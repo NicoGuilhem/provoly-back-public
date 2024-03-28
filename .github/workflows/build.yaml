@@ -26,8 +26,8 @@ on:
 env:
   JAVA_VERSION: 21
   MAVEN_OPTS: "-Dorg.slf4j.simpleLogger.showDateTime=true -Djansi.force=true"
-  MAVEN_CLI_OPTS: "-Dstyle.color=always --batch-mode --errors --show-version -DinstallAtEnd=true -Dno-format -DdeployAtEnd=true -Dquarkus.container-image.tag=latest"
-  DOCKER_IMAGE_ADDITIONAL_TAGS: ""
+  MAVEN_CLI_OPTS: "-Dstyle.color=always --batch-mode --errors --show-version -DinstallAtEnd=true -Dno-format -DdeployAtEnd=true"
+  MAVEN_JIB_OPTIONS:  "-Dquarkus.container-image.tag=latest -Dquarkus.container-image.labels.\"git-ref\"=${{ github.sha }}"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -74,6 +74,13 @@ jobs:
         id: spotless
         run: mvn $MAVEN_CLI_OPTS -Dvalidate compile
 
+      - name: Prepare Short Sha
+        id: shortSha
+        run: | 
+          export "CI_SHORT_COMMIT_SHA=$(echo ${{ github.sha }} | cut -c1-8)"
+          echo "CI_SHORT_COMMIT_SHA=$CI_SHORT_COMMIT_SHA" >> $GITHUB_ENV
+          echo "DOCKER_IMAGE_ADDITIONAL_TAGS=dev-$CI_SHORT_COMMIT_SHA,latest" >> $GITHUB_ENV
+
 
       # CHECK AND BUILD REF IF NEEDED
       - name: Check Ref modification
@@ -93,15 +100,13 @@ jobs:
       - name: Sets env vars for main branch
         id: main-branch
         run: |
-          echo "CI_SHORT_COMMIT_SHA=$(echo ${{ github.sha }} | cut -c1-8)" >> $GITHUB_ENV
-          echo "DOCKER_IMAGE_ADDITIONAL_TAGS=dev-$CI_SHORT_COMMIT_SHA,latest" >> $GITHUB_ENV
-          echo "MAVEN_CLI_OPTS=-Dstyle.color=always --batch-mode --errors --show-version -DinstallAtEnd=true -DdeployAtEnd=true -Dquarkus.container-image.additional-tags=$DOCKER_IMAGE_ADDITIONAL_TAGS -Dquarkus.container-image.labels.\"git-ref\"=${{ github.sha }} -DskipTests" >> $GITHUB_ENV
-          echo "MAVEN_PROFILE=-Pdocker-image" >> $GITHUB_ENV
+          echo "DOCKER_IMAGE_ADDITIONAL_TAGS=$DOCKER_IMAGE_ADDITIONAL_TAGS, latest" >> $$GITHUB_ENV
+          echo "MAVEN_CLI_OPTS=-Dstyle.color=always --batch-mode --errors --show-version -DinstallAtEnd=true -DdeployAtEnd=true  -DskipTests" >> $GITHUB_ENV
         if: github.ref == 'refs/heads/main'
 
       - name: Build Ref
         id: ref-build
-        run: mvn ${{ env.MAVEN_CLI_OPTS }} verify -pl data-ref -am -Pdocker-image
+        run: mvn ${{ env.MAVEN_CLI_OPTS }} verify -pl data-ref -Dquarkus.container-image.additional-tags=${{ env.DOCKER_IMAGE_ADDITIONAL_TAGS }} -am  ${{ env.MAVEN_JIB_OPTIONS }} -Pdocker-image
         if: steps.changed-ref-files.outputs.any_changed == 'true'
         env:
           CI_REGISTRY_PASSWORD: ${{ secrets.CI_REGISTRY_PASSWORD }}
@@ -125,7 +130,7 @@ jobs:
 
       - name: Build Modules
         id: modules-build
-        run: mvn ${{ env.MAVEN_CLI_OPTS }} verify -pl ${{ env.MODULES }} -am ${{ env.MAVEN_PROFILE }}
+        run: mvn ${{ env.MAVEN_CLI_OPTS }} verify -pl ${{ env.MODULES }} -am ${{ env.MAVEN_JIB_OPTIONS }} -Dquarkus.container-image.additional-tags=${{env.DOCKER_IMAGE_ADDITIONAL_TAGS}} -Pdocker-image
         env:
           CI_REGISTRY_PASSWORD: ${{ secrets.CI_REGISTRY_PASSWORD }}
           CI_REGISTRY_SERVER: ${{ vars.CI_REGISTRY_SERVER }}

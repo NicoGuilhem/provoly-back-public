@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>provoly-transfo-engine</artifactId>
-    <version>0.24.0</version>
+    <version>0.24.2</version>
 
     <parent>
         <groupId>com.provoly</groupId>
         <artifactId>provoly-parent-build-quarkus</artifactId>
-        <version>0.24.0</version>
+        <version>0.24.2</version>
         <relativePath>../../provoly-parent-build-quarkus</relativePath>
     </parent>
 
