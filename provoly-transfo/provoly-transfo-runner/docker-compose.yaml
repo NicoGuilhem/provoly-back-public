@@ -1,0 +1,53 @@
+version: '3.6'
+
+services:
+
+  akhq:
+    image: tchiotludo/akhq:0.24.0
+    environment:
+      AKHQ_CONFIGURATION: |
+        akhq:
+          connections:
+            quarkus-dev:
+              properties:
+                bootstrap.servers: "kafka:9092"
+    ports:
+      - 9900:8080
+
+
+#  schema-registry:
+#    image: docker.io/bitnami/schema-registry:7.3.0
+#    ports:
+#      - 9902:9902
+#    depends_on:
+#      - kafka
+#    environment:
+#      - SCHEMA_REGISTRY_LISTENERS=http://0.0.0.0:9902
+#      - SCHEMA_REGISTRY_KAFKA_BROKERS=PLAINTEXT://kafka:9092
+
+  kafka:
+    image: docker.io/bitnami/kafka:3.6.1
+    ports:
+      - "9901:9901"
+    environment:
+      - KAFKA_ENABLE_KRAFT=yes
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,EXTERNAL://:9901,CONTROLLER://:2181
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9901
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@127.0.0.1:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    #      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=false
+
+    volumes:
+      - "kafka:/bitnami/kafka"
+
+
+
+volumes:
+  kafka:
+    driver: local
+
+

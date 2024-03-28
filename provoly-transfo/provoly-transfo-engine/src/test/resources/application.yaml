@@ -1,0 +1,43 @@
+quarkus:
+  datasource:
+    devservices:
+      image-name: dh2wltsh.gra7.container-registry.ovh.net/docker-mirror/library/postgres:14.1-alpine
+
+  otel:
+    sdk:
+      enabled: false
+
+  keycloak:
+    devservices:
+      realm-name: provoly
+      realm-path: dev-realm.json
+      port: 9080
+
+  oidc:
+    token:
+      # Auth Server clock can be xx seconds ahead of resource server
+      lifespan-grace: 120
+    roles:
+      role-claim-path: "realm_access/roles"
+
+  rest-client:
+    "provoly-exec-engine":
+      url: "http://dummy.notexist"
+    "data-ref":
+      url: "http://dummy.notexist"
+
+  log:
+    category:
+      "tracer": # Show trace for elastic client
+        level: TRACE
+      "com.provoly":
+        level: DEBUG
+    min-level: TRACE
+
+provoly:
+  transfo:
+    job-model-id: 423b5c01-1816-41d4-b358-000000000000
+  application:
+    version: test
+    chart:
+      version: test

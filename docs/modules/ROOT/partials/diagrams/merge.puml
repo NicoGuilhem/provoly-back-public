@@ -1,0 +1,16 @@
+@startuml
+|Build|
+start
+:Detect which modules where touched;
+
+:Builds and pushes images for all needed modules;
+stop
+|Deploy|
+
+start
+:On build success;
+:Detect wich modules where touched;
+:Dispacth an event to provoly-chart for deployment
+with modules and appropriate tag;
+stop
+@enduml

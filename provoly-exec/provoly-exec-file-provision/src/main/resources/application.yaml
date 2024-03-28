@@ -1,0 +1,54 @@
+quarkus:
+  management:
+    enabled: true
+    port: 8081
+  oidc:
+    client-id: provoly
+
+"%dev":
+  quarkus:
+    management:
+      port: 8096
+    log:
+      category:
+        "com.provoly":
+          level: DEBUG
+      min-level: TRACE
+
+    keycloak:
+      devservices:
+        realm-name: provoly
+        realm-path: dev-realm.json
+        port: 9080
+
+    oidc:
+      token:
+        # Auth Server clock can be xx seconds ahead of resource server
+        lifespan-grace: 120
+
+    otel:
+      enabled: false
+      exporter:
+        resource-attributes: env=dev-local
+        otlp:
+          traces:
+            legacy-endpoint: http://localhost:4317
+
+    rest-client:
+      "provoly-exec-engine":
+        url: http://localhost:8780
+
+  provoly:
+    exec:
+      file-base-path: "./data"
+    application:
+      version: dev
+      chart:
+        version: dev
+
+
+"%prod":
+  quarkus:
+    kubernetes-config:
+      enabled: true
+      config-maps: provoly-exec-file-provision

@@ -1,0 +1,67 @@
+mp:
+  messaging:
+    incoming:
+      ref-event:
+        topic: ref-event
+        connector: smallrye-kafka
+        auto:
+          offset:
+            reset: earliest
+    outgoing:
+      ref-event-out:
+        topic: ref-event
+        connector: smallrye-kafka
+
+
+quarkus:
+  cache:
+    # Deactivated cache for test
+    enabled: false
+
+  keycloak:
+    devservices:
+      enabled: false
+  otel:
+    sdk:
+      disabled: true
+
+  kafka:
+    # Kafka is provided by ProvolyTestContainers
+    devservices:
+      enabled: false
+
+  oidc:
+    token:
+      # Auth Server clock can be xx seconds ahead of resource server
+      lifespan-grace: 120
+    auth-server-url: https://acme.com/auth # Needed by extension even if not used
+  oidc-client:
+    auth-server-url: https://sso.test.provoly.net/auth/realms/provoly
+    credentials:
+      secret: secret
+    grant:
+      type: password
+
+  rest-client:
+    "sso":
+      url: https://sso.test.provoly.net
+
+  log:
+    category:
+      "com.provoly":
+        level: DEBUG
+
+provoly:
+  virt:
+    user: provoly_virt
+    password: password
+    icons-bucket-name: "provoly"
+    files-bucket-name: "provoly"
+    elastic-enable-immediate-refresh-policy: true
+    chunk-size: 1000
+    import-max-errors: 2
+
+  application:
+    version: test
+    chart:
+      version: test

@@ -1,0 +1,1 @@
+UPDATE dataset_version_message SET extract_message_code = 'STORAGE' WHERE extract_message_code = 'ELASTIC_SEARCH'

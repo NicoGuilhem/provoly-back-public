@@ -1,0 +1,102 @@
+package com.provoly.common.dataset;
+
+import java.util.List;
+import java.util.UUID;
+
+import com.provoly.common.Default;
+import com.provoly.common.metadata.MetadataValueWriteDto;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+
+public class DatasetDto {
+
+    private UUID id;
+    private String name;
+    private UUID oClass;
+    private DatasetType type;
+    private String description;
+    private List<MetadataValueWriteDto> metadata;
+    private List<String> groups;
+
+    @Default
+    @JsonCreator
+    public DatasetDto(UUID id, String name, UUID oClass, DatasetType type, String description,
+            List<MetadataValueWriteDto> metadata, List<String> groups) {
+        this.id = id;
+        this.name = name;
+        this.oClass = oClass;
+        this.type = type;
+        this.description = description;
+        this.metadata = metadata;
+        this.groups = groups;
+    }
+
+    public DatasetDto(UUID id, String name, UUID oClass, DatasetType type) {
+        this(id, name, oClass, type, null, List.of(), List.of());
+    }
+
+    public DatasetDto(UUID id, String name, UUID oClass, DatasetType type, String description) {
+        this(id, name, oClass, type, description, List.of(), List.of());
+    }
+
+    public DatasetDto(UUID id, String name, UUID oClass, DatasetType type, List<String> groups) {
+        this(id, name, oClass, type, null, List.of(), groups);
+    }
+
+    public List<String> getGroups() {
+        return groups;
+    }
+
+    public void setGroups(List<String> groups) {
+        this.groups = groups;
+    }
+
+    public List<MetadataValueWriteDto> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(List<MetadataValueWriteDto> metadata) {
+        this.metadata = metadata;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public DatasetType getType() {
+        return type;
+    }
+
+    public void setType(DatasetType type) {
+        this.type = type;
+    }
+
+    public UUID getoClass() {
+        return oClass;
+    }
+
+    public void setoClass(UUID oClass) {
+        this.oClass = oClass;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+}

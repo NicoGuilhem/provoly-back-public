@@ -1,0 +1,25 @@
+== Run an application
+
+Each application has its dependencies. You can refer to this exhaustive list of all applications dependencies :
+
+|===
+| Application               | Dependencies
+| data-ref                  |  elastic-search
+| data-link                 |  data-ref
+| data-replay               | data-ref
+| data-sync                 | data-ref, data-virt
+| data-virt                 | data-ref
+| provoly-transfo-engine        | data-ref, provoly-exec-engine
+| provoly-exec-engine           | data-ref, data-virt
+| provoly-monitor               | data-ref
+|===
+
+== Run elastic-search
+elastic-search is the data management service used in the project. The latter is dockerized and used in most applications of the project.
+
+In order to use it, you need to start it manually :
+
+[source, bash]
+----
+docker-compose up es_01
+----

@@ -1,0 +1,70 @@
+== Running tests depending on data-ref
+
+=== With data-ref from registry
+
+It's first necessary to log into the private registry. Credentials info are here:
+https://gitlab.groupeonepoint.com/cds-bdx/pole-edition/yap/yap-deploy/-/blob/master/provoly/templates/register-credentials.yaml
+
+run :
+
+[source, bash]
+----
+docker login {host}
+----
+
+And fill username and password.
+
+It's now possible to run your module test:
+
+[source, bash]
+----
+mvn test -pl data-virt -am
+----
+
+== With local data-ref image
+
+It's necessary to build data-ref image:
+
+[source, bash]
+----
+mvn package -DskipTests -pl data-ref -am
+docker image build -f data-ref/src/main/docker/Dockerfile.jvm -t dh2wltsh.gra7.container-registry.ovh.net/provoly/data-ref data-ref
+----
+
+=== Running with Maven
+
+Now it's possible to run the data-virt/data-replay test with the generated image, with a specific profile:
+
+[source, bash]
+----
+mvn test -D local -pl data-virt -am
+----
+
+=== Running with IntelliJ
+
+IntelliJ test launcher doesn't use maven selected profiles (ie _local_).
+You have to change the test runner configuration :
+image:configuration_intellij_step_1.png[Edit Configuration Settings from IntelliJ Step 1]
+
+
+And add the following settings :
+
+[source,bash]
+----
+-ea -Dservice.filesystem.bind=/deployments/config/application.yaml -Dservice.image.policy=defaultPolicy
+
+----
+
+In the `Build and run` section :
+
+image:configuration_intellij_step_2.png[Edit Configuration Settings from IntelliJ Step 2]
+
+
+=== Enable kuzzle Test
+
+Currently the tests for the `KUZZLE_ASSET` and `KUZZLE_MEASURE` storages are not run automatically. To activate tests on these storages :
+
+1. Add the environment variable `-Dservice.kuzzle.enabled=true` in Intellij settings or when running mvn test -pl data-virt -am
+2. You need to have a kuzzle with the `device-manager` plugin available on the url specified in the `url` property above. Default url is `http://localhost:7512`
+
+NOTE: Tests for `KUZZLE` storage are not available as this storage is not mature enough and will potentially no longer be used.

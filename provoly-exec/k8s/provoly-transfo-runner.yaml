@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: provoly-transfo-runner
+  labels:
+    app: provoly
+    module: provoly-transfo-runner
+data:
+  application.yaml: |
+    quarkus:
+      banner:
+        enabled: false
+      log:
+        console:
+          json: false
+          level: TRACE
+          format: "%d{HH:mm:ss} %-5p traceId=%X{traceId} parentId=%X{parentId} spanId=%X{spanId} [%c{2.}] (%t) %s%e%n"
+    
+      otel:
+        exporter:
+          resource-attributes: env=dev-local
+          otlp:
+            traces:
+              legacy-endpoint: http://localhost:4317
+    
+    kafka:
+      bootstrap:
+        servers: kafka-provoly-kafka-bootstrap:9092
+
+---

@@ -1,0 +1,64 @@
+quarkus:
+  management:
+    enabled: true
+    port: 8081
+  oidc:
+    client-id: provoly
+  oidc-client:
+    grant-options:
+      password:
+        username: ${provoly.link.user}
+        password: ${provoly.link.password}
+    auth-server-url: http://localhost:9080/realms/provoly
+  kafka-streams:
+    topics: ignored #We start yourself our streams, configuration is mandatory but not used
+
+"%dev":
+  quarkus:
+    management:
+      port: 8093
+    log:
+      category:
+        "com.provoly":
+          level: DEBUG
+    oidc:
+      token:
+        # Auth Server clock can be xx seconds ahead of resource server
+        lifespan-grace: 120
+      roles:
+        role-claim-path: "realm_access/roles"
+    oidc-client:
+      client-id: provoly
+      credentials:
+        secret: secret
+      grant:
+        type: password
+      auth-server-url: http://localhost:9080/realms/provoly
+    rest-client:
+      "data-ref": http://localhost:8180
+    otel:
+      enabled: false
+    http:
+      port: 8580
+  kafka:
+    bootstrap:
+      servers: localhost:9093
+  provoly:
+    link:
+      refresh: 10s
+      aggregate:
+        partitions: 10
+      user: provoly_link
+      password: password
+    application:
+      version: dev
+      chart:
+        version: dev
+"%prod":
+  quarkus:
+    kubernetes-config:
+      enabled: true
+      config-maps: data-link
+      secrets:
+        enabled: true
+        ~: data-link

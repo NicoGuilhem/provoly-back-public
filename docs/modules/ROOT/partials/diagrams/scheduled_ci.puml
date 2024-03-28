@@ -1,0 +1,7 @@
+@startuml
+start
+:Analyse cve on dependencies;
+:Execute `mvn verify` on all modules;
+:Execute sonar analysis;
+stop
+@enduml

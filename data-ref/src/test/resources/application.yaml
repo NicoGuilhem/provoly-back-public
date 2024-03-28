@@ -1,0 +1,51 @@
+quarkus:
+  kubernetes-client:
+    devservices:
+      enabled: false
+  otel:
+    enabled: false
+  keycloak:
+    devservices:
+      realm-name: provoly
+      realm-path: dev-realm.json
+      port: 9080
+  oidc:
+    client-id: provoly
+    token:
+      # Auth Server clock can be xx seconds ahead of resource server
+      lifespan-grace: 120
+    roles:
+      role-claim-path: "realm_access/roles"
+
+  rest-client:
+    "sso":
+      url: https://localhost:9080
+
+  log:
+    category:
+      "tracer": # Show trace for elastic client
+        level: TRACE
+      "com.provoly":
+        level: DEBUG
+    min-level: TRACE
+
+  hibernate-orm:
+    log:
+      sql: false
+      bind-parameters: false
+
+provoly:
+  ref:
+    skip-index-creation-allowed: true
+    user: provoly_ref
+    password: password
+    keycloak-user-list: true
+    scheduler:
+      notification: 10s
+    storages:
+      - ELASTIC
+      - POSTGIS
+  application:
+    version: test
+    chart:
+      version: test

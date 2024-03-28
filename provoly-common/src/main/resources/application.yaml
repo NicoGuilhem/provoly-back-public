@@ -1,0 +1,4 @@
+"%dev":
+  quarkus:
+    console:
+      color: true

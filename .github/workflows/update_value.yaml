@@ -1,0 +1,77 @@
+name: "Update ArgoCD values."
+
+on:
+  workflow_run:
+    paths-ignore:
+      - '.gitignore'
+      - 'LICENSE'
+      - '*.adoc'
+      - 'docs'
+      - 'ide-config'
+      - '*.txt'
+      - '.github/**'
+    workflows: [Build]
+    branches:
+      - main
+    types:
+      - completed
+
+
+jobs:
+  build:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    name: Dispatch deploy Event
+    runs-on: provoly-runner
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: '2'
+
+      - name: Prepare shot SHA commit
+        run: |
+          echo "CI_SHORT_COMMIT_SHA=$(echo ${{ github.sha }} | cut -c1-8)" >> $GITHUB_ENV
+
+
+      #  CHECK AND BUILD REQUIRED MODULES
+      - name: Detect Changes
+        id: changes
+        uses: jbangdev/jbang-action@v0.115.0
+        with:
+          script: ./ci/scripts/CiScripts.java
+          scriptargs: select-deploy-modules
+
+      - name: Check deploy values
+        id: check_files
+        uses: andstor/file-existence-action@v3
+        with:
+          files: "deployment.env"
+
+      - name: Getting changed Modules
+        run: echo "$(cat deployment.env)" >> $GITHUB_ENV
+        if: steps.check_files.outputs.files_exists == 'true'
+
+      - name: Update values on provoly-dev
+        id: update
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.SA_PERSONAL_ACCESS_TOKEN }}
+          repository: provoly/provoly-chart-values
+          event-type: update-chart-value
+          client-payload: |
+            {
+              "filename": "provoly/provoly-dev/values.yaml",
+              "field_names": "${{ env.DEPLOY }}",
+              "field_value": "dev-${{ env.CI_SHORT_COMMIT_SHA }}"
+            }
+        if: github.ref == 'refs/heads/main' && steps.check_files.outputs.files_exists == 'true'
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "# Steps status " >> $GITHUB_STEP_SUMMARY
+          echo "| Step | State |" >> $GITHUB_STEP_SUMMARY
+          echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
+          echo "| Setting up runner | ${{ steps.cache-maven.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| changed modules |  ${{ env.DEPLOY }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| image identifier | dev-${{ env.CI_SHORT_COMMIT_SHA }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dispatch Event | ${{ steps.update.outcome }} |" >> $GITHUB_STEP_SUMMARY

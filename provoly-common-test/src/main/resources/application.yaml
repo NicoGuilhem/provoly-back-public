@@ -1,0 +1,6 @@
+"%test":
+  quarkus:
+    log:
+      category:
+        "com.provoly.test":
+          level: DEBUG

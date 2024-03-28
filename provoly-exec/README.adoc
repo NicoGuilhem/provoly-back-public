@@ -1,0 +1,28 @@
+
+
+
+== Delete all jobs
+kubectl delete job -l "provoly.net/provoly-exec-job"
+
+
+
+== Push a new version of provoly-transfo and provoly-engine (waiting for integration in provoly-deploy)
+export CI_REGISTRY_SERVER=dh2wltsh.gra7.container-registry.ovh.net
+export CI_REGISTRY_USER=provoly-sa
+export CI_REGISTRY_PASSWORD=<non-disclosed>
+export CI_REGISTRY_PROJECT_NAME=provoly
+mvn clean package -pl provoly-exec/provoly-exec-engine -am -Pdocker-image
+mvn clean package -pl provoly-exec/provoly-exec-file-provision -am -Pdocker-image
+mvn clean package -pl provoly-transfo/provoly-transfo-runner -am -Pdocker-image
+mvn clean package -pl provoly-transfo/provoly-transfo-engine -am -Pdocker-image
+
+
+for MODULE in "provoly-exec/provoly-exec-engine" "provoly-exec/provoly-exec-file-provision" "provoly-transfo/provoly-transfo-runner"
+do
+    mvn clean package -pl $MODULE -am -Pdocker-image
+done
+
+
+kubectl port-forward service/provoly-postgresql 5452:5432
+
+

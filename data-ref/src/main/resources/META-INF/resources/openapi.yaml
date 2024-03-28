@@ -1,0 +1,5485 @@
+openapi: 3.0.3
+info:
+  title: API Baseline
+  description: CRUD Operation on repositories data
+  version: 0.7.0
+servers:
+  - url: http://data-ref.provoly.com
+paths:
+  /about/version:
+    get:
+      tags:
+        - Version Controller
+      summary: Retrieve the application and chart versions
+      operationId: com.provoly.version.VersionController_getVersion
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
+              examples:
+                default:
+                  value: |
+                    {
+                      "applicationVersion": "0.4.8",
+                      "chartVersion": "0.4.8"
+                    }
+        "404":
+          $ref: '#/components/responses/notFoundException'
+  /model/categories:
+    put:
+      tags:
+        - Model Controller
+      summary: Save a new category
+      description: |
+        They are used to categorise attributes of a data model. 
+        If a category with this id already exists, update it.
+      operationId: com.provoly.ref.model.ModelController_addCategory
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryDto'
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "409":
+          description: Conflict
+      security:
+        - oidc:
+            - class_write
+    get:
+      tags:
+        - Model Controller
+      summary: Retrieve all categories
+      operationId: com.provoly.ref.model.ModelController_getCategories
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CategoryDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - class_read
+            - search
+            - datasource_read
+  /model/categories/{id}:
+    get:
+      tags:
+        - Model Controller
+      summary: Retrieve a category based on its identifier
+      operationId: com.provoly.ref.model.ModelController_getCategory
+      parameters:
+        - name: id
+          in: path
+          description: Category UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - class_read
+    delete:
+      tags:
+        - Model Controller
+      summary: Delete a category based on its identifier
+      operationId: com.provoly.ref.model.ModelController_deleteCategory
+      parameters:
+        - name: id
+          in: path
+          description: UUID of the category
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+          content:
+            application/json:
+              examples:
+                deleteDefaultCategory:
+                  description: Occurs when you try to delete default category.
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "NOT_MODIFIABLE",
+                      "message": "This is default category id. It can't be deleted"
+                    }
+      security:
+        - oidc:
+            - class_write
+  /model/field:
+    post:
+      tags:
+        - Model Controller
+      summary: Save a new field
+      description: |
+        A field is required for defining an attribute in an oClass. 
+        It can be used several times in the same oClass, or in different oClasses.
+      operationId: com.provoly.ref.model.ModelController_addField
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FieldDto'
+            examples:
+              default:
+                summary: Adding a field
+                value: |
+                  {
+                    "id": "1d186f4a-5d75-4d2f-af45-d78180e0f0e8",
+                    "name": "correct_field",
+                    "type": "keyword"
+                  }
+              incorrect:
+                summary: Adding an incorrect field (type unknown)
+                value: |
+                  {
+                    "id": "1d186f4a-5d75-4d2f-af45-d78180e0f0e8",
+                    "name": "incorrect_field",
+                    "type": "char"
+                  }
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - field_write
+  /model/fields:
+    post:
+      tags:
+        - Model Controller
+      summary: Save a new collection of fields
+      operationId: com.provoly.ref.model.ModelController_addFields
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/FieldDto'
+            examples:
+              default:
+                summary: Adding a collection of fields
+                value: |
+                  [
+                    {
+                      "id": "1d186f4a-5d75-4d2f-af45-d78180e0f0e8",
+                      "name": "field_address",
+                      "type": "string"
+                    },
+                    {
+                      "id": "fcc51f53-9295-4caf-968e-873b601763b1",
+                      "name": "field_code",
+                      "type": "integer"
+                    }
+                  ]
+      responses:
+        "201":
+          description: Created
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - field_write
+    get:
+      tags:
+        - Model Controller
+      summary: Retrieve all existing fields
+      operationId: com.provoly.ref.model.ModelController_getFields
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FieldDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - field_read
+            - search
+            - datasource_read
+  /model/fields/{id}:
+    get:
+      tags:
+        - Model Controller
+      summary: Retrieve a field based on its identifier
+      operationId: com.provoly.ref.model.ModelController_getFieldById
+      parameters:
+        - name: id
+          in: path
+          description: Field UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - field_read
+            - item_write
+    delete:
+      tags:
+        - Model Controller
+      summary: Delete a field based on its identifier
+      description: Deleting a field is only possible if it's not used in a oclass or named query.
+      operationId: com.provoly.ref.model.ModelController_deleteFieldById
+      parameters:
+        - name: id
+          in: path
+          description: UUID of the field to delete
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+        "400":
+          description: Bad Request
+      security:
+        - oidc:
+            - field_read
+            - item_write
+            - search
+            - datasource_read
+  /model/fields/{id}/associations:
+    get:
+      tags:
+        - Model Controller
+      summary: Retrieve all field's associate items
+      description: A field can be used in oClasses and named queries.
+      operationId: com.provoly.ref.model.ModelController_getAssociationOfField
+      parameters:
+        - name: id
+          in: path
+          description: Field id
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/AssociationsDto'
+              examples:
+                default:
+                  summary: Get associations of a field
+                  value: |
+                    {
+                        "associations": [
+                          {
+                              "id": "423b5c01-1816-41d4-b358-100000000005",
+                              "name": "Station de velos",
+                              "type": "OCLASS"
+                          },
+                          {
+                            "id": "423b5c01-1816-41d4-b358-100000000010",
+                            "name": "Test named query",
+                            "type": "NAMED_QUERY"
+                          }
+                        ],
+                        "usedElsewhere": false
+                    }
+
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - field_read
+            - field_write
+  /model/fields/class/{id}:
+    get:
+      tags:
+        - Model Controller
+      summary: Retrieve all existing fields for an oClass
+      operationId: com.provoly.ref.model.ModelController_getFieldsForClass
+      parameters:
+        - name: id
+          in: path
+          description: Class UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FieldDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - field_read
+            - search
+            - item_write
+            - datasource_read
+  /model/class:
+    post:
+      tags:
+        - Model Controller
+      summary: Save or update new oClass
+      description: |
+        An oClass is made up of attributes and is used to define the data model that will be inserted. 
+        An attribute belongs to a single class, and can be grouped by category. OClass names must be unique 
+        and attributes ids must be unique.
+        If class with same id already exists, update it.
+        Note: It's not possible to change fields.
+      operationId: com.provoly.ref.model.ModelController_saveClass
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OClassWriteDto'
+            examples:
+              default:
+                summary: Create "Accident" oClass
+                description: |
+                  With the \"car_id\" attribute able to have several values,
+                  and \"date_accident\", \"location\" and \"weather\" that belong to same category.
+                value: |
+                  {
+                    "id": "c3ffd8e7-e334-4710-aeb1-8506a12ad39c",
+                    "name": "Accident",
+                    "icon": "path/to/icon",
+                    "attributes": [
+                      {
+                        "id": "7527bd0a-5059-4edd-a053-83189be6a920",
+                        "name": "date_accident",
+                        "technicalName": "date_accident",
+                        "field": "872ff200-b4cc-47e6-a45b-fe3ea9c1ab9f",
+                        "multiValued": false
+                      },
+                      {
+                        "id": "430b3c66-d621-466a-9fa0-1f2e3ae3b15d",
+                        "name": "location",
+                        "technicalName": "location",
+                        "field": "5510a2a9-dcbb-4861-bdb1-f0091a824767",
+                        "category": "cf666d66-838f-4d92-a4d2-a315df21fac9",
+                        "multiValued": false
+                      },
+                      {
+                        "id": "24b31150-5acc-4f13-bf9f-3987abb32ffe",
+                        "name": "weather",
+                        "technicalName": "weather",
+                        "field": "5510a2a9-dcbb-4861-bdb1-f0091a824767",
+                        "category": "cf666d66-838f-4d92-a4d2-a315df21fac9",
+                        "multiValued": false
+                      },
+                      {
+                        "id": "4b8b4f6c-7dfd-4613-9414-c9daf00016af",
+                        "name": "car_id",
+                        "technicalName": "car_id",
+                        "field": "7000506c-049b-47d3-b92d-a2e823b46b81",
+                        "multiValued": true
+                      }
+                    ]
+                  }
+      responses:
+        "201":
+          description: created
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                missingTechnicalName:
+                  description: Occurs when you try to create a class without technical name in attribute.
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "BAD_REQUEST",
+                      "message": "Missing technical name in attribute 39257557-083b-4427-9493-1cedc92b25cf"
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - class_write
+    get:
+      tags:
+        - Model Controller
+      summary: Retrieve all defined oClasses
+      operationId: com.provoly.ref.model.ModelController_get
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OClassReadDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - class_read
+            - search
+            - datasource_read
+  /model/class/id/{id}:
+    get:
+      tags:
+        - Model Controller
+      summary: Retrieve an oClass based on its identifier
+      operationId: com.provoly.ref.model.ModelController_getById
+      parameters:
+        - name: id
+          in: path
+          description: Class UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OClassReadDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - class_read
+            - search
+            - datasource_read
+    delete:
+      tags:
+        - Model Controller
+      summary: Delete an oClass based on its identifier
+      description: |
+        Delete a class is possible if not used elsewhere. Deleting a class means deleting the table that
+        contained the data
+      operationId: com.provoly.ref.model.ModelController_deleteClass
+      parameters:
+        - name: id
+          in: path
+          description: Class UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - class_write
+  /model/class/id/{id}/details:
+    get:
+      tags:
+        - Model Controller
+      summary: Retrieve an oClass based on its identifier with more details
+      description: |
+        This oClass contains more information about the attributes used in the oClass,
+        with details of the associated fields.
+      operationId: com.provoly.ref.model.ModelController_getDetails
+      parameters:
+        - name: id
+          in: path
+          description: Class UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/OClassDetailsDto'
+              examples:
+                default:
+                  summary: get detailed oClass of "Accident"
+                  value: |
+                    {
+                      "id": "c3ffd8e7-e334-4710-aeb1-8506a12ad39c",
+                      "slug": "7d2cda0aab_accident",
+                      "name": "Accident",
+                      "attributes": [
+                        {
+                          "oclass": "c3ffd8e7-e334-4710-aeb1-8506a12ad39c",
+                          "id": "7527bd0a-5059-4edd-a053-83189be6a920",
+                          "name": "date_accident",
+                          "slug": "5e8c3edc5d_date_accident",
+                          "multiValued": false,
+                          "field": {
+                            "id": "872ff200-b4cc-47e6-a45b-fe3ea9c1ab9f",
+                            "name": "date",
+                            "type": "instant",
+                            "slug": "279ff1f102_date"
+                          }
+                        },
+                        {
+                          "oclass": "c3ffd8e7-e334-4710-aeb1-8506a12ad39c",
+                          "id": "430b3c66-d621-466a-9fa0-1f2e3ae3b15d",
+                          "name": "location",
+                          "slug": "c7746c45c2_location",
+                          "multiValued": false,
+                          "field": {
+                            "id": "5510a2a9-dcbb-4861-bdb1-f0091a824767",
+                            "name": "string",
+                            "type": "string",
+                            "slug": "279ff1f103_string"
+                          }
+                        },
+                        {
+                          "oclass": "c3ffd8e7-e334-4710-aeb1-8506a12ad39c",
+                          "id": "24b31150-5acc-4f13-bf9f-3987abb32ffe",
+                          "name": "weather",
+                          "slug": "b32bc15ba2_weather",
+                          "multiValued": false,
+                          "field": {
+                            "id": "5510a2a9-dcbb-4861-bdb1-f0091a824767",
+                            "name": "string",
+                            "type": "string",
+                            "slug": "279ff1f103_string"
+                          }
+                        },
+                        {
+                          "oclass": "c3ffd8e7-e334-4710-aeb1-8506a12ad39c",
+                          "id": "4b8b4f6c-7dfd-4613-9414-c9daf00016af",
+                          "name": "car_id",
+                          "slug": "3c7587eddf_car_id",
+                          "multiValued": true,
+                          "field": {
+                            "id": "6994ede1-7689-489f-8003-115e7cd4646b",
+                            "name": "identifier",
+                            "type": "string",
+                            "slug": "279ff1f102_identifier"
+                          }
+                        }
+                      ]
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - class_read
+            - search
+            - datasource_read
+  /model/class/id/{id}/attribute:
+    put:
+      tags:
+        - Model Controller
+      summary: Save a new attribute to a class
+      operationId: com.provoly.ref.model.ModelController_addAttribute
+      parameters:
+        - name: id
+          in: path
+          description: Class UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttributeDefDto'
+            examples:
+              default:
+                summary: Adding an attribute to a class
+                value: |
+                  {
+                    "id": "ba681f33-fe70-42f8-a277-05c607ba29cf",
+                    "name": "attribute_example",
+                    "field": "423b5c01-1816-41d4-b358-200000000010",
+                    "category": "991eb4b2-253c-4875-b708-8209fa5bfd51",
+                    "multiValued": false
+                  }
+              incorrect:
+                summary: Adding an incorrect attribute to a class (field ID unknown)
+                value: |
+                  {
+                    "id": "423b5c01-1816-41d4-b358-200000000010",
+                    "name": "attribute_example",
+                    "field": "",
+                    "category": "991eb4b2-253c-4875-b708-8209fa5bfd51",
+                    "multiValued": false
+                  }
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - class_write
+  /model/class/id/{classId}/attribute/id/{attributeId}:
+    delete:
+      tags:
+        - Model Controller
+      summary: Delete an attribute based on its identifier
+      operationId: com.provoly.ref.model.ModelController_deleteAttribute
+      parameters:
+        - name: classId
+          in: path
+          description: UUID of the attribute's class
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: attributeId
+          in: path
+          description: UUID of the attribute to delete
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                usedField:
+                  description: Occurs when we try to delete an attribute used by a link, a namedquery or an abac rule.
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "BAD_REQUEST",
+                      "message": "The attribute 423b5c01-1816-41d4-b358-100000000021 is used by one or more search(es) and abac rule(s), remove them to delete the attribute"
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - class_write
+  /model/class/datasets/count:
+    get:
+      tags:
+        - Model Controller
+      operationId: com.provoly.ref.model.ModelController_getDatasetCountByClass
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CountDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - class_read
+  /model/class/field/{id}:
+    get:
+      tags:
+        - Model Controller
+      summary: Retrieve all classes based on the identifier of a field
+      operationId: com.provoly.ref.model.ModelController_getByField
+      parameters:
+        - name: id
+          in: path
+          description: Field UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OClassDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - class_read
+  /model/class/{id}/associations:
+    get:
+      tags:
+        - Model Controller
+      summary: Retrieve all usages of a class
+      operationId: com.provoly.ref.model.ModelController_getClassAssociations
+      parameters:
+        - name: id
+          in: path
+          description: UUID of the class
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssociationsDto'
+              examples:
+                associationsClass:
+                  description: The parameter usedElsewhere in the response body is a boolean used to indicate if the class is used in a private object.
+                  value: |
+                    {
+                      "associations": [
+                            {
+                              "id": "2f021992-5fb0-42d3-9646-0affccb98101",
+                              "name": "LINK",
+                              "type": "LINK"
+                            },
+                            {
+                              "id": "2f021992-5fb0-42d3-9646-0affccb98111",
+                              "name": "Name of the namedquery",
+                              "type": "NAMED_QUERY"
+                            },
+                            {
+                              "id": "2f121992-5fb0-42d3-9646-0affccb98111",
+                              "name": "Name of the dataset",
+                              "type": "DATASET"
+                            },
+                            {
+                              "id": "2f121992-5fb0-42d3-9646-0affccb98111",
+                              "name": "Name of the abac_rule",
+                              "type": "ABAC"
+                            }
+                      ],
+                      "usedElsewhere": false
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - class_read
+  /model/id/{classId}/metadata/id/{metadataDefId}:
+    put:
+      tags:
+        - Model Controller
+      operationId: com.provoly.ref.dataset.ModelController_setMetadataToClass
+      summary: Add metadata to a class
+      parameters:
+        - name: classId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: metadataDefId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetadataValueWriteDto'
+            examples:
+              add_metadata:
+                summary: Adding metadata to a class
+                value: |
+                  {
+                    "value": "22"
+                  }
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+          content:
+            application/json:
+              examples:
+                wrongMetadataType:
+                  description: Occurs when you try to add metadata with a type not supported
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "FORBIDDEN",
+                      "message": "Metadata value should be of type : {{type}}"
+                    }
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - class_write
+    delete:
+      tags:
+        - Model Controller
+      operationId: com.provoly.ref.dataset.ModelController_deleteMetadataToClass
+      summary: Delete metadata of a class
+      parameters:
+        - name: classId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: metadataDefId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - class_write
+  /model/attribute/{id}/associations:
+    get:
+      tags:
+        - Model Controller
+      summary: Retrieve all usages of an attribute
+      operationId: com.provoly.ref.model.ModelController_getAttributeAssociations
+      parameters:
+        - name: id
+          in: path
+          description: UUID of the attribute
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssociationsDto'
+              examples:
+                attributeAssociations:
+                  description: The parameter usedElsewhere in the response body is a boolean used to indicate if the dataset is used in a private object.
+                  value: |
+                    {
+                      "associations": [
+                            {
+                              "id": "2f021992-5fb0-42d3-9646-0affccb98101",
+                              "name": "LINK",
+                              "type": "LINK"
+                            },
+                            {
+                              "id": "2f021992-5fb0-42d3-9646-0affccb98111",
+                              "name": "Name of the namedquery",
+                              "type": "NAMED_QUERY"
+                            },
+                            {
+                              "id": "2f121992-5fb0-42d3-9646-0affccb98111",
+                              "name": "Name of the abac_rule",
+                              "type": "ABAC"
+                            }
+                      ],
+                      "usedElsewhere": false
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - class_read
+  /model/storages:
+    get:
+      tags:
+        - Model Controller
+      summary: Retrieve available storages
+      description: Retrieve the list of available storages
+      operationId: com.provoly.ref.model.ModelController_getStorages
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+              examples:
+                listStorages:
+                  value: |
+                    [
+                        "POSTGIS",
+                        "ELASTIC"
+                    ]
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - class_write
+  /customclass/all/param:
+    get:
+      tags:
+        - Custom Class Controller
+      summary: Retrieve all custom classes
+      operationId: com.provoly.ref.customclass.CustomClassController_getAll
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomClass'
+              examples:
+                default:
+                  value: |
+                    [
+                      {
+                        "domain":"symbol",
+                        "oClass":"e9479a55-f260-4de7-a5b0-24bd58e5e405",
+                        "content":{
+                          "isDefault":true,
+                          "iconUrl":"internal:image.png",
+                          "iconSize":[
+                            25,
+                            25
+                          ]
+                        }
+                      },
+                      {
+                        "domain":"tooltips",
+                        "oClass":"42a6035a-fc3d-4694-a447-3a2189900da3",
+                        "content":{
+                          "type":"attribute",
+                          "options":{
+                            "attributes":[
+                              "Seats Number",
+                              "Seats Number IRVE",
+                              "Seats Number PMR"
+                            ]
+                          }
+                        }
+                      }
+                    ]
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - class_read
+            - search
+            - datasource_read
+  /customclass/all/param/{domain}:
+    get:
+      tags:
+        - Custom Class Controller
+      summary: Retrieve the list of custom classes for a domain
+      operationId: com.provoly.ref.customclass.CustomClassController_getByDomain
+      parameters:
+        - name: domain
+          in: path
+          description: class domain
+          required: true
+          example: tooltips
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              examples:
+                default:
+                  value: |
+                    [
+                      {
+                        "domain":"symbol",
+                        "oClass":"e9479a55-f260-4de7-a5b0-24bd58e5e405",
+                        "content":{
+                          "isDefault":true,
+                          "iconUrl":"internal:image.png",
+                          "iconSize":[
+                            25,
+                            25
+                          ]
+                        }
+                      },
+                      {
+                        "domain":"symbol",
+                        "oClass":"42a6035a-fc3d-4694-a447-3a2189900da3",
+                         "content":{
+                            "isDefault":true,
+                            "iconUrl":"internal:image2.png",
+                            "iconSize":[
+                              25,
+                              25
+                            ]
+                          }
+                      }
+                    ]
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - class_read
+  /customclass/id/{id}/param/{domain}:
+    put:
+      tags:
+        - Custom Class Controller
+      summary: Save a new custom class by adding its configuration JSON file
+      operationId: com.provoly.ref.customclass.CustomClassController_addCustomClass
+      parameters:
+        - name: domain
+          in: path
+          description: Class domain
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: Class UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomClass'
+            examples:
+              default:
+                summary: add custom class with "tooltips" domain.
+                value: |
+                  {
+                    "domain": "tooltips",
+                    "oClass": "42a6035a-fc3d-4694-a447-3a2189900da3",
+                    "content": {
+                      "type": "attribute",
+                      "options": {
+                        "attributes": [
+                          "Seats Number",
+                          "Seats Number IRVE",
+                          "Seats Number PMR"
+                        ]
+                      }
+                    }
+                  }
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                wrongJSON:
+                  description: Occurs when the format of the JSON file is incorrect
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "BAD_REQUEST",
+                      "message": "Json content is invalid"
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - class_write
+    get:
+      tags:
+        - Custom Class Controller
+      summary: Retrieve a JSON file describing a custom class based on its identifier and its domain
+      operationId: com.provoly.ref.customclass.CustomClassController_getCustomClass
+      parameters:
+        - name: domain
+          in: path
+          description: Class domain
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: Class UUID
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - class_read
+  /datasets:
+    post:
+      tags:
+        - Dataset Controller
+      summary: Save a new dataset for a specific oClass
+      description: |
+        A dataset is a coherent, versioned (functionally) set of data belonging to the same class.
+        Dataset could be CLOSED and will therefore have several versions, OPEN or MODIFIABLE.
+      operationId: com.provoly.ref.dataset.DatasetController_addDataset
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatasetDto'
+            examples:
+              closedDataset:
+                summary: Adding a closed dataset
+                value: |
+                  {
+                    "id": "423b5c01-1816-41d4-b358-200000000010",
+                    "name": "closed dataset",
+                    "oClass": "991eb4b2-253c-4875-b708-8209fa5bfd51",
+                    "type": "CLOSED"
+                  }
+              datasetWithMetadata:
+                summary: Adding a closed dataset with metadata
+                value: |
+                  {
+                    "id": "423b5c01-1816-41d4-b358-200000000010",
+                    "name": "closed dataset",
+                    "oClass": "991eb4b2-253c-4875-b708-8209fa5bfd51",
+                    "type": "CLOSED",
+                    "metadata": [
+                      "value": "20",
+                      "metadataDefId": "c18b19eb-0c2a-4877-a7cb-3603ba94cb1c"
+                    ]
+                  }
+              datasetWithGroups:
+                summary: Adding a closed dataset with groups
+                value: |
+                  {
+                    "id": "423b5c01-1816-41d4-b358-200000000010",
+                    "name": "closed dataset",
+                    "oClass": "991eb4b2-253c-4875-b708-8209fa5bfd51",
+                    "type": "CLOSED",
+                    "groups": [
+                      "ALL",
+                      "test"
+                    ]
+                  }
+              invalidDataset:
+                summary: Adding an incorrect dataset (with invalid type)
+                value: |
+                  {
+                    "id": "423b5c01-1816-41d4-b358-200000000010",
+                    "name": "closed incorrect dataset",
+                    "oClass": "991eb4b2-253c-4875-b708-8209fa5bfd51",
+                    "type": "UNKNOWN",
+                    "groups": "[group_test]"
+                  }
+      responses:
+        "201":
+          description: Created
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                sameOClassName:
+                  summary: Save dataset with wrong name
+                  description: Occurs when you try to save a dataset that has the same name as its OClass
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "CONFLICT",
+                      "message": "Name {{datasetName}} already exists for class {{oClassName}}"
+                    }
+      security:
+        - oidc:
+            - dataset_write
+    put:
+      tags:
+        - Dataset Controller
+      summary: Update a dataset based on its identifier
+      description: You can only update the dataset name, description, metadata and groups, you cannot change its id, type or OClass.
+      operationId: com.provoly.ref.dataset.DatasetController_update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatasetDto'
+            examples:
+              dataset_update:
+                summary: Updating a dataset name
+                value: |
+                  {
+                    "id": "423b5c01-1816-41d4-b358-200000000010",
+                    "name": "we change dataset name",
+                    "oClass": "991eb4b2-253c-4875-b708-8209fa5bfd51",
+                    "type": "CLOSED"
+                  }
+              group_update:
+                summary: Update dataset groups
+                description: |
+                  Updating groups.
+                  If you add an empty group list, the current groups in the dataset will be deleted.
+                  If the group list is null, the dataset's current groups will not be modified.
+                value: |
+                  {
+                    "id": "423b5c01-1816-41d4-b358-200000000010",
+                    "name": "we change dataset name",
+                    "oClass": "991eb4b2-253c-4875-b708-8209fa5bfd51",
+                    "type": "CLOSED",
+                    "groups": [
+                      "AUTHENTICATED"
+                    ]
+                  }
+      responses:
+        "200":
+          description: No Content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupErrors'
+              examples:
+                deleteGroupReferencedByDashboard:
+                  summary: Delete group used by a dashboard
+                  description: When groups are deleted from a dataset, a list of groups is returned if they were used by a dashboard.
+                  value: |
+                    { "missingGroupsByEntity": 
+                      {
+                        "dataset_id": ["group1"],
+                        "dataset_id2": ["group1", "group2"]
+                      }
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+          content:
+            application/json:
+              examples:
+                changeType:
+                  summary: Update dataset with different type
+                  description: Occurs when you try to update a dataset with a different type
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "FORBIDDEN",
+                      "message": "The dataset's type is immutable"
+                    }
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - dataset_write
+    get:
+      tags:
+        - Dataset Controller
+      summary: Get all datasets
+      operationId: com.provoly.ref.dataset.DatasetController_getAll
+      responses:
+        "201":
+          description: Retrieve all datasets
+          content:
+            application/json:
+              examples:
+                getAllDatasets:
+                  summary: Get all datasets
+                  value: |
+                    [
+                      {
+                        "id": "618af062-d722-43d2-8e4d-cb65d07230ac",
+                        "name": "classification des sols",
+                        "oClass": "9d37e039-272b-463e-942e-6c6af0c2f440",
+                        "type": "CLOSED",
+                        "metadata": []
+                      }
+                    ]
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - dataset_read
+  /datasets/id/{id}:
+    get:
+      tags:
+        - Dataset Controller
+      operationId: com.provoly.ref.dataset.DatasetController_get
+      summary: Retrieve a dataset based on its identifier.
+      description: Also returns the metadata attached to the dataset, if any.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          $ref: '#/components/responses/datasetDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - dataset_read
+            - search
+    delete:
+      tags:
+        - Dataset Controller
+      summary: Delete a dataset based on its identifier
+      description: Deleting a dataset is not possible if dataset-version are associated with it
+      operationId: com.provoly.ref.dataset.DatasetController_delete
+      parameters:
+        - name: id
+          in: path
+          description: dataset UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              examples:
+                deleteDataset:
+                  summary: Delete dataset with dataset-version
+                  description: Occurs when you try to delete a dataset who owns dataset-version
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "BAD_REQUEST",
+                      "message": "You're not allowed to delete dataset {{datasetId}} because it owns one or more dataset version"
+                    }
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - dataset_write
+  /datasets/id/{id}/dataset-version:
+    get:
+      tags:
+        - Dataset Controller
+      summary: Retrieve the last active dataset version based on its dataset id
+      operationId: com.provoly.ref.dataset.DatasetController_getDatasetVersionByDatasetId
+      parameters:
+        - name: id
+          in: path
+          description: UUID of the dataset
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          $ref: '#/components/responses/datasetVersionDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - dataset_read
+  /datasets/id/{id}/dataset-versions:
+    get:
+      tags:
+        - Dataset Controller
+      summary: Retrieve all dataset versions by the identifier of its dataset
+      operationId: com.provoly.ref.dataset.DatasetController_getAllById
+      parameters:
+        - name: id
+          in: path
+          description: dataset UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          $ref: '#/components/responses/listdatasetVersionDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - search
+            - dataset_read
+            - datasource_read
+  /datasets/{id}/associations:
+    get:
+      tags:
+        - Dataset Controller
+      summary: Retrieve all usages of a dataset
+      operationId: com.provoly.ref.dataset.DatasetController_getAssociationsByDatasetId
+      parameters:
+        - name: id
+          in: path
+          description: UUID of the dataset
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/AssociationsDto'
+              examples:
+                attributeAssociations:
+                  summary: Attribute associations
+                  description: The parameter usedElsewhere in the response body is a boolean used to indicate if the attribute is used in a private object.
+                  value: |
+                    {
+                      "associations": [
+                            {
+                              "id": "2f021992-5fb0-42d3-9646-0affccb98101",
+                              "name": "Name du widget",
+                              "type": "WIDGET"
+                            },
+                            {
+                              "id": "2f021992-5fb0-42d3-9646-0affccb98111",
+                              "name": "Name of the namedquery",
+                              "type": "NAMED_QUERY"
+                            },
+                            {
+                              "id": "2f121992-5fb0-42d3-9646-0affccb98111",
+                              "name": "Name of the dashboard",
+                              "type": "DASHBOARD"
+                            }
+                      ],
+                      "usedElsewhere": false
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - dataset_read
+  /datasets/id/{datasetId}/metadata/id/{metadataDefId}:
+    put:
+      tags:
+        - Dataset Controller
+      operationId: com.provoly.ref.dataset.DatasetController_setMetadata
+      summary: Add metadata to a dataset
+      parameters:
+        - name: datasetId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: metadataDefId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetadataValueWriteDto'
+            examples:
+              add_metadata:
+                summary: Adding metadata to a dataset
+                value: |
+                  {
+                    "value": "22"
+                  }
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          $ref: '#/components/responses/wrongMetadataType'
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - dataset_write
+    delete:
+      tags:
+        - Dataset Controller
+      operationId: com.provoly.ref.dataset.DatasetController_deleteMetadata
+      summary: Delete metadata of a dataset
+      parameters:
+        - name: datasetId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: metadataDefId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - dataset_write
+  /datasets/class/{id}:
+    get:
+      tags:
+        - Dataset Controller
+      summary: Retrieve all datasets associated to a class
+      operationId: com.provoly.ref.dataset.DatasetController_getAllForClass
+      parameters:
+        - name: id
+          in: path
+          description: Class UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          $ref: '#/components/responses/datasetDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - class_read
+            - search
+  /datasets/name/{name}:
+    get:
+      tags:
+        - Dataset Controller
+      operationId: com.provoly.ref.dataset.DatasetController_getByName
+      summary: Retrieve a dataset based on its name
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          $ref: '#/components/responses/datasetDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              examples:
+                notFound:
+                  description: Occurs when you try to find a dataset with the wrong name
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "NOT_FOUND",
+                      "message": "Dataset {{datasetName}} doesn't exists"
+                    }
+      security:
+        - oidc:
+            - dataset_read
+  /datasets/name/{datasetName}/dataset-version:
+    get:
+      tags:
+        - Dataset Controller
+      summary: Retrieve the last active dataset version of a dataset by its name
+      operationId: com.provoly.ref.dataset.DatasetController_getDatasetVersionByDatasetName
+      parameters:
+        - name: datasetName
+          in: path
+          description: dataset name
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          $ref: '#/components/responses/datasetVersionDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              examples:
+                notFound:
+                  description: Occurs when you try to find a dataset version for a dataset that doesn't have any
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "NOT_FOUND",
+                      "message": "No dataset version available for dataset {{datasetName}}"
+                    }
+      security:
+        - oidc:
+            - dataset_read
+  /dataset-versions:
+    post:
+      tags:
+        - Dataset Version Controller
+      operationId: com.provoly.ref.dataset.DatasetVersionController_create
+      summary: Save a new dataset version
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatasetVersionDto'
+            examples:
+              inactive:
+                summary: Adding an inactive dataset version
+                value: |
+                  {
+                    "id": "b1a08d9d-4c38-4d43-90f3-25015537ebfd" ,
+                    "dataset": "423b5c01-1816-41d4-b358-200000000010",
+                    "oClass": "991eb4b2-253c-4875-b708-8209fa5bfd51",
+                    "lastModified": "2023-04-27T13:56:13.861018Z",
+                    "version": 3,
+                    "state": "INACTIVE",
+                    "withFile": false
+                  }
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                idSaved:
+                  summary: Create dataset version without unique id
+                  description: Occurs when you try to create a dataset version of a closed dataset with an id already saved
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "BAD_REQUEST",
+                      "message": "Dataset version {{datasetVersionId}} already exist."
+                    }
+                multipleVersionOnOpen:
+                  summary: Create dataset version on an open dataset
+                  description: Occurs when you try to create a second dataset version of an open dataset
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "BAD_REQUEST",
+                      "message": "Dataset {{datasetId}} can't have more than one version."
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                multipleOnClosedDataset:
+                  summary: Create dataset version on a closed dataset
+                  description: |
+                    Occurs when you try to create a new dataset version on a closed dataset. This can also happen if you try to import data and an import is in progress on this dataset.
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "CONFLICT",
+                      "message": "Can't override existing dataset {{datasetVersionId}} or have parallel imports"
+                    }
+      security:
+        - oidc:
+            - item_write
+    put:
+      tags:
+        - Dataset Version Controller
+      operationId: com.provoly.ref.dataset.DatasetVersionController_updateState
+      summary: Update the state of a dataset version
+      description: |
+        A dataset version has multiple states to indicate the level of availability of the data imported.
+        Each state can be modified to a specific set of other states. For example, if a dataset's state is `LOADING`,
+        it can only obtain the `INDEXING` or `ERROR` states.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatasetVersionDto'
+            examples:
+              updateDatasetVersion:
+                summary: Update dataset version
+                value: |
+                  {
+                    "id": "b1a08d9d-4c38-4d43-90f3-25015537ebfd" ,
+                    "dataset": "423b5c01-1816-41d4-b358-200000000010",
+                    "oClass": "991eb4b2-253c-4875-b708-8209fa5bfd51",
+                    "lastModified": "2023-04-27T13:56:13.861018Z",
+                    "version": 1,
+                    "state": "INACTIVE",
+                    "withFile": false
+                  }
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                incompatibleStates:
+                  summary: Wrong transition of state
+                  description: Occurs when you try to update a dataset version's state to a state it can't transition to
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "BAD_REQUEST",
+                      "message": "Dataset cannot transition from LOADING to ACTIVE"
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+          content:
+            application/json:
+              examples:
+                differentDatasetId:
+                  summary: Different dataset id
+                  description: Occurs when you try to update a dataset version's state with a different dataset as the one in the database
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "FORBIDDEN",
+                      "message": "Dataset versions are immutable"
+                    }
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                sameState:
+                  summary: Update state with the actual state
+                  description: Occurs when you try to update a dataset version's state with the same state it already is in
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "CONFLICT",
+                      "message": "Dataset {{datasetId}} is already in state: {{datasetState}}"
+                    }
+      security:
+        - oidc:
+            - item_write
+    get:
+      tags:
+        - Dataset Version Controller
+      summary: Retrieve all dataset versions
+      description: |
+        A dataset version is an instantiation of a dataset. It allows us to have coherent and versioned class data. 
+        The parameter hasWarnings in the response body is a boolean used to indicate if dataset-version import's generated some warnings.
+      operationId: com.provoly.ref.dataset.DatasetVersionController_getAll
+      responses:
+        "200":
+          $ref: '#/components/responses/listdatasetVersionDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - dataset_read
+  /dataset-versions/id/{id}:
+    get:
+      tags:
+        - Dataset Version Controller
+      operationId: com.provoly.ref.dataset.DatasetVersionController_get
+      summary: Retrieve a dataset version based on its identifier. It also returns its associated metadata.
+      parameters:
+        - name: id
+          in: path
+          description: dataset version UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          $ref: '#/components/responses/datasetVersionDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - dataset_read
+            - search
+    delete:
+      tags:
+        - Dataset Version Controller
+      operationId: com.provoly.ref.dataset.DatasetVersionController_delete
+      summary: Delete a dataset version based on its identifier
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "204":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetVersionDto'
+              examples:
+                deletingDataset:
+                  summary: Deleting dataset version
+                  description: Return the dataset version currently deleting, this is an asynchrone operation.
+                  value: |
+                    {
+                      "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                      "dataset": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                      "oClass": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                      "lastModified": "2022-03-10T16:15:50Z",
+                      "version": 1,
+                      "state": "DELETING",
+                      "withFile": false
+                    }
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                wrongState:
+                  summary: Delete a version dataset in the wrong state
+                  description: Occurs when you try to delete a dataset version in state INDEXING, LOADING, DELETING
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "BAD_REQUEST",
+                      "message": "Unable to delete dataset version {{dataset_version_id}} because it's {{current_state}}"
+                    }
+        "401":
+          description: Not Authorized
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - dataset_write
+  /dataset-versions/id/{datasetVersionId}/metadata/id/{metadataDefId}:
+    put:
+      tags:
+        - Dataset Version Controller
+      operationId: com.provoly.ref.dataset.DatasetVersionController_setMetadata
+      summary: Add metadata to a dataset version
+      parameters:
+        - name: datasetVersionId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: metadataDefId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetadataValueWriteDto'
+            examples:
+              default:
+                value: |
+                  {
+                    "value": "22"
+                  }
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          $ref: '#/components/responses/wrongMetadataType'
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - dataset_write
+    delete:
+      tags:
+        - Dataset Version Controller
+      operationId: com.provoly.ref.dataset.DatasetVersionController_deleteMetadata
+      summary: Delete the metadata related to a dataset version
+      parameters:
+        - name: datasetVersionId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: metadataDefId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              examples:
+                metadataNotAssigned:
+                  summary: Not assigned metadata
+                  description: Occurs when you try to delete a metadata not assigned to the dataset version
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "BAD_REQUEST",
+                      "message": "Metadata {{metadata_id}} is not assigned to DATASET_VERSION {{dataset_version_id}}"
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - dataset_write
+  /dataset-versions/id/{id}/activate:
+    post:
+      tags:
+        - Dataset Version Controller
+      operationId: com.provoly.ref.dataset.DatasetVersionController_activate
+      summary: Activate a dataset version based on its identifier
+      description: |
+        It also deactivates the previous one. 
+        It is only possible to have only one version of an active dataset.
+      parameters:
+        - name: id
+          in: path
+          description: dataset version UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                incompatibleStates:
+                  summary: Incompatible transition states
+                  description: Occurs when you try to activate a dataset version that is not ready to be activated
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "BAD_REQUEST",
+                      "message": "Dataset cannot transition from LOADING to ACTIVE"
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                alreadyActive:
+                  summary: Already active
+                  description: Occurs when you try to activate a dataset version that is already active
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "CONFLICT",
+                      "message": "Dataset {{datasetId}} is already in state: ACTIVE"
+                    }
+      security:
+        - oidc:
+            - dataset_read
+  /dataset-versions/id/{id}/deactivate:
+    post:
+      tags:
+        - Dataset Version Controller
+      operationId: com.provoly.ref.dataset.DatasetVersionController_deactivate
+      summary: Deactivate a dataset version based on its identifier
+      parameters:
+        - name: id
+          in: path
+          description: dataset version UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                incompatibleStates:
+                  summary: Incompatible transition states
+                  description: Occurs when you try to deactivate a dataset version that is not active
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "BAD_REQUEST",
+                      "message": "Dataset cannot transition from ERROR to INACTIVE"
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                alreadyInactive:
+                  summary: Already inactive
+                  description: Occurs when you try to deactivate a dataset version that is already inactive
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "CONFLICT",
+                      "message": "Dataset {{datasetId}} is already in state: INACTIVE"
+                    }
+
+      security:
+        - oidc:
+            - dataset_read
+  /dataset-versions/class/{classId}:
+    get:
+      tags:
+        - Dataset Version Controller
+      operationId: com.provoly.ref.dataset.DatasetVersionController_getAllForClass
+      summary: Retrieve all dataset versions related to the class contained in its dataset
+      parameters:
+        - name: classId
+          in: path
+          description: class UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          $ref: '#/components/responses/listdatasetVersionDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - search
+  /dataset-versions/id/{datasetVersionId}/previews:
+    get:
+      tags:
+        - Dataset Version Controller
+      operationId: com.provoly.ref.dataset.DatasetVersionController_getDatasetVersionPreviews
+      summary: Returns the details of errors and warnings for a dataset version
+      parameters:
+        - name: datasetVersionId
+          in: path
+          description: datasetVersion UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              examples:
+                datasetVersionPreviews:
+                  summary: Dataset version errors and warnings
+                  value: |
+                    [
+                      {
+                        "level": "ERROR",
+                        "messages": [
+                          {
+                            "level": "ERROR",
+                            "extractMessageCode": "NO_ATTRIBUTES",
+                            "type": null,
+                            "name": null,
+                            "recordId": null,
+                            "datasetVersionId": "aba17aa9-fe0f-4610-8f36-60a244e875bb"
+                          }
+                        ],
+                        "count": 1
+                      },
+                      {
+                        "level": "WARNING",
+                        "messages": [
+                          {
+                            "level": "WARNING",
+                            "extractMessageCode": "UNRECOGNIZED",
+                            "type": null,
+                            "name": "Geo Point",
+                            "recordId": null,
+                            "datasetVersionId": "ff8dc620-57b4-4132-8326-efb01daac5b9"
+                          },
+                          {
+                            "level": "WARNING",
+                            "extractMessageCode": "UNRECOGNIZED",
+                            "type": null,
+                            "name": "Geo Shape",
+                            "recordId": null,
+                            "datasetVersionId": "ff8dc620-57b4-4132-8326-efb01daac5b9"
+                          }
+                        ],
+                        "count": 2
+                      }
+                    ]
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - dataset_read
+  /metadata:
+    post:
+      tags:
+        - Metadata Def Controller
+      operationId: com.provoly.ref.metadata.MetadataDefController_addMetadata
+      summary: Save a new metadata definition
+      description: |
+        A metadata is used to add context to an entity. 
+        Metadata definitions must first be created before being used on an entity.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetadataDefDto'
+            examples:
+              addMetadataDef:
+                summary: Add a valid metadata definition
+                value: |
+                  {
+                     "id": "ba681f33-fe70-42f8-a277-05c607ba29cf",
+                     "name": "metadata_test",
+                     "type": "STRING"
+                  }
+              addInvliadMetadataDef:
+                summary: Add a metadata definition with invalid type
+                value: |
+                  {
+                     "id": "ba681f33-fe70-42f8-a277-05c607ba29cf",
+                     "name": "metadata_test",
+                     "type": "UNKNOWN"
+                  }
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                nameAlreadyExists:
+                  summary: Add metadata definition with a name that already exists
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "NAME_ALREADY_USED",
+                      "message": "Name {{metadata_def_name}} already exists"
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - metadata_item_ref_write
+    get:
+      tags:
+        - Metadata Def Controller
+      summary: Retrieve all metadata definitions
+      operationId: com.provoly.ref.metadata.MetadataDefController_getAll
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                uniqueItems: true
+                type: array
+                items:
+                  $ref: '#/components/schemas/MetadataDefDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - metadata_item_ref_read
+            - item_write
+            - dashboard_write
+            - dataset_write
+  /metadata/id/{metadataId}:
+    get:
+      tags:
+        - Metadata Def Controller
+      operationId: com.provoly.ref.metadata.MetadataDefController_getById
+      summary: Retrieve a metadata definition based on its identifier
+      parameters:
+        - name: metadataId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetadataDefDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - metadata_item_ref_read
+            - item_write
+            - search
+            - dashboard_read
+  /metadata/name/{metadataName}:
+    get:
+      tags:
+        - Metadata Def Controller
+      operationId: com.provoly.ref.metadata.MetadataDefController_getByName
+      summary: Retrieve a metadata based on its name
+      parameters:
+        - name: metadataName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetadataDefDto'
+        "404":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                notFound:
+                  summary: Not found
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "NOT_FOUND",
+                      "message": "Unknown metadata name : {{metadata_name}}"
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - metadata_item_ref_read
+            - item_write
+            - search
+            - datasource_read
+  /metadata/slug/{metadataSlug}:
+    get:
+      tags:
+        - Metadata Def Controller
+      operationId: com.provoly.ref.metadata.MetadataDefController_getBySlug
+      summary: Retrieve a metadata based on its slug
+      parameters:
+        - name: metadataSlug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetadataDefDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                notFound:
+                  summary: Not found
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "NOT_FOUND",
+                      "message": "Unknown metadata with slug : {{metadata_slug}}"
+                    }
+      security:
+        - oidc:
+            - metadata_item_ref_read
+            - item_write
+            - search
+            - datasource_read
+  /predicates:
+    post:
+      tags:
+        - Predicate Controller
+      summary: Save a new predicate
+      description: Predicates are used to define abac rules. They can refer to context variables.
+      operationId: com.provoly.ref.abac.predicate.PredicateController_addPredicate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PredicateDto'
+            examples:
+              default:
+                summary: Adding a predicate that use a context variable "defcon"
+                value: |
+                  {
+                    "id": "334c1229-61e7-4807-aeaa-edaf16ec2273",
+                    "name": "role_data-reader_defcon",
+                    "value": "user.hasRole('data-reader') && request.header('User-Agent').startsWith('Post') && var.defcom < 3"
+                  }
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - data_access_write
+    get:
+      tags:
+        - Predicate Controller
+      summary: Retrieve all defined predicates
+      operationId: com.provoly.ref.abac.predicate.PredicateController_getAllPredicates
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PredicateDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - data_access_read
+  /abac/context:
+    get:
+      tags:
+        - Metadata Context Controller
+      summary: Retrieve all defined context variables
+      description: |
+        Context variables are used in our predicates to give more context information. \
+        We treat it as metadata, and it is notably used as a condition of an ABAC rule, or its expression for example.
+      operationId: com.provoly.ref.abac.MetadataContextController_listContextVariables
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContextVariableDto'
+              examples:
+                default:
+                  summary: Get INTEGER metadata context variable
+                  value: |
+                    {
+                      "name": "string",
+                      "type": "INTEGER",
+                      "value": 2
+                    }
+
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          description: Not Found. In the case where no context variable has been previously set.
+      security:
+        - oidc:
+            - metadata_context_read
+            - search
+            - datasource_read
+    put:
+      tags:
+        - Metadata Context Controller
+      summary: Save a new context variable
+      operationId: com.provoly.ref.abac.MetadataContextController_addContextVariable
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContextVariableDto'
+            examples:
+              default:
+                summary: Addition of INTEGER metadata context variable
+                value: |
+                  {
+                    "name": "metadataContextVariable",
+                    "type": "INTEGER",
+                    "value": 3
+                  }
+              unauthorized:
+                summary: Unauthorized addition
+                description: Unauthorized addition of context metadata, in which the type passed in parameter is incorrect.
+                value: |
+                  {
+                    "name": "metadataError",
+                    "type": "INCORRECT_TYPE",
+                    "value": 3                  
+                  }
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "500":
+          description: Technical Error. Triggered when the type passed in parameter is incorrect.
+          content:
+            application/json:
+              examples:
+                badType:
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "TECHNICAL",
+                      "message": "Mismatch between type and value : {{type}}"
+                    }
+      security:
+        - oidc:
+            - metadata_context_write
+  /abac/context/{variableName}:
+    get:
+      tags:
+        - Metadata Context Controller
+      summary: Retrieve a context variable based on its name
+      operationId: com.provoly.ref.abac.MetadataContextController_getContextVariable
+      parameters:
+        - name: variableName
+          in: path
+          description: Variable name
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContextVariableDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - metadata_context_read
+    delete:
+      tags:
+        - Metadata Context Controller
+      summary: Delete a context variable based on its name
+      operationId: com.provoly.ref.abac.MetadataContextController_deleteContextVariable
+      parameters:
+        - name: variableName
+          in: path
+          description: name of the variable
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              examples:
+                usedInRule:
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "FORBIDDEN",
+                      "message": "this context is used in rule {{ruleId}}"
+                    }
+      security:
+        - oidc:
+            - metadata_context_write
+  /abac/rules:
+    get:
+      tags:
+        - Abac Controller
+      summary: Retrieve all ABAC rules
+      description: |
+        The ABAC (Attribute-Based Access Control) are rules and predicates.
+        They allow us to provide access to users based on who they are rather than what they do.
+      operationId: com.provoly.ref.abac.AbacController_getRules
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AbacRuleDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - data_access_read
+    post:
+      tags:
+        - Abac Controller
+      summary: Save a new ABAC rule
+      operationId: com.provoly.ref.abac.AbacController_addRule
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AbacRuleDto'
+            examples:
+              attributeAdd:
+                summary: Adding an ABAC rule of type attribute
+                value: |
+                  {
+                    "id": "077e4ac8-7499-4489-bd5f-ac37d2ca226d",
+                    "type": "ATTRIBUTE",
+                    "name": "Attribute example",
+                    "predicate": "077e4ac8-7499-4489-bd5f-ac37d2ca226e",
+                    "condition": {
+                      "type": "ATTRIBUTE",
+                      "attribute": "f897dc76-9c4a-4b7a-9797-fc577c0438e9",
+                      "operator": "EQUALS",
+                      "value": 1234567890
+                    }
+                  }
+              composedAdd:
+                summary: Adding a composed ABAC rule
+                value: |
+                  {
+                    "id": "7ffcea67-2335-429f-888a-59121f522144",
+                    "name": "MyRule",
+                    "type": "ATTRIBUTE",
+                    "predicate": "7ffcea67-2335-429f-888a-59121f522143",
+                    "condition": {
+                      "type": "OR",
+                      "composed": [
+                        {
+                          "type": "AND",
+                          "composed": [
+                            {
+                              "type": "ATTRIBUTE",
+                              "oClass": "411a19f5-9d00-4028-b4b6-4b04101f6316",
+                              "attribute": "9d82213c-db91-42db-8675-5f2e70ae2f05",
+                              "value": 202000010265
+                            },
+                            {
+                              "type": "ATTRIBUTE",
+                              "oClass": "411a19f5-9d00-4028-b4b6-4b04101f6316",
+                              "attribute": "dbf3917f-1af8-495e-94af-67d8315a7772",
+                              "value": 3
+                            }
+                          ]
+                        },
+                        {
+                          "type": "ATTRIBUTE",
+                          "oClass": "411a19f5-9d00-4028-b4b6-4b04101f6316",
+                          "attribute": "9d82213c-db91-42db-8675-5f2e70ae2f05",
+                          "value": 202000010265
+                        },
+                        {
+                          "type": "ATTRIBUTE",
+                          "oClass": "411a19f5-9d00-4028-b4b6-4b04101f6316",
+                          "attribute": "dbf3917f-1af8-495e-94af-67d8315a7772",
+                          "value": 3
+                        }
+                      ]
+                    }
+                  }
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                differentOClass:
+                  description: Different OClass in AND/OR condition
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "BAD_REQUEST",
+                      "message": "Attributes are not on same OClass"
+                    }
+                differentTypes:
+                  description: If the ABAC rule type is different from its condition type
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "BAD_REQUEST",
+                      "message": "RuleType ATTRIBUTE does not allowed Metadata condition"
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "501":
+          description: Unsupported Operation. In the case you try to add an ABAC rule with a condition we do not support.
+          content:
+            application/json:
+              examples:
+                unknownType:
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "NOT_IMPLEMENTED",
+                      "message": "Unknown condition type {{condition.type}}"
+                    }
+      security:
+        - oidc:
+            - data_access_write
+  /abac/rules/class/{oClassId}:
+    get:
+      tags:
+        - Abac Controller
+      summary: Retrieve all ABAC rules for a class based on its identifier
+      operationId: com.provoly.ref.abac.AbacController_getRulesFor
+      parameters:
+        - name: oClassId
+          in: path
+          description: Class UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: includeInactive
+          in: query
+          description: Boolean to retrieve inactive rules.
+          schema:
+            type: boolean
+          example: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AbacRuleDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - data_access_read
+            - search
+            - datasource_read
+  /abac/rules/id/{ruleId}:
+    get:
+      tags:
+        - Abac Controller
+      summary: Retrieve an ABAC rule based on its identifier
+      operationId: com.provoly.ref.abac.AbacController_getRule
+      parameters:
+        - name: ruleId
+          in: path
+          description: ABAC rule UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbacRuleDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - data_access_read
+  /abac/rules/{ruleId}:
+    delete:
+      tags:
+        - Abac Controller
+      summary: Delete an ABAC rule based on its identifier
+      operationId: com.provoly.ref.abac.AbacController_deleteRule
+      parameters:
+        - name: ruleId
+          in: path
+          description: UUID of the rule
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - data_access_write
+  /predicates/id/{id}:
+    get:
+      tags:
+        - Predicate Controller
+      summary: Retrieve a predicate based on its identifier
+      operationId: com.provoly.ref.abac.predicate.PredicateController_getPredicate
+      parameters:
+        - name: id
+          in: path
+          description: Predicate ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PredicateDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - data_access_read
+            - search
+            - datasource_read
+  /meta-provisioning:
+    get:
+      tags:
+        - Meta Provisioning Controller
+      summary: Retrieve the automatic metadata feeding rules for an item during its insertion
+      operationId: com.provoly.ref.metaProvisioning.MetaProvisioningController_getAll
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MetaProvisioningReaderDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - metadata_item_ref_read
+    post:
+      tags:
+        - Meta Provisioning Controller
+      summary: Save a new an automatic metadata feeding rule
+      operationId: com.provoly.ref.metaProvisioning.MetaProvisioningController_add
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetaProvisioningDto'
+            examples:
+              addFeedingRule:
+                value: |
+                  {
+                    "id": "cb8d2714-d1ce-11ec-9d64-0242ac120005",
+                    "name": "meta_date",
+                    "userProfile": "ba681f33-fe70-42f8-a277-05c607ba28cf",
+                    "metadata": "ba681f33-fe70-42f8-a277-05c607ba29cf"
+                  }
+
+      responses:
+        "201":
+          description: Created
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - metadata_item_ref_write
+  /meta-provisioning/id/{id}:
+    get:
+      tags:
+        - Meta Provisioning Controller
+      summary: Retrieve an automatic metadata feeding rule based on its identifier
+      operationId: com.provoly.ref.metaProvisioning.MetaProvisioningController_getById
+      parameters:
+        - name: id
+          in: path
+          description: UUID of the automatic metadata feeding rule to delete
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetaProvisioningReaderDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - metadata_item_ref_read
+    delete:
+      tags:
+        - Meta Provisioning Controller
+      summary: Delete an automatic feeding rule based on its identifier
+      operationId: com.provoly.ref.metaProvisioning.MetaProvisioningController_delete
+      parameters:
+        - name: id
+          in: path
+          description: UUID of the feeding rule
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - metadata_item_ref_write
+  /relation-types:
+    get:
+      tags:
+        - Relation Type Controller
+      summary: Retrieve all relation types
+      operationId: com.provoly.ref.relation.RelationTypeController_getAll
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RelationTypeDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - class_read
+            - search
+            - datasource_read
+    post:
+      tags:
+        - Relation Type Controller
+      summary: Save a new relation type
+      operationId: com.provoly.ref.relation.RelationTypeController_save
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RelationTypeDto'
+            examples:
+              nominal:
+                summary: Adding a relation type
+                value: |
+                  {
+                    "id": "2f021992-5fb0-42d3-9646-0affccb98105",
+                    "name": "est accidentée"
+                  }
+              incorrect:
+                summary: Adding a relation type with an incorrect id
+                value: |
+                  {
+                    "id": null,
+                    "name": "relation incorrecte"
+                  }
+      responses:
+        "201":
+          description: Created
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - class_write
+  /relation-types/id/{id}:
+    get:
+      tags:
+        - Relation Type Controller
+      summary: Retrieve a relation type based on its identifier
+      operationId: com.provoly.ref.relation.RelationTypeController_getById
+      parameters:
+        - name: id
+          in: path
+          description: Relation type UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RelationTypeDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - class_read
+    delete:
+      tags:
+        - Relation Type Controller
+      summary: Delete a relation type based on its identifier
+      operationId: com.provoly.ref.relation.RelationTypeController_delete
+      parameters:
+        - name: id
+          in: path
+          description: Relation type UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - class_write
+  /links:
+    get:
+      tags:
+        - Link Controller
+      summary: Retrieve all links
+      description: |
+        A link is a connections or relationships between attributes of classes. 
+        They allow us to represent associations between our objects.
+      operationId: com.provoly.ref.link.LinkController_getAll
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LinkDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - link_read
+    post:
+      tags:
+        - Link Controller
+      summary: Save a new link defining a relationship
+      operationId: com.provoly.ref.link.LinkController_saveLink
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LinkDto'
+            examples:
+              add_link:
+                summary: Adding a link defining a relationship
+                value: |
+                  {
+                      "id": "334c1229-61e7-4807-aeaa-edaf16ec2273",
+                      "relationType": "2f021992-5fb0-42d3-9646-0affccb98105",
+                      "attributeSource": "f897dc76-9c4a-4b7a-9797-fc577c0438e9",
+                      "attributeDestination": "7319d99b-5400-40e4-a0e5-f9fb46b3d2d6"
+                  }
+      responses:
+        "201":
+          description: Created
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                alreadyExists:
+                  summary: Link already exist
+                  description: Occurs when you try to create a link that already exists
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "CONFLICT",
+                      "message": "Link from {{attributeSource}} to {{attributeDestination}} already exists"
+                    }
+      security:
+        - oidc:
+            - link_write
+  /links/id/{id}:
+    get:
+      tags:
+        - Link Controller
+      summary: Retrieve a link based on its identifier
+      operationId: com.provoly.ref.link.LinkController_getById
+      parameters:
+        - name: id
+          in: path
+          description: Link UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - link_read
+            - update_relation_aggregate
+    delete:
+      tags:
+        - Link Controller
+      summary: delete a link based on its identifier
+      operationId: com.provoly.ref.link.LinkController_deleteLink
+      parameters:
+        - name: id
+          in: path
+          description: Link UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - link_write
+  /data-sources/id/{dataSourceId}:
+    get:
+      tags:
+        - Data Source Controller
+      summary: Retrieve a DataSource based on its identifier
+      description: |
+        DataSources are sources containing data that can be displayed in widgets. They include
+        named queries, dataset versions and datasets.
+      operationId: com.provoly.ref.datasource.DataSourceController_getDatasourceDetail
+      parameters:
+        - name: dataSourceId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSourceDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - search
+            - datasource_read
+  /users:
+    get:
+      tags:
+        - User Controller
+      operationId: com.provoly.ref.user.UserController_getAllUsers
+      summary: Retrieve all users
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - user_read
+  /users/me:
+    get:
+      tags:
+        - User Controller
+      operationId: com.provoly.ref.user.UserController_getUserInfo
+      summary: Retrieve the current user info
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserMeDto'
+  /users/id/{userId}/metadata:
+    get:
+      tags:
+        - User Controller
+      operationId: com.provoly.ref.user.UserController_getProfileValuesByUserId
+      summary: Retrieve all profile values of a user based on its identifier
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserProfileValueReadDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - metadata_user_read
+  /users/id/{userId}/metadata/id/{metadataDefId}:
+    put:
+      tags:
+        - User Controller
+      operationId: com.provoly.ref.user.UserController_addProfileForUser
+      summary: Save new profile values for a user based on its identifier
+      parameters:
+        - name: metadataDefId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: userId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetadataValueWriteDto'
+            examples:
+              default:
+                summary: Adding metadata for a user
+                value: |
+                  {
+                    "value": "some value"
+                  }
+              incorrect:
+                summary: Adding null metadata for a user
+                value: |
+                  {
+                    "value": null
+                  }
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - metadata_user_write
+    delete:
+      tags:
+        - User Controller
+      operationId: com.provoly.ref.user.UserController_deleteProfileForUser
+      summary: Delete all profile values of a user based on its identifier
+      parameters:
+        - name: metadataDefId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: userId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - metadata_user_write
+  /users/me/metadata:
+    get:
+      tags:
+        - User Controller
+      operationId: com.provoly.ref.user.UserController_getMines
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserProfileValueReadDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - metadata_user_ref_read
+            - metadata_user_read
+            - search
+  /users/metadata:
+    post:
+      tags:
+        - User Profile Controller
+      operationId: com.provoly.ref.user.metadata.UserProfileController_addUserProfile
+      summary: Save a new user profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfileDto'
+            examples:
+              default:
+                summary: Adding metadata (profile) to the current user.
+                value: |
+                  {
+                    "id": "ba681f33-fe70-42f8-a277-05c607ba28cf",
+                    "name": "example_profile",
+                    "type": "STRING"
+                  }
+              incorrect:
+                summary: Adding wrong metadata to the current user.
+                value: |
+                  {
+                    "id": null,
+                    "name": "error_profile",
+                    "type": "STRING"
+                  }
+      responses:
+        "201":
+          description: Created
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - metadata_user_ref_write
+    get:
+      tags:
+        - User Profile Controller
+      operationId: com.provoly.ref.user.metadata.UserProfileController_getAll
+      summary: Retrieve all user profiles
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserProfileDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - metadata_user_ref_read
+  /users/metadata/{metadataId}:
+    get:
+      tags:
+        - User Profile Controller
+      operationId: com.provoly.ref.user.metadata.UserProfileController_getDefById
+      summary: Retrieve a user profile based on its identifier
+      parameters:
+        - name: metadataId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - metadata_user_ref_read
+  /users/me/namedquery:
+    post:
+      tags:
+        - Named Query Controller
+      summary: Save a new named query
+      operationId: com.provoly.ref.user.NamedQueryController_saveNamedQuery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NamedQueryDto'
+            examples:
+              default:
+                summary: Adding a named query to the current user
+                value: |
+                  {
+                    "id": "09061554-298f-4f56-8cd2-51ccec998307",
+                    "name": "NamedQuery_example",
+                    "description": "Je suis une named query mono",
+                    "color": "rose",
+                    "favorite": false,
+                    "level": "PUBLIC",
+                    "request": {
+                      "type": "MONO_CLASS",
+                      "oClass": "193f3aad-0531-4fe5-b62c-141aa3cad454",
+                      "sort": {
+                        "attribute": "2792422e-f0a7-41b0-aa6b-51372f49c25a",
+                        "direction": "asc"
+                      }
+                    }
+                  }
+      responses:
+        "201":
+          description: Created
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - search
+    get:
+      tags:
+        - Named Query Controller
+      summary: Retrieve all named queries of the current user
+      operationId: com.provoly.ref.user.NamedQueryController_getMines
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NamedQueryDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - search
+  /users/me/namedquery/{id}:
+    get:
+      tags:
+        - Named Query Controller
+      summary: Retrieve a named query based on its identifier
+      description: |
+        This endpoint is used only by data-virt and allows executing a private namedQuery\
+        that we do not own if we know its ID.
+      operationId: com.provoly.ref.user.NamedQueryController_getNamedQueryById
+      parameters:
+        - name: id
+          in: path
+          description: Named query id
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NamedQueryDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - search
+            - data_virt
+    delete:
+      tags:
+        - Named Query Controller
+      summary: Delete a named query based on its identifier
+      description: Currently, only private named queries can be deleted
+      operationId: com.provoly.ref.user.NamedQueryController_deleteForMe
+      parameters:
+        - name: id
+          in: path
+          description: Named query id
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - search
+  /users/me/namedquery/{id}/execution:
+    post:
+      tags:
+        - Named Query Controller
+      summary: Save the execution time of a named query based on its identifier
+      operationId: com.provoly.ref.user.NamedQueryController_updateNamedQueryExecution
+      parameters:
+        - name: id
+          in: path
+          description: named query id
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "201":
+          description: Created
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - search
+  /users/me/namedquery/{id}/favorite:
+    post:
+      tags:
+        - Named Query Controller
+      summary: Set a named query as a favorite for the current user
+      operationId: com.provoly.ref.user.NamedQueryController_addToMineFavorite
+      parameters:
+        - name: id
+          in: path
+          description: Named query UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "201":
+          description: Created
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - search
+    delete:
+      tags:
+        - Named Query Controller
+      summary: Unset a named query as the favorite for the current user
+      operationId: com.provoly.ref.user.NamedQueryController_removeFromMineFavorite
+      parameters:
+        - name: id
+          in: path
+          description: Named query id
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - search
+  /users/me/namedquery/{id}/info:
+    get:
+      tags:
+        - Named Query Controller
+      summary: Retrieve all information of a named query based on its identifier
+      operationId: com.provoly.ref.user.NamedQueryController_getUserNamedQueryById
+      parameters:
+        - name: id
+          in: path
+          description: Named query id
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NamedQueryDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - search
+  /users/me/dashboards:
+    post:
+      tags:
+        - Dashboard Controller
+      summary: Save a new dashboard
+      description: |
+        Saves a dashboard for the current user. Groups can be added, otherwise the dashboard is private by default. If the group added is "ALL", then the dashboard can be consulted by anyone. If the group added is "AUTHENTICATED", then everyone will have the right to view the dashboard except the anonymous user.
+        A list of missing groups is returned when the list of groups added to the dashboard does not match those present in the datasets, and the dashboard is not created.
+      operationId: com.provoly.ref.dashboard.DashboardController_saveDashboard
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DashboardWriteDto'
+            examples:
+              default:
+                summary: Adding a dashboard
+                value: |
+                  {
+                    "id": "f4f77417-0f5b-4d8e-9bde-a8dcf799632f",
+                    "userId": "6ae39cfa-df83-47ca-ad97-d18341756a75",
+                    "name":"dashboard example",
+                    "group": ["admin","AUTHENTICATED"],
+                    "manifest":{
+                      "windows":[
+                        {
+                          "widgets":[
+                            {
+                              "type":"map",
+                              "layout":{
+                                "x":1,
+                                "y":1,
+                                "height":2,
+                                "width":3
+                              },
+                              "options":{
+                                "style":"osm-bright",
+                                "fit":true,
+                                "layers":[
+                                  {
+                                    "type":"bubble",
+                                    "locationAttribute":"location",
+                                    "intensityAttribute":"integer",
+                                    "radiusFactor":0.005
+                                  }
+                                ]
+                              },
+                              "resultSet":"rs1"
+                            },
+                            {
+                              "type":"map",
+                              "layout":{
+                                "x":4,
+                                "y":1,
+                                "height":2,
+                                "width":3
+                              },
+                              "options":{
+                                "style":"osm-bright",
+                                "fit":true,
+                                "layers":[
+                                  {
+                                    "type":"heatmap",
+                                    "locationAttribute":"location",
+                                    "intensityAttribute":"integer",
+                                    "intensityAsc":true
+                                  }
+                                ]
+                              },
+                              "resultSet":"rs1"
+                            },
+                            {
+                              "type":"table",
+                              "layout":{
+                                "x":1,
+                                "y":3,
+                                "height":5,
+                                "width":10
+                              },
+                              "options":{
+                  
+                              },
+                              "resultSet":"rs1"
+                            }
+                          ]
+                        },
+                        {
+                          "widgets":[
+                            {
+                              "type":"map",
+                              "layout":{
+                                "x":1,
+                                "y":1,
+                                "height":7,
+                                "width":6
+                              },
+                              "options":{
+                                "style":"osm-bright",
+                                "fit":true,
+                                "layers":[
+                                  {
+                                    "type":"heatmap",
+                                    "locationAttribute":"location",
+                                    "intensityAttribute":"integer",
+                                    "intensityAsc":true
+                                  }
+                                ]
+                              },
+                              "resultSet":"rs1"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    "metadata": [
+                        {
+                          "metadataDefId": "ba691f33-fe70-42f8-a277-05c607ba29cf",
+                          "value": "50"
+                        },
+                        {
+                          "metadataDefId": "ba691f33-fe70-42f8-a277-05c607ba28cf",
+                          "value": "30"
+                        }
+                      ],
+                    "groups": [
+                        "AUTHENTICATED"
+                      ]
+                  }
+      responses:
+        "201":
+          description: Dashboard created or updated. It return groups missing to match those in the datasource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupErrors'
+              examples:
+                default:
+                  value: |
+                    { "missingGroupsByEntity": 
+                      {
+                        "dataset_id": ["group1"],
+                        "dataset_id2": ["group1", "group2"]
+                      }
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - dashboard_write
+    get:
+      tags:
+        - Dashboard Controller
+      summary: Retrieve the dashboards of the current user
+      operationId: com.provoly.ref.dashboard.DashboardController_getAllForCurrentUser
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DashboardReadDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - dashboard_read
+  /users/me/dashboards/id/{dashboardId}/metadata/id/{metadataDefId}:
+    put:
+      tags:
+        - Dashboard Controller
+      operationId: com.provoly.ref.dashboard.DashboardController_setMetadata
+      summary: Save new metadata values for a dashboard based on its identifier
+      parameters:
+        - name: metadataDefId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: dashboardId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetadataValueWriteDto'
+            examples:
+              default:
+                summary: Adding metadata for a dashboard
+                value: |
+                  {
+                    "value": "some value"
+                  }
+              incorrect:
+                summary: Adding null metadata for a dashboard
+                value: |
+                  {
+                    "value": null
+                  }
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - dashboard_write
+    delete:
+      tags:
+        - Dashboard Controller
+      operationId: com.provoly.ref.dashboard.DashboardController_deleteMetadata
+      summary: Delete metadata values for a dashboard based on its identifier
+      parameters:
+        - name: metadataDefId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: dashboardId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - dashboard_write
+  /users/me/dashboards/id/{id}:
+    get:
+      tags:
+        - Dashboard Controller
+      summary: Retrieve a dashboard based on its identifier
+      operationId: com.provoly.ref.dashboard.DashboardController_getById
+      parameters:
+        - name: id
+          in: path
+          description: Dashboard UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardReadDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - dashboard_read
+    delete:
+      tags:
+        - Dashboard Controller
+      summary: Delete a dashboard based on its identifier
+      operationId: com.provoly.ref.dashboard.DashboardController_delete
+      parameters:
+        - name: id
+          in: path
+          description: Dashboard UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+          content:
+            application/json:
+              examples:
+                notGranted:
+                  summary: Not granted
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "FORBIDDEN",
+                      "message": "User is not granted to write DASHBOARD {{dashboard_id}}."
+                    }
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - dashboard_write
+  /users/me/dashboards/id/{id}/manifest:
+    get:
+      tags:
+        - Dashboard Controller
+      summary: Retrieve the manifest of the dashboard based on its identifier
+      operationId: com.provoly.ref.dashboard.DashboardController_getDashBoardManifest
+      parameters:
+        - name: id
+          in: path
+          description: Dashboard UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - dashboard_read
+  /widget/catalog:
+    post:
+      tags:
+        - Widget Controller
+      summary: Adding a JSON file describing a widget configuration
+      operationId: com.provoly.ref.widget.WidgetController_addWidget
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WidgetDto'
+            examples:
+              default:
+                summary: Adding a widget configuration
+                value: |
+                  {
+                     "id": "921e297f-4b21-4045-9896-5ec98910cae1",
+                     "name": "example_widget_config",
+                     "description": "this is a new widget configuration",
+                     "image": "",
+                     "content": "{\"type\":\"table\",\"layout\":{\"x\":1,\"y\":1,\"width\":1,\"height\":1},\"options\":{\"columns\":[{\"property\":\"date timestamp\",\"label\":\"date timestamp\",\"attributeId\":\"7d4ac9df-dfe7-430f-a4c5-4b8c2c77433c\"},{\"property\":\"identifiant\",\"label\":\"identifiant\",\"attributeId\":\"36d67f72-d5a8-4aed-ae47-dfedb95702cb\"}]},\"title\":\"issueBack115\",\"datasource\":[\"a1041310-3c83-4512-97be-9e665d20d0a5\"],\"header\":{\"datasourceSelection\":false,\"parameters\":true,\"window\":false,\"maximize\":false,\"addToCatalog\":false,\"delete\":false,\"changeSpot\":false},\"cover\":false}",
+                     "visibility": {
+                         "type": "PUBLIC",
+                         "users": null
+                     },
+                     "datasource": [
+                         "a1041310-3c83-4512-97be-9e665d20d0a5"
+                     ],
+                     "cover": false,
+                     "owner": true
+                  }
+              incorrect:
+                summary: Adding an incorrect widget configuration (null id and content)
+                value: |
+                  {
+                     "id": null,
+                     "name": "wrong_widget_config",
+                     "description": "this is an incorrect widget configuration",
+                     "image": "",
+                     "content": null,
+                     "visibility": {
+                         "type": "PUBLIC",
+                         "users": null
+                     },
+                     "datasource": [
+                         "a1041310-3c83-4512-97be-9e665d20d0a5"
+                     ],
+                     "cover": false,
+                     "owner": true
+                  }
+      responses:
+        "201":
+          description: Created
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - widget_catalog_write
+    get:
+      tags:
+        - Widget Controller
+      summary: Retrieve all saved widgets
+      operationId: com.provoly.ref.widget.WidgetController_getAll
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WidgetDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - widget_catalog_read
+  /widget/catalog/id/{id}:
+    get:
+      tags:
+        - Widget Controller
+      summary: Retrieve a widget configuration based on its identifier
+      operationId: com.provoly.ref.widget.WidgetController_getWidget
+      parameters:
+        - name: id
+          in: path
+          description: Widget UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WidgetDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - widget_catalog_read
+    delete:
+      tags:
+        - Widget Controller
+      summary: Delete a widget configuration based on its identifier
+      operationId: com.provoly.ref.widget.WidgetController_deleteWidget
+      parameters:
+        - name: id
+          in: path
+          description: Widget UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - widget_catalog_write
+  /types:
+    get:
+      tags:
+        - Type Controller
+      operationId: com.provoly.ref.model.TypeController_getAll
+      summary: Retrieve all types
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TypeDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - class_read
+  /groups:
+    post:
+      tags:
+        - Group Controller
+      operationId: com.provoly.ref.model.GroupController_saveGroup
+      summary: Add new group
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupWrite'
+            examples:
+              default:
+                summary: Add new group
+                value: |
+                  {
+                      "id": "6bc614e0-24a7-427d-bc6a-b65de4f3d2b0",
+                      "name": "test"
+                  }
+      responses:
+        "200":
+          description: Created
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - dashboard_write
+    get:
+      tags:
+        - Group Controller
+      operationId: com.provoly.ref.model.GroupController_getAll
+      summary: Retrieve all groups
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Group'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - dashboard_read
+  /notification:
+    post:
+      tags:
+        - Notification Controller
+      summary: Save a new notification to the associated users
+      operationId: com.provoly.ref.message.notification.NotificationController_addNotification
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationRequestDto'
+            examples:
+              default:
+                summary: Adding a notification to the associated users
+                value: |
+                  {
+                    "type": "notification",
+                    "id": "c5b4908f-c477-436b-b346-160803a82915",
+                    "notificationTextDto": {
+                      "code": "DASHBOARD_PUBLIC",
+                      "param": {
+                        "name": "presentationAdmin"
+                      },
+                      "link": null
+                    },
+                    "users": ["7b2c2947-d26d-41c8-8827-23b43b6ff5b3", "941cc554-b81d-4998-a65d-8f7861ab110d", "8c002d8a-a050-40e3-bf28-a6217bf8f6dc"]
+                  }
+      responses:
+        "201":
+          description: Created
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - notification_write
+  /notification/me:
+    delete:
+      tags:
+        - Notification Controller
+      summary: Delete all notifications related to the associated user
+      operationId: com.provoly.ref.message.notification.NotificationController_acknowledgeAllNotification
+      responses:
+        "204":
+          description: No Content
+  /notification/me/id/{id}:
+    delete:
+      tags:
+        - Notification Controller
+      summary: Remove a notification from its associated user
+      operationId: com.provoly.ref.message.notification.NotificationController_acknowledgeNotification
+      parameters:
+        - name: id
+          in: path
+          description: Notification UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "204":
+          description: No Content
+        "404":
+          $ref: '#/components/responses/notFoundException'
+components:
+  responses:
+    notFoundException:
+      description: Entity not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    wrongMetadataType:
+      description: Not Allowed
+      content:
+        application/json:
+          examples:
+            wrongMetadataType:
+              summary: Add metadata with unknown type
+              description: Occurs when you try to add metadata with a type not supported
+              value: |
+                {
+                  "application": "data-ref",
+                  "code": "FORBIDDEN",
+                  "message": "Metadata value should be of type : {{type}}"
+                }
+    datasetDetailsDto:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DatasetDetailsDto'
+          examples:
+            dataset:
+              summary: Get a dataset with metadata
+              value: |
+                {
+                  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "oClass": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "type": "OPEN",
+                  "name": "open dataset of my class",
+                  "metadata": [
+                    {
+                      "value": 2,
+                      "metadataDef": {
+                        "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                        "name": "metadata_name",
+                        "type": "INTEGER",
+                        "description": "description of metadata"
+                      }
+                    }
+                  ]
+                }
+    listdatasetVersionDetailsDto:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/DatasetVersionDetailsDto'
+          examples:
+            getAllDatasetVersion:
+              summary: Get list of dataset version disabled with warnings
+              description: Example of a disabled dataset version that has warnings.
+              value: |
+                [
+                  {
+                    "id": "b1a08d9d-4c38-4d43-90f3-25015537ebfd" ,
+                    "dataset": "423b5c01-1816-41d4-b358-200000000010",
+                    "oClass": "991eb4b2-253c-4875-b708-8209fa5bfd51",
+                    "lastModified": "2023-04-27T13:56:13.861018Z",
+                    "version": 1,
+                    "state": "INACTIVE",
+                    "withFile": false,
+                    "hasWarnings": true
+                  }
+                ]
+            datasetVersionWithMetadata:
+              summary: Get list of dataset version with metadata
+              description: Example of a dataset version with metadata
+              value: |
+                [
+                  {
+                    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "dataset": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "oClass": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "lastModified": "2022-03-10T16:15:50Z",
+                    "version": 0,
+                    "state": "LOADING",
+                    "withFile": true,
+                    "metadata": [
+                      {
+                        "value": 2,
+                        "metadataDef": {
+                          "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                          "name": "metadata_name",
+                          "type": "INTEGER",
+                          "description": "description of metadata",
+                          "slug": "string"
+                        }
+                      }
+                    ]
+                  }
+                ]
+    datasetVersionDetailsDto:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DatasetVersionDetailsDto'
+          examples:
+            getAllDatasetVersion:
+              summary: Get dataset version with warnings
+              description: Example of a dataset version that has warnings.
+              value: |
+                {
+                  "id": "b1a08d9d-4c38-4d43-90f3-25015537ebfd" ,
+                  "dataset": "423b5c01-1816-41d4-b358-200000000010",
+                  "oClass": "991eb4b2-253c-4875-b708-8209fa5bfd51",
+                  "lastModified": "2023-04-27T13:56:13.861018Z",
+                  "version": 1,
+                  "state": "ACTIVE",
+                  "withFile": false,
+                  "hasWarnings": true
+                }
+            datasetVersionWithMetadata:
+              summary: Get dataset version with metadata
+              description: Example of a dataset version with metadata
+              value: |
+                {
+                  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "dataset": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "oClass": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "lastModified": "2022-03-10T16:15:50Z",
+                  "version": 2,
+                  "state": "ACTIVE",
+                  "withFile": true,
+                  "metadata": [
+                    {
+                      "value": 2,
+                      "metadataDef": {
+                        "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                        "name": "metadata_name",
+                        "type": "INTEGER",
+                        "description": "description of metadata",
+                        "slug": "string"
+                      }
+                    }
+                  ]
+                }
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          example: 404
+        message:
+          type: string
+          example: "Entity : ac2c1a7f-0694-4f03-bb00-d349adeecd3d inexistant."
+      required:
+        - code
+        - message
+    AbacRuleDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          example: "my rule"
+        description:
+          type: string
+          example: "description of my rule"
+        active:
+          type: boolean
+          example: true
+          description: If abac rule is not active, then it will not be taken into account for restriction processes.
+        predicate:
+          $ref: '#/components/schemas/UUID'
+        type:
+          $ref: '#/components/schemas/AbacRuleType'
+        condition:
+          $ref: '#/components/schemas/ConditionDto'
+    AbacRuleType:
+      enum:
+        - METADATA
+        - ATTRIBUTE
+      type: string
+    Group:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          example: "ALL"
+        system:
+          type: boolean
+          example: false
+    GroupWrite:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          example: "ALL"
+    AttributeDefDetailsDto:
+      type: object
+      properties:
+        oclass:
+          $ref: '#/components/schemas/UUID'
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          example: "Attribute name"
+        technicalName:
+          type: string
+          example: "Technical name"
+        slug:
+          type: string
+          example: "12390_attribute_name"
+        multiValued:
+          type: boolean
+          example: false
+        field:
+          $ref: '#/components/schemas/FieldDto'
+    AttributeDefDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          example: "Attribute name"
+        technicalName:
+          type: string
+          example: "Technical name"
+        field:
+          $ref: '#/components/schemas/UUID'
+        category:
+          $ref: '#/components/schemas/UUID'
+        multiValued:
+          type: boolean
+          example: false
+        slug:
+          type: string
+          example: "12390_attribute_name"
+    CategoryDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          example: "category_name"
+    AssociationsDto:
+      type: object
+      properties:
+        associations:
+          $ref: '#/components/schemas/AssociationDto'
+        usedElsewhere:
+          type: boolean
+          default: false
+    AssociationDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          example: "oclass name"
+          description: Name of the associated entity
+        type:
+          enum:
+            - ABAC
+            - LINK
+            - NAMED_QUERY
+            - DATASET
+            - OCLASS
+            - DASHBOARD
+            - WIDGET
+          example: OCLASS
+    ConditionDto:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ConditionType'
+    ConditionType:
+      enum:
+        - "TRUE"
+        - OR
+        - AND
+        - ATTRIBUTE
+        - METADATA
+      type: string
+    ContextVariableDto:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/VariableTypeDto'
+        value:
+          type: object
+    CountDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        count:
+          format: int32
+          type: integer
+    CustomClass:
+      type: object
+      properties:
+        domain:
+          maxLength: 30
+          minLength: 1
+          type: string
+        oClass:
+          $ref: '#/components/schemas/UUID'
+        content:
+          maxLength: 100000
+          type: string
+    DashboardReadDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          example: "Flood risk in France"
+        image:
+          type: string
+        description:
+          type: string
+          example: ""
+        cover:
+          type: boolean
+          example: false
+        creationDate:
+          $ref: '#/components/schemas/Instant'
+        modificationDate:
+          $ref: '#/components/schemas/Instant'
+        isDefault:
+          type: boolean
+          description: Displays this dashboard on the home page for current user
+        manifestUrl:
+          format: uri
+          type: string
+        owner:
+          type: boolean
+          example: true
+          description: Determines whether this dashboard belongs to the current user
+        datasource:
+          type: array
+          items:
+            $ref: '#/components/schemas/UUID'
+        readOnlyMetadata:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetadataValueReadDto'
+        metadata:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetadataValueReadDto'
+        groups:
+          type: array
+          items:
+            type: string
+    DashboardWriteDto:
+      type: object
+      properties:
+        groups:
+          type: array
+          items:
+            type: string
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          example: "Flood risk in France"
+        image:
+          type: string
+        description:
+          type: string
+          example: ""
+        cover:
+          type: boolean
+          example: false
+        manifest:
+          type: object
+          additionalProperties:
+            type: object
+        datasource:
+          type: array
+          items:
+            $ref: '#/components/schemas/UUID'
+        metadata:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetadataValueWriteDto'
+    DataSourceDetailsDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        type:
+          $ref: '#/components/schemas/DataSourceType'
+        oClass:
+          $ref: '#/components/schemas/UUID'
+    DataSourceType:
+      enum:
+        - SEARCH
+        - DATASET_VERSION
+        - DATASET
+      type: string
+    DatasetDetailsDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          example: "my dataset"
+        oClass:
+          $ref: '#/components/schemas/UUID'
+        type:
+          $ref: '#/components/schemas/DatasetType'
+        metadata:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetadataValueReadDto'
+        groups:
+          type: array
+          items:
+            type: string
+          example: [ "first_group", "second_group" ]
+        description:
+          type: string
+          example: "my description"
+        owner:
+          type: boolean
+          example: false
+        slug:
+          type: string
+    DatasetDto:
+      type: object
+      required:
+        - id
+        - name
+        - oClass
+        - type
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          example: "my dataset"
+        oClass:
+          $ref: '#/components/schemas/UUID'
+        type:
+          $ref: '#/components/schemas/DatasetType'
+        description:
+          type: string
+          example: "my description"
+        metadata:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetadataValueWriteDto'
+        groups:
+          type: array
+          items:
+            type: string
+          example: ["first_group", "second_group"]
+    DatasetState:
+      enum:
+        - LOADING
+        - INDEXING
+        - ACTIVE
+        - ERROR
+        - INACTIVE
+      type: string
+      example: ACTIVE
+    DatasetType:
+      enum:
+        - OPEN
+        - CLOSED
+        - MODIFIABLE
+      type: string
+      example: CLOSED
+    DatasetVersionDetailsDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        dataset:
+          $ref: '#/components/schemas/UUID'
+        oClass:
+          $ref: '#/components/schemas/UUID'
+        lastModified:
+          $ref: '#/components/schemas/Instant'
+        version:
+          format: int32
+          type: integer
+          example: 2
+        state:
+          $ref: '#/components/schemas/DatasetState'
+        withFile:
+          type: boolean
+          example: false
+        metadata:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetadataValueReadDto'
+        hasWarnings:
+          type: boolean
+          example: false
+    DatasetVersionDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        dataset:
+          $ref: '#/components/schemas/UUID'
+        oClass:
+          $ref: '#/components/schemas/UUID'
+        lastModified:
+          $ref: '#/components/schemas/Instant'
+        version:
+          format: int32
+          type: integer
+        state:
+          $ref: '#/components/schemas/DatasetState'
+        withFile:
+          type: boolean
+          example: false
+    FieldDto:
+      type: object
+      required:
+        - id
+        - name
+        - type
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          example: "my field"
+        type:
+          $ref: '#/components/schemas/Type'
+        slug:
+          type: string
+          example: "73981_my_field"
+        crs:
+          type: string
+          example: "EPSG:1233"
+          default: "EPSG:4326"
+          description: "Required only for Geo field. Should be a valid CRS"
+    FullSearchConditionDto:
+      type: object
+      properties:
+        value:
+          type: string
+    GroupErrors:
+      type : object
+      additionalProperties:
+        description: missing group list
+        example: ["admin"]
+        type: array
+        items:
+          type: string
+    Instant:
+      format: date-time
+      type: string
+      example: 2022-03-10T16:15:50Z
+    LinkDetailsDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        relationType:
+          $ref: '#/components/schemas/RelationTypeDto'
+        attributeSource:
+          $ref: '#/components/schemas/AttributeDefDetailsDto'
+        attributeDestination:
+          $ref: '#/components/schemas/AttributeDefDetailsDto'
+    LinkDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        relationType:
+          $ref: '#/components/schemas/UUID'
+        attributeSource:
+          $ref: '#/components/schemas/UUID'
+        attributeDestination:
+          $ref: '#/components/schemas/UUID'
+    MetaProvisioningDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/UUID'
+        userProfile:
+          $ref: '#/components/schemas/UUID'
+    MetaProvisioningReaderDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/MetadataDefDto'
+        userProfile:
+          $ref: '#/components/schemas/UserProfileDto'
+    MetadataDefDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          example: "my metadata definition"
+        type:
+          $ref: '#/components/schemas/VariableTypeDto'
+        description:
+          type: string
+          example: "metadata definition description"
+        allowedValues:
+          type: array
+          items:
+            type: string
+        slug:
+          type: string
+          example: "87280_my_metadata_definition"
+        readOnly:
+          type: boolean
+        system:
+          type: boolean
+    MetadataValueReadDto:
+      type: object
+      properties:
+        value:
+          type: string
+          example: "my_value"
+        metadataDef:
+          $ref: '#/components/schemas/MetadataDefDto'
+    MetadataValueWriteDto:
+      type: object
+      properties:
+        value:
+          type: string
+        metadataDefId:
+          $ref: '#/components/schemas/UUID'
+    NamedQueryDetailsDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          example: "Accidents 2019-2022"
+        description:
+          type: string
+          example: "Return all accidents between 2019 and 2022 in France"
+        request:
+          $ref: '#/components/schemas/SearchRequestDto'
+        favorite:
+          type: boolean
+        color:
+          type: string
+        visibility:
+          $ref: '#/components/schemas/VisibilityDto'
+        lastExecutionDate:
+          $ref: '#/components/schemas/Instant'
+        owner:
+          type: boolean
+    NamedQueryDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+        description:
+          type: string
+        request:
+          $ref: '#/components/schemas/SearchRequestDto'
+        favorite:
+          type: boolean
+        color:
+          type: string
+        visibility:
+          $ref: '#/components/schemas/VisibilityDto'
+    NotificationMessageCode:
+      enum:
+        - DASHBOARD_PRIVATE
+        - DASHBOARD_PUBLIC
+        - DASHBOARD_DELETED
+      type: string
+    NotificationRequestDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        users:
+          type: array
+          items:
+            format: uuid
+            pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+            type: string
+        notificationTextDto:
+          $ref: '#/components/schemas/NotificationTextDto'
+        link:
+          type: string
+    NotificationTextDto:
+      type: object
+      properties:
+        code:
+          $ref: '#/components/schemas/NotificationMessageCode'
+        param:
+          type: object
+          additionalProperties:
+            type: string
+    OClassDetailsDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        slug:
+          type: string
+        name:
+          type: string
+        icon:
+          type: string
+        attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttributeDefDetailsDto'
+        storage:
+          $ref: '#/components/schemas/Storage'
+        metadata:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetadataValueReadDto'
+    Storage:
+      enum:
+        - ELASTIC
+        - POSTGIS
+        - KUZZLE
+      type: string
+      example: ELASTIC
+    OClassReadDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+        icon:
+          type: string
+        attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttributeDefDto'
+        slug:
+          type: string
+        metadata:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetadataValueReadDto'
+    OClassWriteDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+        icon:
+          type: string
+        attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttributeDefDto'
+        slug:
+          type: string
+        metadata:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetadataValueWriteDto'
+    PredicateDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+        value:
+          type: string
+    RelationTypeDetailsDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+        slug:
+          type: string
+        nbRelation:
+          format: int32
+          type: integer
+        nbLink:
+          format: int32
+          type: integer
+        deletable:
+          type: boolean
+        modificationDate:
+          $ref: '#/components/schemas/Instant'
+    RelationTypeDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+        slug:
+          type: string
+    SearchRequestDto:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/SearchRequestType'
+        fullSearch:
+          $ref: '#/components/schemas/FullSearchConditionDto'
+    SearchRequestType:
+      enum:
+        - MONO_CLASS
+        - MULTI_CLASS
+      type: string
+    Type:
+      enum:
+        - string
+        - keyword
+        - integer
+        - long
+        - decimal
+        - raw
+        - instant
+        - Point
+        - MultiPoint
+        - LineString
+        - MultiLineString
+        - Polygon
+        - MultiPolygon
+      type: string
+      example: "keyword"
+    TypeCategory:
+      enum:
+        - STRING
+        - DATE
+        - NUMERIC
+        - GEO
+      type: string
+    TypeDto:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/Type'
+        category:
+          $ref: '#/components/schemas/TypeCategory'
+    UUID:
+      format: uuid
+      pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+      type: string
+    UserDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        familyName:
+          type: string
+          example: "ThePower"
+        name:
+          type: string
+          example: "Agathe"
+        email:
+          type: string
+          example: "agathe.thepower@email.com"
+    UserMeDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        familyName:
+          type: string
+          example: "ThePower"
+        name:
+          type: string
+          example: "Agathe"
+        email:
+          type: string
+          example: "agathe.thepower@email.com"
+        roles:
+          type: array
+          items:
+            type: string
+          example: [ "default-roles-provoly","job_instance_read" ]
+        groups:
+          type: array
+          items:
+            type: string
+          example: ["first_group", "second_group"]
+        isAnonymous:
+          type: boolean
+          default: false
+    UserProfileDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          example: "defcon"
+        type:
+          $ref: '#/components/schemas/VariableTypeDto'
+        description:
+          type: string
+          example: "The defense readiness condition (DEFCON) is an alert state used by the United States Armed Forces."
+        allowedValues:
+          type: array
+          items:
+            type: string
+          example: "[]"
+        slug:
+          type: string
+          example: "10928_defcon"
+    UserProfileValueReadDto:
+      type: object
+      properties:
+        value:
+          type: string
+          example: "level 1"
+        userProfile:
+          $ref: '#/components/schemas/UserProfileDto'
+    VariableTypeDto:
+      enum:
+        - INTEGER
+        - STRING
+        - DOUBLE
+        - DATE
+        - UUID
+        - LIST
+      type: string
+    Version:
+      type: object
+      properties:
+        applicationVersion:
+          type: string
+        chartVersion:
+          type: string
+    VisibilityDto:
+      type: object
+      properties:
+        type:
+          type: string
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/UUID'
+    WidgetDetailsDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          example: "Flood/submergence risk"
+        description:
+          type: string
+          example: "widget displaying a map showing the various risks of submersion and flooding."
+        image:
+          type: string
+        content:
+          type: string
+        visibility:
+          $ref: '#/components/schemas/VisibilityDto'
+        datasource:
+          type: array
+          items:
+            $ref: '#/components/schemas/UUID'
+        cover:
+          type: boolean
+          description: Determine whether the image should take up the whole widget or not
+        owner:
+          type: boolean
+        creationDate:
+          $ref: '#/components/schemas/Instant'
+        modificationDate:
+          $ref: '#/components/schemas/Instant'
+    WidgetDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+        description:
+          type: string
+        image:
+          type: string
+        content:
+          type: string
+        visibility:
+          $ref: '#/components/schemas/VisibilityDto'
+        datasource:
+          type: array
+          items:
+            format: uuid
+            pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+            type: string
+        cover:
+          type: boolean
+  securitySchemes:
+    oidc:
+      type: openIdConnect
+      description: Authentication
+      openIdConnectUrl: https://auth/realms/provoly/.well-known/openid-configuration

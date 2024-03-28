@@ -1,0 +1,2704 @@
+---
+openapi: 3.0.3
+info:
+  title: Virtualize API
+  description: |
+    \"Moving`\" data access, Virtualizes data access to underlying persistence engines.
+  version: 0.9.0
+servers:
+  - url: http://data-virt.provoly:8080
+    description: Auto generated value
+paths:
+  /about/version:
+    get:
+      summary: Return current version of data virt
+      tags:
+        - Version Controller
+      operationId: com.provoly.version.VersionController_getVersion
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
+              examples:
+                nominal:
+                  summary: Nominal response
+                  value: |
+                    {
+                      "applicationVersion": "0.4.8",
+                      "chartVersion": "0.4.8"
+                    }
+  /data-sources/id/{dataSourceId}:
+    get:
+      summary: Proxy for getting dataset, dataset version or a named query from its id.
+      tags:
+        - Data Source Controller
+      operationId: com.provoly.virt.datasource.DataSourceController_getDataSourceDetail
+      parameters:
+        - name: dataSourceId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSourceDetailsDto'
+              examples:
+                datasetVersion:
+                  summary: Get dataset version
+                  value: |
+                    {
+                      "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                      "type": "DATASET_VERSION",
+                      "oClass": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                    }
+                namedQuery:
+                  summary: Get named query
+                  value: |
+                    {
+                      "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                      "type": "SEARCH",
+                      "oClass": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                    }
+                dataset:
+                  summary: Get dataset
+                  value: |
+                    {
+                      "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                      "type": "DATASET",
+                      "oClass": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                    }
+
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - search
+            - datasource_read
+  /data-sources/id/{dataSourceId}/items:
+    get:
+      summary: Proxy for getting items from dataset, dataset version or named query.
+      description: |
+        Get 200 items from data source.
+        It's possible to filter, and set more than one filter in query parameters.
+      tags:
+        - Data Source Controller
+      operationId: com.provoly.virt.datasource.DataSourceController_getItems
+      parameters:
+        - name: dataSourceId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/filterDto'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sortString'
+        - $ref: '#/components/parameters/excludeGeo'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemsSearchResultDto'
+              examples:
+                itemSearchResult:
+                  summary: Item search result
+                  value: |
+                    {
+                      "items": {
+                        "oclass_id_1": [
+                          {
+                            "oClass": "oclass_id_1",
+                            "id": "dataset_version_id_1@item_id_1",
+                            "metadata": {
+                              "_insertion_date": "2023-06-27T07:14:00.228606022",
+                              "datasetdef_id": "dataset_id_1",
+                              "_dataset_id": "dataset_version_id_1",
+                              "_item_id": "dataset_version_id_1@item_id_1",
+                              "_class": "oclass_id_1"
+                            },
+                            "attributes": {
+                              "Classification": {
+                                "value": "Conifères",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              },
+                              "Pourcentage surface": {
+                                "value": "6.82",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              },
+                              "Année": {
+                                "value": "2020",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              }
+                            },
+                            "datasetId": "dataset_version_id_1",
+                            "itemId": "item_id_1"
+                          },
+                          {
+                            "oClass": "oclass_id_1",
+                            "id": "dataset_version_id_1@item_id_1",
+                            "metadata": {
+                              "_insertion_date": "2023-06-27T07:14:00.228606022",
+                              "datasetdef_id": "dataset_id_1",
+                              "_dataset_id": "dataset_version_id_1",
+                              "_item_id": "dataset_version_id_1@item_id_1",
+                              "_class": "oclass_id_1"
+                            },
+                            "attributes": {
+                              "Classification": {
+                                "value": "Conifères",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              },
+                              "Pourcentage surface": {
+                                "value": "6.66",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              },
+                              "Année": {
+                                "value": "2021",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              }
+                            },
+                            "datasetId": "dataset_version_id_1",
+                            "itemId": "item_id_1"
+                          }
+                        ]
+                      },
+                      "relations": [],
+                      "count": {
+                        "oclass_id_1": {
+                          "count": 115,
+                          "accurate": true
+                        }
+                      },
+                      "searchAfter": null
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - search
+            - datasource_read
+    post:
+      summary: Proxy for getting items from dataset, dataset version or named query.
+      description: |
+        Get 200 items from data source.
+        
+        It is possible to search on one or more classes.
+        On Mono class search, it returns items from all active datasets. It's possible to specify
+        dataset versions ids. 200 items are returned. This limit can be adjusted,
+        but cannot exceed 1000. Items can be sorted. Works only with a Mono Class search. If a sort is
+        set, then the next page of results can be retrieved by specifying the \"searchAfter\" 
+        value of the first search result.
+        This property has a ttl: once the time has elapsed, you'll have to restart the search from the beginning.
+        It's also possible to add one or more filters in query parameters and sort your results.
+      tags:
+        - Data Source Controller
+      operationId: com.provoly.virt.datasource.DataSourceController_getItemsSearch
+      parameters:
+        - name: dataSourceId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/filterDto'
+        - $ref: '#/components/parameters/sortString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                excludeGeo:
+                  $ref: '#/components/parameters/excludeGeo'
+                type:
+                  $ref: '#/components/schemas/SearchRequestType'
+                fullSearch:
+                  $ref: '#/components/schemas/FullSearchConditionDto'
+              oneOf:
+                - $ref: '#/components/schemas/MonoClassRequestDto'
+                - $ref: '#/components/schemas/MultiClassRequestDto'
+            examples:
+              monoWithoutCondition:
+                summary: Mono request without condition
+                description: Returns items from oclass oclass_id_1.
+                value: |
+                  {
+                      "type":"MONO_CLASS",
+                      "oClass": "oclass_id_1"
+                  }
+              monoWithDatasetVersions:
+                summary: Mono request with datasetVersionIds
+                description: Returns items from oclass oclass_id_1 only in dataset_version_id
+                value: |
+                  {
+                      "type":"MONO_CLASS",
+                      "oClass": "oclass_id_1",
+                      "datasetVersionIds": ["dataset_version_id"]
+                  }
+              monoSimpleCondition:
+                summary: Mono request with condition
+                description: |
+                  Returns items from oclass 
+                  oclass_id_1 that match attribute_id_1 condition.
+                value: |
+                  {
+                    "type": "MONO_CLASS",
+                    "oClass": "oclass_id_1",
+                    "condition": {
+                      "type": "ATTRIBUTE",
+                      "attribute": "attribute_id_1",
+                      "operator": "EQUALS",
+                      "value": "Avant"
+                    }
+                  }
+              monoSimpleConditionWithSearchAfter:
+                summary: Mono request with condition and searchAfter
+                description: |
+                  Returns items from oclass 
+                  oclass_id_1 that match attribute_id_1 condition.
+                value: |
+                  {
+                    "type": "MONO_CLASS",
+                    "oClass": "oclass_id_1",
+                    "condition": {
+                      "type": "ATTRIBUTE",
+                      "attribute": "attribute_id_1",
+                      "operator": "EQUALS",
+                      "value": "Avant"
+                    },
+                     "searchAfter":"search_after_value"
+                  }
+              monoOrComposedCondition:
+                summary: Mono request with composed condition
+                description: |
+                  Returns items from oclass 
+                  oclass_id_1 that match attribute_id_1 OR attribute_id_2 conditions.
+                value: |
+                  {
+                    "type": "MONO_CLASS",
+                    "oClass": "oclass_id_1",
+                    "condition": {
+                      "type": "OR",
+                      "composed": [
+                        {
+                          "type": "ATTRIBUTE",
+                          "attribute": "attribute_id_1",
+                          "operator": "INSIDE",
+                          "value": 2020,
+                          "upperValue" : 2023
+                        },
+                        {
+                          "type": "ATTRIBUTE",
+                          "attribute": "attribute_id_2",
+                          "operator": "GREATER_THAN",
+                          "value": "2020"
+                        }
+                      ]
+                    }
+                  }
+              multiWithFieldsAndClass:
+                summary: Multi request with field condition
+                description: |
+                  Returns items from oclasses 
+                  oclass_id_1 and oclass_id_2 that match field_id_1 AND field_id_2 condition. 
+                  Default operator is EQUALS.
+                value: |
+                  {
+                    "type": "MULTI_CLASS",
+                    "multiType": "AND",
+                    "oClasses": [ "oclass_id_1", "oclass_id_2"],
+                    "fields": [
+                      {
+                        "field": "field_id_1",
+                        "value": "2020"
+                      },
+                      {
+                        "field": "field_id_2",
+                        "value": "2022"
+                      }
+                    ]
+                  }
+              multiWithFieldsAllClass:
+                summary: Multi request with field condition on all class
+                description: |
+                  Returns items from all oclasses that match field_id_1 OR field_id_2 condition. 
+                  Default operator is EQUALS.
+                value: |
+                  {
+                   "type": "MULTI_CLASS",
+                   "multiType": "OR",
+                   "oClasses": [],
+                   "fields": [
+                     {
+                       "field": "field_id_1",
+                       "value": "2020"
+                     },
+                     {
+                       "field": "field_id_2",
+                       "value": "2022"
+                     }
+                   ]
+                  }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemsSearchResultDto'
+              examples:
+                itemSearchResult:
+                  summary: Item search result
+                  value: |
+                    {
+                      "items": {
+                        "oclass_id_1": [
+                          {
+                            "oClass": "oclass_id_1",
+                            "id": "dataset_version_id_1@item_id_1",
+                            "metadata": {
+                              "_insertion_date": "2023-06-27T07:14:00.228606022",
+                              "datasetdef_id": "dataset_id_1",
+                              "_dataset_id": "dataset_version_id_1",
+                              "_item_id": "dataset_version_id_1@item_id_1",
+                              "_class": "oclass_id_1"
+                            },
+                            "attributes": {
+                              "Classification": {
+                                "value": "Conifères",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              },
+                              "Pourcentage surface": {
+                                "value": "6.82",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              },
+                              "Année": {
+                                "value": "2020",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              }
+                            },
+                            "datasetId": "dataset_version_id_1",
+                            "itemId": "item_id_1"
+                          },
+                          {
+                            "oClass": "oclass_id_1",
+                            "id": "dataset_version_id_1@item_id_1",
+                            "metadata": {
+                              "_insertion_date": "2023-06-27T07:14:00.228606022",
+                              "datasetdef_id": "dataset_id_1",
+                              "_dataset_id": "dataset_version_id_1",
+                              "_item_id": "dataset_version_id_1@item_id_1",
+                              "_class": "oclass_id_1"
+                            },
+                            "attributes": {
+                              "Classification": {
+                                "value": "Conifères",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              },
+                              "Pourcentage surface": {
+                                "value": "6.66",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              },
+                              "Année": {
+                                "value": "2021",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              }
+                            },
+                            "datasetId": "dataset_version_id_1",
+                            "itemId": "item_id_1"
+                          }
+                        ]
+                      },
+                      "relations": [],
+                      "count": {
+                        "oclass_id_1": {
+                          "count": 115,
+                          "accurate": true
+                        }
+                      },
+                      "searchAfter": null
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - search
+            - datasource_read
+  /data-sources/id/{dataSourceId}/items/aggregate:
+    get:
+      summary: Get aggregated results from dataset, dataset version or named query.
+      description: |
+        Named query must reference a mono class request. Only aggregatedBy is required.
+        The default operation is count.
+      tags:
+        - Data Source Controller
+      operationId: com.provoly.virt.datasource.DataSourceController_getItemsAggregate
+      parameters:
+        - name: dataSourceId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: aggregatedBy
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+          example: tree_AttributeId
+        - name: dateInterval
+          in: query
+          schema:
+            $ref: '#/components/schemas/DateInterval'
+          examples:
+            default:
+              value: "null"
+            groupByAndSum:
+              value: "null"
+            interval:
+              value: "null"
+        - $ref: '#/components/parameters/filterDto'
+        - name: groupBy
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+          examples:
+            default:
+              value: "null"
+            groupByAndSum:
+              value: year_AttributeId
+            interval:
+              value: "null"
+        - name: interval
+          in: query
+          schema:
+            format: double
+            type: number
+          examples:
+            default:
+              value: "null"
+            groupByAndSum:
+              value: "null"
+            interval:
+              value: 10
+        - name: operation
+          in: query
+          schema:
+            $ref: '#/components/schemas/AggregateOperation'
+          examples:
+            default:
+              value: count
+            groupByAndSum:
+              value: sum
+            interval:
+              value: sum
+        - $ref: '#/components/parameters/sortAggregate'
+        - name: valueField
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+          examples:
+            default:
+              value: "null"
+            groupByAndSum:
+              value: area_attributeId
+            interval:
+              value: area_AttributeId
+        - $ref: '#/components/parameters/excludeGeo'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AggregationResultDto'
+              examples:
+                default:
+                  description: aggregation with only aggregatedBy. Return the count of each trees.
+                  value: |
+                    { 
+                      "operation": "count",
+                      "values": [
+                        {
+                          "key": "coniferes",
+                          "value": 4
+                        },
+                        {
+                          "key": "feuillus",
+                           "value": 8
+                        }
+                      ]
+                    }
+                interval:
+                  summary: With interval
+                  description: Returns the sum of occupied areas in intervals of 10
+                  value : |
+                    {
+                      "operation": "count",
+                      "values": [
+                        {
+                          "key": 0.0,
+                          "value": 51
+                        },
+                        {
+                          "key": 10.0,
+                          "value": 5
+                        },
+                        {
+                          "key": 20.0,
+                          "value": 5
+                        }
+                      ]
+                    }
+                groupBy:
+                  summary: With group By
+                  description: Returns for each tree the sum of its occupied area grouped by year.
+                  value: |
+                    { 
+                    "operation": "sum",
+                    "values": [
+                      {
+                        "key": "coniferes",
+                        "groupBy": [
+                          {
+                            "key": 2018,
+                            "value": 3783.4
+                          },
+                          {
+                            "key": 2019,
+                            "value": 3256.18
+                          }
+                        ]
+                      },
+                      {
+                        "key": "feuillus",
+                        "groupBy": [
+                          {
+                            "key": 2018,
+                            "value": 2798.82
+                          },
+                          {
+                            "key": 2019,
+                            "value": 2999.87
+                          }
+                        ]
+                      }
+                    ]}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AggregationResultDto'
+              examples:
+                badNumericType:
+                  summary: Non-numeric attribute
+                  value: |
+                    {
+                      "application": "data-virt",
+                      "code": "BAD_REQUEST",
+                      "message": "It's not possible to aggregate on the non-numeric attribute {{attribute}} which has type keyword"
+                    }
+                badDateType:
+                  summary: Bad attribute type
+                  value: |
+                    {
+                      "application": "data-virt",
+                      "code": "BAD_REQUEST",
+                      "message": "Aggregating on date is unavailable for attribute {{attribute}} that is not a date."
+                    }
+                invalidSortAndGroupBy:
+                  summary: Sort with groupBy
+                  value: |
+                    {
+                      "application": "data-virt",
+                      "code": "BAD_REQUEST",
+                      "message": "Sort is not available when a groupBy has been set" 
+                    }
+                invalidDateInterval:
+                  summary: Wrong DateInterval value
+                  value: |
+                    {
+                      "application": "data-virt",
+                      "code": "BAD_REQUEST",
+                      "message": "{{dateInterval}} is not a valid DateInterval value"
+                    }
+                invalidAggregatedBy:
+                  summary: Wrong AggregateBy type
+                  value: |
+                    {
+                      "application": "data-virt",
+                      "code": "BAD_REQUEST",
+                      "message": "Aggregate by is not available for types STRING, RAW, or GEO type"
+                    }
+      security:
+        - oidc:
+            - search
+            - datasource_read
+  /data-sources/id/{dataSourceId}/items/paginate:
+    get:
+      summary: Get all items from dataset, dataset version or named query
+      description: |
+        This endpoint is not restricted by the limit of max item number in a result.
+        It returns all items from a datasource using server sent event. An order is necessary.
+      tags:
+        - Data Source Controller
+      operationId: com.provoly.virt.datasource.DataSourceController_getPaginateItems
+      parameters:
+        - name: dataSourceId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/filterDto'
+        - $ref: '#/components/parameters/sortString'
+        - $ref: '#/components/parameters/excludeGeo'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ItemsSearchResultDto'
+              examples:
+                itemSearchResult:
+                  summary: Item search result
+                  value: |
+                    [{
+                      "items": {
+                        "oclass_id_1": [
+                          {
+                            "oClass": "oclass_id_1",
+                            "id": "dataset_version_id_1@item_id_1",
+                            "metadata": {
+                              "_insertion_date": "2023-06-27T07:14:00.228606022",
+                              "datasetdef_id": "dataset_id_1",
+                              "_dataset_id": "dataset_version_id_1",
+                              "_item_id": "dataset_version_id_1@item_id_1",
+                              "_class": "oclass_id_1"
+                            },
+                            "attributes": {
+                              "Classification": {
+                                "value": "Conifères",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              },
+                              "Pourcentage surface": {
+                                "value": "6.82",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              },
+                              "Année": {
+                                "value": "2020",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              }
+                            },
+                            "datasetId": "dataset_version_id_1",
+                            "itemId": "item_id_1"
+                          },
+                          {
+                            "oClass": "oclass_id_1",
+                            "id": "dataset_version_id_1@item_id_1",
+                            "metadata": {
+                              "_insertion_date": "2023-06-27T07:14:00.228606022",
+                              "datasetdef_id": "dataset_id_1",
+                              "_dataset_id": "dataset_version_id_1",
+                              "_item_id": "dataset_version_id_1@item_id_1",
+                              "_class": "oclass_id_1"
+                            },
+                            "attributes": {
+                              "Classification": {
+                                "value": "Conifères",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              },
+                              "Pourcentage surface": {
+                                "value": "6.66",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              },
+                              "Année": {
+                                "value": "2021",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              }
+                            },
+                            "datasetId": "dataset_version_id_1",
+                            "itemId": "item_id_1"
+                          }
+                        ]
+                      },
+                      "relations": [],
+                      "count": {
+                        "oclass_id_1": {
+                          "count": 115,
+                          "accurate": true
+                        }
+                      },
+                      "searchAfter": null
+                      }]
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                noSort:
+                  summary: Search all without sorting
+                  value: |
+                    {
+                      "application": "data-virt",
+                      "code": "BAD_REQUEST",
+                      "message": "It's not possible to search all items without sorting"
+                    }
+        "401":
+          description: Not Authorized
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - search
+            - datasource_read
+  /data-sources/values:
+    post:
+      summary: Get distinct values on attribute column where value match a requested value
+      description: |
+        This endpoint is used to retrieve a list of possible values for an attribute in a datasource.
+        The datasource available for this endpoint are Dataset and DatasetVersion
+      tags:
+        - Data Source Controller
+      operationId: com.provoly.virt.datasource.DataSourceController_searchForAttributeValues
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: '#/components/schemas/Search'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+              examples:
+                result:
+                  summary: List of values
+                  value: |
+                    [
+                      "marie", "marianne", "marin"
+                    ]
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                noAttributeId:
+                  summary: No attributeId provided
+                  value: |
+                    {
+                      "application": "data-virt",
+                      "code": "BAD_REQUEST",
+                      "message": "You need to provide an attributeId of the class"
+                    }
+        "401":
+          description: Not Authorized
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - datasource_read
+  /datasets/id/{datasetId}/dataset-versions/id/{id}:
+    post:
+      tags:
+        - Dataset Controller
+      summary: Trigger asynchronous items insertion
+      description: Import data by adding ItemDto list directly in a new version of a closed dataset
+      operationId: com.provoly.virt.dataset.DatasetController_importData
+      parameters:
+        - name: datasetId
+          in: path
+          description: Dataset id
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: id
+          in: path
+          description: Dataset version id that will be created
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ItemDto'
+            example : |
+              [
+                {
+                  "id": "{{datasetId}}@item_id",
+                  "oClass": "oclass_id",
+                  "metadata": {},
+                  "attributes": {
+                    "Adresse": {
+                        "type": "VALUE",
+                        "metadata": {},
+                        "value": "2 rue toto 30000 Nîmes",
+                        "visible": false
+                    },
+                    "Nb place disponibles": {
+                        "type": "VALUE",
+                        "metadata": {},
+                        "value": 5,
+                        "visible": false
+                    }
+                  }
+                }
+              ]
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                mismatchOclassId:
+                  summary: Oclass id doesn't match dataset
+                  value: |
+                    {
+                      "application": "data-virt",
+                      "code": "BAD_REQUEST",
+                      "message": "Item {{item_id}} cannot be added due to different OClassId with its Dataset"
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+          content:
+            application/json:
+              examples:
+                noClosedDataset:
+                  summary: Import on non closed dataset
+                  value: |
+                    {
+                      "application": "data-virt",
+                      "code": "FORBIDDEN",
+                      "message": "Import is only allowed on closed dataset"
+                    }
+                idNotMatch:
+                  summary: ItemId mismatch with datasetId
+                  value: |
+                    {
+                      "application": "data-virt",
+                      "code": "FORBIDDEN",
+                      "message": "Item id {{item_id}} doesn't match dataset id {{dataset_id}}"
+                    }
+        "404":
+          $ref: '#/components/responses/notFoundException'
+        "409":
+          description: Insertion
+      security:
+        - oidc:
+            - item_write
+  /file:
+    post:
+      tags:
+        - File Controller
+      summary: Upload file
+      description: Save file which will be linked to an item
+      operationId: com.provoly.virt.file.FileController_receiveFile
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "generated_file_id"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                missingFile:
+                  summary: Missing file
+                  value: |
+                    {
+                      "application": "data-virt",
+                      "code": "BAD_REQUEST",
+                      "message": "File is required."
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - item_write
+  /file/id/{id}:
+    get:
+      tags:
+        - File Controller
+      summary: Download file
+      description: |
+        Download file linked to an item by using the id generated during the upload.
+        It's possible to retrieve part of the file by specifying the range in headers.
+      operationId: com.provoly.virt.file.FileController_getFile
+      parameters:
+        - name: id
+          in: path
+          description: File id
+          required: true
+          schema:
+            type: string
+        - name: Range
+          in: header
+          schema:
+            type: string
+            example: bytes=440000-882069
+      responses:
+        "200":
+          description: OK
+          content:
+            image/*:
+              schema:
+                format: binary
+                type: string
+            video/*:
+              schema:
+                format: binary
+                type: string
+            application/json:
+              schema:
+                format: binary
+                type: string
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - search
+            - dashboard_read
+            - dataset_read
+            - widget_catalog_read
+  /file/icons:
+    post:
+      tags:
+        - File Controller
+      summary: Upload icon or illustration
+      description: |
+        Service used for saving an icon for oClass customization or
+        an illustration for widget and dashboard.
+      operationId: com.provoly.virt.file.FileController_receiveIcon
+      parameters:
+        - name: type
+          in : query
+          description: Image category
+          schema:
+            required:
+              - icon
+              - illustration
+            enum:
+              - icon
+              - illustration
+            example: icon
+      requestBody:
+        content:
+          image/png:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+          image/jpeg:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: generated_icon_id
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                missingType:
+                  value: |
+                    {
+                      "application": "data-virt",
+                      "code": "BAD_REQUEST",
+                      "message": "Type is required."
+                    }
+                invalidFile:
+                  value: |
+                    {
+                      "application": "data-virt",
+                      "code": "BAD_REQUEST",
+                      "message": "File type : {{file_mimetype}} is not supported for icon imports."
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - class_write
+            - dashboard_write
+            - dataset_write
+            - widget_catalog_write
+    get:
+      tags:
+        - File Controller
+      summary: Get all icons and illustrations names
+      description: |
+        Return the name of all uploaded icons and illustrations, with their corresponding type.
+        It's possible to filter on type to get all icons or all illustrations.
+      operationId: com.provoly.virt.file.FileController_getIconList
+      parameters:
+        - name: type
+          in: query
+          description: Image type
+          schema:
+            required:
+              - icon
+              - illustration
+            enum:
+              - icon
+              - illustration
+            example: icon
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ImageInfoDto'
+              example: |
+                [
+                  {
+                    "image": "icon.png",
+                    "type": ["icon"]
+                  },
+                 {
+                    "image": "arbre.png",
+                    "type": ["illustration"]
+                  }
+                ]
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - class_read
+            - search
+            - dashboard_read
+            - dataset_read
+            - widget_catalog_read
+  /file/icons/{name}:
+    get:
+      tags:
+        - File Controller
+      summary: Download icon or illustration
+      description: Download the icon or illustration by using the id generated during the upload
+      operationId: com.provoly.virt.file.FileController_getIcon
+      parameters:
+        - name: name
+          in: path
+          description: Icon or illustration id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                format: binary
+                type: string
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - class_read
+            - search
+            - dashboard_read
+            - dataset_read
+            - widget_catalog_read
+    delete:
+      tags:
+        - File Controller
+      summary: Delete icon or illustration
+      description: This endpoint is only used for cleaning s3 server.
+      operationId: com.provoly.virt.file.FileController_deleteIcon
+      parameters:
+        - name: name
+          in: path
+          description: Icon or illustration id
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - class_write
+            - search
+            - dashboard_write
+            - dataset_write
+            - widget_catalog_write
+  /file/icons/{id}/{type}:
+    put:
+      tags:
+        - File Controller
+      summary: Set type to an icon or illustration
+      description: |
+        Type is necessary when uploading an icon or illustration,
+        but it's possible to add a additional types with this endpoint.
+      operationId: com.provoly.virt.file.FileController_setIconType
+      parameters:
+        - name: id
+          in: path
+          description: Icon or illustration id
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: path
+          description: type to add
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                typeAlreadyExists:
+                  summary: Wrong type
+                  value: |
+                    {
+                      "application": "data-virt",
+                      "code": "BAD_REQUEST",
+                      "message": "Type {{type}} already exists for file {{file_id}}"
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - class_write
+            - search
+            - dashboard_write
+            - dataset_write
+            - widget_catalog_write
+  /imports/dataset/id/{datasetId}:
+    post:
+      tags:
+        - Imports Controller
+      summary: Asynchronous data import
+      description: |
+        Asynchronous data import that support csv file and zipped shapefile. It returns the
+        created dataset version for dataset.
+        NormalizeGeo is used to specify whether a shapefile should be normalized. For example, if a shapefile contains a polygon and a multi-polygon, set this property to true.
+        ChunkSize is used to specify the number of items per chunk that data-virt will hold in memory during import.
+      operationId: com.provoly.virt.importFile.ImportsController_importNewDataset
+      parameters:
+        - name: datasetId
+          in: path
+          description: Dataset id
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          text/csv:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                normalizeGeo:
+                  type: boolean
+                  default: false
+                chunkSize:
+                  type: integer
+                  example: 12
+          application/shp:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                normalizeGeo:
+                  type: boolean
+                  default: false
+                chunkSize:
+                  type: integer
+                  example: 12
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetVersionDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - item_write
+  /items:
+    post:
+      tags:
+        - Items Controller
+      summary: Synchronous insertion of ItemDto collection
+      description: Add items in the dataset version of a modifiable dataset.
+      operationId: com.provoly.virt.item.ItemsController_insert
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ItemDto'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ItemDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+          content:
+            application/json:
+              examples:
+                noModifiableDataset:
+                  summary: Non-modifiable dataset
+                  value: |
+                    {
+                      "application": "data-virt",
+                      "code": "FORBIDDEN",
+                      "message": "Can't add to dataset {{datast_name}}"
+                    }
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - item_write
+  /items/id/{id}:
+    get:
+      tags:
+        - Items Controller
+      summary: Return item
+      operationId: com.provoly.virt.item.ItemsController_get
+      parameters:
+        - name: id
+          in: path
+          description: Item id
+          required: true
+          schema:
+            $ref: '#/components/schemas/ItemId'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - search
+            - datasource_read
+  /items/id/{id}/relations:
+    get:
+      tags:
+        - Items Controller
+      summary: Return all items related to the requested item
+      operationId: com.provoly.virt.item.ItemsController_searchWithRelations
+      parameters:
+        - name: id
+          in: path
+          description: Item id
+          required: true
+          schema:
+            $ref: '#/components/schemas/ItemId'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemsSearchResultDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - search
+            - datasource_read
+  /items/id/{itemId}/attributes/name/{attributeName}/metadata/name/{metadataName}/{value}:
+    post:
+      tags:
+        - Metadata Controller
+      summary: Add metadata on specific attribute on specific item
+      operationId: com.provoly.virt.metadata.MetadataController_setMetadataToAttribute
+      parameters:
+        - name: itemId
+          in: path
+          description: Item id
+          required: true
+          schema:
+            $ref: '#/components/schemas/ItemId'
+        - name: attributeName
+          in: path
+          description: Attribute name
+          required: true
+          schema:
+            type: string
+        - name: metadataName
+          in: path
+          description: Metadata name
+          required: true
+          schema:
+            type: string
+        - name: value
+          in: path
+          description: Metadata value
+          required: true
+          schema:
+            type: string
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UnknownMetadata:
+                  summary: Unknown metadata
+                  value: |
+                    {
+                      "application": "data-virt",
+                      "code": "BAD_REQUEST",
+                      "message": "Unknown metadata {{metadata_name}}"
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+        "500":
+          description: Technical
+          content:
+            application/json:
+              examples:
+                attributeNotFound:
+                  summary: Attribute not found
+                  value: |
+                    {
+                      "application": "data-virt",
+                      "code": "TECHNICAL",
+                      "message": "Attribute {{name}} not found in {{Oclass_name}}"
+                    }
+      security:
+        - oidc:
+            - item_write
+  /items/id/{itemId}/metadata/name/{metadataName}/{value}:
+    post:
+      tags:
+        - Metadata Controller
+      summary: Add metadata on specific item
+      operationId: com.provoly.virt.metadata.MetadataController_setMetadataToItem
+      parameters:
+        - name: itemId
+          in: path
+          description: id de l'item
+          required: true
+          schema:
+            $ref: '#/components/schemas/ItemId'
+        - name: metadataName
+          in: path
+          description: metadata name
+          required: true
+          schema:
+            type: string
+        - name: value
+          in: path
+          description: metadata value
+          required: true
+          schema:
+            type: string
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UnknownMetadata:
+                  summary: Unknown metadata
+                  value: |
+                    {
+                      "application": "data-virt",
+                      "code": "BAD_REQUEST",
+                      "message": "Unknown metadata {{metadata_name}}"
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - item_write
+  /items/search:
+    post:
+      tags:
+        - Search Controller
+      summary: Get n items that match search criteria
+      description: |
+        It is possible to search on one or more classes.
+        On Mono class search, it returns items from all active datasets. It's possible to specify
+        dataset versions ids. 200 items are returned. This limit can be adjusted,
+        but cannot exceed 1000. Items can be sorted. Works only with a Mono Class search. If a sort is
+        set, then the next page of results can be retrieved by specifying the \"searchAfter\" 
+        value of the first search result. 
+        This property has a ttl: once the time has elapsed, you'll have to restart the search from the beginning.
+      operationId: com.provoly.virt.search.SearchController_search
+      parameters:
+        - $ref: '#/components/parameters/sortString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                excludeGeo:
+                  $ref: '#/components/parameters/excludeGeo'
+                type:
+                  $ref: '#/components/schemas/SearchRequestType'
+                fullSearch:
+                  $ref: '#/components/schemas/FullSearchConditionDto'
+              oneOf:
+                - $ref: '#/components/schemas/MonoClassRequestDto'
+                - $ref: '#/components/schemas/MultiClassRequestDto'
+            examples:
+              monoWithoutCondition:
+                summary: Mono request without condition
+                description: Returns items from oclass oclass_id_1.
+                value: |
+                  {
+                      "type":"MONO_CLASS",
+                      "oClass": "oclass_id_1"
+                  }
+              monoWithDatasetVersions:
+                summary: Mono request with datasetVersionIds
+                description: Returns items from oclass oclass_id_1 only in dataset_version_id
+                value: |
+                  {
+                      "type":"MONO_CLASS",
+                      "oClass": "oclass_id_1",
+                      "datasetVersionIds": ["dataset_version_id"]
+                  }
+              monoSimpleCondition:
+                summary: Mono request with condition
+                description: |
+                  Returns items from oclass 
+                  oclass_id_1 that match attribute_id_1 condition.
+                value: |
+                  {
+                    "type": "MONO_CLASS",
+                    "oClass": "oclass_id_1",
+                    "condition": {
+                      "type": "ATTRIBUTE",
+                      "attribute": "attribute_id_1",
+                      "operator": "EQUALS",
+                      "value": "Avant"
+                    }
+                  }
+              monoSimpleConditionWithSearchAfter:
+                summary: Mono request with condition and searchAfter
+                description: |
+                  Returns items from oclass 
+                  oclass_id_1 that match attribute_id_1 condition.
+                value: |
+                  {
+                    "type": "MONO_CLASS",
+                    "oClass": "oclass_id_1",
+                    "condition": {
+                      "type": "ATTRIBUTE",
+                      "attribute": "attribute_id_1",
+                      "operator": "EQUALS",
+                      "value": "Avant"
+                    },
+                     "searchAfter":"search_after_value"
+                  }
+              monoOrComposedCondition:
+                summary: Mono request with composed condition
+                description: |
+                  Returns items from oclass 
+                  oclass_id_1 that match attribute_id_1 OR attribute_id_2 conditions.
+                value: |
+                  {
+                    "type": "MONO_CLASS",
+                    "oClass": "oclass_id_1",
+                    "condition": {
+                      "type": "OR",
+                      "composed": [
+                        {
+                          "type": "ATTRIBUTE",
+                          "attribute": "attribute_id_1",
+                          "operator": "INSIDE",
+                          "value": 2020,
+                          "upperValue" : 2023
+                        },
+                        {
+                          "type": "ATTRIBUTE",
+                          "attribute": "attribute_id_2",
+                          "operator": "GREATER_THAN",
+                          "value": "2020"
+                        }
+                      ]
+                    }
+                  }
+              multiWithFieldsAndClass:
+                summary: Multi request with field condition
+                description: |
+                  Returns items from oclasses 
+                  oclass_id_1 and oclass_id_2 that match field_id_1 AND field_id_2 condition. 
+                  Default operator is EQUALS.
+                value: |
+                  {
+                    "type": "MULTI_CLASS",
+                    "multiType": "AND",
+                    "oClasses": [ "oclass_id_1", "oclass_id_2"],
+                    "fields": [
+                      {
+                        "field": "field_id_1",
+                        "value": "2020"
+                      },
+                      {
+                        "field": "field_id_2",
+                        "value": "2022"
+                      }
+                    ]
+                  }
+              multiWithFieldsAllClass:
+                summary: Multi request with field condition on all class
+                description: |
+                  Returns items from all oclasses that match field_id_1 OR field_id_2 condition. 
+                  Default operator is EQUALS.
+                value: |
+                  {
+                   "type": "MULTI_CLASS",
+                   "multiType": "OR",
+                   "oClasses": [],
+                   "fields": [
+                     {
+                       "field": "field_id_1",
+                       "value": "2020"
+                     },
+                     {
+                       "field": "field_id_2",
+                       "value": "2022"
+                     }
+                   ]
+                  }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemsSearchResultDto'
+              examples:
+                monoSearchResult:
+                  summary: Mono search result
+                  value: |
+                    {
+                      "items": {
+                        "oclass_id_1": [
+                          {
+                            "oClass": "oclass_id_1",
+                            "id": "dataset_version_id_1@item_id_1",
+                            "metadata": {
+                              "_insertion_date": "2023-06-27T07:14:00.228606022",
+                              "datasetdef_id": "dataset_id_1",
+                              "_dataset_id": "dataset_version_id_1",
+                              "_item_id": "dataset_version_id_1@item_id_1",
+                              "_class": "oclass_id_1"
+                            },
+                            "attributes": {
+                              "Classification": {
+                                "value": "Conifères",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              },
+                              "Pourcentage surface": {
+                                "value": "6.82",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              },
+                              "Année": {
+                                "value": "2020",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              }
+                            },
+                            "datasetId": "dataset_version_id_1",
+                            "itemId": "item_id_1"
+                          },
+                          {
+                            "oClass": "oclass_id_1",
+                            "id": "dataset_version_id_1@item_id_1",
+                            "metadata": {
+                              "_insertion_date": "2023-06-27T07:14:00.228606022",
+                              "datasetdef_id": "dataset_id_1",
+                              "_dataset_id": "dataset_version_id_1",
+                              "_item_id": "dataset_version_id_1@item_id_1",
+                              "_class": "oclass_id_1"
+                            },
+                            "attributes": {
+                              "Classification": {
+                                "value": "Conifères",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              },
+                              "Pourcentage surface": {
+                                "value": "6.66",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              },
+                              "Année": {
+                                "value": "2021",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              }
+                            },
+                            "datasetId": "dataset_version_id_1",
+                            "itemId": "item_id_1"
+                          }
+                        ]
+                      },
+                      "relations": [],
+                      "count": {
+                        "oclass_id_1": {
+                          "count": 115,
+                          "accurate": true
+                        }
+                      },
+                      "searchAfter": null
+                    }
+
+                multiSearchResult:
+                  summary: Multi search result
+                  value: |
+                    {
+                        "items": {
+                            "oclass_id_1": [
+                                {
+                                    "oClass": "oclass_id_1",
+                                    "id": "dataset_id_1@item_id_1",
+                                    "metadata": {
+                                        "_insertion_date": "2023-06-27T07:14:00.228606022",
+                                        "datasetdef_id": "dataset_id_1",
+                                        "_dataset_id": "dataset_version_id_1",
+                                        "_item_id": "dataset_version_id_1@item_id1",
+                                        "_class": "oclass_id_1"
+                                    },
+                                    "attributes": {
+                                        "Classification": {
+                                            "value": "Conifères",
+                                            "type": "VALUE",
+                                            "metadata": {},
+                                            "visible": true
+                                        },
+                                        "Pourcentage surface": {
+                                            "value": 6.82,
+                                            "type": "VALUE",
+                                            "metadata": {},
+                                            "visible": true
+                                        }
+                                    },
+                                    "datasetId": "dataset_version_id_1",
+                                    "itemId": "dataset_version_id_1@item_id_1"
+                                }
+                            ],
+                            "oclass_id_2": [
+                                {
+                                    "oClass": "oclass_id_2",
+                                    "id": "dataset_id_2@item_id_1",
+                                    "metadata": {
+                                        "_insertion_date": "2023-06-27T07:14:00.228606022",
+                                        "datasetdef_id": "dataset_id_2",
+                                        "_dataset_id": "dataset_version_id_2",
+                                        "_item_id": "dataset_version_id_2@item_id_1",
+                                        "_class": "oclass_id_2"
+                                    },
+                                    "attributes": {
+                                        "Espece": {
+                                            "value": "Conifères",
+                                            "type": "VALUE",
+                                            "metadata": {},
+                                            "visible": true
+                                        },
+                                        "Taille moyenne (m)": {
+                                            "value": 2.50,
+                                            "type": "VALUE",
+                                            "metadata": {},
+                                            "visible": true
+                                        }
+                                    },
+                                    "datasetId": "dataset_version_id_2",
+                                    "itemId": "item_id_1"
+                                }
+                            ]
+                        },
+                        "relations": [],
+                        "count": {
+                            "oclass_id_1": {
+                                "count": 115,
+                                "accurate": true
+                            },
+                            "oclass_id_2": {
+                                "count": 200,
+                                "accurate": true
+                            }
+                        },
+                        "searchAfter": null
+                    }
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                SearchAfterWithoutSort:
+                  summary: Error pagination
+                  value: |
+                    {
+                      "application": "data-virt",
+                      "code": "BAD_REQUEST",
+                      "message": "Pagination isn't possible without sorting"
+                    }
+                datasetVersionOclassMismatch:
+                  summary: Dataset version and class mismatch
+                  value: |
+                    {
+                      "application": "data-virt",
+                      "code": "BAD_REQUEST",
+                      "message": "Dataset version and class mismatch {{classId}} <-> {{dataset_version_id}}"
+                    }
+                invalidLimit:
+                  summary: Limit error
+                  value: |
+                    {
+                      "application": "data-virt",
+                      "code": "BAD_REQUEST",
+                      "message": "Limit can't be negative or exceed 1000."
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+        "500":
+          description: Technical
+          content:
+            application/json:
+              examples:
+                unknownRequestType:
+                  summary: Unknown request type
+                  value: |
+                    {
+                      "application": "data-virt",
+                      "code": "TECHNICAL",
+                      "message": "Unknown request type {{request_type}}"
+                    }
+                unknownOperator:
+                  summary: Unknown operator
+                  value: |
+                    {
+                      "application": "data-virt",
+                      "code": "TECHNICAL",
+                      "message": "Operator {{operator}} is not supported"
+                    }
+                unknowConditionType:
+                  summary: Unknown condition type
+                  value: |
+                    {
+                      "application": "data-virt",
+                      "code": "BAD_REQUEST",
+                      "message": "Unknown condition type {{condition_type}}"
+                    }
+      security:
+        - oidc:
+            - search
+  /items/search/named/{nameQueryId}:
+    get:
+      tags:
+        - Search Controller
+      summary: Returns items that match named query
+      description: |
+        Search criteria are stored in a named query. 
+        It's possible to add a limit and a order like the classic search.
+      operationId: com.provoly.virt.search.SearchController_searchByNamedQuery
+      parameters:
+        - name: nameQueryId
+          in: path
+          description: named query id
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sortString'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemsSearchResultDto'
+              examples:
+                monoSearchResult:
+                  summary: Mono search result
+                  value: |
+                    {
+                      "items": {
+                        "oclass_id_1": [
+                          {
+                            "oClass": "oclass_id_1",
+                            "id": "dataset_version_id_1@item_id_1",
+                            "metadata": {
+                              "_insertion_date": "2023-06-27T07:14:00.228606022",
+                              "datasetdef_id": "dataset_id_1",
+                              "_dataset_id": "dataset_version_id_1",
+                              "_item_id": "dataset_version_id_1@item_id_1",
+                              "_class": "oclass_id_1"
+                            },
+                            "attributes": {
+                              "Classification": {
+                                "value": "Conifères",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              },
+                              "Pourcentage surface": {
+                                "value": "6.82",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              },
+                              "Année": {
+                                "value": "2020",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              }
+                            },
+                            "datasetId": "dataset_version_id_1",
+                            "itemId": "item_id_1"
+                          },
+                          {
+                            "oClass": "oclass_id_1",
+                            "id": "dataset_version_id_1@item_id_1",
+                            "metadata": {
+                              "_insertion_date": "2023-06-27T07:14:00.228606022",
+                              "datasetdef_id": "dataset_id_1",
+                              "_dataset_id": "dataset_version_id_1",
+                              "_item_id": "dataset_version_id_1@item_id_1",
+                              "_class": "oclass_id_1"
+                            },
+                            "attributes": {
+                              "Classification": {
+                                "value": "Conifères",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              },
+                              "Pourcentage surface": {
+                                "value": "6.66",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              },
+                              "Année": {
+                                "value": "2021",
+                                "type": "VALUE",
+                                "metadata": {},
+                                "visible": true
+                              }
+                            },
+                            "datasetId": "dataset_version_id_1",
+                            "itemId": "item_id_1"
+                          }
+                        ]
+                      },
+                      "relations": [],
+                      "count": {
+                        "oclass_id_1": {
+                          "count": 115,
+                          "accurate": true
+                        }
+                      },
+                      "searchAfter": null
+                      }
+
+                multiSearchResult:
+                  summary: Multi search result
+                  value: |
+                    {
+                        "items": {
+                            "oclass_id_1": [
+                                {
+                                    "oClass": "oclass_id_1",
+                                    "id": "dataset_id_1@item_id_1",
+                                    "metadata": {
+                                        "_insertion_date": "2023-06-27T07:14:00.228606022",
+                                        "datasetdef_id": "dataset_id_1",
+                                        "_dataset_id": "dataset_version_id_1",
+                                        "_item_id": "dataset_version_id_1@item_id1",
+                                        "_class": "oclass_id_1"
+                                    },
+                                    "attributes": {
+                                        "Classification": {
+                                            "value": "Conifères",
+                                            "type": "VALUE",
+                                            "metadata": {},
+                                            "visible": true
+                                        },
+                                        "Pourcentage surface": {
+                                            "value": 6.82,
+                                            "type": "VALUE",
+                                            "metadata": {},
+                                            "visible": true
+                                        }
+                                    },
+                                    "datasetId": "dataset_version_id_1",
+                                    "itemId": "dataset_version_id_1@item_id_1"
+                                }
+                            ],
+                            "oclass_id_2": [
+                                {
+                                    "oClass": "oclass_id_2",
+                                    "id": "dataset_id_2@item_id_1",
+                                    "metadata": {
+                                        "_insertion_date": "2023-06-27T07:14:00.228606022",
+                                        "datasetdef_id": "dataset_id_2",
+                                        "_dataset_id": "dataset_version_id_2",
+                                        "_item_id": "dataset_version_id_2@item_id_1",
+                                        "_class": "oclass_id_2"
+                                    },
+                                    "attributes": {
+                                        "Espece": {
+                                            "value": "Conifères",
+                                            "type": "VALUE",
+                                            "metadata": {},
+                                            "visible": true
+                                        },
+                                        "Taille moyenne (m)": {
+                                            "value": 2.50,
+                                            "type": "VALUE",
+                                            "metadata": {},
+                                            "visible": true
+                                        }
+                                    },
+                                    "datasetId": "dataset_version_id_2",
+                                    "itemId": "item_id_1"
+                                }
+                            ]
+                        },
+                        "relations": [],
+                        "count": {
+                            "oclass_id_1": {
+                                "count": 115,
+                                "accurate": true
+                            },
+                            "oclass_id_2": {
+                                "count": 200,
+                                "accurate": true
+                            }
+                        },
+                        "searchAfter": null
+                    }
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                invalidLimit:
+                  summary: Error limit
+                  value: |
+                    {
+                      "application": "data-virt",
+                      "code": "BAD_REQUEST",
+                      "message": "Limit can't be negative or exceed 1000."
+                    }
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - search
+  /relations:
+    post:
+      tags:
+        - Relations Controller
+      summary: Save a list of relations
+      description: |
+        Registers a relation between two attributes of different oClasses 
+        to link items of these oClasses. It creates a new item in the `relation` index in elasticsearch.
+        The relationType must first be registered in `data-ref` service.
+      operationId: com.provoly.virt.relation.RelationsController_saveRelations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/RelationDto'
+      responses:
+        "201":
+          description: Created
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - item_write
+    delete:
+      tags:
+        - Relations Controller
+      summary: Delete relation between two attributes
+      description: Deleting a relation implies the dissociation between items linked by the relation.
+      operationId: com.provoly.virt.relation.RelationsController_delete
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RelationDto'
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - item_write
+  /relations/aggregate:
+    post:
+      tags:
+        - Relation Aggregate Controller
+      summary: Update relations between items. Called by `data-link`
+      description: |
+        Data Link automatically analyze which relation is deprecated, 
+        and update them by calling this endpoint with the `aggregateId` and the `link` which is the
+         id of the attribute on which to delete and remake the relation.
+      operationId: com.provoly.virt.relation.RelationAggregateController_updateAggregate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/RelationsAggregateDto'
+      responses:
+        "201":
+          description: Created
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - update_relation_aggregate
+components:
+  responses:
+    notFoundException:
+      description: Entity not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  parameters:
+    limit:
+      in: query
+      name: limit
+      schema:
+        format: int32
+        type: integer
+        default: 200
+        maximum: 1000
+        example: 10
+    sortString:
+      in: query
+      name: order
+      schema:
+        description: Query parameters usage to SortDto.
+        type: string
+        properties:
+          sortById:
+            type: boolean
+            example: false
+          attribute:
+            $ref: '#/components/schemas/UUID'
+          direction:
+            $ref: '#/components/schemas/Direction'
+          type:
+            $ref: '#/components/schemas/SortType'
+        pattern: '{{is_sort_id}},{{attribute_id}},{{direction}},{{SORT_TYPE}}'
+        example:
+          - "uuid,desc,METADATA"
+          - "true,asc"
+    sortAggregate:
+      in: query
+      name: order
+      schema:
+        description: Query parameter usage to SortAggregate.
+        type: object
+        properties:
+          direction:
+            $ref: '#/components/schemas/Direction'
+          orderBy:
+            $ref: '#/components/schemas/OrderBy'
+    excludeGeo:
+      in: query
+      name: excludeGeo
+      schema:
+        description: Parameter to exclude geographic data from queries.
+        type: boolean
+        default: true
+    filterDto:
+      in: query
+      name: filter
+      schema:
+        description: |
+          Query parameter usage of FilterDto. 
+          The upperValue is necessary only with operator that accept it such as INSIDE and OUTSIDE.
+        type: string
+        properties:
+          attribute:
+            $ref: '#/components/schemas/UUID'
+          operator:
+            $ref: '#/components/schemas/Operator'
+          value:
+            type: string
+            example: "mar"
+          upperValue:
+            type: string
+            example: "MAR"
+        pattern: '{{attribute_id}},{{OPERATOR}},{{value}},{{upperValue}}'
+        example:
+          - 'uuid,INSIDE,2020,2022'
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          example: 404
+        message:
+          type: string
+          example: "Entity : ac2c1a7f-0694-4f03-bb00-d349adeecd3d inexistant."
+      required:
+        - code
+        - message
+    AggregateOperation:
+      enum:
+        - count
+        - max
+        - min
+        - avg
+        - sum
+        - cardinality
+        - median
+        - q1
+        - q3
+        - extent
+      type: string
+    AggregationResultDto:
+      type: object
+      properties:
+        operation:
+          $ref: '#/components/schemas/AggregateOperation'
+        values:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemAggregationDto'
+    AttributeDto:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/AttributeType'
+    AttributeType:
+      enum:
+        - VALUE
+        - MULTI
+      type: string
+    ConditionDto:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ConditionType'
+    ConditionType:
+      enum:
+        - "TRUE"
+        - OR
+        - AND
+        - ATTRIBUTE
+        - METADATA
+      type: string
+    CountDto:
+      type: object
+      properties:
+        count:
+          format: int64
+          type: integer
+        accurate:
+          type: boolean
+    DataSourceDetailsDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        type:
+          $ref: '#/components/schemas/DataSourceType'
+        oClass:
+          $ref: '#/components/schemas/UUID'
+    DataSourceType:
+      enum:
+        - SEARCH
+        - DATASET_VERSION
+        - DATASET
+      type: string
+    DatasetState:
+      enum:
+        - LOADING
+        - INDEXING
+        - ACTIVE
+        - ERROR
+        - INACTIVE
+        - DELETE_ERROR
+        - DELETING
+      type: string
+    DatasetVersionDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        dataset:
+          $ref: '#/components/schemas/UUID'
+        oClass:
+          $ref: '#/components/schemas/UUID'
+        lastModified:
+          $ref: '#/components/schemas/Instant'
+        version:
+          format: int32
+          type: integer
+        state:
+          $ref: '#/components/schemas/DatasetState'
+        withFile:
+          type: boolean
+    DateInterval:
+      enum:
+        - SECOND
+        - MINUTE
+        - HOUR
+        - WEEK
+        - QUARTER
+        - YEAR
+      type: string
+    Direction:
+      enum:
+        - asc
+        - desc
+      type: string
+      default: asc
+    FieldConditionDto:
+      type: object
+      properties:
+        field:
+          $ref: '#/components/schemas/UUID'
+        value:
+          type: string
+        upperValue:
+          type: string
+        location:
+          type: string
+        operator:
+          $ref: '#/components/schemas/Operator'
+    Search:
+      type: object
+      properties:
+        value:
+          type: string
+          example: "mar"
+        limit:
+          $ref: '#/components/parameters/limit'
+        attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttributeByDatasource'
+    AttributeByDatasource:
+      type: object
+      required:
+        - datasource
+        - attribute
+      properties:
+        datasource:
+          $ref: '#/components/schemas/UUID'
+        attribute:
+          $ref: '#/components/schemas/UUID'
+    OrderBy:
+      enum:
+        - KEY
+        - VALUE
+      type: string
+      default: VALUE
+    FullSearchConditionDto:
+      type: object
+      properties:
+        value:
+          type: string
+    GroupByValueDto:
+      type: object
+      properties:
+        key:
+          type: object
+        value:
+          type: object
+    ImageInfoDto:
+      type: object
+      properties:
+        image:
+          type: string
+        type:
+          type: array
+          items:
+            type: string
+    Instant:
+      format: date-time
+      type: string
+      example: 2022-03-10T16:15:50Z
+    ItemAggregationDto:
+      type: object
+      properties:
+        key:
+          type: object
+        value:
+          type: object
+        groupBy:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupByValueDto'
+    ItemDto:
+      type: object
+      properties:
+        id:
+          type: string
+        oClass:
+          $ref: '#/components/schemas/UUID'
+        metadata:
+          type: object
+          additionalProperties:
+            type: object
+        attributes:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/AttributeDto'
+        datasetVersionId:
+          type: string
+        itemId:
+          type: string
+    ItemId:
+      type: object
+      properties:
+        datasetId:
+          $ref: '#/components/schemas/UUID'
+        id:
+          type: string
+        asString:
+          type: string
+    ItemsSearchResultDto:
+      type: object
+      properties:
+        items:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/ItemDto'
+        relations:
+          type: array
+          items:
+            $ref: '#/components/schemas/RelationDto'
+        count:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CountDto'
+        searchAfter:
+          type: string
+    MonoClassRequestDto:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/SearchRequestType'
+        fullSearch:
+          $ref: '#/components/schemas/FullSearchConditionDto'
+        oClass:
+          $ref: '#/components/schemas/UUID'
+        datasetVersionIds:
+          type: array
+          items:
+            format: uuid
+            pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+            type: string
+        condition:
+          $ref: '#/components/schemas/ConditionDto'
+        sort:
+          $ref: '#/components/schemas/SortDto'
+        searchAfter:
+          type: string
+    MultiClassRequestDto:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/SearchRequestType'
+        fullSearch:
+          $ref: '#/components/schemas/FullSearchConditionDto'
+        multiType:
+          $ref: '#/components/schemas/MultiSearchType'
+        oClasses:
+          type: array
+          items:
+            format: uuid
+            pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+            type: string
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldConditionDto'
+    MultiSearchType:
+      enum:
+        - OR
+        - AND
+      type: string
+    Operator:
+      enum:
+        - EQUALS
+        - NOT_EQUALS
+        - CONTAINS
+        - START_WITH
+        - END_WITH
+        - GREATER_THAN
+        - LOWER_THAN
+        - INSIDE
+        - OUTSIDE
+        - DISTANCE
+        - EXISTS
+        - INTERSECTS
+        - I_EQUALS
+        - I_NOT_EQUALS
+        - I_CONTAINS
+        - I_START_WITH
+        - I_END_WITH
+      type: string
+    RelationDto:
+      type: object
+      properties:
+        relationType:
+          type: string
+        source:
+          type: string
+        destination:
+          type: string
+    RelationsAggregateDto:
+      type: object
+      properties:
+        link:
+          $ref: '#/components/schemas/UUID'
+        aggregateId:
+          type: string
+        source:
+          type: array
+          items:
+            type: string
+        dest:
+          type: array
+          items:
+            type: string
+    SearchRequestType:
+      enum:
+        - MONO_CLASS
+        - MULTI_CLASS
+      type: string
+    SortDto:
+      type: object
+      properties:
+        attribute:
+          $ref: '#/components/schemas/UUID'
+        direction:
+          $ref: '#/components/schemas/Direction'
+        type:
+          $ref: '#/components/schemas/SortType'
+    SortType:
+      enum:
+        - ATTRIBUTE
+        - METADATA
+        - ITEM_ID
+      type: string
+      default: ATTRIBUTE
+    UUID:
+      format: uuid
+      pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+      type: string
+    Version:
+      type: object
+      properties:
+        applicationVersion:
+          type: string
+        chartVersion:
+          type: string
+  securitySchemes:
+    oidc:
+      type: openIdConnect
+      description: Authentication
+      openIdConnectUrl: /auth/realms/provoly/.well-known/openid-configuration

@@ -1,0 +1,80 @@
+quarkus:
+  management:
+    enabled: true
+    port: 8081
+  oidc:
+    client-id: provoly
+
+kafka:
+  key:
+    deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  value:
+    deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  auto:
+    offset:
+      reset: earliest
+
+mp:
+  messaging:
+    incoming:
+      summary:
+        topic: "summary-error"
+        value:
+          deserializer: com.provoly.replay.serializer.ErrorReportDeserializer
+        auto:
+          offset:
+            reset: earliest
+        enable:
+          auto:
+            commit: false
+        commit:
+          strategy: ignore
+        consumer-rebalance-listener:
+          name: summary-error.rebalancer
+"%dev":
+  quarkus:
+    management:
+      port: 8091
+    log:
+      category:
+        "com.provoly":
+          level: DEBUG
+    oidc:
+      token:
+        # Auth Server clock can be xx seconds ahead of resource server
+        lifespan-grace: 120
+      roles:
+        role-claim-path: "realm_access/roles"
+    oidc-client:
+      client-id: provoly
+      credentials:
+        secret: secret
+      grant:
+        type: password
+      auth-server-url: http://localhost:9080/realms/provoly
+    rest-client:
+      "data-ref":
+        url: http://localhost:8180
+
+    otel:
+      enabled: false
+    http:
+      port: 8680
+  kafka:
+    bootstrap:
+      servers: localhost:9093
+  provoly:
+    replay:
+      commit_interval_ms: 3000
+      probing_rebalance_interval_ms: 60000
+      skipping_fake_dlq_creation: false
+    application:
+      version: dev
+      chart:
+        version: dev
+
+"%prod":
+  quarkus:
+    kubernetes-config:
+      enabled: true
+      config-maps: data-replay

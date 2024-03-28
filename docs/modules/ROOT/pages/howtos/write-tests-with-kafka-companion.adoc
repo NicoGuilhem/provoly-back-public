@@ -1,0 +1,34 @@
+== Write tests with kafka companion
+
+. If the `KafkaCompanion` is used through it's `ConsumerTask`s prepared in a `@BeforeEach`, use `TestInfo` parameter to generate better logs :
+
+[source,java]
+----
+ @BeforeEach
+void prepare(TestInfo testInfo) {
+    log.infof("Preparing companion for %s", testInfo.getDisplayName());
+    ...
+----
+
+. Prefere using usefull identifiers over generic ones:
+[source,java]
+----
+//Nope
+testService.createAndSaveField("field1", Type.STRING);
+//Yes
+testService.createAndSaveField("whenFieldAdded_eventSent", Type.STRING);
+----
+
+When combined, those rules allow logs generation as followed:
+
+[source]
+----
+2023-03-06 11:37:27,341 INFO  [com.one.provoly.ref.mod.RefEventTest] (main) Companion ready. Running whenFieldAdded_eventSent()...
+2023-03-06 11:37:42,347 DEBUG [com.one.provoly.ref.ent.SlugifyService] (main) Generating slug for entity with name whenFieldAdded_eventSent-a06840eb-ae94-4048-b2c1-8255fa357ab0
+2023-03-06 11:37:42,347 INFO  [com.one.provoly.ref.ent.SlugifyService] (main) slug for name whenFieldAdded_eventSent-a06840eb-ae94-4048-b2c1-8255fa357ab0 is : f25de6a00d_whenfieldadded_eventsent-a06840eb-ae94-4048-b2c1-8255fa357ab0
+2023-03-06 11:37:42,354 INFO  [com.one.provoly.ref.eve.RefEventService] (main) Sending event field Added FieldDto{id=a06840eb-ae94-4048-b2c1-8255fa357ab0, name='whenFieldAdded_eventSent-a06840eb-ae94-4048-b2c1-8255fa357ab0', type='string', slug='f25de6a00d_whenfieldadded_eventsent-a06840eb-ae94-4048-b2c1-8255fa357ab0'}
+2023-03-06 11:37:42,465 INFO  [io.sma.rea.mes.kaf.com.ConsumerBuilder] (consumer-companion-b8c169d7-8a49-4fac-8c39-64646bc29f66) Closing consumer companion-b8c169d7-8a49-4fac-8c39-64646bc29f66
+2023-03-06 11:37:42,465 INFO  [io.sma.rea.mes.kaf.com.ConsumerBuilder] (consumer-companion-b8c169d7-8a49-4fac-8c39-64646bc29f66) companion-b8c169d7-8a49-4fac-8c39-64646bc29f66 revoked partitions [ref-event-0]
+----
+
+

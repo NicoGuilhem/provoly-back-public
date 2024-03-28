@@ -1,0 +1,192 @@
+quarkus:
+  management:
+    enabled: true
+    port: 8081
+  datasource:
+    db-kind: other
+    jdbc:
+      driver: net.postgis.jdbc.jts.JtsGisWrapper
+      telemetry: true
+
+  oidc:
+    client-id: provoly
+  oidc-client:
+    client-id: provoly
+    grant-options:
+      password:
+        username: ${provoly.virt.user}
+        password: ${provoly.virt.password}
+    auth-server-url: http://localhost:9080/realms/provoly
+
+  # Specify for each profile ?
+  http:
+    limits:
+      max-body-size: 2G
+  kafka-streams:
+    health:
+      enabled: false
+
+  cache:
+    caffeine:
+      "class-dto":
+        expire-after-write: 30S
+      "link":
+        expire-after-write: 30S
+      "metadata-by-name":
+        expire-after-write: 30s
+      "current-user-metadata":
+        expire-after-write: 30s
+      "all-meta-provisioning":
+        expire-after-write: 30s
+      "get-dataset-version":
+        expire-after-write: 30s
+      "fields-for-class":
+        expire-after-write: 30s
+      "metadata-by-id":
+        expire-after-write: 30s
+      "get-predicate":
+        expire-after-write: 30s
+      "get-rules-for-class":
+        expire-after-write: 30s
+      "field-by-id":
+        expire-after-write: 30s
+      "metadata-by-slug":
+        expire-after-write: 30s
+      "get-dataset-byID":
+        expire-after-write: 30s
+      "search-dataset":
+        expire-after-write: 30s
+      "class-dto-details":
+        expire-after-write: 30s
+      "context-variables":
+        expire-after-write: 30s
+      "kuzzle-measures-mapping":
+        expire-after-write: 30s
+
+mp:
+  messaging:
+    incoming:
+      ref-event:
+        failure-strategy: dead-letter-queue # nack events that triggers an error
+        dead-letter-queue:
+          value:
+            serializer: io.quarkus.kafka.client.serialization.ObjectMapperSerializer
+        topic: ref-event
+        connector: smallrye-kafka
+        auto:
+          offset:
+            reset: earliest
+    outgoing:
+      ref-event-out:
+        topic: ref-event
+        connector: smallrye-kafka
+        merge: true # to allow multiple upstreams
+      "virt-event":
+        connector: smallrye-kafka
+
+"%dev":
+  quarkus:
+    management:
+      port: 8090
+    live-reload:
+      instrumentation: true
+    otel:
+      exporter:
+        resource-attributes: env=tracingTest
+        otlp:
+          enabled: false
+          endpoint: http://localhost:4317
+    smallrye-openapi:
+      path: /openapi.yaml
+
+    keycloak:
+      devservices:
+        enabled: true
+        realm-name: provoly
+        realm-path: dev-realm.json
+        port: 9080
+    oidc:
+      token:
+        # Auth Server clock can be xx seconds ahead of resource server
+        lifespan-grace: 120
+      roles:
+        role-claim-path: "realm_access/roles"
+    oidc-client:
+      client-id: provoly
+      credentials:
+        secret: secret
+      grant:
+        type: password
+      auth-server-url: http://localhost:9080/realms/provoly
+    rest-client:
+      "data-ref":
+        url: http://localhost:8180
+
+    kafka:
+      devservices:
+        enabled: true
+        port: 9093
+
+#     Set the postgis connection information
+#     Configuration is not mandatory if postgis is not available
+    datasource:
+      username: postgres
+      password: mysecretpassword
+      jdbc:
+        url: jdbc:postgresql_JTS://localhost:5532/postgres
+
+    log:
+      category:
+        "io.quarkus":
+          level: INFO
+        "io.vertx":
+          level: INFO
+        "com.provoly":
+          level: INFO
+        "io.quarkus.oidc":
+          level: INFO
+      console:
+        format: "%d{HH:mm:ss} %-5p traceId=%X{traceId} parentId=%X{parentId} spanId=%X{spanId} [%c{2.}] (%t) %s%e%n"
+    http:
+      access-log:
+        enabled: true
+  provoly:
+    anonymous:
+      uuid: 1fb6c658-c02e-4531-996e-c37b9eefc6b3
+      roles:
+        - search
+
+    virt:
+      elasticsearch:
+        host: localhost
+        protocol: http
+        username: elastic
+        password: elastic
+        port: 9200
+      user: provoly_virt
+      password: password
+      chunk-size: 1000
+      max-import-chunk-size: 10000
+      import-max-errors: 1000
+      import-chunk-size: 1000
+      search-limit: 200
+      files-bucket-name: "provoly"
+      icons-bucket-name: "provoly"
+      max-size-limit: 200
+      kuzzle:
+        host: localhost
+        tenant: chalons
+
+    application:
+      version: dev
+      chart:
+        version: dev
+
+"%prod":
+  quarkus:
+    kubernetes-config:
+      enabled: true
+      config-maps: data-virt
+      secrets:
+        enabled: true
+        ~: data-virt

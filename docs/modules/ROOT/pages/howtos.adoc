@@ -1,0 +1,13 @@
+== How-tos
+
+[.howtos]
+--
+* xref:howtos/runjiblocaly.adoc[Run jib locally]
+* xref:howtos/run-an-application.adoc[Run an application]
+* xref:howtos/reuse-containers.adoc[Reuse test containers]
+* xref:howtos/run-data-ref-dependent-tests.adoc[Running tests depending on data-ref]
+* xref:howtos/write-tests-with-kafka-companion.adoc[Write tests with kafka companion]
+* xref:howtos/import.adoc[Import data with APIs]
+* xref:howtos/tracing-locally-tests.adoc[Run traces locally with jaeger]
+--
+

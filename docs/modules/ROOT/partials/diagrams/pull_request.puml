@@ -1,0 +1,11 @@
+@startuml
+|General|
+start
+:Check source format;
+if (data-ref needs to be build) then (yes)
+    :Build, test and push image;
+endif
+:Detect which modules where touched;
+:Builds and tests all needed modules;
+stop
+@enduml

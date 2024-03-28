@@ -1,0 +1,120 @@
+quarkus:
+  management:
+    enabled: true
+    port: 8081
+  oidc:
+    client-id: provoly
+
+  flyway:
+    default-schema: provoly_exec
+    migrate-at-start: true
+    validate-on-migrate: true
+  hibernate-orm:
+    physical-naming-strategy: io.hypersistence.utils.hibernate.naming.CamelCaseToSnakeCaseNamingStrategy
+    database:
+      default-schema: provoly_exec
+
+  smallrye-openapi:
+    operation-id-strategy: package_class_method
+    oidc-open-id-connect-url: /auth/realms/provoly/.well-known/openid-configuration
+    security-scheme: oidc
+    security-scheme-name: oidc
+    store-schema-directory: target/generated-sources/oas
+    info-title: API du moteur d'exécution
+    info-description: Permet de lancer et de monitorer des exécutions de traitements.
+mp:
+  messaging:
+    incoming:
+      ref-event:
+        connector: smallrye-kafka
+        auto:
+          offset:
+            reset: earliest
+
+    outgoing:
+      exec-event:
+        connector: smallrye-kafka
+
+
+"%dev":
+  quarkus:
+    management:
+      port: 8095
+    flyway:
+      repair-at-start: true
+
+    log:
+      category:
+        "org.hibernate":
+          level: INFO
+        "com.provoly":
+          level: DEBUG
+      min-level: TRACE
+
+    keycloak:
+      devservices:
+        realm-name: provoly
+        realm-path: dev-realm.json
+        port: 9080
+
+    oidc:
+      token:
+        # Auth Server clock can be xx seconds ahead of resource server
+        lifespan-grace: 120
+      roles:
+        role-claim-path: "realm_access/roles"
+    oidc-client:
+      credentials: # ne sert a rien, voir si on peut le suppr
+        secret: secret
+      grant:
+        type: password
+      grant-options:
+        password:
+          username: ${provoly.exec.user}
+          password: ${provoly.exec.password}
+      auth-server-url: http://localhost:9080/realms/provoly
+
+    http:
+      port: 8780
+
+    hibernate-orm:
+      log:
+        sql: false
+
+    datasource:
+      devservices:
+        port: 5434
+
+    kafka:
+      devservices:
+        enabled: true
+        port: 9093
+
+    rest-client:
+      "data-virt":
+        url: http://localhost:8080
+      "data-ref":
+        url: http://localhost:8180
+
+    otel:
+      enabled: false
+      exporter:
+        resource-attributes: env=dev-local
+        otlp:
+          traces:
+            legacy-endpoint: http://localhost:4317
+
+  provoly:
+    exec:
+      user: provoly_exec
+      password: password
+    application:
+      version: dev
+      chart:
+        version: dev
+
+"%prod":
+  quarkus:
+    kubernetes-config:
+      enabled: true
+      config-maps: provoly-exec-engine

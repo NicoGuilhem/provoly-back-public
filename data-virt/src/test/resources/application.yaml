@@ -1,0 +1,78 @@
+mp:
+  messaging:
+    incoming:
+      ref-event:
+        topic: ref-event
+        connector: smallrye-kafka
+        auto:
+          offset:
+            reset: earliest
+    outgoing:
+      ref-event-out:
+        topic: ref-event
+        connector: smallrye-kafka
+
+
+quarkus:
+  kubernetes-client:
+    devservices:
+      enabled: false
+  cache:
+    # Deactivated cache for test
+    enabled: false
+
+  keycloak:
+    devservices:
+      enabled: false
+  otel:
+    sdk:
+      disabled: true
+  datasource:
+    db-kind: other
+    jdbc:
+      driver: net.postgis.jdbc.jts.JtsGisWrapper
+      url: jdbc:postgresql_JTS://localhost:5430/postgis
+    password: test_postgis
+    username: test_postgis
+
+
+  kafka:
+    # Kafka is provided by ProvolyTestContainers
+    devservices:
+      enabled: false
+
+  oidc:
+    token:
+      # Auth Server clock can be xx seconds ahead of resource server
+      lifespan-grace: 120
+    roles:
+      role-claim-path: "realm_access/roles"
+
+  oidc-client:
+    credentials:
+      secret: secret
+    grant:
+      type: password
+
+  log:
+    category:
+      "com.provoly":
+        level: DEBUG
+
+provoly:
+  virt:
+    user: provoly_virt
+    password: password
+    icons-bucket-name: "provoly"
+    files-bucket-name: "provoly"
+    elastic-enable-immediate-refresh-policy: true
+    chunk-size: 10
+    import-max-errors: 2
+    kuzzle: # only used when kuzzle tests are enabled
+      host: localhost
+      tenant: test
+
+  application:
+    version: test
+    chart:
+      version: test

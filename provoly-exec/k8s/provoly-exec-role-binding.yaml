@@ -1,0 +1,49 @@
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: provoly-exec
+rules:
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["create"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["watch"]
+---
+
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: configmap-reader-provoly-exec
+
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: configmap-reader-provoly-dev
+
+subjects:
+  - kind: ServiceAccount
+    name: provoly-exec-engine
+
+  - kind: ServiceAccount
+    name: provoly-exec-file-provision
+
+---
+
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: provoly-exec
+
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: provoly-exec
+
+subjects:
+  - kind: ServiceAccount
+    name: provoly-exec-engine
+---

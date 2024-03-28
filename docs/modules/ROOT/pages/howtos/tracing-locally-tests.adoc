@@ -1,0 +1,20 @@
+== How to get local traces
+
+Start docker-compose jeager with command :
+
+[source]
+----
+docker compose up jaeger
+----
+
+Add the following configuration to the `application.yml` of the project of your choice :
+[source]
+----
+otel:
+  exporter:
+    resource-attributes: env=tracingTest
+    otlp:
+      endpoint: http://localhost:4317
+----
+
+Now if you want to see your traces, go to `http://localhost:16686/`

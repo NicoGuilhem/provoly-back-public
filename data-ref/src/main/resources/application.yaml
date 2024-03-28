@@ -1,0 +1,131 @@
+quarkus:
+  log:
+    category:
+      "org.hibernate":
+        level: INFO
+      "io.quarkus.oidc":
+        level: DEBUG
+      "com.provoly":
+        level: INFO
+      min-level: TRACE
+  kubernetes-client:
+    devservices:
+      enabled: false
+  management:
+    enabled: true
+    port: 8081
+  oidc:
+    client-id: provoly
+
+  flyway:
+    migrate-at-start: true
+    validate-on-migrate: true
+  hibernate-orm:
+    physical-naming-strategy: io.hypersistence.utils.hibernate.naming.CamelCaseToSnakeCaseNamingStrategy
+
+  websocket:
+    dispatch-to-worker: true
+
+  kafka-streams:
+    health:
+      enabled: false
+mp:
+  messaging:
+    incoming:
+      virt-event:
+        failure-strategy: dead-letter-queue # nack events that triggers an error
+        dead-letter-queue:
+          value:
+            serializer: io.quarkus.kafka.client.serialization.ObjectMapperSerializer
+        topic: virt-event
+        connector: smallrye-kafka
+        auto:
+          offset:
+            reset: earliest
+    outgoing:
+      "ref-event":
+        connector: smallrye-kafka
+
+
+"%dev":
+
+  quarkus:
+    keycloak:
+      devservices:
+        realm-name: provoly
+        realm-path: dev-realm.json
+        port: 9080
+    smallrye-openapi:
+      path: /openapi.yaml
+    flyway:
+      repair-at-start: true
+    log:
+      category:
+        "org.hibernate":
+          level: INFO
+        "io.quarkus.oidc":
+          level: DEBUG
+        "com.provoly":
+          level: INFO
+        min-level: TRACE
+      console:
+        format: "%d{HH:mm:ss} %-5p traceId=%X{traceId} parentId=%X{parentId} spanId=%X{spanId} [%c{2.}] (%t) %s%e%n"
+    hibernate-orm:
+      log:
+        sql: false
+        bind-parameters: false
+    oidc:
+      token:
+        # Auth Server clock can be xx seconds ahead of resource server
+        lifespan-grace: 120
+
+      roles:
+        role-claim-path: "realm_access/roles"
+    http:
+      port: 8180
+      access-log:
+        enabled: true
+    datasource:
+      devservices:
+        port: 5431
+    kafka:
+      devservices:
+        enabled: true
+        port: 9093
+    otel:
+      exporter:
+        resource-attributes: env=tracingTest
+        otlp:
+          enabled: false
+          endpoint: http://localhost:4317
+  provoly:
+    ref:
+      skip-index-creation-allowed: true
+      user: provoly_ref
+      password: password
+      scheduler:
+        notification: 10s
+      storages:
+        - ELASTIC
+        - POSTGIS
+      # Anonymous user Roles, no write
+    anonymous:
+      uuid: 1fb6c658-c02e-4531-996e-c37b9eefc6b3
+      roles:
+        - dashboard_read
+        - widget_catalog_read
+        - dataset_read
+        - datasource_read
+    application:
+      version: dev
+      chart:
+        version: dev
+
+"%prod":
+  quarkus:
+    kubernetes-config:
+      enabled: true
+      config-maps: data-ref
+      secrets:
+        enabled: true
+        ~: data-ref

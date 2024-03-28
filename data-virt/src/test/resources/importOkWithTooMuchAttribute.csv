@@ -1,0 +1,2 @@
+StringField;IntegerField;InstantField;GeoField;toto
+toto;100;1977-04-22T06:00:00Z;"{""type"": ""MultiLineString"",""coordinates"": [[[1.0, 1.0], [1.0, 2.0]]]}";toto

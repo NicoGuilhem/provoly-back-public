@@ -1,0 +1,89 @@
+package com.provoly.ref.metaProvisioning;
+
+import java.util.List;
+import java.util.UUID;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.transaction.Transactional;
+
+import com.provoly.common.error.BusinessException;
+import com.provoly.common.error.ErrorCode;
+import com.provoly.common.metadata.MetaProvisioningDto;
+import com.provoly.ref.entity.EntityIdService;
+
+@ApplicationScoped
+public class MetaProvisioningService {
+    private MetaProvisioningMapper mapper;
+    private EntityIdService entityIdService;
+    private EntityManager em;
+
+    MetaProvisioningService(MetaProvisioningMapper mapper, EntityManager em, EntityIdService entityIdService) {
+        this.mapper = mapper;
+        this.em = em;
+        this.entityIdService = entityIdService;
+    }
+
+    @Transactional
+    public void saveOrUpdate(MetaProvisioningDto metaProvisioningDto) {
+        MetaProvisioning metaProvisioning = mapper.toModel(metaProvisioningDto);
+        checkAlreadyLinkedWithMetadata(metaProvisioning);
+
+        if (!metaProvisioning.getMetadata().getType().equals(metaProvisioning.getUserProfile().getType())) {
+            throw new BusinessException(ErrorCode.FORBIDDEN,
+                    "Metadata and user profile must have same type");
+        }
+
+        var metaPro = findById(metaProvisioningDto.id());
+        if (metaPro == null) {
+            entityIdService.saveEntity(metaProvisioning);
+        } else {
+            mapper.update(metaProvisioningDto, metaPro);
+        }
+    }
+
+    @Transactional
+    public void checkAlreadyLinkedWithMetadata(MetaProvisioning meta) {
+        var cb = em.getCriteriaBuilder();
+        var q = cb.createQuery(MetaProvisioning.class);
+        var root = q.from(MetaProvisioning.class);
+        Predicate sameMetadataUser = cb.equal(root.get(MetaProvisioning_.userProfile), meta.getUserProfile());
+        Predicate sameMetadataItem = cb.equal(root.get(MetaProvisioning_.metadata), meta.getMetadata());
+
+        q.select(root).where(cb.and(sameMetadataUser, sameMetadataItem));
+        List<MetaProvisioning> res = em.createQuery(q).getResultList();
+
+        if (checkIsSameEntity(meta, res)) {
+            throw new BusinessException(ErrorCode.ID_ALREADY_USED,
+                    "This user profile is already linked to this metadata item");
+        }
+    }
+
+    private boolean checkIsSameEntity(MetaProvisioning meta, List<MetaProvisioning> res) {
+        if (res.isEmpty()) {
+            return false;
+        }
+        return res.get(0).getId().equals(meta.getId());
+    }
+
+    public List<MetaProvisioning> getAllMetaprovisionings() {
+        return entityIdService.getAll(MetaProvisioning.class);
+    }
+
+    public MetaProvisioning findById(UUID id) {
+        return entityIdService.findById(id, MetaProvisioning.class);
+    }
+
+    public MetaProvisioning getById(UUID id) {
+        return entityIdService.getById(id, MetaProvisioning.class);
+    }
+
+    public void removeEntity(UUID id) {
+        entityIdService.removeEntity(id, MetaProvisioning.class);
+    }
+
+    public void removeIfExists(UUID id) {
+        entityIdService.removeIfExists(id, MetaProvisioning.class);
+    }
+}

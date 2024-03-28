@@ -1,0 +1,38 @@
+quarkus:
+  kafka:
+    devservices:
+      enabled: false
+  otel:
+    enabled: false
+
+  keycloak:
+    devservices:
+      enabled: false
+
+  oidc:
+    token:
+      # Auth Server clock can be xx seconds ahead of resource server
+      lifespan-grace: 120
+    roles:
+      role-claim-path: "realm_access/roles"
+
+  oidc-client:
+    client-id: provoly
+    credentials:
+      secret: secret
+    grant:
+      type: password
+  log:
+    category:
+      "com.provoly":
+        level: DEBUG
+
+provoly:
+  replay:
+    commit_interval_ms: 3000
+    probing_rebalance_interval_ms: 60000
+    skipping_fake_dlq_creation: true
+  application:
+    version: test
+    chart:
+      version: test

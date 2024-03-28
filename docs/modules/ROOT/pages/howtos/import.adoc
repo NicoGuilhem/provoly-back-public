@@ -1,0 +1,84 @@
+== How to import data using project APIs
+
+=== Requirement
+
+Use following endpoints to initialize the data model and the dataset into which the data must be imported :
+
+* xref:API:data-ref.adoc#.com.provoly.ref.model.ModelControllerAddFields[Create fields]
+* xref:API:data-ref.adoc#.com.provoly.ref.model.ModelControllerSaveClass[Create a data model (oClass)]
+* xref:API:data-ref.adoc#.com.provoly.ref.dataset.DatasetControllerAddDataset[Create a closed dataset for this data model]
+
+
+=== Import data
+
+
+Use the xref:API:data-virt.adoc#.com.provoly.virt.importFile.FileUploadControllerImportNewDataset[import endpoint] by specifying the dataset id.
+
+To see the process import, use xref:API:data-virt.adoc#.com.provoly.ref.dataset.DatasetVersionControllerGet[this endpoint] with the dataset version id returned by the import request.
+
+During indexation items are split in chunks, it's necessary to reduce the chunk size if data has a lot of properties,
+or if their values are large, so as not to saturate memory.
+
+On the other hand, it is possible to speed up the import by increasing the size of the chunk if there is a lot of "small" data.
+
+To do this, go to the desired environment and edit the value of `import-chunk-size` in the `data-virt` configmap, then restart the pod.
+
+==== CSV import
+
+The first line of the csv must contain the data model attributes. All attributes must be specified, even if there is no value.
+The separator used must be a semicolon (`;`). Encoding is `utf-8`.
+
+The csv import will be much less effective if it contains more than 150 columns.
+
+Geo data can be added to the csv as follows :
+
+[source]
+----
+"{""type"": ""Point"", ""coordinates"": [102.0, 0.5]}"
+----
+
+Let `car` be a data model with the following attributes:
+
+* `model` : text field
+* `color` : text field
+* `nbDoors` : numeric field
+* `creationDate` : instant field
+* `position`: point field
+
+The corresponding csv could be :
+
+[source]
+----
+model;color;nbDoors;creationDate;position
+nissan;red;3;1977-04-22T00:00:00Z;"{""type"": ""Point"",""coordinates"": [102.0, 0.5]}"
+peugeot;blue;5;1968-09-06T00:00:;"{""type"": ""Point"",""coordinates"": [208.0, 0.10]}"
+----
+
+Or
+
+[source]
+----
+model;nbDoors;color;creationDate;position
+nissan;3;red;1977-04-22T00:00:00Z;"{""type"": ""Point"",""coordinates"": [102.0, 0.5]}"
+peugeot;;blue;;;
+----
+
+
+==== Geo import
+
+Geodetic datum is a reference frame used to measure locations on Earth.
+
+To import geodetic data, it's necessary to fill in a zipped folder containing at least the `.shp`, `.dbf` and `.shx` files.
+The archive may also contain the following files :
+
+*  `.cpg`
+*  `.prj`
+
+The content-type must be `application/shp`.
+
+The attribute carrying the geometry must be named `the_geom` in the data model and there can **only be one**. All attributes must be filled in, even if values are empty.
+The geometry must correspond exactly to the attribute type : it's not possible to have lines and multilines in a dataset.
+
+All data will be added with the default Coordinate Reference System (CRS) which is `WGS84`. For now, it's not possible to specify a different CRS.
+
+If the precision of the geometry is greater than 15, it will be truncated at 15.

@@ -1,0 +1,50 @@
+quarkus:
+  otel:
+    enabled: false
+
+  keycloak:
+    devservices:
+      realm-name: provoly
+      realm-path: dev-realm.json
+      port: 9080
+
+  oidc:
+    token:
+      # Auth Server clock can be xx seconds ahead of resource server
+      lifespan-grace: 120
+    roles:
+      role-claim-path: "realm_access/roles"
+
+  rest-client:
+    "data-virt":
+      url: http://localhost:8080
+    "data-ref":
+      url: http://localhost:8180
+
+  log:
+    category:
+      "com.provoly":
+        level: DEBUG
+      "io.fabric8":
+        level: INFO
+    min-level: TRACE
+
+  hibernate-orm:
+    log:
+      sql: false
+
+#  kafka:
+#    devservices:
+#      port: 9903
+
+provoly:
+  ref:
+    automatic-dataset: false
+    user: provoly_ref
+    password: password
+    mock:
+      enabled: false
+  application:
+    version: test
+    chart:
+      version: test

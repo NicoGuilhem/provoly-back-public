@@ -1,0 +1,12 @@
+name: provoly-back
+title: Provoly backend
+version: true
+nav:
+  - modules/ROOT/nav.adoc
+ext:
+  collector:
+    run:
+      command: mvn -DskipTests -B package
+    scan:
+      dir: docs/target/generated
+      base: modules/API/pages

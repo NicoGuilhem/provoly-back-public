@@ -1,0 +1,52 @@
+version: '2.2'
+services:
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.1
+    container_name: es01
+    environment:
+      - discovery.type=single-node
+      - ELASTIC_PASSWORD=elastic
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - ${PWD}/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    ports:
+      - "9200:9200"
+    networks:
+      - provoly
+#
+#  kib01:
+#    image: docker.elastic.co/kibana/kibana:8.4.1
+#    container_name: kib01
+#    ports:
+#      - "5601:5601"
+#    environment:
+#      - ELASTICSEARCH_HOSTS=http://es01:9200
+#    networks:
+#      - provoly
+
+  db01:
+    image: postgres:16.1-alpine
+    container_name: db01
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=quarkus
+      - POSTGRES_PASSWORD=quarkus
+      - POSTGRES_DB=default
+    networks:
+      - provoly
+
+  ref01:
+    image: quarkus/data-ref-jvm-dirty
+    container_name: ref01
+    ports:
+      - "8180:8180"
+    networks:
+      - provoly
+
+volumes:
+  data-es-01:
+    driver: local
+
+networks:
+  provoly:

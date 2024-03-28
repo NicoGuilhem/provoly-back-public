@@ -1,0 +1,146 @@
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: provoly-transfo-engine
+  labels:
+    app: provoly
+    module: provoly-transfo-engine
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: provoly-transfo-engine
+  labels:
+    app: provoly
+    module: provoly-transfo-engine
+data:
+  application.yaml: |
+    quarkus:
+      banner:
+        enabled: false
+      log:
+        console:
+          json: false
+          level: TRACE
+          format: "%d{HH:mm:ss} %-5p traceId=%X{traceId} parentId=%X{parentId} spanId=%X{spanId} [%c{2.}] (%t) %s%e%n"
+    
+      datasource:
+        jdbc:
+          url: jdbc:postgresql://provoly-postgresql:5432/provoly
+        username: ${ref.database.user}
+        password: ${ref.database.password}
+    
+    
+      oidc:
+        auth-server-url: https://sso.dev.provoly.net/auth/realms/provoly
+    
+      rest-client:
+        "provoly-exec-engine":
+          url: http://provoly-exec-engine:8080
+        "data-ref":
+          url: http://data-ref:8080
+
+      otel:
+        exporter:
+          resource-attributes: env=dev-local
+          otlp:
+            traces:
+              legacy-endpoint: http://localhost:4317
+    
+    provoly:
+      transfo:
+        job-model-id: 423b5c01-1816-41d4-b358-000000000000
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: provoly-transfo-engine
+  labels:
+    app: provoly
+    module: provoly-transfo-engine
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: provoly
+      module: provoly-transfo-engine
+  template:
+    metadata:
+      labels:
+        app: provoly
+        module: provoly-transfo-engine
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      serviceAccountName: provoly-transfo-engine
+      containers:
+        - name: provoly-transfo-engine
+          image: dh2wltsh.gra7.container-registry.ovh.net/provoly/provoly-transfo-engine:0.3.0
+          imagePullPolicy: Always
+          env:
+            - name: REF_DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: provoly-postgresql
+                  key: username
+            - name: REF_DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: provoly-postgresql
+                  key: password
+          ports:
+            - containerPort: 8080
+              name: http
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: provoly-transfo-engine
+  labels:
+    app: provoly
+    module: provoly-transfo-engine
+spec:
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+  selector:
+    app: provoly
+    module: provoly-transfo-engine
+
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: provoly-transfo-api
+  labels:
+    app: provoly
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - provoly.provoly-dev.pangee.ovh
+      secretName: provoly-dev-ingress-tls
+  rules:
+    - host: provoly.provoly-dev.pangee.ovh
+      http:
+        paths:
+          - path: /api/transfos(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: provoly-transfo-engine
+                port:
+                  name: http

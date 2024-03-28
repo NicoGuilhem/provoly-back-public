@@ -1,0 +1,165 @@
+== Read Me : A guide for new contributors
+
+=== Install Environment
+
+The required languages and tools to work on the project are the following :
+
+* Java v.*21*
+* Maven v.*3.6*
+* Docker v.*20*
+
+The numbers are an indication of the minimum version supported for the project to launch properly.
+
+For Maven to work with *java21* preview features, you need to set the following environment variable :
+
+[source,bash]
+----
+export MAVEN_OPTS='--enable-preview'
+----
+
+=== IntelliJ Setup
+
+==== IDE Configuration and plugins
+
+Code formatting is done by the *Eclipse Code Formatter*, using the config files found in the `ide-config` directory.
+
+In order to use it, you need to install the following plugin from the marketplace :
+
+image::plugin_eclipse_to_download.png[]
+
+Open your Settings (or Preferences) page and go to Eclipse's settings :
+
+image::settings_plugin_location.png[]
+
+Make sure the following box is ticked :
+
+image::option_1_eclipse.png[]
+
+Change the Eclipse Java Formatter Config File to point to the eclipse-format.xml file in the `ide-config` directory :
+
+image::option_2_eclipse.png[]
+
+Select the Quarkus profile if it was not set by default.
+
+Make sure the following box is ticked :
+
+image::option_3_eclipse.png[]
+
+Select the `eclipse.importorder` file as the import order config file :
+
+image::option_3_eclipse.png[]
+
+Next, disable wildcard imports:
+
+image::option_5_eclipse.png[]
+
+Navigate to Editor -> Code Style -> Java -> Imports and set Class count/names count to use import with '*' to 5.
+
+===== AsciiDoc
+
+Our technical documentation uses the plain text markup language *AsciiDoc*.
+
+In order to visualize your changes in the documentation, you will require the following plugin from the marketplace :
+
+image::plugin_asciidoc_to_download.png[]
+
+After that, you have to enable *soft wraps* for the asciiDoc files :
+
+image::configuration_asciidoc.png[]
+
+===== SonarLint
+Extension which finds and fixes coding issues in real-time.
+
+=== Run the formatter manually
+
+The following command must be run in the root folder.
+
+[source,bash]
+----
+mvn compile
+----
+
+When submitting a merge request the CI build will fail if the code isn't properly formatted, so it is recommended that you always run a full Maven build before submitting a pull request.
+
+=== Services Available
+
+Below is listed an exhaustive list of the services available in the project.
+
+==== Applications
+
+|===
+| Application | Description | Local port
+| data-virt         | data search application                                                 | 8080
+| data-ref         | application to reference data models, metadata and rules             | 8180
+| data-sync         | synchronisation service allowing data insertion                         | 8280
+| provoly-monitor     | applications' monitoring service                                     | 8380
+| data-link         | service to reconcile data relations                             | 8580
+| data-replay     | service to replay or drop data that couldn't be inserted     | 8680
+| provoly-exec           | service to monitor services and jobs                         | 8780
+| provoly-transfo        | service to monitor transformations                     | 8880
+|===
+
+==== External services
+
+|===
+| Service | Description | Local port
+| postgres         | Referential database        | 5431 on data-ref devservice, 5432 with docker compose
+| postgres         | Transformation engine database        | 5433 on provoly-transfo-engine devservice
+| kibana             |                                            | 5601
+| kafka             | Message broker  | 9093
+| akhq             | To visualize kafka topics              | 9193
+| nifi             |                                            | 8443
+|===
+
+==== Items Databases
+
+|===
+| Service | Local port
+| postgres         | 5532
+| elasticsearch    | 9200
+|===
+
+=== Prerequesites to run locally
+
+==== Using provoly-common and CDI beans
+
+For other components to be able to run using provoly-common, they must be instructed on which CDI beans exist in `provoly-common`.
+
+The `target/classes/META-INF/jandex.idx` is responsible for this, and this file is not generated through intellij build.
+So you HAVE to have at least used `mvn package` at least once.
+
+If not the symptom will be lots of _Unsatisfied dependency_ errors pointing at beans belonging to `provoly-commons`.
+
+==== Resolve Workspace Artifacts
+
+In order to run all the project's applications, you are required to verify that each application has enabled the option to resolve your workspace artifact.
+
+To do so, firstly you have to right-click on each application separately in your *Service* tab and select *Edit Configuration* as below :
+
+image::edit_configuration_IDEA.png[]
+
+Then, check the box below :
+
+image::resolve_application_artifact.png[]
+
+Repeat the operation for each application present on the project.
+
+==== Docker login
+
+Because we use a private repository, we need to be logged in to our registry to be able to pull the docker image:
+
+Run command :
+
+[source,bash]
+----
+docker login dh2wltsh.gra7.container-registry.ovh.net
+----
+
+And fill username and password.
+
+==== Launch database and services
+
+Provoly is provided with two docker-compose configurations:
+
+- The default: docker-compose.yaml, which only start databases
+- The extended: docker-compose-extended.yaml, which starts all provoly services as defined above and databases

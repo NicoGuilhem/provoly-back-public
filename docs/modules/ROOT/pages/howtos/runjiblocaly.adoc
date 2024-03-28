@@ -1,0 +1,7 @@
+== Run jib locally
+
+[source, bash]
+----
+mvn clean package -P local-docker-image -DskipTests=true
+----
+

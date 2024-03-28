@@ -1,0 +1,36 @@
+quarkus:
+  log:
+    console:
+      format: "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p (%t) [%c{30.30}] %s%e%n"
+
+#  kafka:
+#    devservices:
+#      port: 9904
+
+  keycloak:
+    devservices:
+      realm-name: provoly
+      realm-path: dev-realm.json
+      port: 9080
+
+  otel:
+    sdk:
+      enabled: false
+
+
+transformation:
+  file: transfo.json
+
+job:
+  execution:
+    id: 423b5c01-1816-41d4-b358-000000000020 # Force job instance id in test run
+
+provoly:
+  ref:
+    mock:
+      enabled:
+        true
+  application:
+    version: test
+    chart:
+      version: test

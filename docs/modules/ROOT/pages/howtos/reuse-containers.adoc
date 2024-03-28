@@ -1,0 +1,12 @@
+== Reuse containers
+
+Both data-virt and data-replay tests use containers. Those containers are recreated for each test execution and stopped at the end.
+
+To avoid this time consuming task, it is possible to make use of `testcontainer` reuse feature:
+
+*$HOME/.testcontainers.properties* :
+
+[source, bash]
+----
+testcontainers.reuse.enable=true
+----

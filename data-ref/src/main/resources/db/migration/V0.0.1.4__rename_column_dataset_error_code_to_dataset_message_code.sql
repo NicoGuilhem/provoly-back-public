@@ -1,0 +1,2 @@
+ALTER TABLE dataset_version_message
+RENAME COLUMN extract_error_code to extract_message_code;

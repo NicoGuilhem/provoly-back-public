@@ -1,0 +1,24 @@
+quarkus:
+  management:
+    enabled: true
+    port: 8081
+  jackson:
+    fail-on-empty-beans: false # Needed for noop node
+
+
+"%dev":
+  quarkus:
+    management:
+      port: 8098
+  provoly:
+    application:
+      version: dev
+      chart:
+        version: dev
+
+
+"%prod":
+  quarkus:
+    kubernetes-config:
+      enabled: true
+      config-maps: provoly-transfo-runner

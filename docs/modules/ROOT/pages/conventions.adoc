@@ -1,0 +1,26 @@
+== Conventions guideline
+
+=== Global coding conventions guideline
+
+- GET endpoints must specify the field on which the object is retrieved:  /objects/id/{id}.
+- Endpoint paths must be plural.
+- The project's code and its related documentation must be written in English.
+- No implicit use of curly brackets.
+- When adding new Dtos, favor using `record` if it's possible. Otherwise, set private attributes, and only add their getters. Convert those that do not respect this rule.
+
+=== Java related coding conventions guideline:
+
+- No implicit use of the *final* keyword. It can only be used explicitly and for a set purpose.
+- Use `String.formatted()` method for concatenation.
+- Favor constructor injection over `default package` field injection.
+- Use AssertJ assertions instead of Junit.
+- Try to fix sonar issues on files impacted by your changes using the plugin `sonarLint`.
+
+Java related coding conventions will be enforced by SonarQube.
+We strongly recommend using Sonar Lint with the project specific SonarQube profile.
+SonarQube project can be found https://sonar.prod.pe.pangee.ovh/dashboard?id=com.provoly%provoly[here].
+
+
+=== Team and other conventions guideline
+
+- All merge requests will be squashed in a single commit. Preferably, the author of the merge request will do the squash and set the final commit him/her self.

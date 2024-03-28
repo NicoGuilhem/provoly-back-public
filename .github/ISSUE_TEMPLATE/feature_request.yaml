@@ -1,0 +1,25 @@
+name: Feature Request
+labels: ["feature"]
+description: A new feature proposition for Provoly
+
+body:
+  - type: dropdown
+    attributes:
+      label: Module
+      options:
+        - data-ref
+        - data-virt
+    id: Module
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Feature Description
+      description: Please describe the wanted feature
+
+  - type: textarea
+    id: api
+    attributes:
+      label: API
+      description: Provide a request example and the associated wanted response
+      render: shell

@@ -1,0 +1,16 @@
+@startuml
+|General|
+start
+:Detect which modules where touched;
+|Build|
+if (data-ref needs to be build) then (yes)
+    :Build and push data-ref image;
+endif
+:Builds, tests and pushes images for all needed modules;
+|Deploy|
+if (data-ref impacted) then (yes)
+    :Amends provoly values.yaml file;
+endif
+:Amends provoly values.yaml file for all other impacted modules;
+stop
+@enduml

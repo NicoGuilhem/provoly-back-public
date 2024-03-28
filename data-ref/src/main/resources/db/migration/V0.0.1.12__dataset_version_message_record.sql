@@ -1,0 +1,1 @@
+ALTER TABLE dataset_version_message ALTER COLUMN record_id TYPE varchar(255);

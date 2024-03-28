@@ -1,0 +1,1 @@
+UPDATE metadata_value SET entity_type = 'DATASET' WHERE entity_type = 'DATASET_DEF'

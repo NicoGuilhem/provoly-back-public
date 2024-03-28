@@ -1,0 +1,86 @@
+quarkus:
+  management:
+    enabled: true
+    port: 8081
+  oidc:
+    client-id: provoly
+
+  flyway:
+    default-schema: provoly_transfo
+    migrate-at-start: true
+    validate-on-migrate: true
+  hibernate-orm:
+    physical-naming-strategy: io.hypersistence.utils.hibernate.naming.CamelCaseToSnakeCaseNamingStrategy
+    database:
+      default-schema: provoly_transfo
+"%dev":
+  quarkus:
+    management:
+      port: 8097
+    flyway:
+      repair-at-start: true
+    smallrye-openapi:
+      path: /openapi.yaml
+
+    log:
+      category:
+        "org.hibernate":
+          level: INFO
+        "com.provoly":
+          level: DEBUG
+      min-level: TRACE
+
+    keycloak:
+      devservices:
+        realm-name: provoly
+        realm-path: dev-realm.json
+        port: 9080
+
+    oidc:
+      token:
+        # Auth Server clock can be xx seconds ahead of resource server
+        lifespan-grace: 120
+      roles:
+        role-claim-path: "realm_access/roles"
+
+    http:
+      port: 8880
+
+    hibernate-orm:
+      log:
+        sql: false
+
+    datasource:
+      devservices:
+        port: 5433
+
+    rest-client:
+      "data-ref":
+        url: "http://localhost:8180"
+      "provoly-exec-engine":
+        url: "http://localhost:8780"
+
+    otel:
+      enabled: false
+      exporter:
+        resource-attributes: env=dev-local
+        otlp:
+          traces:
+            legacy-endpoint: http://localhost:4317
+
+  provoly:
+    transfo:
+      job-model-id: 423b5c01-1816-41d4-b358-000000000000
+    application:
+      version: dev
+      chart:
+        version: dev
+
+  http:
+    port: 8880
+
+"%prod":
+  quarkus:
+    kubernetes-config:
+      enabled: true
+      config-maps: provoly-transfo-engine

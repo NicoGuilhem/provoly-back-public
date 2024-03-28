@@ -1,0 +1,66 @@
+quarkus:
+  management:
+    enabled: true
+    port: 8081
+  oidc:
+    client-id: provoly
+
+"%dev":
+  quarkus:
+    management:
+      port: 8094
+    log:
+      category:
+        "com.provoly":
+          level: DEBUG
+      min-level: TRACE
+
+    oidc:
+      token:
+        # Auth Server clock can be xx seconds ahead of resource server
+        lifespan-grace: 120
+
+    otel:
+      enabled: false
+      exporter:
+        resource-attributes: env=dev-local
+        otlp:
+          traces:
+            legacy-endpoint: http://localhost:4317
+
+  provoly:
+    exec:
+      job-exec-id: 00000000-f383-4517-b3d0-7ff0acb3349a
+
+
+
+"%test":
+  quarkus:
+
+    oidc:
+      token:
+        # Auth Server clock can be xx seconds ahead of resource server
+        lifespan-grace: 120
+    rest-client:
+      "sso":
+        url: https://localhost:9080
+    log:
+      category:
+        "tracer": # Show trace for elastic client
+          level: TRACE
+        "com.provoly":
+          level: DEBUG
+      min-level: TRACE
+
+  provoly:
+    ref:
+      automatic-dataset: false
+      user: provoly_ref
+      password: password
+
+"%prod":
+  quarkus:
+    kubernetes-config:
+      enabled: true
+      config-maps: provoly-exec-data-outcome
+

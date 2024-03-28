@@ -1,0 +1,26 @@
+
+quarkus:
+
+  log:
+    category:
+      "com.provoly":
+        level: DEBUG
+    min-level: TRACE
+
+  otel:
+    enabled: false
+
+  oidc:
+    auth-server-url: https://acme.com/auth # Needed by extension even if not used
+
+provoly:
+  exec:
+    file-base-path: "./data"
+  application:
+    version: test
+    chart:
+      version: test
+
+job:
+  execution:
+    id: 423b5c01-1816-41d4-b358-000000000020 # Force job instance id in test run

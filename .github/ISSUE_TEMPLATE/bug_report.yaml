@@ -1,0 +1,48 @@
+name: Bug report
+labels: ["fix"]
+description: Report a new bug on Provoly
+
+body:
+  - type: dropdown
+    attributes:
+      label: Module
+      options:
+        - data-ref
+        - data-virt
+    id: Module
+
+  - type: input
+    attributes:
+      label: Version
+    id: Version
+
+  - type: input
+    attributes:
+      label: Environment
+    id: Environment
+
+  - type: textarea
+    id: Problem
+    attributes:
+       label: Problem description
+       description: Please describe the issue and the wanted behaviour
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Problem Reproduction
+      description: Please describe how to reproduce the issue
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+      render: shell
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: Implementation Idea
+      description: Any Implementation idea for resolution
+      render: shell

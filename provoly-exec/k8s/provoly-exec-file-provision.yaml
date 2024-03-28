@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: provoly-exec-file-provision
+  labels:
+    app: provoly
+    module: provoly-exec-file-provision
+data:
+  application.yaml: |
+    quarkus:
+      banner:
+        enabled: false
+      log:
+        console:
+          json: false
+          level: TRACE
+          format: "%d{HH:mm:ss} %-5p traceId=%X{traceId} parentId=%X{parentId} spanId=%X{spanId} [%c{2.}] (%t) %s%e%n"
+       
+      oidc:
+        auth-server-url: https://sso.dev.provoly.net/auth/realms/provoly
+
+      otel:
+        exporter:
+          resource-attributes: env=dev-local
+          otlp:
+            traces:
+              legacy-endpoint: http://localhost:4317
+    
+      rest-client:
+        "provoly-exec-engine":
+          url: http://provoly-exec-engine:8080
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: provoly-exec-file-provision
+  labels:
+    app: provoly
+    module: provoly-exec-file-provision

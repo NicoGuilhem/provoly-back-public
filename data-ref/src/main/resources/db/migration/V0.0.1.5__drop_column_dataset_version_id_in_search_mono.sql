@@ -1,0 +1,1 @@
+drop table mono_class_search_request_dataset_version_ids;

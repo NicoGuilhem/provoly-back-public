@@ -1,0 +1,63 @@
+mp:
+  messaging:
+    incoming:
+      virt-event:
+        topic: virt-event
+        connector: smallrye-kafka
+        auto:
+          offset:
+            reset: earliest
+    outgoing:
+      "ref-event":
+        connector: smallrye-kafka
+
+quarkus:
+  log:
+    category:
+      "org.hibernate":
+        level: INFO
+      "com.provoly":
+        level: DEBUG
+      "io.quarkus.oidc":
+        level: INFO
+    min-level: TRACE
+
+  kubernetes-config:
+    enabled: false
+  otel:
+    sdk:
+      disabled: true
+
+  oidc:
+    client-id: provoly
+    token:
+      # Auth Server clock can be xx seconds ahead of resource server
+      lifespan-grace: 120
+    roles:
+      role-claim-path: "realm_access/roles"
+
+  http:
+    port: 8180
+
+
+provoly:
+  ref:
+    skip-index-creation-allowed: true
+    user: provoly_ref
+    password: password
+    keycloak-user-list: true
+    scheduler:
+      notification: 10s
+    storages:
+      - ELASTIC
+      - POSTGIS
+  anonymous:
+    uuid: 1fb6c658-c02e-4531-996e-c37b9eefc6b3
+    roles:
+      - dashboard_read
+      - search
+      - widget_catalog_read
+  application:
+    version: container-test
+    chart:
+      version: container-test

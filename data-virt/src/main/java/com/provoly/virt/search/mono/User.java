@@ -1,0 +1,42 @@
+package com.provoly.virt.search.mono;
+
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import com.provoly.common.metadata.UserProfileValueReadDto;
+
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
+/**
+ * This user is used is the context of evaluating predicate
+ */
+@RegisterForReflection
+public class User {
+
+    private final String name;
+    private final Set<String> roles;
+    private final Map<String, UserProfileValueReadDto> metadata;
+
+    User(String name, Set<String> roles, Collection<UserProfileValueReadDto> metadata) {
+        this.name = name;
+        this.roles = roles;
+        this.metadata = metadata.stream().collect(Collectors.toMap(m -> m.getUserProfile().name, Function.identity()));
+    }
+
+    public String getLogin() {
+        return name;
+    }
+
+    public boolean hasRole(String role) {
+        return roles.contains(role);
+    }
+
+    public String metadata(String name) {
+        var metadata = this.metadata.get(name);
+        return metadata == null ? null : metadata.getValue();
+    }
+
+}
