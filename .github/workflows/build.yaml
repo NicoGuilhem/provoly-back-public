@@ -85,7 +85,7 @@ jobs:
       # CHECK AND BUILD REF IF NEEDED
       - name: Check Ref modification
         id: changed-ref-files
-        uses: tj-actions/changed-files@v43
+        uses: tj-actions/changed-files@v44
         with:
           # Avoid using single or double quotes for multiline patterns
           files: |
