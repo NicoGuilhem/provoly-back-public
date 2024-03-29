@@ -27,7 +27,9 @@ env:
   JAVA_VERSION: 21
   MAVEN_OPTS: "-Dorg.slf4j.simpleLogger.showDateTime=true -Djansi.force=true"
   MAVEN_CLI_OPTS: "-Dstyle.color=always --batch-mode --errors --show-version -DinstallAtEnd=true -Dno-format -DdeployAtEnd=true"
-  MAVEN_JIB_OPTIONS:  "-Dquarkus.container-image.tag=latest -Dquarkus.container-image.labels.\"git-ref\"=${{ github.sha }}"
+  SKIP_TEST: "false"
+  MAVEN_JIB_OPTIONS:  "-Dquarkus.container-image.labels.\"git-ref\"=${{ github.sha }}"
+  IMAGE_NAME: "-Dquarkus.container-image.tag=latest"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -101,12 +103,13 @@ jobs:
         id: main-branch
         run: |
           echo "DOCKER_IMAGE_ADDITIONAL_TAGS=$DOCKER_IMAGE_ADDITIONAL_TAGS, latest" >> $$GITHUB_ENV
-          echo "MAVEN_CLI_OPTS=-Dstyle.color=always --batch-mode --errors --show-version -DinstallAtEnd=true -DdeployAtEnd=true  -DskipTests" >> $GITHUB_ENV
+          echo "SKIP_TEST=true" >> $GITHUB_ENV
+          echo "IMAGE_NAME=" >> $GITHUB_ENV
         if: github.ref == 'refs/heads/main'
 
       - name: Build Ref
         id: ref-build
-        run: mvn ${{ env.MAVEN_CLI_OPTS }} verify -pl data-ref -Dquarkus.container-image.additional-tags=${{ env.DOCKER_IMAGE_ADDITIONAL_TAGS }} -am  ${{ env.MAVEN_JIB_OPTIONS }} -Pdocker-image
+        run: mvn ${{ env.MAVEN_CLI_OPTS }} -DskipTests=${{ env.SKIP_TEST }} verify -pl data-ref -Dquarkus.container-image.additional-tags=${{ env.DOCKER_IMAGE_ADDITIONAL_TAGS }} -am  ${{ env.MAVEN_JIB_OPTIONS }} ${{ env.IMAGE_NAME }} -Pdocker-image
         if: steps.changed-ref-files.outputs.any_changed == 'true'
         env:
           CI_REGISTRY_PASSWORD: ${{ secrets.CI_REGISTRY_PASSWORD }}
@@ -130,7 +133,7 @@ jobs:
 
       - name: Build Modules
         id: modules-build
-        run: mvn ${{ env.MAVEN_CLI_OPTS }} verify -pl ${{ env.MODULES }} -am ${{ env.MAVEN_JIB_OPTIONS }} -Dquarkus.container-image.additional-tags=${{env.DOCKER_IMAGE_ADDITIONAL_TAGS}} -Pdocker-image
+        run: mvn ${{ env.MAVEN_CLI_OPTS }} -DskipTests=${{ env.SKIP_TEST }} verify -pl ${{ env.MODULES }} -am ${{ env.MAVEN_JIB_OPTIONS }} ${{ env.IMAGE_NAME }} -Dquarkus.container-image.additional-tags=${{env.DOCKER_IMAGE_ADDITIONAL_TAGS}} -Pdocker-image
         env:
           CI_REGISTRY_PASSWORD: ${{ secrets.CI_REGISTRY_PASSWORD }}
           CI_REGISTRY_SERVER: ${{ vars.CI_REGISTRY_SERVER }}

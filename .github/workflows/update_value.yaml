@@ -59,7 +59,7 @@ jobs:
           event-type: update-chart-value
           client-payload: |
             {
-              "filename": "provoly/provoly-dev/values.yaml",
+              "filename": "provoly/provoly-dev/provoly/values.yaml",
               "field_names": "${{ env.DEPLOY }}",
               "field_value": "dev-${{ env.CI_SHORT_COMMIT_SHA }}"
             }
