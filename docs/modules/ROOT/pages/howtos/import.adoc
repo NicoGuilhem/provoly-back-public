@@ -77,8 +77,10 @@ The archive may also contain the following files :
 The content-type must be `application/shp`.
 
 The attribute carrying the geometry must be named `the_geom` in the data model and there can **only be one**. All attributes must be filled in, even if values are empty.
-The geometry must correspond exactly to the attribute type : it's not possible to have lines and multilines in a dataset.
+The geometry must correspond exactly to the attribute type : it's not possible to have lines and polygon in a dataset. However, it is possible to have lines and multilines. To do this, when importing data you must send params `normalizeGeo` to true..
 
-All data will be added with the default Coordinate Reference System (CRS) which is `WGS84`. For now, it's not possible to specify a different CRS.
+When you create a field, it's possible to precise the Coordinate Reference System (CRS) of your choice, otherwise it will be `WGS84` by default.
+All data will be added with the Coordinate Reference System (CRS) precise in the field.
+
 
 If the precision of the geometry is greater than 15, it will be truncated at 15.

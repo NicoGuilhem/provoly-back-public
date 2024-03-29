@@ -108,7 +108,6 @@ Below is listed an exhaustive list of the services available in the project.
 | kibana             |                                            | 5601
 | kafka             | Message broker  | 9093
 | akhq             | To visualize kafka topics              | 9193
-| nifi             |                                            | 8443
 |===
 
 ==== Items Databases

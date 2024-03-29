@@ -10,7 +10,7 @@ on:
       - 'LICENSE'
       - '*.adoc'
       - '*.txt'
-      - 'docs'
+      - 'docs/**'
       - 'ide-config'
       - '.github/**'
   pull_request:
@@ -18,7 +18,7 @@ on:
       - '.gitignore'
       - 'LICENSE'
       - '*.adoc'
-      - 'docs'
+      - 'docs/**'
       - 'ide-config'
       - '*.txt'
       - '.github/**'
