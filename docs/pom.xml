@@ -6,11 +6,11 @@
 
     <artifactId>docs</artifactId>
     <packaging>pom</packaging>
-    <version>0.24.2</version>
+    <version>0.24.3</version>
     <parent>
         <groupId>com.provoly</groupId>
         <artifactId>provoly-parent-build-quarkus</artifactId>
-        <version>0.24.2</version>
+        <version>0.24.3</version>
         <relativePath>../provoly-parent-build-quarkus</relativePath>
     </parent>
 
