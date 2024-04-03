@@ -2273,7 +2273,7 @@ components:
       name: order
       schema:
         description: Query parameters usage to SortDto.
-        type: string
+        type: object
         properties:
           sortById:
             type: boolean
@@ -2314,17 +2314,6 @@ components:
           Query parameter usage of FilterDto. 
           The upperValue is necessary only with operator that accept it such as INSIDE and OUTSIDE.
         type: string
-        properties:
-          attribute:
-            $ref: '#/components/schemas/UUID'
-          operator:
-            $ref: '#/components/schemas/Operator'
-          value:
-            type: string
-            example: "mar"
-          upperValue:
-            type: string
-            example: "MAR"
         pattern: '{{attribute_id}},{{OPERATOR}},{{value}},{{upperValue}}'
         example:
           - 'uuid,INSIDE,2020,2022'
