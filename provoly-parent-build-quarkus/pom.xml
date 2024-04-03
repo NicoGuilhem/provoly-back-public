@@ -5,13 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>provoly-parent-build-quarkus</artifactId>
-    <version>0.24.3</version>
+    <version>0.24.4</version>
     <packaging>pom</packaging>
 
     <parent>
         <groupId>com.provoly</groupId>
         <artifactId>provoly-parent</artifactId>
-        <version>0.24.3</version>
+        <version>0.24.4</version>
         <relativePath>../provoly-parent</relativePath>
     </parent>
 

@@ -35,7 +35,7 @@ jobs:
       #  CHECK AND BUILD REQUIRED MODULES
       - name: Detect Changes
         id: changes
-        uses: jbangdev/jbang-action@v0.116.0
+        uses: jbangdev/jbang-action@v0.115.0
         with:
           script: ./ci/scripts/CiScripts.java
           scriptargs: select-deploy-modules
