@@ -6,7 +6,7 @@
 
     <groupId>com.provoly</groupId>
     <artifactId>provoly</artifactId>
-    <version>0.24.4</version>
+    <version>0.25.0</version>
     <packaging>pom</packaging>
 
     <modules>

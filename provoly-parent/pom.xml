@@ -6,7 +6,7 @@
 
     <groupId>com.provoly</groupId>
     <artifactId>provoly-parent</artifactId>
-    <version>0.24.4</version>
+    <version>0.25.0</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -141,12 +141,12 @@
             <dependency>
                 <groupId>com.provoly</groupId>
                 <artifactId>provoly-common</artifactId>
-                <version>0.24.4</version>
+                <version>0.25.0</version>
             </dependency>
             <dependency>
                 <groupId>com.provoly</groupId>
                 <artifactId>provoly-common-test</artifactId>
-                <version>0.24.4</version>
+                <version>0.25.0</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
