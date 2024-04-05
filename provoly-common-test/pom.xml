@@ -51,6 +51,10 @@
             <version>1.19.5</version>
         </dependency>
         <dependency>
+            <groupId>org.postgresql</groupId> <!-- Needed by testcontainers to execute scripts -->
+            <artifactId>postgresql</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
         </dependency>

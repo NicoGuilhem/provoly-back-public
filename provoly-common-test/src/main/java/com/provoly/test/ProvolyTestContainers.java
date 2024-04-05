@@ -1,33 +1,31 @@
 package com.provoly.test;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
-import io.quarkus.devservices.common.ContainerAddress;
-import io.quarkus.devservices.common.ContainerLocator;
-import io.quarkus.runtime.LaunchMode;
 import io.quarkus.test.common.DevServicesContext;
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 
-import org.testcontainers.DockerClientFactory;
-import org.testcontainers.containers.*;
+import org.jboss.logging.Logger;
+import org.testcontainers.containers.BindMode;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.Network;
+import org.testcontainers.containers.PostgisContainerProvider;
 import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
+import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
 import org.testcontainers.images.PullPolicy;
+import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.utility.DockerImageName;
 
-import com.github.dockerjava.api.command.ExecCreateCmd;
-
 /**
- * Data-virt Test use dataRef container which need a Postgres and a Kafka to run
+ * This class is only used by DATA_VIRT TEST
+ * Start every container needed for test
+ * Every container is started in a dedicated network
  */
 
 public class ProvolyTestContainers implements QuarkusTestResourceLifecycleManager, DevServicesContext.ContextAware {
@@ -37,18 +35,13 @@ public class ProvolyTestContainers implements QuarkusTestResourceLifecycleManage
             "dh2wltsh.gra7.container-registry.ovh.net/provoly/data-ref:latest");
 
     public static final String POSTGRES_SERVICE_LABEL = "provoly-postgres";
-    public static final String POSTGRES_VALUE = "postgres";
-    public static final String USERNAME = "test";
-    public static final String PASSWORD = "test";
-    public static final String DATABASE_NAME = "postgres";
-    public static final int POSTGRES_PORT = 5432;
-
-    public static final String POSTGIS_SERVICE_LABEL = "provoly-postgis";
-    public static final String POSTGIS_VALUE = "postgis";
-    public static final String USERNAME_POSTGIS = "test_postgis";
-    public static final String PASSWORD_POSTGIS = "test_postgis";
-    public static final String DATABASE_NAME_POSTGIS = "postgis";
-    public static final int POSTGIS_PORT = 5430;
+    public static final String POSTGRES_VALUE = "postgis";
+    public static final String POSTGRES_DATABASE = "provoly";
+    public static final String POSTGRES_USERNAME = "postgres_admin";
+    public static final String POSTGRES_PASSWORD = "password";
+    public static final String POSTGRES_DATAREF_USERNAME = "dataref";
+    public static final String POSTGRES_DATAREF_PASSWORD = "dataref";
+    public static final int POSTGRES_EXTERNAL_PORT = 5430;
 
     public static final String ELASTIC_SERVICE_LABEL = "provoly-elastic";
     public static final String ELASTIC_VALUE = "elastic";
@@ -63,239 +56,148 @@ public class ProvolyTestContainers implements QuarkusTestResourceLifecycleManage
     public static final String DEV_VALUE = "dataref";
     public static final int DATA_REF_PORT = 8180;
 
-    private ExecCreateCmd postgresCleanUp;
-    private ExecCreateCmd postgisCleanUp;
-    private ExecCreateCmd elasticCleanUp;
+    private static final Logger log = Logger.getLogger(ProvolyTestContainers.class);
 
-    private ExecCreateCmd kafkaCleanUp;
-    private ExecCreateCmd keycloakCleanUp;
-    private ExecCreateCmd datarefCleanUp;
-
-    private AtomicBoolean initialized = new AtomicBoolean(false);
-    private static final String DROP_TABLE = """
-            psql -U postgres -d postgres -c '
-            DO $$
-            DECLARE
-                r record;
-            BEGIN
-                FOR r IN SELECT quote_ident(tablename) AS tablename, quote_ident(schemaname) AS schemaname FROM pg_tables WHERE schemaname = 'public'
-                LOOP
-                    RAISE INFO 'truncate table %.%', r.schemaname, r.tablename;
-                    EXECUTE format('TRUNCATE TABLE %I.%I CASCADE', r.schemaname, r.tablename);
-                END LOOP;
-            END$$;
-            '""";
-
-    private static final String DROP_TABLE_POSTGIS = """
-            psql -U postgis -d postgis -c '
-            DO $$
-            DECLARE
-                r record;
-            BEGIN
-                FOR r IN SELECT quote_ident(tablename) AS tablename, quote_ident(schemaname) AS schemaname FROM pg_tables WHERE schemaname = 'public'
-                LOOP
-                    RAISE INFO 'truncate table %.%', r.schemaname, r.tablename;
-                    EXECUTE format('TRUNCATE TABLE %I.%I CASCADE', r.schemaname, r.tablename);
-                END LOOP;
-            END$$;
-            '""";
     private DevServicesContext context;
-    private Map<String, String> config = new HashMap<>();
-    private Network sharedNetwork;
+
+    private Network sharedNetwork = Network.newNetwork();
+
+    private GenericContainer<?> postgresContainer = buildPostgresContainer();
+    private GenericContainer<?> elasticContainer = buildElasticContainer();
+    private RedpandaTestContainer kafkaContainer = buildKafkaContainer();
+    private KeycloakContainer keycloakContainer = buildKeycloakContainer();
+    private GenericContainer<?> dataRefContainer = buildDataRefContainer();
 
     @Override
     public Map<String, String> start() {
-        String hostAdress = "localhost";
-        try {
-            hostAdress = InetAddress.getLocalHost().getHostAddress();
-        } catch (UnknownHostException e) {
-            throw new RuntimeException(e);
-        }
-        if (!initialized.get()) {
-            sharedNetwork = Network.newNetwork();
-            var addressPostgres = getOrStartContainerAddress(POSTGRES_SERVICE_LABEL, POSTGRES_VALUE, POSTGRES_PORT,
-                    startPostgresContainer());
-            postgresCleanUp = DockerClientFactory.lazyClient().execCreateCmd(addressPostgres.getId()).withCmd(DROP_TABLE);
 
-            var addressPostgis = getOrStartContainerAddress(POSTGIS_SERVICE_LABEL, POSTGIS_VALUE, POSTGIS_PORT,
-                    startPostgisContainer());
-            postgisCleanUp = DockerClientFactory.lazyClient().execCreateCmd(addressPostgis.getId()).withCmd(DROP_TABLE_POSTGIS);
+        log.info("Starting all containers...");
 
-            var addressElastic = getOrStartContainerAddress(ELASTIC_SERVICE_LABEL, ELASTIC_VALUE, ELASTIC_PORT,
-                    startElasticContainer());
-            elasticCleanUp = DockerClientFactory.lazyClient().execCreateCmd(addressElastic.getId())
-                    .withCmd("curl -X DELETE http://localhost:9200/_all");
+        sharedNetwork = Network.newNetwork();
 
-            var addressKafka = getOrStartContainerAddress(KAFKA_SERVICE_LABEL, KAFKA_VALUE, KAFKA_PORT,
-                    startKafkaContainer());
-            kafkaCleanUp = DockerClientFactory.lazyClient().execCreateCmd(addressKafka.getId());
+        postgresContainer = buildPostgresContainer();
+        elasticContainer = buildElasticContainer();
+        kafkaContainer = buildKafkaContainer();
+        keycloakContainer = buildKeycloakContainer();
+        dataRefContainer = buildDataRefContainer();
 
-            var addressKeycloak = getOrStartContainerAddress(KeycloakContainer.KEYCLOAK_SERVICE_LABEL,
-                    KeycloakContainer.KEYCLOAK_VALUE, KeycloakContainer.KEYCLOAK_PORT, startKeycloakContainer(hostAdress));
-            keycloakCleanUp = DockerClientFactory.lazyClient().execCreateCmd(addressKeycloak.getId());
+        log.info("Starting all support containers");
+        Startables
+                .deepStart(postgresContainer, elasticContainer, kafkaContainer, keycloakContainer)
+                .join();
+        log.info("Initializing keycloak");
+        keycloakContainer.postInit(); // Can't use depends on because of the postInit method
+        log.info("Starting data ref container");
+        dataRefContainer.start();
 
-            var addressDataRef = getOrStartContainerAddress(DEV_SERVICE_LABEL, DEV_VALUE, DATA_REF_PORT,
-                    startRefContainer(addressPostgres, addressKeycloak, hostAdress));
-            datarefCleanUp = DockerClientFactory.lazyClient().execCreateCmd(addressDataRef.getId());
+        var config = new HashMap<String, String>();
+        config.put("provoly.virt.elasticsearch.host", elasticContainer.getHost());
+        config.put("provoly.virt.elasticsearch.port", String.valueOf(elasticContainer.getMappedPort(ELASTIC_PORT)));
+        config.put("provoly.virt.elasticsearch.protocol", "http");
+        config.put("provoly.virt.elasticsearch.username", ELASTIC_VALUE);
+        config.put("provoly.virt.elasticsearch.password", ELASTIC_VALUE);
+        config.put("quarkus.rest-client.data-ref.url",
+                "http://" + dataRefContainer.getHost() + ":" + dataRefContainer.getFirstMappedPort());
+        config.put("kafka.bootstrap.servers", kafkaContainer.getHost() + ":" + kafkaContainer.getFirstMappedPort());
 
-            // From the process under test, we use <addressXXX>.getPort which is resolve as 'docker/127.0.0.1' to reach running process in dind service
-            config.put("provoly.virt.elasticsearch.host", addressElastic.getHost());
-            config.put("provoly.virt.elasticsearch.port", String.valueOf(addressElastic.getPort()));
-            config.put("provoly.virt.elasticsearch.protocol", "http");
-            config.put("provoly.virt.elasticsearch.username", ELASTIC_VALUE);
-            config.put("provoly.virt.elasticsearch.password", ELASTIC_VALUE);
-            config.put("quarkus.rest-client.data-ref.url",
-                    "http://" + addressDataRef.getHost() + ":" + addressDataRef.getPort());
-            config.put("kafka.bootstrap.servers", addressKafka.getHost() + ":" + addressKafka.getPort());
-            config.put("quarkus.oidc.auth-server-url",
-                    "http://%s:%s/realms/provoly".formatted(hostAdress, addressKeycloak.getPort()));
-            config.put("quarkus.oidc-client.auth-server-url",
-                    "http://%s:%s/realms/provoly".formatted(hostAdress, addressKeycloak.getPort()));
-            config.put("quarkus.rest-client.\"sso\".url", "http://%s:%s".formatted(hostAdress, addressKeycloak.getPort()));
+        // Parameters for keycloak
+        String keycloakFromDockerHost = "http://127.0.0.1:%s".formatted(keycloakContainer.getFirstMappedPort());
+        String keycloakRealmFromDockerHost = keycloakFromDockerHost + "/realms/provoly";
+        config.put("quarkus.oidc.auth-server-url", keycloakRealmFromDockerHost);
+        config.put("quarkus.oidc-client.auth-server-url", keycloakRealmFromDockerHost);
+        config.put("quarkus.rest-client.\"sso\".url", keycloakFromDockerHost);
 
-            context.devServicesProperties().putAll(config);
-            initialized.set(true);
-        }
+        context.devServicesProperties().putAll(config);
+
         return config;
     }
 
     @Override
     public void stop() {
-        postgresCleanUp.exec();
-        postgisCleanUp.exec();
-        elasticCleanUp.exec();
-        kafkaCleanUp.exec();
-        keycloakCleanUp.exec();
-        datarefCleanUp.exec();
+        log.info("Stopping all containers...");
+        postgresContainer.stop();
+        elasticContainer.stop();
+        kafkaContainer.stop();
+        keycloakContainer.stop();
+        dataRefContainer.stop();
+        sharedNetwork.close();
+        log.info("Containers stopped.");
     }
 
-    private Supplier<ContainerAddress> startPostgresContainer() {
-        return () -> {
-            DockerImageName postgresImage = DockerImageName
-                    .parse("dh2wltsh.gra7.container-registry.ovh.net/docker-mirror/library/postgres:14.1-alpine")
-                    .asCompatibleSubstituteFor("postgres");
-            var postgreSQLContainer = new PostgreSQLContainer<>(postgresImage)
-                    .withReuse(true)
-                    .withLabel(POSTGRES_SERVICE_LABEL, POSTGRES_VALUE)
-                    .withUsername(USERNAME)
-                    .withPassword(PASSWORD)
-                    .withDatabaseName(DATABASE_NAME)
-                    .withExposedPorts(POSTGRES_PORT)
-                    .withNetworkAliases("db01")
-                    .withNetwork(sharedNetwork);
-            postgreSQLContainer.setPortBindings(List.of("%s:%s".formatted(POSTGRES_PORT, POSTGRES_PORT)));
-            postgreSQLContainer.start();
-            return new ContainerAddress(postgreSQLContainer.getContainerId(), "db01",
-                    postgreSQLContainer.getFirstMappedPort());
-        };
+    private GenericContainer<?> buildPostgresContainer() {
+        var postgres = new PostgisContainerProvider().newInstance()
+                .withUsername(POSTGRES_USERNAME)
+                .withPassword(POSTGRES_PASSWORD)
+                .withDatabaseName(POSTGRES_DATABASE)
+                .withInitScript("postgis-init.sql")
+                .withLabel(POSTGRES_SERVICE_LABEL, POSTGRES_VALUE)
+                .withNetwork(sharedNetwork)
+                .withNetworkAliases("db01");
+
+        postgres.setDockerImageName("dh2wltsh.gra7.container-registry.ovh.net/docker-mirror/postgis/postgis:16-3.4");
+        postgres.setPortBindings(List.of("%s:%s".formatted(POSTGRES_EXTERNAL_PORT, "5432")));
+        return postgres;
     }
 
-    private Supplier<ContainerAddress> startPostgisContainer() {
-        return () -> {
-            DockerImageName postgisImage = DockerImageName
-                    .parse("dh2wltsh.gra7.container-registry.ovh.net/docker-mirror/library/postgis:15-3.3-alpine")
-                    .asCompatibleSubstituteFor("postgis");
-            var postgisSQLContainer = new PostgisContainerProvider().newInstance("16-3.4")
-                    .withUsername(USERNAME_POSTGIS)
-                    .withPassword(PASSWORD_POSTGIS)
-                    .withDatabaseName(DATABASE_NAME_POSTGIS)
-                    .withReuse(true)
-                    .withLabel(POSTGIS_SERVICE_LABEL, POSTGIS_VALUE)
-                    .withExposedPorts(POSTGIS_PORT);
+    private GenericContainer<?> buildElasticContainer() {
+        var elasticContainer = new GenericContainer<>(
+                DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch:8.4.1"))
+                .withLabel(ELASTIC_SERVICE_LABEL, ELASTIC_VALUE)
+                .withNetwork(sharedNetwork)
+                .withExposedPorts(ELASTIC_PORT)
+                .withEnv("discovery.type", "single-node")
+                .withEnv("ES_JAVA_OPTS", "-Xms512m -Xmx512m")
+                .withClasspathResourceMapping("elasticsearch.yml",
+                        "/usr/share/elasticsearch/config/elasticsearch.yml", BindMode.READ_ONLY);
 
-            postgisSQLContainer.setPortBindings(List.of("%s:%s".formatted(POSTGIS_PORT, POSTGRES_PORT)));
-            postgisSQLContainer.start();
-            return new ContainerAddress(postgisSQLContainer.getContainerId(), postgisSQLContainer.getHost(),
-                    postgisSQLContainer.getFirstMappedPort());
-        };
+        elasticContainer.setPortBindings(List.of("%s:%s".formatted(ELASTIC_PORT, ELASTIC_PORT)));
+        elasticContainer
+                .setWaitStrategy(new HostPortWaitStrategy().withStartupTimeout(Duration.of(3L, ChronoUnit.MINUTES)));
+        return elasticContainer;
     }
 
-    private Supplier<ContainerAddress> startKeycloakContainer(String hostAdress) {
-        return () -> {
-            var keycloakContainer = new KeycloakContainer(hostAdress, "dev-realm.json");
-            keycloakContainer.start();
-            keycloakContainer.postInit();
-            return new ContainerAddress(keycloakContainer.getContainerId(), keycloakContainer.getHost(),
-                    keycloakContainer.getFirstMappedPort());
-        };
-    }
-
-    private Supplier<ContainerAddress> startElasticContainer() {
-        return () -> {
-            var elasticContainer = new GenericContainer(
-                    DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch:8.4.1"))
-                    .withReuse(true)
-                    .withLabel(ELASTIC_SERVICE_LABEL, ELASTIC_VALUE)
-                    .withExposedPorts(ELASTIC_PORT)
-                    .withEnv("discovery.type", "single-node")
-                    .withEnv("ES_JAVA_OPTS", "-Xms512m -Xmx512m")
-                    .withClasspathResourceMapping("elasticsearch.yml",
-                            "/usr/share/elasticsearch/config/elasticsearch.yml", BindMode.READ_ONLY);
-
-            elasticContainer.setPortBindings(List.of("%s:%s".formatted(ELASTIC_PORT, ELASTIC_PORT)));
-            elasticContainer
-                    .setWaitStrategy(new HostPortWaitStrategy().withStartupTimeout(Duration.of(3l, ChronoUnit.MINUTES)));
-            elasticContainer.start();
-
-            return new ContainerAddress(elasticContainer.getContainerId(), elasticContainer.getHost(),
-                    elasticContainer.getFirstMappedPort());
-        };
-    }
-
-    private Supplier<ContainerAddress> startRefContainer(ContainerAddress addressPostgres, ContainerAddress keycloakAdress,
-            String hostAdress) {
-        var imagePullPolicy = imagePolicy.equals("alwaysPull") ? PullPolicy.alwaysPull() : PullPolicy.defaultPolicy();
-        return () -> {
-            var dataRefContainer = new GenericContainer(DockerImageName.parse(fullImageName))
-                    .withReuse(true)
-                    .withLabel(DEV_SERVICE_LABEL, DEV_VALUE)
-                    .withNetwork(sharedNetwork)
-                    .withImagePullPolicy(imagePullPolicy)
-                    .withExposedPorts(DATA_REF_PORT)
-                    .withLogConsumer(
-                            (Consumer<OutputFrame>) outputFrame -> System.out.print("DATA_REF:" + outputFrame.getUtf8String()))
-                    .withClasspathResourceMapping("application-container-data-ref.yaml", fileSystemBind, BindMode.READ_ONLY)
-                    .withEnv("quarkus.datasource.db-kind", "postgresql")
-                    .withEnv("quarkus.datasource.username", USERNAME)
-                    .withEnv("quarkus.datasource.password", PASSWORD)
-                    .withEnv("quarkus.datasource.jdbc.url", getJdbcUrl(addressPostgres))
-                    .withEnv("quarkus.oidc.auth-server-url",
-                            "http://%s:%s/realms/provoly".formatted(hostAdress, keycloakAdress.getPort()))
-                    .withEnv("quarkus.rest-client.\"sso\".url",
-                            "http://%s:%S/realms/provoly".formatted(hostAdress, keycloakAdress.getPort()))
-                    .withEnv("kafka.bootstrap.servers", "kafka:29092")
-                    .withNetworkAliases("localhost");
-            dataRefContainer.start();
-            return new ContainerAddress(dataRefContainer.getContainerId(), dataRefContainer.getHost(),
-                    dataRefContainer.getFirstMappedPort());
-        };
-    }
-
-    private Supplier<ContainerAddress> startKafkaContainer() {
+    private RedpandaTestContainer buildKafkaContainer() {
         var kafkaTestContainer = new RedpandaTestContainer(DockerImageName.parse(KAFKA_DOCKER_IMAGE), KAFKA_PORT,
-                KAFKA_SERVICE_LABEL);
-        return () -> {
-            var kafkaContainer = kafkaTestContainer
-                    .withReuse(true)
-                    .withLabel(KAFKA_SERVICE_LABEL, KAFKA_VALUE)
-                    .withNetwork(sharedNetwork)
-                    .withNetworkAliases("kafka")
-                    .withExposedPorts(KAFKA_PORT);
-            kafkaContainer.start();
-            return new ContainerAddress(kafkaContainer.getContainerId(), kafkaContainer.getHost(),
-                    kafkaContainer.getFirstMappedPort());
-        };
+                KAFKA_SERVICE_LABEL)
+                .withLabel(KAFKA_SERVICE_LABEL, KAFKA_VALUE)
+                .withNetwork(sharedNetwork)
+                .withNetworkAliases("kafka")
+                .withExposedPorts(KAFKA_PORT);
+        return kafkaTestContainer;
     }
 
-    private ContainerAddress getOrStartContainerAddress(String label, String value, int port,
-            Supplier<ContainerAddress> containerAddressSupplier) {
-        ContainerLocator containerLocator = new ContainerLocator(label, port);
-        var maybeAddress = containerLocator.locateContainer(value, true, LaunchMode.DEVELOPMENT);
-        return maybeAddress.orElseGet(containerAddressSupplier);
+    private KeycloakContainer buildKeycloakContainer() {
+        var keycloakContainer = new KeycloakContainer("dev-realm.json")
+                .withNetwork(sharedNetwork)
+                .withNetworkAliases("sso")
+                .withLogConsumer(
+                        // Using sout to avoid bad log formatting
+                        outputFrame -> System.out.print("KEYCLOAK: " + outputFrame.getUtf8String()));
+        return keycloakContainer;
     }
 
-    private String getJdbcUrl(ContainerAddress containerAddress) {
-        return "jdbc:postgresql://db01:" + containerAddress.getPort() + "/" + DATABASE_NAME;
+    private GenericContainer<?> buildDataRefContainer() {
+        var imagePullPolicy = imagePolicy.equals("alwaysPull") ? PullPolicy.alwaysPull() : PullPolicy.defaultPolicy();
+        var waitLogFor = ".*Listening on: http:\\/\\/0\\.0\\.0\\.0:" + DATA_REF_PORT + ".*";
+        var dataRefContainer = new GenericContainer<>(DockerImageName.parse(fullImageName))
+                .withLabel(DEV_SERVICE_LABEL, DEV_VALUE)
+                .withNetwork(sharedNetwork)
+                .withImagePullPolicy(imagePullPolicy)
+                .waitingFor(new LogMessageWaitStrategy().withRegEx(waitLogFor))
+                .withExposedPorts(DATA_REF_PORT)
+                .withLogConsumer(
+                        // Using sout to avoid bad log formatting
+                        (Consumer<OutputFrame>) outputFrame -> System.out.print("DATA_REF: " + outputFrame.getUtf8String()))
+                .withClasspathResourceMapping("application-container-data-ref.yaml", fileSystemBind, BindMode.READ_ONLY)
+                .withEnv("quarkus.datasource.db-kind", "postgresql")
+                .withEnv("quarkus.datasource.username", POSTGRES_DATAREF_USERNAME)
+                .withEnv("quarkus.datasource.password", POSTGRES_DATAREF_PASSWORD)
+                .withEnv("quarkus.datasource.jdbc.url",
+                        "jdbc:postgresql://db01:5432/" + POSTGRES_DATABASE + "?currentSchema=dataref")
+                .withEnv("quarkus.oidc.auth-server-url", "http://sso:8080/realms/provoly")
+                .withEnv("quarkus.rest-client.\"sso\".url", "http://sso:8080/realms/provoly")
+                .withEnv("kafka.bootstrap.servers", "kafka:29092");
+        return dataRefContainer;
     }
 
     @Override

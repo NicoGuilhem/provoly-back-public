@@ -42,18 +42,16 @@ public class KeycloakContainer extends GenericContainer<KeycloakContainer> {
 
     // Properties recognized by Quarkus-powered Keycloak
     private static final String KEYCLOAK_QUARKUS_HOSTNAME = "KC_HOSTNAME";
+    private static final String KEYCLOAK_QUARKUS_PORT = "KC_HOSTNAME_PORT";
     private static final String KEYCLOAK_QUARKUS_ADMIN_PROP = "KEYCLOAK_ADMIN";
     private static final String KEYCLOAK_QUARKUS_ADMIN_PASSWORD_PROP = "KEYCLOAK_ADMIN_PASSWORD";
 
     private static final String KEYCLOAK_DOCKER_IMAGE = "quay.io/keycloak/keycloak:22.0.5";
-    private final String hostAdress;
     private final String realmPath;
     private RealmRepresentation realmRep;
 
-    public KeycloakContainer(String hostAdress, String realmPath) {
+    public KeycloakContainer(String realmPath) {
         super(DockerImageName.parse(KEYCLOAK_DOCKER_IMAGE));
-        this.hostAdress = hostAdress;
-
         this.realmPath = realmPath;
 
         super.setWaitStrategy(Wait.forLogMessage(".*Keycloak.*started.*", 1));
@@ -62,7 +60,9 @@ public class KeycloakContainer extends GenericContainer<KeycloakContainer> {
     @Override
     protected void configure() {
         super.configure();
-        addEnv(KEYCLOAK_QUARKUS_HOSTNAME, hostAdress);
+        // Override Hostname and port in order to have a correct iss in generated token
+        addEnv(KEYCLOAK_QUARKUS_HOSTNAME, "sso");
+        addEnv(KEYCLOAK_QUARKUS_PORT, String.valueOf(KEYCLOAK_PORT));
         addExposedPort(KEYCLOAK_PORT);
         withLabel(KEYCLOAK_SERVICE_LABEL, KEYCLOAK_VALUE);
         addEnv(KEYCLOAK_QUARKUS_ADMIN_PROP, KEYCLOAK_ADMIN_USER);
@@ -105,11 +105,6 @@ public class KeycloakContainer extends GenericContainer<KeycloakContainer> {
             LOG.errorf("Realm %s resource can not be opened: %s", realmPath, ex.getMessage());
         }
         return Optional.empty();
-    }
-
-    @Override
-    public String getHost() {
-        return hostAdress;
     }
 
     public String getAdminToken(WebClient client, String keycloakUrl) {
@@ -167,7 +162,7 @@ public class KeycloakContainer extends GenericContainer<KeycloakContainer> {
     public void postInit() {
         var vertxInstance = Vertx.vertx();
         WebClient client = OidcDevServicesUtils.createWebClient(vertxInstance);
-        String clientAuthServerBaseUrl = "http://%s:%s".formatted(hostAdress, getFirstMappedPort());
+        String clientAuthServerBaseUrl = "http://127.0.0.1:%s".formatted(getFirstMappedPort());
         try {
             String adminToken = getAdminToken(client, clientAuthServerBaseUrl);
             if (realmRep != null) {

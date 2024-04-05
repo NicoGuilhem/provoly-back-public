@@ -31,9 +31,9 @@ quarkus:
     db-kind: other
     jdbc:
       driver: net.postgis.jdbc.jts.JtsGisWrapper
-      url: jdbc:postgresql_JTS://localhost:5430/postgis
-    password: test_postgis
-    username: test_postgis
+      url: jdbc:postgresql_JTS://localhost:5430/provoly
+    username: datavirt
+    password: datavirt
 
 
   kafka:

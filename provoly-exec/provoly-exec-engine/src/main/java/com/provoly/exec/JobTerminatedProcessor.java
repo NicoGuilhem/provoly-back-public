@@ -64,6 +64,7 @@ public class JobTerminatedProcessor {
             log.infof("Import %s items in new dataset version %s of dataset %s", items.size(), newDataset, datasetId);
             importService.importData(datasetId, newDataset, items);
         }
+        log.infof("Import done for jobExecutionId %s", execEvent.jobExecutionId());
     }
 
     private KafkaConsumer<String, ItemDto> buildConsumer() {

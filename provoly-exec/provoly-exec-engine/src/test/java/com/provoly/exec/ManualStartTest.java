@@ -6,9 +6,11 @@ import static com.provoly.exec.JobService.FILE_PROVISION_IMAGE;
 import static com.provoly.exec.JobService.JOB_CONTAINER_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.waitAtMost;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
@@ -131,7 +133,11 @@ public class ManualStartTest extends AbstractStartTest {
 
         var jobTerminatedEvent = record.get(2).value();
         assertThat(jobTerminatedEvent.context()).isNotNull();
-        assertThat(jobExecutionService.get(jobExecutionId).getStatus()).isEqualTo(ExecutionStatus.TERMINATED);
+
+        // Check jobExecutionService has been updated in database
+        // We need to wait for the event to be processed
+        waitAtMost(Duration.ofSeconds(5))
+                .until(() -> jobExecutionService.get(jobExecutionId).getStatus() == ExecutionStatus.TERMINATED);
     }
 
     /**
@@ -204,7 +210,7 @@ public class ManualStartTest extends AbstractStartTest {
         var job = awaitJob(jobExecutionDto);
         var initContainers = job.getSpec().getTemplate().getSpec().getInitContainers();
         assertThat(initContainers).hasSize(1);
-        var initContainer = initContainers.get(0);
+        var initContainer = initContainers.getFirst();
         assertThat(initContainer.getImage()).isEqualTo(FILE_PROVISION_IMAGE);
         assertThat(initContainer.getEnv())
                 .anyMatch(env -> env.getName().equals(ENV_NAME_JOB_EXECUTION_ID)
@@ -223,7 +229,7 @@ public class ManualStartTest extends AbstractStartTest {
         var job = awaitJob(jobExecutionDto);
         var jobContainers = job.getSpec().getTemplate().getSpec().getContainers();
         assertThat(jobContainers).hasSize(1);
-        var jobContainer = jobContainers.get(0);
+        var jobContainer = jobContainers.getFirst();
         assertThat(jobContainer.getImage()).isEqualTo(EXPECTED_IMAGE_NAME);
         assertThat(jobContainer.getEnv())
                 .anyMatch(env -> env.getName().equals(PARAMETER_NAME)

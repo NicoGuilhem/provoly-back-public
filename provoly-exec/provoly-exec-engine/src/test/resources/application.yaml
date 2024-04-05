@@ -2,11 +2,15 @@ quarkus:
   otel:
     enabled: false
 
+  # Containers are provided by ProvolyTestContainers
   keycloak:
     devservices:
-      realm-name: provoly
-      realm-path: dev-realm.json
-      port: 9080
+      enabled: false
+
+  kafka:
+    devservices:
+      enabled: false
+
 
   oidc:
     token:
