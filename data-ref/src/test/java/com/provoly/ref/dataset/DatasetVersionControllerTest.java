@@ -3,7 +3,9 @@ package com.provoly.ref.dataset;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.hamcrest.CoreMatchers.is;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -84,6 +86,7 @@ public class DatasetVersionControllerTest {
     private Dataset dataset;
     private MetadataDefDto metadataDefDto;
     private static final String OCLASS_ID = "bdcdf6f7-5ab4-4b79-b521-7d33675186f4";
+    private final Instant fixedDate = Instant.ofEpochSecond(500);
 
     @BeforeEach
     public void init() {
@@ -119,7 +122,7 @@ public class DatasetVersionControllerTest {
 
     private void generateDatasetVersionDto(boolean withFile) {
         datasetVersionDto = new DatasetVersionDto(datasetVersionId, datasetId, oClass.getId(),
-                DatasetState.ACTIVE, withFile);
+                DatasetState.ACTIVE, withFile, fixedDate, "author", "SomeInformations");
     }
 
     private void saveDatasetVersion() {
@@ -954,6 +957,25 @@ public class DatasetVersionControllerTest {
         assertThatThrownBy(() -> datasetService.getById(datasetId))
                 .isInstanceOf(ProvolyNotFoundException.class)
                 .hasMessage("%s : %s inexistant.".formatted("Dataset", datasetId));
+    }
+
+    @Test
+    @TestSecurity(user = "testUser", roles = { Role.STR_ITEM_WRITE, Role.STR_DATASET_WRITE, Role.STR_DATASET_READ,
+            Role.STR_SEARCH })
+    public void createDatasetVersion() {
+        initDataset(DatasetType.CLOSED);
+        generateDatasetVersionDto(false);
+        saveDatasetVersion();
+
+        given()
+                .pathParam("datasetVersionId", datasetVersionDto.getId())
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/dataset-versions/id/{datasetVersionId}")
+                .then()
+                .body("producer", is("author"))
+                .body("additionalInformation", is("SomeInformations"))
+                .body("productionDate", is(fixedDate.toString()));
     }
 
 }

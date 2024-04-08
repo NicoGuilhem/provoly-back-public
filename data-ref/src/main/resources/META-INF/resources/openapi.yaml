@@ -5010,6 +5010,14 @@ components:
           example: "EPSG:1233"
           default: "EPSG:4326"
           description: "Required only for Geo field. Should be a valid CRS"
+        productionDate:
+          $ref: '#/components/schemas/Instant'
+        producer:
+          type: string
+          example: "the_author"
+        additionalInformation:
+          type: string
+          example: "Some additional information"
     FullSearchConditionDto:
       type: object
       properties:

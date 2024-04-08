@@ -16,11 +16,14 @@ public class DatasetVersionDto {
     private Integer version;
     private DatasetState state;
     private boolean withFile;
+    private Instant productionDate;
+    private String producer;
+    private String additionalInformation;
 
     @Default
     @JsonCreator
     public DatasetVersionDto(UUID id, UUID dataset, UUID oClass, Instant lastModified, Integer version,
-            DatasetState state, boolean withFile) {
+            DatasetState state, boolean withFile, Instant productionDate, String producer, String additionalInformation) {
         this.id = id;
         this.dataset = dataset;
         this.oClass = oClass;
@@ -28,35 +31,48 @@ public class DatasetVersionDto {
         this.version = version;
         this.state = state;
         this.withFile = withFile;
+        this.productionDate = productionDate;
+        this.producer = producer;
+        this.additionalInformation = additionalInformation;
+    }
+
+    public DatasetVersionDto(UUID id, UUID dataset, UUID oClass, Instant lastModified, Integer version,
+            DatasetState state, boolean withFile) {
+        this(id, dataset, oClass, lastModified, version, state, withFile, null, null, null);
     }
 
     public DatasetVersionDto(UUID id) {
-        this(id, null, null, null, null, null, false);
+        this(id, null, null, null, null, null, false, null, null, null);
     }
 
     public DatasetVersionDto(UUID id, UUID dataset) {
-        this(id, dataset, null, null, null, null, false);
+        this(id, dataset, null, null, null, null, false, null, null, null);
     }
 
     public DatasetVersionDto(UUID id, UUID dataset, UUID oClass) {
-        this(id, dataset, oClass, null, null, null, false);
+        this(id, dataset, oClass, null, null, null, false, null, null, null);
     }
 
     public DatasetVersionDto(UUID id, UUID dataset, UUID oClass, Integer version) {
-        this(id, dataset, oClass, null, version, null, false);
+        this(id, dataset, oClass, null, version, null, false, null, null, null);
     }
 
     public DatasetVersionDto(UUID id, UUID dataset, UUID oClass, DatasetState state) {
-        this(id, dataset, oClass, null, null, state, false);
+        this(id, dataset, oClass, null, null, state, false, null, null, null);
     }
 
     public DatasetVersionDto(UUID id, UUID dataset, DatasetState state) {
-        this(id, dataset, null, null, null, state, false);
+        this(id, dataset, null, null, null, state, false, null, null, null);
+    }
+
+    public DatasetVersionDto(UUID id, UUID dataset, UUID oClass, DatasetState state,
+            boolean withFile, Instant productionDate, String producer, String additionalInformation) {
+        this(id, dataset, oClass, null, null, state, withFile, productionDate, producer, additionalInformation);
     }
 
     public DatasetVersionDto(UUID id, UUID dataset, UUID oClass, DatasetState state,
             boolean withFile) {
-        this(id, dataset, oClass, null, null, state, withFile);
+        this(id, dataset, oClass, null, null, state, withFile, null, null, null);
     }
 
     public UUID getId() {
@@ -86,4 +102,17 @@ public class DatasetVersionDto {
     public boolean isWithFile() {
         return withFile;
     }
+
+    public Instant getProductionDate() {
+        return productionDate;
+    }
+
+    public String getProducer() {
+        return producer;
+    }
+
+    public String getAdditionalInformation() {
+        return additionalInformation;
+    }
+
 }

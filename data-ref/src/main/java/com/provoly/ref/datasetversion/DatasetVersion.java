@@ -30,6 +30,10 @@ public class DatasetVersion extends EntityId {
     @Enumerated(EnumType.STRING)
     private DatasetState state;
 
+    private Instant productionDate;
+    private String producer;
+    private String additionalInformation;
+
     protected DatasetVersion() {
         super();
     }
@@ -89,5 +93,29 @@ public class DatasetVersion extends EntityId {
 
     public void setWithFile(boolean withFile) {
         this.withFile = withFile;
+    }
+
+    public Instant getProductionDate() {
+        return productionDate;
+    }
+
+    public String getProducer() {
+        return producer;
+    }
+
+    public void setProducer(String producer) {
+        this.producer = producer;
+    }
+
+    public String getAdditionalInformation() {
+        return additionalInformation;
+    }
+
+    public void setAdditionalInformation(String additionalInformation) {
+        this.additionalInformation = additionalInformation;
+    }
+
+    public void setProductionDate(Instant productionDate) {
+        this.productionDate = productionDate;
     }
 }

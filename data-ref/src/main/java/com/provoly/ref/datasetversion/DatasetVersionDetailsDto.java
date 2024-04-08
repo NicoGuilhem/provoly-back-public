@@ -15,8 +15,8 @@ public class DatasetVersionDetailsDto extends DatasetVersionDto {
 
     public DatasetVersionDetailsDto(UUID id, UUID dataset, UUID oClass, Instant lastModified,
             Integer version, DatasetState state, boolean withFile,
-            List<MetadataValueReadDto> metadata) {
-        super(id, dataset, oClass, lastModified, version, state, withFile);
+            List<MetadataValueReadDto> metadata, Instant productionDate, String producer, String additionalInformation) {
+        super(id, dataset, oClass, lastModified, version, state, withFile, productionDate, producer, additionalInformation);
         this.metadata = metadata != null ? metadata : new ArrayList<>();
         this.hasWarnings = false;
     }
