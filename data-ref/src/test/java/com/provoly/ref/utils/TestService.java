@@ -23,6 +23,7 @@ import com.provoly.ref.abac.predicate.PredicateService;
 import com.provoly.ref.dashboard.DashboardService;
 import com.provoly.ref.dataset.DatasetService;
 import com.provoly.ref.datasetversion.DatasetVersionMessageService;
+import com.provoly.ref.datasetversion.DatasetVersionRepository;
 import com.provoly.ref.datasetversion.DatasetVersionService;
 import com.provoly.ref.entity.EntityNamed;
 import com.provoly.ref.entity.EntityType;
@@ -88,6 +89,8 @@ public class TestService {
     LinkService linkService;
     @Inject
     RelationTypeService relationTypeService;
+    @Inject
+    DatasetVersionRepository datasetVersionRepository;
 
     public OClassWriteDto createClassWriteDto(UUID id, String name, AttributeDefDto... attributeDefDtos) {
         return createClassWriteDto(id, name, Storage.ELASTIC, attributeDefDtos);
@@ -180,7 +183,7 @@ public class TestService {
         abacService.getAllRules().forEach(abac -> entityManager.remove(entityManager.merge(abac)));
         predicateService.getAllPredicates().forEach(predicate -> entityManager.remove(entityManager.merge(predicate)));
         linkService.getAll().forEach(link -> linkService.delete(link.getId()));
-        datasetVersionService.getAll().forEach(dv -> {
+        datasetVersionRepository.getAll().forEach(dv -> {
             List<MetadataValue> metadataValues = metadataService.getMetadataValueByEntityId(dv.getId());
             metadataValues.forEach(metadataValue -> {
                 metadataService.deleteMetadataValueByEntityId(dv.getId(), metadataValue.getMetadataDefId(),

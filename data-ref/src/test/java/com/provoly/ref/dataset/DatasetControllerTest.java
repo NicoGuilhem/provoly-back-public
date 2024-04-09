@@ -6,6 +6,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.hamcrest.CoreMatchers.equalTo;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.*;
 
 import jakarta.inject.Inject;
@@ -162,7 +163,7 @@ public class DatasetControllerTest {
                 .then()
                 .statusCode(404)
                 .body("code", equalTo("NOT_FOUND"))
-                .body("message", equalTo("Dataset : " + datasetId + " inexistant."));
+                .body("message", equalTo("Dataset : %s inexistant.".formatted(datasetId)));
     }
 
     @Test
@@ -213,12 +214,12 @@ public class DatasetControllerTest {
         datasetService.saveEntity(dataset);
 
         var activeDatasetVersionDto = new DatasetVersionDto(UUID.randomUUID(), datasetDto.getId(), oClass.getId(),
-                DatasetState.ACTIVE);
+                DatasetState.ACTIVE, "author", Instant.now());
         datasetVersionService.createDatasetVersion(datasetVersionMapper.toModel(activeDatasetVersionDto));
         datasetVersionService.activateDatasetVersion(activeDatasetVersionDto.getId());
 
         var errorDatasetVersion = new DatasetVersionDto(UUID.randomUUID(), datasetDto.getId(), oClass.getId(),
-                DatasetState.ERROR);
+                DatasetState.ERROR, "author", Instant.now());
         datasetVersionService.createDatasetVersion(datasetVersionMapper.toModel(errorDatasetVersion));
 
         // WHEN
@@ -387,12 +388,12 @@ public class DatasetControllerTest {
         datasetService.saveEntity(dataset);
 
         var activeDatasetVersionDto = new DatasetVersionDto(UUID.randomUUID(), datasetDto.getId(), oClass.getId(),
-                DatasetState.ACTIVE);
+                DatasetState.ACTIVE, "author", Instant.now());
         datasetVersionService.createDatasetVersion(datasetVersionMapper.toModel(activeDatasetVersionDto));
         datasetVersionService.activateDatasetVersion(activeDatasetVersionDto.getId());
 
         var errorDatasetVersion = new DatasetVersionDto(UUID.randomUUID(), datasetDto.getId(), oClass.getId(),
-                DatasetState.ERROR);
+                DatasetState.ERROR, "author", Instant.now());
         datasetVersionService.createDatasetVersion(datasetVersionMapper.toModel(errorDatasetVersion));
 
         // THEN

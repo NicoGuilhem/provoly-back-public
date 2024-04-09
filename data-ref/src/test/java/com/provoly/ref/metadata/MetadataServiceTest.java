@@ -19,7 +19,7 @@ public class MetadataServiceTest {
 
     @Test
     public void updateMetadataByEntityType_with_no_metadata_skipping() {
-        metadataService = spy(new MetadataService(null, null, null, mock(Logger.class)));
+        metadataService = spy(new MetadataService(null, null, null, null, mock(Logger.class)));
         var dashboard = new DashboardWriteDto(UUID.randomUUID(), "name", null, "description", false,
                 List.of(UUID.randomUUID()), null, null, List.of());
 

@@ -7,6 +7,7 @@
 - The project's code and its related documentation must be written in English.
 - No implicit use of curly brackets.
 - When adding new Dtos, favor using `record` if it's possible. Otherwise, set private attributes, and only add their getters. Convert those that do not respect this rule.
+- Repository classes are created with parsimony to avoid breaking SOLID principles when needed
 
 === Java related coding conventions guideline:
 

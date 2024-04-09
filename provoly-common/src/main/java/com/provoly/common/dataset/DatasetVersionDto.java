@@ -45,20 +45,24 @@ public class DatasetVersionDto {
         this(id, null, null, null, null, null, false, null, null, null);
     }
 
-    public DatasetVersionDto(UUID id, UUID dataset) {
-        this(id, dataset, null, null, null, null, false, null, null, null);
+    public DatasetVersionDto(UUID id, UUID dataset, String producer, Instant productionDate) {
+        this(id, dataset, null, null, null, null, false, productionDate, producer, null);
     }
 
     public DatasetVersionDto(UUID id, UUID dataset, UUID oClass) {
         this(id, dataset, oClass, null, null, null, false, null, null, null);
     }
 
-    public DatasetVersionDto(UUID id, UUID dataset, UUID oClass, Integer version) {
-        this(id, dataset, oClass, null, version, null, false, null, null, null);
+    public DatasetVersionDto(UUID id, UUID dataset, UUID oClass, Integer version, String producer, Instant productionDate) {
+        this(id, dataset, oClass, null, version, null, false, productionDate, producer, null);
     }
 
     public DatasetVersionDto(UUID id, UUID dataset, UUID oClass, DatasetState state) {
         this(id, dataset, oClass, null, null, state, false, null, null, null);
+    }
+
+    public DatasetVersionDto(UUID id, UUID dataset, UUID oClass, DatasetState state, String producer, Instant productionDate) {
+        this(id, dataset, oClass, null, null, state, false, productionDate, producer, null);
     }
 
     public DatasetVersionDto(UUID id, UUID dataset, DatasetState state) {
@@ -73,6 +77,11 @@ public class DatasetVersionDto {
     public DatasetVersionDto(UUID id, UUID dataset, UUID oClass, DatasetState state,
             boolean withFile) {
         this(id, dataset, oClass, null, null, state, withFile, null, null, null);
+    }
+
+    public DatasetVersionDto(UUID id, UUID dataset, UUID oClass, DatasetState state,
+            boolean withFile, String producer, Instant productionDate) {
+        this(id, dataset, oClass, null, null, state, withFile, productionDate, producer, null);
     }
 
     public UUID getId() {

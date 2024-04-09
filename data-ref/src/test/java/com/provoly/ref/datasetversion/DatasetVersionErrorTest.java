@@ -1,7 +1,8 @@
-package com.provoly.ref.datasetversionsummary;
+package com.provoly.ref.datasetversion;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -18,10 +19,6 @@ import com.provoly.common.model.OClassWriteDto;
 import com.provoly.ref.dataset.Dataset;
 import com.provoly.ref.dataset.DatasetMapper;
 import com.provoly.ref.dataset.DatasetService;
-import com.provoly.ref.datasetversion.DatasetVersionMapper;
-import com.provoly.ref.datasetversion.DatasetVersionMessage;
-import com.provoly.ref.datasetversion.DatasetVersionMessageService;
-import com.provoly.ref.datasetversion.DatasetVersionService;
 import com.provoly.ref.entity.EntityIdService;
 import com.provoly.ref.metadata.MetadataService;
 import com.provoly.ref.model.ModelMapper;
@@ -87,7 +84,7 @@ public class DatasetVersionErrorTest {
                 oclassWriteDto.getId(),
                 DatasetType.CLOSED);
         datasetVersionDto = new DatasetVersionDto(UUID.randomUUID(),
-                datasetDto.getId(), oClass.getId(), DatasetState.ACTIVE);
+                datasetDto.getId(), oClass.getId(), DatasetState.ACTIVE, "author", Instant.now());
 
         Dataset dataset = datasetMapper.toModel(datasetDto);
         dataset.setUser(provolyUser);

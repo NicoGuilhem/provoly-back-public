@@ -15,6 +15,7 @@ import com.provoly.common.error.ErrorCode;
 import com.provoly.ref.dataset.Dataset;
 import com.provoly.ref.dataset.DatasetService;
 import com.provoly.ref.datasetversion.DatasetVersion;
+import com.provoly.ref.datasetversion.DatasetVersionRepository;
 import com.provoly.ref.datasetversion.DatasetVersionService;
 import com.provoly.ref.user.NamedQuery;
 import com.provoly.ref.user.NamedQueryService;
@@ -29,21 +30,20 @@ public class DataSourceService {
     private DatasetVersionService datasetVersionService;
 
     private DatasetService datasetService;
-
-    private JPAStreamer jpaStreamer;
+    private DatasetVersionRepository datasetVersionRepository;
 
     public DataSourceService(NamedQueryService namedQueryService, DatasetVersionService datasetVersionService,
-            DatasetService datasetService, JPAStreamer jpaStreamer) {
+            DatasetService datasetService, JPAStreamer jpaStreamer, DatasetVersionRepository datasetVersionRepository) {
         this.namedQueryService = namedQueryService;
         this.datasetVersionService = datasetVersionService;
         this.datasetService = datasetService;
-        this.jpaStreamer = jpaStreamer;
+        this.datasetVersionRepository = datasetVersionRepository;
     };
 
     @Transactional
     public DataSourceDetailsDto getDataSourceDetails(UUID dataSourceId) {
         return switch (getDataSourceType(dataSourceId)) {
-            case DATASET_VERSION -> mapDatasetVersionToDataSource(datasetVersionService.findById(dataSourceId));
+            case DATASET_VERSION -> mapDatasetVersionToDataSource(datasetVersionRepository.findById(dataSourceId));
             case SEARCH -> mapNamedQueryToDatasource(namedQueryService.findById(dataSourceId));
             case DATASET -> mapDatasetToDataSource(datasetService.getById(dataSourceId));
         };
@@ -68,7 +68,7 @@ public class DataSourceService {
     }
 
     public DataSourceType getDataSourceType(UUID dataSourceId) {
-        if (datasetVersionService.findById(dataSourceId) != null) {
+        if (datasetVersionRepository.findById(dataSourceId) != null) {
             return DATASET_VERSION;
         } else if (namedQueryService.findById(dataSourceId) != null) {
             return SEARCH;

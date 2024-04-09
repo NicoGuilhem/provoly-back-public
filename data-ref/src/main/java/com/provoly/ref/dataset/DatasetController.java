@@ -12,6 +12,7 @@ import com.provoly.common.metadata.MetadataValueWriteDto;
 import com.provoly.common.user.Role;
 import com.provoly.ref.datasetversion.DatasetVersionDetailsDto;
 import com.provoly.ref.datasetversion.DatasetVersionMapper;
+import com.provoly.ref.datasetversion.DatasetVersionRepository;
 import com.provoly.ref.datasetversion.DatasetVersionService;
 import com.provoly.ref.entity.EntityType;
 import com.provoly.ref.groups.GroupErrors;
@@ -30,15 +31,18 @@ public class DatasetController {
     private DatasetVersionService datasetVersionService;
     private DatasetVersionMapper datasetVersionMapper;
     private MetadataService metadataService;
+    private DatasetVersionRepository datasetVersionRepository;
 
     public DatasetController(DatasetService datasetService,
             DatasetMapper datasetMapper, DatasetVersionService datasetVersionService,
-            DatasetVersionMapper datasetVersionMapper, MetadataService metadataService) {
+            DatasetVersionMapper datasetVersionMapper, MetadataService metadataService,
+            DatasetVersionRepository datasetVersionRepository) {
         this.datasetService = datasetService;
         this.datasetMapper = datasetMapper;
         this.datasetVersionService = datasetVersionService;
         this.datasetVersionMapper = datasetVersionMapper;
         this.metadataService = metadataService;
+        this.datasetVersionRepository = datasetVersionRepository;
     }
 
     @GET
@@ -58,7 +62,7 @@ public class DatasetController {
     @Path("/id/{id}/dataset-versions")
     @RolesAllowed({ Role.STR_SEARCH, Role.STR_DATASET_READ, Role.STR_DATASOURCE_READ })
     public Collection<DatasetVersionDetailsDto> getAllById(UUID id) {
-        return datasetVersionMapper.toDatasetVersionDetailsDto(datasetVersionService.getAllByDatasetId(id));
+        return datasetVersionMapper.toDatasetVersionDetailsDto(datasetVersionRepository.getAllByDatasetId(id));
     }
 
     @GET
@@ -79,14 +83,14 @@ public class DatasetController {
     @Path("/name/{datasetName}/dataset-version")
     @RolesAllowed({ Role.STR_DATASET_READ })
     public DatasetVersionDetailsDto getDatasetVersionByDatasetName(String datasetName) {
-        return datasetVersionMapper.toDatasetVersionDetailsDto(datasetVersionService.getByName(datasetName));
+        return datasetVersionMapper.toDatasetVersionDetailsDto(datasetVersionRepository.getByName(datasetName));
     }
 
     @GET
     @Path("/id/{datasetId}/dataset-version")
     @RolesAllowed({ Role.STR_DATASET_READ })
     public DatasetVersionDetailsDto getDatasetVersionByDatasetId(UUID datasetId) {
-        return datasetVersionMapper.toDatasetVersionDetailsDto(datasetVersionService.getByDatasetId(datasetId));
+        return datasetVersionMapper.toDatasetVersionDetailsDto(datasetVersionRepository.getByDatasetId(datasetId));
     }
 
     @GET

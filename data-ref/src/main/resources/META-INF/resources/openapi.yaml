@@ -1803,7 +1803,9 @@ paths:
                     "lastModified": "2023-04-27T13:56:13.861018Z",
                     "version": 3,
                     "state": "INACTIVE",
-                    "withFile": false
+                    "withFile": false,
+                    "producer": "the producer"
+                    "productionDate": "2023-04-27T13:56:13.861018Z"
                   }
       responses:
         "201":
@@ -1830,6 +1832,15 @@ paths:
                       "application": "data-ref",
                       "code": "BAD_REQUEST",
                       "message": "Dataset {{datasetId}} can't have more than one version."
+                    }
+                closeWithoutInformation:
+                  summary: Create dataset version on an closed dataset without producer or productionDate
+                  description: Occurs when you try to create a closed dataset version without the mandatory attribute producer or productionDate
+                  value: |
+                    {
+                      "application": "data-ref",
+                      "code": "BAD_REQUEST",
+                      "message": "Producer and Production date are mandatory for closed dataset."
                     }
         "401":
           description: Not Authorized

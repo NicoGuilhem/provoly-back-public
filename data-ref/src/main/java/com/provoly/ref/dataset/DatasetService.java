@@ -25,8 +25,8 @@ import com.provoly.common.user.UserDto;
 import com.provoly.ref.dashboard.Dashboard;
 import com.provoly.ref.dashboard.Dashboard_;
 import com.provoly.ref.datasetversion.DatasetVersion;
+import com.provoly.ref.datasetversion.DatasetVersionRepository;
 import com.provoly.ref.datasetversion.DatasetVersionService;
-import com.provoly.ref.datasetversion.DatasetVersion_;
 import com.provoly.ref.entity.EntityId;
 import com.provoly.ref.entity.EntityIdService;
 import com.provoly.ref.entity.EntityNamed_;
@@ -56,7 +56,7 @@ public class DatasetService {
     private EntityIdService entityIdService;
     private AssociationService associationService;
     private JPAStreamer jpaStreamer;
-
+    private DatasetVersionRepository datasetVersionRepository;
     private GroupService groupService;
     private Logger log;
     private DatasetMapper datasetMapper;
@@ -64,13 +64,15 @@ public class DatasetService {
     private GrantService grantService;
 
     public DatasetService(EntityManager em, DatasetVersionService datasetVersionService,
-            EntityIdService entityIdService, AssociationService associationService, GroupService groupService,
+            EntityIdService entityIdService, AssociationService associationService,
+            DatasetVersionRepository datasetVersionRepository, GroupService groupService,
             DatasetMapper datasetMapper, JPAStreamer jpaStreamer, Logger log, UserService userService,
             GrantService grantService) {
         this.em = em;
         this.datasetVersionService = datasetVersionService;
         this.entityIdService = entityIdService;
         this.associationService = associationService;
+        this.datasetVersionRepository = datasetVersionRepository;
         this.jpaStreamer = jpaStreamer;
         this.groupService = groupService;
         this.log = log;
@@ -116,11 +118,7 @@ public class DatasetService {
     @Transactional
     public Dataset searchByDatasetVersionId(UUID datasetVersionId) {
         try {
-            var cb = entityIdService.getEm().getCriteriaBuilder();
-            var q = cb.createQuery(DatasetVersion.class);
-            var rootQuery = q.from(DatasetVersion.class);
-            q.where(cb.equal(rootQuery.get(DatasetVersion_.id), datasetVersionId));
-            return entityIdService.getEm().createQuery(q).getSingleResult().getDataset();
+            return datasetVersionRepository.getById(datasetVersionId).getDataset();
         } catch (NoResultException e) {
             throw new ProvolyNotFoundException("No dataset version with id %s exists".formatted(datasetVersionId));
         }
@@ -128,7 +126,7 @@ public class DatasetService {
 
     @Transactional
     public void deleteDataset(UUID id) {
-        if (cantDeleteDataset(id)) {
+        if (!canDeleteDataset(id)) {
             throw new BusinessException(ErrorCode.BAD_REQUEST,
                     "You're not allowed to delete dataset %s because it owns one or more dataset version".formatted(id));
         }
@@ -274,9 +272,15 @@ public class DatasetService {
                 .toList();
     }
 
-    private boolean cantDeleteDataset(UUID datasetId) {
-        return jpaStreamer.stream(DatasetVersion.class)
-                .anyMatch(datasetVersion -> datasetVersion.getDataset().getId().equals(datasetId));
+    private boolean canDeleteDataset(UUID datasetId) {
+        try {
+            return datasetVersionRepository.getByDatasetId(datasetId) == null;
+        } catch (BusinessException error) {
+            if (error.getCode().equals(ErrorCode.NOT_FOUND)) {
+                return true;
+            }
+            throw error;
+        }
     }
 
     public List<AssociationDto> findDashboardsAssociationByDatasetId(UUID datasetId) {

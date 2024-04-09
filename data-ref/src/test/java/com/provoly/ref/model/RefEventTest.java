@@ -5,6 +5,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 import static org.assertj.core.api.InstanceOfAssertFactories.type;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.UUID;
 
 import jakarta.inject.Inject;
@@ -251,7 +252,7 @@ public class RefEventTest {
         var dataset = datasetMapper.toModel(datasetDto);
         dataset.setUser(provolyUser);
         datasetService.saveEntity(dataset);
-        var datasetVersion = new DatasetVersionDto(UUID.randomUUID(), dataset.getId());
+        var datasetVersion = new DatasetVersionDto(UUID.randomUUID(), dataset.getId(), "author", Instant.now());
         datasetVersionController.create(datasetVersion);
 
         // When
@@ -283,7 +284,7 @@ public class RefEventTest {
         dataset.setUser(userService.getCurrentUser());
         datasetService.saveEntity(dataset);
         UUID datasetVersionId = UUID.randomUUID();
-        var datasetVersion = new DatasetVersionDto(datasetVersionId, dataset.getId());
+        var datasetVersion = new DatasetVersionDto(datasetVersionId, dataset.getId(), "author", Instant.now());
         datasetVersionController.create(datasetVersion);
         datasetVersionService.changeStateDatasetVersion(datasetVersionId, DatasetState.ACTIVE);
         // When

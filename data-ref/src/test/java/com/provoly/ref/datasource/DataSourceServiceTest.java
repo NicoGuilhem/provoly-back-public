@@ -12,7 +12,7 @@ import com.provoly.common.datasource.DataSourceType;
 import com.provoly.common.error.BusinessException;
 import com.provoly.ref.dataset.Dataset;
 import com.provoly.ref.datasetversion.DatasetVersion;
-import com.provoly.ref.datasetversion.DatasetVersionService;
+import com.provoly.ref.datasetversion.DatasetVersionRepository;
 import com.provoly.ref.model.OClass;
 import com.provoly.ref.searchrequest.MonoClassSearchRequest;
 import com.provoly.ref.searchrequest.SearchRequest;
@@ -32,7 +32,7 @@ public class DataSourceServiceTest {
     NamedQueryService namedQueryService;
 
     @InjectMock
-    DatasetVersionService datasetVersionService;
+    DatasetVersionRepository datasetVersionRepository;
 
     @Inject
     DataSourceService dataSourceService;
@@ -47,7 +47,7 @@ public class DataSourceServiceTest {
         DatasetVersion datasetVersion = new DatasetVersion(id);
         datasetVersion.setDataset(dataset);
 
-        when(datasetVersionService.findById(id)).thenReturn(datasetVersion);
+        when(datasetVersionRepository.findById(id)).thenReturn(datasetVersion);
         when(namedQueryService.findById(id)).thenReturn(null);
 
         assertThat(dataSourceService.getDataSourceDetails(id).type()).isEqualTo(DataSourceType.DATASET_VERSION);
@@ -62,7 +62,7 @@ public class DataSourceServiceTest {
 
         NamedQuery namedQuery = new NamedQuery(id, "name");
         namedQuery.setRequest(request);
-        when(datasetVersionService.findById(id)).thenReturn(null);
+        when(datasetVersionRepository.findById(id)).thenReturn(null);
         when(namedQueryService.findById(id)).thenReturn(namedQuery);
 
         assertThat(dataSourceService.getDataSourceDetails(id).type()).isEqualTo(DataSourceType.SEARCH);
@@ -72,7 +72,7 @@ public class DataSourceServiceTest {
     public void getDatasourceDetail_WithUnknownId_RaiseException() {
         UUID id = UUID.randomUUID();
 
-        when(datasetVersionService.findById(id)).thenReturn(null);
+        when(datasetVersionRepository.findById(id)).thenReturn(null);
         when(namedQueryService.findById(id)).thenReturn(null);
 
         Assertions.assertThatThrownBy(() -> dataSourceService.getDataSourceDetails(id)).isInstanceOf(BusinessException.class);
@@ -82,7 +82,7 @@ public class DataSourceServiceTest {
     public void allDataSourceExist_WithUnknownId_RaiseException() {
         UUID id = UUID.randomUUID();
 
-        when(datasetVersionService.findById(id)).thenReturn(null);
+        when(datasetVersionRepository.findById(id)).thenReturn(null);
         when(namedQueryService.findById(id)).thenReturn(null);
 
         Assertions.assertThatThrownBy(() -> dataSourceService.allDataSourcesExist(List.of(id)))

@@ -81,6 +81,8 @@ public class DatasetVersionControllerTest {
     CurrentSubjectProvider currentSubjectProvider;
     @Inject
     UserService userService;
+    @Inject
+    DatasetVersionRepository datasetVersionRepository;
     private DatasetVersionDto datasetVersionDto;
     private OClass oClass;
     private Dataset dataset;
@@ -215,7 +217,7 @@ public class DatasetVersionControllerTest {
         dataset.setUser(userService.getCurrentUser());
         datasetService.saveEntity(dataset);
         var datasetVersionDto = new DatasetVersionDto(this.datasetVersionDto.getId(), dataset.getId(), this.oClass.getId(),
-                this.datasetVersionDto.getVersion());
+                this.datasetVersionDto.getVersion(), "author", Instant.now());
 
         assertThatThrownBy(() -> datasetVersionController.updateState(datasetVersionDto))
                 .isInstanceOf(BusinessException.class)
@@ -278,13 +280,13 @@ public class DatasetVersionControllerTest {
         saveDatasetVersion();
         datasetVersionService.activateDatasetVersion(datasetVersionId);
         var secondDatasetVersion = new DatasetVersionDto(UUID.randomUUID(), datasetId, oClass.getId(),
-                DatasetState.ACTIVE, false);
+                DatasetState.ACTIVE, false, "author", Instant.now());
 
         // WHEN
         datasetVersionController.create(secondDatasetVersion);
         assertThat(datasetVersionController.get(secondDatasetVersion.getId()).getVersion()).isEqualTo(2);
 
-        var maxVersion = datasetVersionService.getAllByDatasetId(datasetId).stream()
+        var maxVersion = datasetVersionRepository.getAllByDatasetId(datasetId).stream()
                 .max(Comparator.comparing(DatasetVersion::getVersion))
                 .map(DatasetVersion::getVersion)
                 .orElse(0);
@@ -779,7 +781,7 @@ public class DatasetVersionControllerTest {
     public void deactivateDataset_should_setStateAtInactive() {
         saveCloseDatasetAtActive();
         datasetVersionService.deactivateDatasetVersion(datasetVersionId);
-        assertThat(datasetVersionService.getById(datasetVersionId).getState()).isEqualTo(DatasetState.INACTIVE);
+        assertThat(datasetVersionRepository.getById(datasetVersionId).getState()).isEqualTo(DatasetState.INACTIVE);
     }
 
     @Test
@@ -790,7 +792,7 @@ public class DatasetVersionControllerTest {
         DatasetDto anotherDatasetDto = new DatasetDto(UUID.randomUUID(), "another one", oClass.getId(), DatasetType.CLOSED);
         datasetService.save(anotherDatasetDto);
         DatasetVersionDto anotherDatasetVersion = new DatasetVersionDto(UUID.randomUUID(), anotherDatasetDto.getId(),
-                oClass.getId(), DatasetState.LOADING);
+                oClass.getId(), DatasetState.LOADING, "author", Instant.now());
 
         given()
                 .contentType(ContentType.JSON)
@@ -807,7 +809,7 @@ public class DatasetVersionControllerTest {
         saveCloseDatasetAtLoading();
 
         DatasetVersionDto anotherDatasetVersionWithSameDataset = new DatasetVersionDto(UUID.randomUUID(), datasetId,
-                oClass.getId(), DatasetState.LOADING);
+                oClass.getId(), DatasetState.LOADING, "author", Instant.now());
 
         given()
                 .contentType(ContentType.JSON)
@@ -852,8 +854,8 @@ public class DatasetVersionControllerTest {
         // THEN
         assertThat(datasetVersionPreview.get(0).count()).isEqualTo(8);
         assertThat(datasetVersionPreview.get(1).count()).isEqualTo(6);
-        assertThat(datasetVersionPreview.get(0).messages()).hasSize(DatasetVersionService.PREVIEW_MAX_RESULT);
-        assertThat(datasetVersionPreview.get(1).messages()).hasSize(DatasetVersionService.PREVIEW_MAX_RESULT);
+        assertThat(datasetVersionPreview.get(0).messages()).hasSize(DatasetVersionRepository.PREVIEW_MAX_RESULT);
+        assertThat(datasetVersionPreview.get(1).messages()).hasSize(DatasetVersionRepository.PREVIEW_MAX_RESULT);
     }
 
     @Test
@@ -903,7 +905,7 @@ public class DatasetVersionControllerTest {
     public void getAllActiveDatasetVersionForClass_shouldSucceed() {
         saveCloseDatasetAtActive();
 
-        var result = datasetVersionService.getAllActiveForClass(UUID.fromString(OCLASS_ID));
+        var result = datasetVersionRepository.getAllActiveForClass(UUID.fromString(OCLASS_ID));
 
         assertThat(result).hasSize(1);
     }
@@ -913,7 +915,7 @@ public class DatasetVersionControllerTest {
     public void getZeroDatasetVersionOfADataset_shouldThrow() {
         initDataset(DatasetType.CLOSED);
 
-        assertThatThrownBy(() -> datasetVersionService.getByDatasetId(datasetId))
+        assertThatThrownBy(() -> datasetVersionRepository.getByDatasetId(datasetId))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("No dataset version found for dataset %s.".formatted(datasetId));
     }

@@ -23,32 +23,34 @@ public class DatasetVersionController {
     private DatasetVersionService datasetVersionService;
     private DatasetVersionMapper datasetVersionMapper;
     private MetadataService metadataService;
+    private DatasetVersionRepository datasetVersionRepository;
 
     public DatasetVersionController(DatasetVersionService datasetVersionService, DatasetVersionMapper datasetVersionMapper,
-            MetadataService metadataService) {
+            MetadataService metadataService, DatasetVersionRepository datasetVersionRepository) {
         this.datasetVersionService = datasetVersionService;
         this.datasetVersionMapper = datasetVersionMapper;
         this.metadataService = metadataService;
+        this.datasetVersionRepository = datasetVersionRepository;
     }
 
     @GET
     @RolesAllowed({ Role.STR_DATASET_READ })
     public Collection<DatasetVersionDetailsDto> getAll() {
-        return datasetVersionMapper.toDatasetVersionDetailsDto(datasetVersionService.getAll());
+        return datasetVersionMapper.toDatasetVersionDetailsDto(datasetVersionRepository.getAll());
     }
 
     @GET
     @Path("/id/{id}")
     @RolesAllowed({ Role.STR_DATASET_READ, Role.STR_SEARCH })
     public DatasetVersionDetailsDto get(@NotNull UUID id) {
-        return datasetVersionMapper.toDatasetVersionDetailsDto(datasetVersionService.getById(id));
+        return datasetVersionMapper.toDatasetVersionDetailsDto(datasetVersionRepository.getById(id));
     }
 
     @GET
     @RolesAllowed({ Role.STR_SEARCH })
     @Path("/class/{classId}")
     public Collection<DatasetVersionDetailsDto> getAllActiveForClass(UUID classId) {
-        return datasetVersionMapper.toDatasetVersionDetailsDto(datasetVersionService.getAllActiveForClass(classId));
+        return datasetVersionMapper.toDatasetVersionDetailsDto(datasetVersionRepository.getAllActiveForClass(classId));
     }
 
     @DELETE

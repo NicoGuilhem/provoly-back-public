@@ -12,11 +12,11 @@ import org.mapstruct.MappingTarget;
 @Mapper(componentModel = "jakarta", collectionMappingStrategy = CollectionMappingStrategy.ADDER_PREFERRED)
 public abstract class DatasetVersionDetailsMapper {
     @Inject
-    DatasetVersionService datasetVersionService;
+    DatasetVersionRepository datasetVersionRepository;
 
     @AfterMapping
     void setHasWarnings(@MappingTarget DatasetVersionDetailsDto datasetVersionDetailsDto) {
-        boolean hasWarnings = datasetVersionService.countDatasetVersionMessagesByLevel(datasetVersionDetailsDto.getId(),
+        boolean hasWarnings = datasetVersionRepository.countDatasetVersionMessagesByLevel(datasetVersionDetailsDto.getId(),
                 MessageLevel.WARNING) > 0;
         datasetVersionDetailsDto.setHasWarnings(hasWarnings);
     }

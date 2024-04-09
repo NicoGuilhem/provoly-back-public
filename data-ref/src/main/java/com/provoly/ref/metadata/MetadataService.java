@@ -14,7 +14,7 @@ import com.provoly.common.metadata.MetadataValueWriteDto;
 import com.provoly.common.model.WithMetadata;
 import com.provoly.ref.dashboard.Dashboard;
 import com.provoly.ref.dataset.Dataset;
-import com.provoly.ref.datasetversion.DatasetVersion;
+import com.provoly.ref.datasetversion.DatasetVersionRepository;
 import com.provoly.ref.entity.EntityIdService;
 import com.provoly.ref.entity.EntityType;
 import com.provoly.ref.model.OClass;
@@ -27,13 +27,16 @@ public class MetadataService {
     private EntityManager em;
     private EntityIdService entityIdService;
     private MetadataDefService metadataDefService;
+    private DatasetVersionRepository datasetVersionRepository;
     private Logger log;
 
     public MetadataService(EntityManager em, EntityIdService entityIdService, MetadataDefService metadataDefService,
+            DatasetVersionRepository datasetVersionRepository,
             Logger log) {
         this.em = em;
         this.entityIdService = entityIdService;
         this.metadataDefService = metadataDefService;
+        this.datasetVersionRepository = datasetVersionRepository;
         this.log = log;
     }
 
@@ -51,7 +54,7 @@ public class MetadataService {
             case DASHBOARD -> entityIdService.checkEntityExists(entityId, Dashboard.class);
             case CLASS -> entityIdService.checkEntityExists(entityId, OClass.class);
             case DATASET -> entityIdService.checkEntityExists(entityId, Dataset.class);
-            case DATASET_VERSION -> entityIdService.checkEntityExists(entityId, DatasetVersion.class);
+            case DATASET_VERSION -> datasetVersionRepository.checkExists(entityId);
         }
     }
 

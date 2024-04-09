@@ -14,7 +14,7 @@ import jakarta.transaction.Transactional;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.search.*;
-import com.provoly.ref.datasetversion.DatasetVersion;
+import com.provoly.ref.datasetversion.DatasetVersionRepository;
 import com.provoly.ref.entity.EntityId;
 import com.provoly.ref.entity.EntityIdService;
 import com.provoly.ref.searchrequest.MonoClassSearchRequest;
@@ -37,17 +37,19 @@ public class NamedQueryService {
     private EntityIdService entityIdService;
 
     private SearchMapper searchMapper;
+    private DatasetVersionRepository datasetVersionRepository;
 
     @PersistenceContext
     EntityManager em;
 
     public NamedQueryService(Logger log, UserService userService, NamedQueryMapper mapper, EntityIdService entityIdService,
-            SearchMapper searchMapper) {
+            SearchMapper searchMapper, DatasetVersionRepository datasetVersionRepository) {
         this.log = log;
         this.userService = userService;
         this.mapper = mapper;
         this.entityIdService = entityIdService;
         this.searchMapper = searchMapper;
+        this.datasetVersionRepository = datasetVersionRepository;
     }
 
     public Collection<ProvolyUserNamedQuery> getNamedQueriesForCurrentUser() {
@@ -180,7 +182,7 @@ public class NamedQueryService {
             MonoClassRequestDto monoClassRequestDto = (MonoClassRequestDto) dto.getRequest();
             if (monoClassRequestDto.getDatasetVersionIds() != null) {
                 monoClassRequestDto.getDatasetVersionIds()
-                        .forEach(datasetVersionId -> entityIdService.getById(datasetVersionId, DatasetVersion.class));
+                        .forEach(datasetVersionId -> datasetVersionRepository.getById(datasetVersionId));
             }
         }
     }
