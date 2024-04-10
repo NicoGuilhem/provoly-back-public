@@ -105,9 +105,7 @@ public class ImportService {
             span.end();
         }
 
-        DatasetVersionDto datasetVersionDtoIndexing = new DatasetVersionDto(dto.getId(), dto.getDataset(),
-                DatasetState.INDEXING);
-        datasetVersionService.updateState(datasetVersionDtoIndexing);
+        updateVersionState(dto, DatasetState.INDEXING);
         log.infof("Starting indexing %s", datasetId);
 
         bus.publish("importFromFile", new ImportEvent(dto, normalizeGeo, chunkSize));
@@ -143,7 +141,7 @@ public class ImportService {
         Infrastructure.getDefaultWorkerPool().submit(() -> {
             var isTerminatedWithoutError = importRunner.importItemsFromFile(event.dto().getId(), event.normalizeGeo(),
                     event.chunkSize());
-            updateVersionState(event.dto(), isTerminatedWithoutError);
+            updateVersionState(event.dto(), isTerminatedWithoutError ? DatasetState.ACTIVE : DatasetState.ERROR);
         });
     }
 
@@ -177,14 +175,9 @@ public class ImportService {
                         List.of(new ExtractedMessage(MessageLevel.ERROR, ExtractMessageCode.FORMAT))));
     }
 
-    private void updateVersionState(DatasetVersionDto dto, boolean isTerminatedWithoutErrors) {
-        if (isTerminatedWithoutErrors) {
-            log.debugf("update dataset version state to ACTIVE");
-            virtEventEmitter.sendDatasetVersion(new DatasetVersionDto(dto.getId(), dto.getDataset(), DatasetState.ACTIVE));
-        } else {
-            log.debugf("update dataset version state to ERROR");
-            virtEventEmitter.sendDatasetVersion(new DatasetVersionDto(dto.getId(), dto.getDataset(), DatasetState.ERROR));
-        }
+    private void updateVersionState(DatasetVersionDto dto, DatasetState state) {
+        log.debugf("update dataset version state to %s", state.toString());
+        virtEventEmitter.sendDatasetVersion(new DatasetVersionDto(dto.getId(), dto.getDataset(), state));
     }
 
     public record ImportEvent(DatasetVersionDto dto, Boolean normalizeGeo, Integer chunkSize) {

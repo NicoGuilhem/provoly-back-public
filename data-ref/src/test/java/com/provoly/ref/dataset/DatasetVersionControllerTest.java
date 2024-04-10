@@ -16,10 +16,7 @@ import jakarta.transaction.Transactional;
 
 import com.provoly.common.Storage;
 import com.provoly.common.VariableType;
-import com.provoly.common.dataset.DatasetDto;
-import com.provoly.common.dataset.DatasetState;
-import com.provoly.common.dataset.DatasetType;
-import com.provoly.common.dataset.DatasetVersionDto;
+import com.provoly.common.dataset.*;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.error.ProvolyNotFoundException;
@@ -127,58 +124,20 @@ public class DatasetVersionControllerTest {
                 DatasetState.ACTIVE, withFile, fixedDate, "author", "SomeInformations");
     }
 
+    private DatasetVersion generateDatasetVersion(DatasetState state, boolean withFile) {
+        var dsv = new DatasetVersion(datasetVersionId);
+        dsv.setDataset(dataset);
+        dsv.setVersion(1);
+        dsv.setState(state);
+        dsv.setProducer("producer");
+        dsv.setProductionDate(Instant.now());
+        dsv.setWithFile(withFile);
+        return dsv;
+    }
+
     private void saveDatasetVersion() {
         DatasetVersion datasetVersion = datasetVersionMapper.toModel(datasetVersionDto);
         datasetVersionService.createDatasetVersion(datasetVersion);
-    }
-
-    private void saveCloseDatasetWithDatasetState(DatasetState wantedState) {
-        switch (wantedState) {
-            case LOADING -> saveCloseDatasetAtLoading();
-            case INDEXING -> saveCloseDatasetAtIndexing();
-            case ACTIVE -> saveCloseDatasetAtActive();
-            case INACTIVE -> saveCloseDatasetAtInactive();
-            case ERROR -> saveCloseDatasetAtError();
-        }
-    }
-
-    private void saveCloseDatasetAtLoading() {
-        initDataset(DatasetType.CLOSED);
-        generateDatasetVersionDto(true);
-        saveDatasetVersion();
-    }
-
-    private void saveCloseDatasetAtIndexing() {
-        initDataset(DatasetType.CLOSED);
-        generateDatasetVersionDto(false);
-        saveDatasetVersion();
-    }
-
-    private void saveCloseDatasetAtActive() {
-        saveCloseDatasetAtIndexing();
-        datasetVersionController.activate(datasetVersionId);
-    }
-
-    private void saveCloseDatasetAtError() {
-        saveCloseDatasetAtIndexing();
-        DatasetVersionDto error = generateDatasetDtoWithState(DatasetState.ERROR);
-        datasetVersionController.updateState(error);
-
-    }
-
-    private void saveCloseDatasetAtInactive() {
-        saveCloseDatasetAtActive();
-        //TODO: remplacer par un appel a l'endpoint de désactivation une fois codé
-        DatasetVersionDto inactive = generateDatasetDtoWithState(DatasetState.INACTIVE);
-        datasetVersionController.updateState(inactive);
-    }
-
-    private DatasetVersionDto generateDatasetDtoWithState(Boolean withFile, DatasetState state) {
-        return new DatasetVersionDto(datasetVersionId, datasetId, oClass.getId(), state, withFile);
-    }
-
-    private DatasetVersionDto generateDatasetDtoWithState(DatasetState state) {
-        return generateDatasetDtoWithState(false, state);
     }
 
     @Test
@@ -205,25 +164,52 @@ public class DatasetVersionControllerTest {
 
     @Test
     @TestSecurity(user = "testUser", roles = { Role.STR_ITEM_WRITE })
-    public void updateDatasetVersion_returnKO() {
+    public void updateDatasetVersion_returnOK() {
         initDataset(DatasetType.MODIFIABLE);
         generateDatasetVersionDto(false);
         saveDatasetVersion();
         Dataset dataset = new Dataset(UUID.randomUUID());
-        dataset.setName("Casséééééééés");
+        dataset.setName("dataset-version-name");
         dataset.setoClass(oClass);
         dataset.setSlug(oClass.getSlug());
         dataset.setType(DatasetType.CLOSED);
         dataset.setUser(userService.getCurrentUser());
         datasetService.saveEntity(dataset);
-        var datasetVersionDto = new DatasetVersionDto(this.datasetVersionDto.getId(), dataset.getId(), this.oClass.getId(),
-                this.datasetVersionDto.getVersion(), "author", Instant.now());
+        var datasetVersionDto = new DatasetVersionInformationsDto("author", Instant.now());
 
-        assertThatThrownBy(() -> datasetVersionController.updateState(datasetVersionDto))
-                .isInstanceOf(BusinessException.class)
-                .hasMessage("Dataset versions are immutable.");
+        given()
+                .pathParam("datasetVersionId", datasetVersionId)
+                .contentType(ContentType.JSON)
+                .body(datasetVersionDto)
+                .when()
+                .put("/dataset-versions/id/{datasetVersionId}")
+                .then()
+                .statusCode(204);
+    }
 
-        datasetService.deleteDataset(dataset.getId());
+    @Test
+    @TestSecurity(user = "testUser", roles = { Role.STR_ITEM_WRITE })
+    public void updateCloseDatasetVersion_without_producer_return_badRequest() {
+        initDataset(DatasetType.CLOSED);
+        generateDatasetVersionDto(false);
+        saveDatasetVersion();
+        Dataset dataset = new Dataset(UUID.randomUUID());
+        dataset.setName("dataset-version-name");
+        dataset.setoClass(oClass);
+        dataset.setSlug(oClass.getSlug());
+        dataset.setType(DatasetType.CLOSED);
+        dataset.setUser(userService.getCurrentUser());
+        datasetService.saveEntity(dataset);
+        var datasetVersionDto = new DatasetVersionInformationsDto(null, Instant.now());
+
+        given()
+                .pathParam("datasetVersionId", datasetVersionId)
+                .contentType(ContentType.JSON)
+                .body(datasetVersionDto)
+                .when()
+                .put("/dataset-versions/id/{datasetVersionId}")
+                .then()
+                .statusCode(400);
     }
 
     @Test
@@ -450,336 +436,11 @@ public class DatasetVersionControllerTest {
     }
 
     @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_ITEM_WRITE, Role.STR_CLASS_READ,
-            Role.STR_SEARCH })
-    public void put_closedDatasetVersionStateLoading_when_updateWithStateIndexing_should_returnOK() {
-        saveCloseDatasetWithDatasetState(DatasetState.LOADING);
-        DatasetVersionDto datasetVersionDtoIndexing = generateDatasetDtoWithState(
-                datasetVersionController.get(datasetVersionId).isWithFile(), DatasetState.INDEXING);
-
-        datasetVersionService.updateState(datasetVersionMapper.toModel(datasetVersionDtoIndexing));
-        assertThat(datasetVersionController.get(datasetVersionDto.getId()).getState()).isEqualTo(DatasetState.INDEXING);
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_ITEM_WRITE, Role.STR_CLASS_READ,
-            Role.STR_SEARCH })
-    public void put_closedDatasetVersionStateLoading_when_updateWithStateError_should_returnOK() {
-        saveCloseDatasetWithDatasetState(DatasetState.LOADING);
-        DatasetVersionDto datasetVersionDtoError = generateDatasetDtoWithState(true, DatasetState.ERROR);
-
-        datasetVersionService.updateState(datasetVersionMapper.toModel(datasetVersionDtoError));
-        assertThat(datasetVersionController.get(datasetVersionDto.getId()).getState()).isEqualTo(DatasetState.ERROR);
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_ITEM_WRITE, Role.STR_CLASS_READ,
-            Role.STR_SEARCH })
-    public void put_closedDatasetVersionStateLoading_when_updateWithStateActive_should_throwBadRequest() {
-        saveCloseDatasetWithDatasetState(DatasetState.LOADING);
-        DatasetVersionDto datasetVersionDtoActive = generateDatasetDtoWithState(true, DatasetState.ACTIVE);
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(datasetVersionDtoActive)
-                .when()
-                .put("/dataset-versions")
-                .then()
-                .statusCode(400);
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_ITEM_WRITE, Role.STR_CLASS_READ,
-            Role.STR_SEARCH })
-    public void put_closedDatasetVersionStateLoading_when_updateWithStateInactive_should_throwBadRequest() {
-        saveCloseDatasetWithDatasetState(DatasetState.LOADING);
-        DatasetVersionDto datasetVersionDtoInactive = generateDatasetDtoWithState(true, DatasetState.INACTIVE);
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(datasetVersionDtoInactive)
-                .when()
-                .put("/dataset-versions")
-                .then()
-                .statusCode(400);
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_ITEM_WRITE, Role.STR_CLASS_READ,
-            Role.STR_SEARCH })
-    public void put_closedDatasetVersionStateIndexing_when_updateWithStateActive_should_returnOK() {
-        saveCloseDatasetWithDatasetState(DatasetState.INDEXING);
-        DatasetVersionDto datasetVersionDtoActive = generateDatasetDtoWithState(false, DatasetState.ACTIVE);
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(datasetVersionDtoActive)
-                .when()
-                .put("/dataset-versions")
-                .then()
-                .statusCode(204);
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_ITEM_WRITE, Role.STR_CLASS_READ,
-            Role.STR_SEARCH })
-    public void put_closedDatasetVersionStateIndexing_when_updateWithStateError_should_returnOK() {
-        saveCloseDatasetWithDatasetState(DatasetState.INDEXING);
-        DatasetVersionDto datasetVersionDtoError = generateDatasetDtoWithState(false, DatasetState.ERROR);
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(datasetVersionDtoError)
-                .when()
-                .put("/dataset-versions")
-                .then()
-                .statusCode(204);
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_ITEM_WRITE, Role.STR_CLASS_READ,
-            Role.STR_SEARCH })
-    public void put_closedDatasetVersionStateIndexing_when_updateWithStateLoading_should_throwBadRequest() {
-        saveCloseDatasetWithDatasetState(DatasetState.INDEXING);
-        DatasetVersionDto datasetVersionDtoLoading = generateDatasetDtoWithState(false, DatasetState.LOADING);
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(datasetVersionDtoLoading)
-                .when()
-                .put("/dataset-versions")
-                .then()
-                .statusCode(400);
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_ITEM_WRITE, Role.STR_CLASS_READ,
-            Role.STR_SEARCH })
-    public void put_closedDatasetVersionStateIndexing_when_updateWithStateInactive_should_throwBadRequest() {
-        saveCloseDatasetWithDatasetState(DatasetState.INDEXING);
-        DatasetVersionDto datasetVersionDtoIndexing = generateDatasetDtoWithState(false, DatasetState.INACTIVE);
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(datasetVersionDtoIndexing)
-                .when()
-                .put("/dataset-versions")
-                .then()
-                .statusCode(400);
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_ITEM_WRITE, Role.STR_CLASS_READ,
-            Role.STR_SEARCH, Role.STR_DATASET_WRITE })
-    public void put_closedDatasetVersionActive_when_updateWithInactiveState_should_returnOK() {
-        saveCloseDatasetWithDatasetState(DatasetState.ACTIVE);
-        DatasetVersionDto datasetVersionDtoInactive = generateDatasetDtoWithState(false, DatasetState.INACTIVE);
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(datasetVersionDtoInactive)
-                .when()
-                .put("/dataset-versions")
-                .then()
-                .statusCode(204);
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_ITEM_WRITE, Role.STR_CLASS_READ,
-            Role.STR_SEARCH, Role.STR_DATASET_WRITE })
-    public void put_closedDatasetVersionActive_when_updateWithLoadingState_should_throwBadRequest() {
-        saveCloseDatasetWithDatasetState(DatasetState.ACTIVE);
-        DatasetVersionDto datasetVersionDtoLoading = generateDatasetDtoWithState(false, DatasetState.LOADING);
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(datasetVersionDtoLoading)
-                .when()
-                .put("/dataset-versions")
-                .then()
-                .statusCode(400);
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_ITEM_WRITE, Role.STR_CLASS_READ,
-            Role.STR_SEARCH, Role.STR_DATASET_WRITE, Role.STR_DATASET_READ })
-    public void put_closedDatasetVersionActive_when_updateWithIndexingState_should_throwBadRequest() {
-        saveCloseDatasetWithDatasetState(DatasetState.ACTIVE);
-        DatasetVersionDto datasetVersionDtoIndexing = generateDatasetDtoWithState(false, DatasetState.INDEXING);
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(datasetVersionDtoIndexing)
-                .when()
-                .put("/dataset-versions")
-                .then()
-                .statusCode(400);
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_ITEM_WRITE, Role.STR_CLASS_READ,
-            Role.STR_SEARCH, Role.STR_DATASET_READ, Role.STR_DATASET_WRITE })
-    public void put_closedDatasetVersionActive_when_updateWithErrorState_should_throwBadRequest() {
-        saveCloseDatasetWithDatasetState(DatasetState.ACTIVE);
-        DatasetVersionDto datasetVersionDtoError = generateDatasetDtoWithState(false, DatasetState.ERROR);
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(datasetVersionDtoError)
-                .when()
-                .put("/datasets")
-                .then()
-                .statusCode(400);
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_ITEM_WRITE, Role.STR_CLASS_READ,
-            Role.STR_SEARCH, Role.STR_DATASET_WRITE })
-    public void put_closedDatasetVersionInactive_when_updateWithLoadingState_should_throwBadRequest() {
-        saveCloseDatasetWithDatasetState(DatasetState.INACTIVE);
-        DatasetVersionDto datasetVersionDtoLoading = generateDatasetDtoWithState(false, DatasetState.LOADING);
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(datasetVersionDtoLoading)
-                .when()
-                .put("/dataset-versions")
-                .then()
-                .statusCode(400);
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_ITEM_WRITE, Role.STR_CLASS_READ,
-            Role.STR_SEARCH, Role.STR_DATASET_WRITE })
-    public void put_closedDatasetVersionInactive_when_updateWithIndexingState_should_throwBadRequest() {
-        saveCloseDatasetWithDatasetState(DatasetState.INACTIVE);
-        DatasetVersionDto datasetVersionDtoIndexing = generateDatasetDtoWithState(false, DatasetState.INDEXING);
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(datasetVersionDtoIndexing)
-                .when()
-                .put("/dataset-versions")
-                .then()
-                .statusCode(400);
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_DATASET_WRITE, Role.STR_CLASS_READ,
-            Role.STR_SEARCH, Role.STR_DATASET_READ, Role.STR_ITEM_WRITE })
-    public void put_closedDatasetVersionInactive_when_updateWithActiveState_should_returnOK() {
-        saveCloseDatasetWithDatasetState(DatasetState.INACTIVE);
-        DatasetVersionDto datasetVersionDtoIndexing = generateDatasetDtoWithState(false, DatasetState.ACTIVE);
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(datasetVersionDtoIndexing)
-                .when()
-                .put("/dataset-versions")
-                .then()
-                .statusCode(204);
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_ITEM_WRITE, Role.STR_CLASS_READ,
-            Role.STR_SEARCH, Role.STR_DATASET_WRITE, Role.STR_DATASET_READ })
-    public void put_closedDatasetVersionInactive_when_updateWithErrorState_should_throwBadRequest() {
-        saveCloseDatasetWithDatasetState(DatasetState.INACTIVE);
-        DatasetVersionDto datasetVersionDtoError = generateDatasetDtoWithState(false, DatasetState.ERROR);
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(datasetVersionDtoError)
-                .when()
-                .put("/dataset-versions")
-                .then()
-                .statusCode(400);
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_ITEM_WRITE, Role.STR_CLASS_READ,
-            Role.STR_SEARCH })
-    public void put_closedDatasetVersionError_when_updateWithActiveState_should_throwBadRequest() {
-        saveCloseDatasetWithDatasetState(DatasetState.ERROR);
-        DatasetVersionDto datasetVersionDtoUpdate = generateDatasetDtoWithState(false, DatasetState.ACTIVE);
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(datasetVersionDtoUpdate)
-                .when()
-                .put("/dataset-versions")
-                .then()
-                .statusCode(400);
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_ITEM_WRITE, Role.STR_CLASS_READ,
-            Role.STR_SEARCH })
-    public void put_closedDatasetVersionError_when_updateWithLoadingState_should_throwBadRequest() {
-        saveCloseDatasetWithDatasetState(DatasetState.ERROR);
-        DatasetVersionDto datasetVersionDtoUpdate = generateDatasetDtoWithState(false, DatasetState.LOADING);
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(datasetVersionDtoUpdate)
-                .when()
-                .put("/dataset-versions")
-                .then()
-                .statusCode(400);
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_ITEM_WRITE, Role.STR_CLASS_READ,
-            Role.STR_SEARCH })
-    public void put_closedDatasetVersionError_when_updateWithIndexingState_should_throwBadRequest() {
-        saveCloseDatasetWithDatasetState(DatasetState.ERROR);
-        DatasetVersionDto datasetVersionDtoUpdate = generateDatasetDtoWithState(false, DatasetState.INDEXING);
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(datasetVersionDtoUpdate)
-                .when()
-                .put("/dataset-versions")
-                .then()
-                .statusCode(400);
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_ITEM_WRITE, Role.STR_CLASS_READ,
-            Role.STR_SEARCH })
-    public void put_closedDatasetVersionError_when_updateWithInactiveState_should_throwBadRequest() {
-        saveCloseDatasetAtError();
-        DatasetVersionDto datasetVersionDtoUpdate = generateDatasetDtoWithState(false, DatasetState.INACTIVE);
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(datasetVersionDtoUpdate)
-                .when()
-                .put("/dataset-versions")
-                .then()
-                .statusCode(400);
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_ITEM_WRITE })
-    public void put_updateClosedDataset_when_gaveSameState_throwBadRequest() {
-        initDataset(DatasetType.CLOSED);
-        generateDatasetVersionDto(false);
-        saveDatasetVersion();
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(datasetVersionDto)
-                .when()
-                .put("/dataset-versions")
-                .then()
-                .statusCode(204);
-    }
-
-    @Test
     @TestSecurity(user = "testUser", roles = { Role.STR_ITEM_WRITE, Role.STR_DATASET_WRITE })
     public void deactivateDataset_should_setStateAtInactive() {
-        saveCloseDatasetAtActive();
+        initDataset(DatasetType.CLOSED);
+        var dsv = generateDatasetVersion(DatasetState.ACTIVE, true);
+        datasetVersionRepository.save(dsv);
         datasetVersionService.deactivateDatasetVersion(datasetVersionId);
         assertThat(datasetVersionRepository.getById(datasetVersionId).getState()).isEqualTo(DatasetState.INACTIVE);
     }
@@ -787,7 +448,9 @@ public class DatasetVersionControllerTest {
     @Test
     @TestSecurity(user = "testUser", roles = { Role.STR_ITEM_WRITE })
     public void importDataset_when_anotherOneIsImporting_should_ReturnOK() {
-        saveCloseDatasetAtLoading();
+        initDataset(DatasetType.CLOSED);
+        var dsv = generateDatasetVersion(DatasetState.LOADING, true);
+        datasetVersionRepository.save(dsv);
 
         DatasetDto anotherDatasetDto = new DatasetDto(UUID.randomUUID(), "another one", oClass.getId(), DatasetType.CLOSED);
         datasetService.save(anotherDatasetDto);
@@ -806,7 +469,9 @@ public class DatasetVersionControllerTest {
     @Test
     @TestSecurity(user = "testUser", roles = { Role.STR_ITEM_WRITE })
     public void importDataset_when_linkedDatasetVersionIsAlreadyImporting_should_ThrowConflict() {
-        saveCloseDatasetAtLoading();
+        initDataset(DatasetType.CLOSED);
+        var dsv = generateDatasetVersion(DatasetState.LOADING, true);
+        datasetVersionRepository.save(dsv);
 
         DatasetVersionDto anotherDatasetVersionWithSameDataset = new DatasetVersionDto(UUID.randomUUID(), datasetId,
                 oClass.getId(), DatasetState.LOADING, "author", Instant.now());
@@ -827,11 +492,8 @@ public class DatasetVersionControllerTest {
         int errorsCount = 8;
         int warningCount = 6;
         initDataset(DatasetType.CLOSED);
-        generateDatasetVersionDto(true);
-        saveDatasetVersion();
-        var dsVersion = new DatasetVersionDto(datasetVersionId, datasetId, oClass.getId(),
-                DatasetState.ERROR, true);
-        datasetVersionController.updateState(dsVersion);
+        var dsv = generateDatasetVersion(DatasetState.ERROR, true);
+        datasetVersionRepository.save(dsv);
 
         List<ExtractedMessage> errors = new ArrayList<>();
         for (int i = 0; i < errorsCount; i++) {
@@ -845,11 +507,11 @@ public class DatasetVersionControllerTest {
                     new FileImportDto.ParamsTypeError(String.valueOf(i), Type.DECIMAL)));
         }
 
-        datasetVersionMessageService.save(new ImportsMessage(dsVersion.getId(), "1", errors));
-        datasetVersionMessageService.save(new ImportsMessage(dsVersion.getId(), null, warnings));
+        datasetVersionMessageService.save(new ImportsMessage(dsv.getId(), "1", errors));
+        datasetVersionMessageService.save(new ImportsMessage(dsv.getId(), null, warnings));
 
         // WHEN
-        var datasetVersionPreview = datasetVersionController.getDatasetVersionPreviews(dsVersion.getId());
+        var datasetVersionPreview = datasetVersionController.getDatasetVersionPreviews(dsv.getId());
 
         // THEN
         assertThat(datasetVersionPreview.get(0).count()).isEqualTo(8);
@@ -862,13 +524,9 @@ public class DatasetVersionControllerTest {
     @TestSecurity(user = "testUser", roles = { Role.STR_ITEM_WRITE, Role.STR_DATASET_READ })
     public void get_DatasetVersionError_should_returnEmpty() {
         initDataset(DatasetType.CLOSED);
-        generateDatasetVersionDto(true);
-        saveDatasetVersion();
-        var dsVersion = new DatasetVersionDto(datasetVersionId, datasetId, oClass.getId(),
-                DatasetState.ERROR, true);
-        datasetVersionController.updateState(dsVersion);
-
-        var datasetVersionPreview = datasetVersionController.getDatasetVersionPreviews(dsVersion.getId());
+        var dsv = generateDatasetVersion(DatasetState.ERROR, true);
+        datasetVersionRepository.save(dsv);
+        var datasetVersionPreview = datasetVersionController.getDatasetVersionPreviews(dsv.getId());
         assertThat(datasetVersionPreview).isEmpty();
     }
 
@@ -903,7 +561,9 @@ public class DatasetVersionControllerTest {
     @Test
     @TestSecurity(user = "testUser", roles = { Role.STR_ITEM_WRITE, Role.STR_DATASET_WRITE })
     public void getAllActiveDatasetVersionForClass_shouldSucceed() {
-        saveCloseDatasetAtActive();
+        initDataset(DatasetType.CLOSED);
+        var dsv = generateDatasetVersion(DatasetState.ACTIVE, false);
+        datasetVersionRepository.save(dsv);
 
         var result = datasetVersionRepository.getAllActiveForClass(UUID.fromString(OCLASS_ID));
 

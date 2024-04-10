@@ -88,13 +88,14 @@ public class Service {
 
         // update older date into dataset
         log.debug("Updating dataset version");
-        datasetVersions.values().forEach(ds -> {
-            log.debugf("Updating last update for ds %s", ds.getId());
-            ds = new DatasetVersionDto(ds.getId(), ds.getDataset(), ds.getoClass(), Instant.now(),
-                    ds.getVersion(),
-                    ds.getState(), ds.isWithFile());
-            datasetVersionService.updateState(ds);
-        });
+        // FIXME: to move and adapt in data-virt, we juste need to update the lastModified field of  a datasetVersion
+        //        datasetVersions.values().forEach(ds -> {
+        //            log.debugf("Updating last update for ds %s", ds.getId());
+        //            ds = new DatasetVersionInformationsDto(ds.getId(), ds.getDataset(), ds.getoClass(), Instant.now(),
+        //                    ds.getVersion(),
+        //                    ds.getState(), ds.isWithFile(), ds.getProductionDate(), ds.getProducer(), ds.getAdditionalInformation());
+        //            datasetVersionService.update(ds);
+        //        });
 
         log.debugf("Mesuring");
         nbObject += records.size();

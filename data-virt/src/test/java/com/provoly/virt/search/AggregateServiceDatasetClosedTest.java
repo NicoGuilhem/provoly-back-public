@@ -2,6 +2,7 @@ package com.provoly.virt.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -131,12 +132,9 @@ public class AggregateServiceDatasetClosedTest {
     private void createDatasetVersions(StorageDataAggregate dataStorage) {
         var datasetVersionDto = new DatasetVersionDto(UUID.randomUUID(),
                 dataStorage.datasetDto.getId(), dataStorage.datasetDto.getoClass(),
-                DatasetState.INDEXING, false);
+                DatasetState.INDEXING, false, "producer", Instant.now());
         datasetVersionService.create(datasetVersionDto);
         insertItems(dataStorage, datasetVersionDto);
-        var datasetVersionDtoUpdate = new DatasetVersionDto(datasetVersionDto.getId(),
-                datasetVersionDto.getDataset(), datasetVersionDto.getoClass(),
-                DatasetState.ACTIVE, datasetVersionDto.isWithFile());
-        datasetVersionService.updateState(datasetVersionDtoUpdate);
+        datasetVersionService.activate(datasetVersionDto.getId());
     }
 }

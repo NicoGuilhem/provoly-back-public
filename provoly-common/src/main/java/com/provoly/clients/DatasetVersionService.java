@@ -6,6 +6,7 @@ import java.util.UUID;
 import jakarta.ws.rs.*;
 
 import com.provoly.common.dataset.DatasetVersionDto;
+import com.provoly.common.dataset.DatasetVersionInformationsDto;
 import com.provoly.common.error.ProvolyResponseExceptionMapper;
 
 import io.quarkus.cache.CacheResult;
@@ -32,7 +33,11 @@ public interface DatasetVersionService {
     void activate(@PathParam("id") UUID id);
 
     @PUT
-    void updateState(DatasetVersionDto datasetVersionDto);
+    void update(DatasetVersionInformationsDto datasetVersionInformationsDto);
+
+    @POST
+    @Path("/id/{id}/deactivate")
+    void deactivate(UUID id);
 
     @DELETE
     @Path("/id/{id}")

@@ -7,6 +7,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
@@ -117,7 +118,7 @@ public class ImportRunnerTest {
 
         dataStorages.get(storageData).datasetVersionDto = new DatasetVersionDto(UUID.randomUUID(),
                 dataStorages.get(storageData).datasetDto.getId(), dataStorages.get(storageData).datasetDto.getoClass(),
-                DatasetState.INDEXING, false);
+                DatasetState.INDEXING, false, "producer", Instant.now());
         datasetVersionService.create(dataStorages.get(storageData).datasetVersionDto);
         fileService.receive(new FileInputStream(fileUpload.filePath().toFile()), mediaType,
                 dataStorages.get(storageData).datasetVersionDto.getId());
@@ -141,8 +142,9 @@ public class ImportRunnerTest {
         dataStorages.values().stream()
                 .filter(storage -> storage.datasetVersionDto != null)
                 .forEach(storage -> {
-                    datasetVersionService.updateState(new DatasetVersionDto(storage.datasetVersionDto.getId(),
-                            storage.datasetVersionDto.getDataset(), DatasetState.ERROR));
+                    // Allow to go from INDEXING to ACTIVE then TO INACTIVE, thus allow us to run some mort import Tests
+                    datasetVersionService.activate(storage.datasetVersionDto.getId());
+                    datasetVersionService.deactivate(storage.datasetVersionDto.getId());
                     storage.datasetVersionDto = null;
                 });
     }

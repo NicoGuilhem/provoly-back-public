@@ -10,6 +10,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
 import com.provoly.common.dataset.DatasetVersionDto;
+import com.provoly.common.dataset.DatasetVersionInformationsDto;
 import com.provoly.common.metadata.MetadataValueWriteDto;
 import com.provoly.common.user.Role;
 import com.provoly.ref.entity.EntityType;
@@ -62,8 +63,9 @@ public class DatasetVersionController {
 
     @PUT
     @RolesAllowed({ Role.STR_ITEM_WRITE })
-    public void updateState(DatasetVersionDto datasetVersion) {
-        datasetVersionService.updateState(datasetVersionMapper.toModel(datasetVersion));
+    @Path("/id/{id}")
+    public void update(UUID id, DatasetVersionInformationsDto datasetVersion) {
+        datasetVersionService.update(datasetVersionRepository.getById(id), datasetVersion);
     }
 
     @POST

@@ -32,7 +32,7 @@ public class DatasetVersionRepository {
     private Logger logger;
     public static final int PREVIEW_MAX_RESULT = 5;
 
-    private DatasetVersionRepository(EntityIdService entityIdService, Logger logger) {
+    public DatasetVersionRepository(EntityIdService entityIdService, Logger logger) {
         this.entityIdService = entityIdService;
         this.logger = logger;
     }

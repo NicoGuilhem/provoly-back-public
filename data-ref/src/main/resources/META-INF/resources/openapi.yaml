@@ -1805,7 +1805,8 @@ paths:
                     "state": "INACTIVE",
                     "withFile": false,
                     "producer": "the producer"
-                    "productionDate": "2023-04-27T13:56:13.861018Z"
+                    "productionDate": "2023-04-27T13:56:13.861018Z",
+                    "additionalInformation": "some information"
                   }
       responses:
         "201":
@@ -1867,29 +1868,23 @@ paths:
     put:
       tags:
         - Dataset Version Controller
-      operationId: com.provoly.ref.dataset.DatasetVersionController_updateState
-      summary: Update the state of a dataset version
+      operationId: com.provoly.ref.dataset.DatasetVersionController_update
+      summary: Update a dataset version
       description: |
-        A dataset version has multiple states to indicate the level of availability of the data imported.
-        Each state can be modified to a specific set of other states. For example, if a dataset's state is `LOADING`,
-        it can only obtain the `INDEXING` or `ERROR` states.
+        Allow to modify some information of a dataset-version: producer, productionDate and additionalInformation
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DatasetVersionDto'
+              $ref: '#/components/schemas/DatasetVersionInformationsDto'
             examples:
               updateDatasetVersion:
                 summary: Update dataset version
                 value: |
                   {
-                    "id": "b1a08d9d-4c38-4d43-90f3-25015537ebfd" ,
-                    "dataset": "423b5c01-1816-41d4-b358-200000000010",
-                    "oClass": "991eb4b2-253c-4875-b708-8209fa5bfd51",
-                    "lastModified": "2023-04-27T13:56:13.861018Z",
-                    "version": 1,
-                    "state": "INACTIVE",
-                    "withFile": false
+                    "producer": "the producer"
+                    "productionDate": "2023-04-27T13:56:13.861018Z",
+                    "additionalInformation": "additional"
                   }
       responses:
         "204":
@@ -1901,43 +1896,17 @@ paths:
               examples:
                 incompatibleStates:
                   summary: Wrong transition of state
-                  description: Occurs when you try to update a dataset version's state to a state it can't transition to
+                  description: Occurs when you try to update a close dataset version's without producer or productionDate
                   value: |
                     {
                       "application": "data-ref",
                       "code": "BAD_REQUEST",
-                      "message": "Dataset cannot transition from LOADING to ACTIVE"
+                      "message": "Producer and Production date are mandatory for closed dataset"
                     }
         "401":
           description: Not Authorized
         "403":
           description: Not Allowed
-          content:
-            application/json:
-              examples:
-                differentDatasetId:
-                  summary: Different dataset id
-                  description: Occurs when you try to update a dataset version's state with a different dataset as the one in the database
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "FORBIDDEN",
-                      "message": "Dataset versions are immutable"
-                    }
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              examples:
-                sameState:
-                  summary: Update state with the actual state
-                  description: Occurs when you try to update a dataset version's state with the same state it already is in
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "CONFLICT",
-                      "message": "Dataset {{datasetId}} is already in state: {{datasetState}}"
-                    }
       security:
         - oidc:
             - item_write
@@ -4999,6 +4968,21 @@ components:
         withFile:
           type: boolean
           example: false
+        producer:
+          type: string
+        productionDate:
+          $ref: '#/components/schemas/Instant'
+        additionalInformation:
+          type: string
+    DatasetVersionInformationsDto:
+      type: object
+      properties:
+        producer:
+          type: string
+        productionDate:
+          $ref: '#/components/schemas/Instant'
+        additionalInformation:
+          type: string
     FieldDto:
       type: object
       required:

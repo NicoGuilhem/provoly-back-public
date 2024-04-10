@@ -9,6 +9,7 @@ import jakarta.transaction.Transactional;
 
 import com.provoly.common.dataset.DatasetState;
 import com.provoly.common.dataset.DatasetType;
+import com.provoly.common.dataset.DatasetVersionInformationsDto;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.imports.MessageLevel;
@@ -72,6 +73,34 @@ public class DatasetVersionService {
         setDatasetVersionState(oldDatasetVersion, datasetVersion.getState());
     }
 
+    @Transactional
+    public void update(DatasetVersion datasetVersion, DatasetVersionInformationsDto datasetVersionInformationsDto) {
+        logger.infof("Start updating dataset version: %s", datasetVersion.getId());
+
+        datasetVersion.setProducer(datasetVersionInformationsDto.producer());
+        datasetVersion.setProductionDate(datasetVersionInformationsDto.productionDate());
+        datasetVersion.setAdditionalInformation(datasetVersionInformationsDto.additionalInformation());
+
+        if (datasetVersion.getDataset().getType().equals(DatasetType.CLOSED)) {
+            checkMandatoryFields(datasetVersion);
+        }
+
+        datasetVersionRepository.save(datasetVersion);
+    }
+
+    private void checkMandatoryFields(DatasetVersion datasetVersion) {
+        if (datasetVersion.getProducer() == null || datasetVersion.getProducer().isBlank()
+                || datasetVersion.getProductionDate() == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST,
+                    "Producer and Production date are mandatory for closed dataset");
+        }
+
+        if (datasetVersion.getProductionDate().isAfter(Instant.now())) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST,
+                    "Production date cannot be in the future");
+        }
+    }
+
     private void setDatasetVersionState(DatasetVersion datasetVersion, DatasetState wantedState) {
         verifyStateModificationIsAllowed(datasetVersion, wantedState);
         datasetVersion.setState(wantedState);
@@ -123,16 +152,7 @@ public class DatasetVersionService {
     private void checkCanCreateClosedDatasetVersion(DatasetVersion datasetVersion) {
         UUID datasetId = datasetVersion.getDataset().getId();
 
-        if (datasetVersion.getProducer() == null || datasetVersion.getProducer().isBlank()
-                || datasetVersion.getProductionDate() == null) {
-            throw new BusinessException(ErrorCode.BAD_REQUEST,
-                    "Producer and Production date are mandatory for closed dataset");
-        }
-
-        if (datasetVersion.getProductionDate().isAfter(Instant.now())) {
-            throw new BusinessException(ErrorCode.BAD_REQUEST,
-                    "Production date cannot be in the future");
-        }
+        checkMandatoryFields(datasetVersion);
 
         if (datasetVersionRepository.countLoadOrIndexingDatasetVersionByDataset(datasetId) > 0) {
             throw new BusinessException(ErrorCode.CONFLICT,

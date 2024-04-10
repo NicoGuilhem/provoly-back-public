@@ -190,7 +190,7 @@ public class TestService {
                         EntityType.DATASET_VERSION);
             });
             datasetVersionMessageService.deleteAllDatasetVersionMessage(dv.getId());
-            entityManager.remove(dv);
+            datasetVersionRepository.deleteDatasetVersion(dv.getId());
         });
         datasetService.getAll().forEach(dataset -> {
             List<MetadataValue> metadataValues = metadataService.getMetadataValueByEntityId(dataset.getId());
