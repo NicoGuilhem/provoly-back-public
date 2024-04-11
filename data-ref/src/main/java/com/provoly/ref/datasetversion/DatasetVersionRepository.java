@@ -180,4 +180,18 @@ public class DatasetVersionRepository {
         return entityIdService.getEm().createQuery(q).getSingleResult();
     }
 
+    public DatasetVersion getLastVersionCreated(UUID datasetId) {
+        entityIdService.checkEntityExists(datasetId, Dataset.class);
+        try {
+            var cb = entityIdService.getEm().getCriteriaBuilder();
+            var q = cb.createQuery(DatasetVersion.class);
+            var rootQuery = q.from(DatasetVersion.class);
+            q.where(cb.equal(rootQuery.get(DatasetVersion_.dataset).get(Dataset_.id), datasetId));
+            q.orderBy(cb.desc(rootQuery.get(DatasetVersion_.version)));
+            return entityIdService.getEm().createQuery(q).setMaxResults(1).getSingleResult();
+        } catch (NoResultException e) {
+            throw new ProvolyNotFoundException("No dataset version found in dataset %s".formatted(datasetId));
+        }
+    }
+
 }

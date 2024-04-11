@@ -231,6 +231,42 @@ public class DatasetControllerTest {
     }
 
     @Test
+    @TestSecurity(user = "testUser", roles = { Role.STR_DATASET_READ })
+    public void getLastDatasetVersionOfDataset_returnLastDatasetVersion() {
+        // GIVEN
+        ProvolyUser currentUser = userService.getCurrentUser();
+        var datasetDto = new DatasetDto(
+                UUID.randomUUID(),
+                "Closed_dataset",
+                oClass.getId(),
+                DatasetType.CLOSED);
+        var dataset = datasetMapper.toModel(datasetDto);
+        dataset.setUser(currentUser);
+        datasetService.saveEntity(dataset);
+
+        var activeDatasetVersionDto = new DatasetVersionDto(UUID.randomUUID(), datasetDto.getId(), oClass.getId(),
+                DatasetState.ACTIVE, "producer", Instant.now());
+        datasetVersionService.createDatasetVersion(datasetVersionMapper.toModel(activeDatasetVersionDto));
+
+        // WHEN
+        var datasetVersion = datasetController.getLastVersionCreated(datasetDto.getId());
+
+        // THEN
+        assertThat(datasetVersion.getVersion()).isEqualTo(1);
+    }
+
+    @Test
+    @TestSecurity(user = "testUser", roles = { Role.STR_DATASET_READ })
+    public void getLastDatasetVersionOfUnknownDataset_shouldThrowError() {
+        var datasetRandom = UUID.randomUUID();
+
+        // THEN
+        assertThatThrownBy(() -> datasetController.getLastVersionCreated(datasetRandom))
+                .isInstanceOf(ProvolyNotFoundException.class)
+                .hasMessage("Dataset : %s inexistant.".formatted(datasetRandom));
+    }
+
+    @Test
     public void generateDatasetSlug() {
         Dataset model = datasetMapper.toModel(datasetDto);
         assertThat(model.getSlug()).endsWith("_crcterstqu");

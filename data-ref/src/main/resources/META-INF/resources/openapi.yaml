@@ -1781,6 +1781,32 @@ paths:
       security:
         - oidc:
             - dataset_read
+  /datasets/{id}/dataset-versions/latest:
+    get:
+      tags:
+        - Dataset Controller
+      summary: Retrieve the last dataset version based on its dataset id
+      operationId: com.provoly.ref.dataset.DatasetController_getLastVersionCreated
+      parameters:
+        - name: id
+          in: path
+          description: UUID of the dataset
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          $ref: '#/components/responses/datasetVersionDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "404":
+          $ref: '#/components/responses/notFoundException'
+      security:
+        - oidc:
+            - dataset_read
+            - dataset_write
   /dataset-versions:
     post:
       tags:

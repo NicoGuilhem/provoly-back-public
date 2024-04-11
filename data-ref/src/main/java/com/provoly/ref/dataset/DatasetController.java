@@ -139,4 +139,11 @@ public class DatasetController {
     public AssociationsDto getAssociationsByDatasetId(@PathParam("id") UUID datasetId) {
         return datasetService.getDatasetAssociations(datasetId);
     }
+
+    @GET
+    @RolesAllowed({ Role.STR_DATASET_READ, Role.STR_DATASET_WRITE })
+    @Path("/{id}/dataset-versions/latest")
+    public DatasetVersionDetailsDto getLastVersionCreated(UUID id) {
+        return datasetVersionMapper.toDatasetVersionDetailsDto(datasetVersionRepository.getLastVersionCreated(id));
+    }
 }
