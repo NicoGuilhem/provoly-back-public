@@ -1,5 +1,7 @@
 package com.provoly.virt.storage.elasticbased.kuzzle;
 
+import static com.provoly.virt.storage.elasticbased.kuzzle.KuzzleLayout.COLLECTION_NAME;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +27,6 @@ import org.jboss.logging.Logger;
 @StorageQualifier(Storage.KUZZLE)
 @ApplicationScoped
 class KuzzleModelService implements StorageModelService {
-
     @Inject
     Logger log;
 
@@ -47,7 +48,7 @@ class KuzzleModelService implements StorageModelService {
 
         var mapping = Map.of("mappings", buildMapping(oClass.getAttributes()));
         log.infov("Creating index with name %s".formatted(indexName));
-        kuzzleClient.createIndexAndCollection(indexName, "provoly", mapping);
+        kuzzleClient.createIndexAndCollection(indexName, COLLECTION_NAME, mapping);
     }
 
     private Map<String, Object> buildMapping(List<AttributeDefDetailsDto> attributes) { // TODO: better mapping management
@@ -56,11 +57,11 @@ class KuzzleModelService implements StorageModelService {
 
         for (var attribute : attributes) {
             mapping.put(attribute.technicalName,
-                    Map.of("type", Type.from(attribute.field.type).getElasticType().name().toLowerCase()));
+                    Map.of("type", Type.from(attribute.field.type).getElasticType().getName()));
         }
         for (var system : MetadataSystem.values()) {
             metadata.put(system.getName(),
-                    Map.of("type", VariableType.getElasticType(system.getMetadata().type).toString().toLowerCase()));
+                    Map.of("type", VariableType.getElasticType(system.getMetadata().type).getName()));
         }
         mapping.put("metadata", Map.of("properties", metadata));
         return Map.of("properties", mapping);

@@ -18,6 +18,7 @@ import com.provoly.virt.storage.elasticbased.KuzzleBasedLayout;
 
 @ApplicationScoped
 public class KuzzleLayout extends KuzzleBasedLayout {
+    public static final String COLLECTION_NAME = "provoly";
 
     private ElasticSupport elasticSupport;
 
@@ -53,7 +54,7 @@ public class KuzzleLayout extends KuzzleBasedLayout {
     @Override
     public Item convertToItem(Map<String, Object> hit, OClassDetailsDto oClass, UUID datasetversionId) {
         var id = getId(hit);
-        Item item = new Item(new ItemId(datasetversionId, id), oClass);
+        Item item = new Item(new ItemId(id), oClass);
 
         // Load attributes : Based on attributes defined in Class. Everything else is ignored
         for (AttributeDefDetailsDto attributeDef : oClass.getAttributes()) {

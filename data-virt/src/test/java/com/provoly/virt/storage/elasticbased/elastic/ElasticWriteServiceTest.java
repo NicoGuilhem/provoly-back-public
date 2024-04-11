@@ -17,7 +17,6 @@ import com.provoly.common.error.BusinessException;
 import com.provoly.common.model.OClassDetailsDto;
 import com.provoly.virt.entity.Item;
 import com.provoly.virt.entity.ItemId;
-import com.provoly.virt.storage.StorageSupport;
 import com.provoly.virt.storage.elasticbased.ElasticSupport;
 
 import org.elasticsearch.client.ResponseBuilder;
@@ -39,14 +38,9 @@ import co.elastic.clients.elasticsearch.core.bulk.OperationType;
 public class ElasticWriteServiceTest {
     ElasticWriteService elasticStorageWriteAdapter;
     MetadataRefService metadataService;
-
     ElasticLayout supportMock;
-
     ElasticsearchClient elasticsearchClientMock;
-
-    StorageSupport storageSupport;
     ElasticSupport elasticSupport;
-
     static Logger logger = Logger.getLogger(ElasticWriteService.class);
 
     @BeforeEach
@@ -54,7 +48,7 @@ public class ElasticWriteServiceTest {
         supportMock = Mockito.mock(ElasticLayout.class);
         elasticsearchClientMock = Mockito.mock(ElasticsearchClient.class);
         elasticStorageWriteAdapter = new ElasticWriteService(elasticsearchClientMock, metadataService,
-                supportMock, storageSupport, elasticSupport, logger);
+                supportMock, elasticSupport, logger);
     }
 
     @Test

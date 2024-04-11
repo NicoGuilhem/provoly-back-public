@@ -1,5 +1,7 @@
 package com.provoly.virt.storage.elasticbased;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -8,19 +10,25 @@ import jakarta.enterprise.context.ApplicationScoped;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.virt.DataVirtProperties;
+import com.provoly.virt.storage.InsertionError;
 
 import io.kuzzle.sdk.Kuzzle;
 import io.kuzzle.sdk.coreClasses.SearchResult;
+import io.kuzzle.sdk.coreClasses.maps.KuzzleMap;
 import io.kuzzle.sdk.protocol.WebSocket;
 import io.quarkus.cache.CacheResult;
 
+import org.jboss.logging.Logger;
+
 @ApplicationScoped
 public class KuzzleClient {
-    private Kuzzle kuzzle;
 
-    private DataVirtProperties dataVirtProperties;
+    private final Logger log;
+    private final Kuzzle kuzzle;
+    private final DataVirtProperties dataVirtProperties;
 
-    public KuzzleClient(DataVirtProperties dataVirtProperties) {
+    public KuzzleClient(DataVirtProperties dataVirtProperties, Logger log) {
+        this.log = log;
         this.dataVirtProperties = dataVirtProperties;
         WebSocket ws = new WebSocket(dataVirtProperties.kuzzle().host().orElse("localhost"));
         this.kuzzle = new Kuzzle(ws);
@@ -76,6 +84,32 @@ public class KuzzleClient {
         } catch (InterruptedException | ExecutionException e) {
             throw new BusinessException(ErrorCode.TECHNICAL, "Unable to get the measure collection mapping", e);
         }
+    }
+
+    public List<InsertionError> insertDocuments(String index, String collection, List<Map<String, Object>> documents) {
+        try {
+            var result = kuzzle.getDocumentController()
+                    .mCreateOrReplace(index, collection, new ArrayList<>(documents))
+                    .get();
+            return convertKuzzleResponseToError(result);
+        } catch (InterruptedException | ExecutionException e) {
+            throw new BusinessException(ErrorCode.TECHNICAL, "Error while communicating with kuzzle", e);
+        }
+    }
+
+    private List<InsertionError> convertKuzzleResponseToError(Map<String, ArrayList<Object>> result) {
+        var errors = result.get("errors");
+        if (errors == null) {
+            return List.of();
+        }
+        var pryErrors = new ArrayList<InsertionError>();
+        for (Object error : errors) {
+            var kuzzleErrorMap = (KuzzleMap) error;
+            log.error("Error while inserting document in Kuzzle : %s".formatted(kuzzleErrorMap));
+            var documentId = kuzzleErrorMap.getMap("document").getString("_id");
+            pryErrors.add(new InsertionError(kuzzleErrorMap.getString("reason"), documentId));
+        }
+        return pryErrors;
     }
 
 }

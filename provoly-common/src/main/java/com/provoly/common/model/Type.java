@@ -12,7 +12,7 @@ public enum Type {
     DECIMAL(ElasticType.DOUBLE, PostgisType.DOUBLE, TypeCategory.NUMERIC, "decimal"),
     RAW(ElasticType.TEXT, PostgisType.VARCHAR, TypeCategory.STRING, "raw"),
     INSTANT(ElasticType.DATE, PostgisType.TIMESTAMP, TypeCategory.DATE, "instant"),
-    POINT(ElasticType.GEOSHAPE, PostgisType.POINT, TypeCategory.GEO, "Point"),
+    POINT(ElasticType.GEOPOINT, PostgisType.POINT, TypeCategory.GEO, "Point"),
     MULTIPOINT(ElasticType.GEOSHAPE, PostgisType.MULTIPOINT, TypeCategory.GEO, "MultiPoint"),
     LINESTRING(ElasticType.GEOSHAPE, PostgisType.LINESTRING, TypeCategory.GEO, "LineString"),
     MULTILINESTRING(ElasticType.GEOSHAPE, PostgisType.MULTILINESTRING, TypeCategory.GEO, "MultiLineString"),

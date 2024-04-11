@@ -22,9 +22,9 @@ import com.provoly.virt.GeoHolder;
 import com.provoly.virt.entity.*;
 import com.provoly.virt.storage.InsertionError;
 import com.provoly.virt.storage.StorageQualifier;
-import com.provoly.virt.storage.StorageSupport;
 import com.provoly.virt.storage.StorageWriteService;
 import com.provoly.virt.storage.elasticbased.ElasticSupport;
+import com.provoly.virt.storage.elasticbased.StorageLayout;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.elasticsearch.client.ResponseException;
@@ -47,20 +47,16 @@ class ElasticWriteService implements StorageWriteService {
 
     private ElasticLayout elasticLayout;
 
-    private StorageSupport storageSupport;
-
     private ElasticSupport elasticSupport;
 
     public ElasticWriteService(ElasticsearchClient elastic,
             @RestClient MetadataRefService metadataService,
             ElasticLayout elasticLayout,
-            StorageSupport storageSupport,
             ElasticSupport elasticSupport,
             Logger log) {
         this.elastic = elastic;
         this.metadataService = metadataService;
         this.elasticLayout = elasticLayout;
-        this.storageSupport = storageSupport;
         this.elasticSupport = elasticSupport;
         this.log = log;
     }
@@ -144,15 +140,16 @@ class ElasticWriteService implements StorageWriteService {
 
         elasticLayout.prepareRequest(request);
         log.tracef("Adding %s item(s)", items.size());
+
         return elastic.bulk(request.build());
     }
 
     private Map<String, ?> buildSource(Item item) {
         var itemMap = new HashMap<String, Object>(); // Root map
         var itemMetadataMap = new HashMap<String, Object>(); // All item metadata - by metadata name
-        itemMap.put(ElasticLayout.META_FIELD_NAME, itemMetadataMap);
+        itemMap.put(StorageLayout.META_FIELD_NAME, itemMetadataMap);
         var valuesMap = new HashMap<String, Object>(); // All attributes value - by attributes name
-        itemMap.put(ElasticLayout.ATTRIBUTE_FIELD_NAME, valuesMap);
+        itemMap.put(StorageLayout.ATTRIBUTE_FIELD_NAME, valuesMap);
         // Add all metadata to item
         for (MetadataValueDto metadataValueDto : item.getMetadata()) {
             var metadataName = elasticLayout.buildElasticMetadataName(metadataValueDto);
@@ -162,14 +159,14 @@ class ElasticWriteService implements StorageWriteService {
         // Add all simple value attributes
         for (AttributeSimpleValue attribute : item.getAttributes(AttributeSimpleValue.class)) {
             var valueMap = new HashMap<String, Object>();
-            valuesMap.put(ElasticLayout.SIMPLE_ITEM_PREFIX + attribute.getSlug(), valueMap);
+            valuesMap.put(StorageLayout.SIMPLE_ITEM_PREFIX + attribute.getSlug(), valueMap);
             addSimpleValue(attribute, valueMap);
         }
 
         // Add all multi value attributes
         for (AttributeMultiValue attributes : item.getAttributes(AttributeMultiValue.class)) {
             var multiValues = new ArrayList<>();
-            valuesMap.put(ElasticLayout.MULTI_ITEM_PREFIX + attributes.getTechnicalName(), multiValues);
+            valuesMap.put(StorageLayout.MULTI_ITEM_PREFIX + attributes.getTechnicalName(), multiValues);
 
             // For every values in the attribute
             for (AttributeSimpleValue attribute : attributes.getValues()) {
@@ -185,7 +182,7 @@ class ElasticWriteService implements StorageWriteService {
 
     private void addSimpleValue(AttributeSimpleValue attribute, HashMap<String, Object> valueMap) {
         var valueMetaMap = new HashMap<String, Object>();
-        valueMap.put(ElasticLayout.META_FIELD_NAME, valueMetaMap);
+        valueMap.put(StorageLayout.META_FIELD_NAME, valueMetaMap);
         for (MetadataValueDto metadataValueDto : attribute.getMetadata()) {
             valueMetaMap.put(elasticLayout.buildElasticMetadataName(metadataValueDto), metadataValueDto.getValue());
         }
@@ -238,8 +235,8 @@ class ElasticWriteService implements StorageWriteService {
 
     private Item convertToItem(Hit<Map> hit, OClassDetailsDto oClass) {
         var itemMap = hit.source();
-        var itemMetaMap = (Map<String, Object>) itemMap.getOrDefault(ElasticLayout.META_FIELD_NAME, new HashMap<>());
-        var itemAttributeMap = (Map<String, Object>) itemMap.get(ElasticLayout.ATTRIBUTE_FIELD_NAME);
+        var itemMetaMap = (Map<String, Object>) itemMap.getOrDefault(StorageLayout.META_FIELD_NAME, new HashMap<>());
+        var itemAttributeMap = (Map<String, Object>) itemMap.get(StorageLayout.ATTRIBUTE_FIELD_NAME);
         //UUID oClassId = UUID.fromString((String) provolyMeta.get("class")); // TODO : Check coherence
         Item item = new Item(new ItemId(hit.id()), oClass);
 
@@ -255,7 +252,7 @@ class ElasticWriteService implements StorageWriteService {
         for (AttributeDefDetailsDto attributeDef : oClass.getAttributes()) {
             if (attributeDef.multiValued) {
                 var attributes = (Iterable<Map<String, Object>>) itemAttributeMap
-                        .get(ElasticLayout.MULTI_ITEM_PREFIX + attributeDef.slug);
+                        .get(StorageLayout.MULTI_ITEM_PREFIX + attributeDef.slug);
                 if (attributes == null)
                     continue;
                 var attributeMultiValue = item.getAttributeMulti(attributeDef.technicalName);
@@ -266,7 +263,7 @@ class ElasticWriteService implements StorageWriteService {
 
             } else {
                 var attribute = (Map<String, Object>) itemAttributeMap
-                        .get(ElasticLayout.SIMPLE_ITEM_PREFIX + attributeDef.slug);
+                        .get(StorageLayout.SIMPLE_ITEM_PREFIX + attributeDef.slug);
                 if (attribute == null)
                     continue;
                 var attributeValue = item.getAttributeSimple(attributeDef.technicalName);
@@ -284,7 +281,7 @@ class ElasticWriteService implements StorageWriteService {
         }
 
         // Load attributes metadata
-        var attributeMetaMap = (Map<String, Object>) attribute.getOrDefault(ElasticLayout.META_FIELD_NAME, new HashMap<>());
+        var attributeMetaMap = (Map<String, Object>) attribute.getOrDefault(StorageLayout.META_FIELD_NAME, new HashMap<>());
 
         for (Map.Entry<String, Object> metadata : attributeMetaMap.entrySet()) {
             var metadataDef = extractMetadataDef(metadata);

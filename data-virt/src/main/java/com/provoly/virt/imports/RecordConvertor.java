@@ -177,7 +177,8 @@ public class RecordConvertor {
             values.put(attribute.technicalName, assignTo(value, type, normalizeGeo, attribute.field.crs));
 
         } catch (BusinessException | IllegalArgumentException | DateTimeParseException exception) {
-            FileImportDto.ParamsTypeError paramsError = new FileImportDto.ParamsTypeError(attribute.name);
+            FileImportDto.ParamsTypeError paramsError = new FileImportDto.ParamsTypeError(attribute.name,
+                    attribute.field.getType());
             errors.add(new ExtractedMessage(MessageLevel.ERROR, ExtractMessageCode.FORMAT, paramsError));
         }
     }

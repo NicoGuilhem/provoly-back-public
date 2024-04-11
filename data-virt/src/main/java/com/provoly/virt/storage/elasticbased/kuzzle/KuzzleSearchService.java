@@ -32,7 +32,6 @@ public class KuzzleSearchService implements StorageSearchService {
     private KuzzleClient kuzzleClient;
 
     private ElasticSupport elasticSupport;
-    private static final String DEFAULT_COLLECTION = "provoly";
 
     public KuzzleSearchService(Logger log,
             KuzzleSearchQueryBuilder searchQueryBuilder,
@@ -67,7 +66,8 @@ public class KuzzleSearchService implements StorageSearchService {
         Map<String, Object> finalQuery = kuzzleQueryResultService.convertQueryToKuzzleQuery(classDto, request, query,
                 kuzzleLayout);
 
-        var response = kuzzleClient.kuzzleSearch(classDto.getSlug(), DEFAULT_COLLECTION, finalQuery, request.getLimit());
+        var response = kuzzleClient.kuzzleSearch(classDto.getSlug(), KuzzleLayout.COLLECTION_NAME, finalQuery,
+                request.getLimit());
         return kuzzleQueryResultService.convertToItemResult(response, classDto, request, kuzzleLayout);
 
     }
