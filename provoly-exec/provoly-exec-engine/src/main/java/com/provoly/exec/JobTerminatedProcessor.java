@@ -1,6 +1,7 @@
 package com.provoly.exec;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,8 +12,10 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import com.provoly.clients.DatasetImportService;
+import com.provoly.common.dataset.DatasetVersionInformationDto;
 import com.provoly.common.exec.ExecContextOutputDatasetInfo;
 import com.provoly.common.exec.ExecEvent;
+import com.provoly.common.imports.ImportParameter;
 import com.provoly.common.item.ItemDto;
 import com.provoly.common.kafka.KafkaTools;
 import com.provoly.exec.deserializer.ItemDtoDeserializer;
@@ -62,7 +65,8 @@ public class JobTerminatedProcessor {
             }
             consumer.close();
             log.infof("Import %s items in new dataset version %s of dataset %s", items.size(), newDataset, datasetId);
-            importService.importData(datasetId, newDataset, items);
+            importService.importData(datasetId, newDataset, new ImportParameter(items, new DatasetVersionInformationDto(
+                    "job-exec: %s".formatted(execEvent.jobExecutionId().toString()), Instant.now())));
         }
         log.infof("Import done for jobExecutionId %s", execEvent.jobExecutionId());
     }

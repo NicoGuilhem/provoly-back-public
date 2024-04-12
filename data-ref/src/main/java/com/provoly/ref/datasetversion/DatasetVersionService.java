@@ -9,7 +9,7 @@ import jakarta.transaction.Transactional;
 
 import com.provoly.common.dataset.DatasetState;
 import com.provoly.common.dataset.DatasetType;
-import com.provoly.common.dataset.DatasetVersionInformationsDto;
+import com.provoly.common.dataset.DatasetVersionInformationDto;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.imports.MessageLevel;
@@ -74,12 +74,12 @@ public class DatasetVersionService {
     }
 
     @Transactional
-    public void update(DatasetVersion datasetVersion, DatasetVersionInformationsDto datasetVersionInformationsDto) {
+    public void update(DatasetVersion datasetVersion, DatasetVersionInformationDto datasetVersionInformationDto) {
         logger.infof("Start updating dataset version: %s", datasetVersion.getId());
 
-        datasetVersion.setProducer(datasetVersionInformationsDto.producer());
-        datasetVersion.setProductionDate(datasetVersionInformationsDto.productionDate());
-        datasetVersion.setAdditionalInformation(datasetVersionInformationsDto.additionalInformation());
+        datasetVersion.setProducer(datasetVersionInformationDto.producer());
+        datasetVersion.setProductionDate(datasetVersionInformationDto.productionDate());
+        datasetVersion.setAdditionalInformation(datasetVersionInformationDto.additionalInformation());
 
         if (datasetVersion.getDataset().getType().equals(DatasetType.CLOSED)) {
             checkMandatoryFields(datasetVersion);

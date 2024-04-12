@@ -1,13 +1,12 @@
 package com.provoly.clients;
 
-import java.util.Collection;
 import java.util.UUID;
 
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 
 import com.provoly.common.error.ProvolyResponseExceptionMapper;
-import com.provoly.common.item.ItemDto;
+import com.provoly.common.imports.ImportParameter;
 
 import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
@@ -20,6 +19,6 @@ public interface DatasetImportService {
 
     @POST
     @Path("/id/{datasetId}/dataset-versions/id/{id}")
-    void importData(UUID datasetId, UUID id, Collection<ItemDto> items);
+    void importData(UUID datasetId, UUID id, ImportParameter importParameter);
 
 }

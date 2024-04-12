@@ -1,17 +1,13 @@
 package com.provoly.virt.dataset;
 
-import java.util.Collection;
 import java.util.UUID;
 
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
-import com.provoly.common.item.ItemDto;
+import com.provoly.common.imports.ImportParameter;
 import com.provoly.common.user.Role;
 import com.provoly.virt.imports.ImportService;
 
@@ -29,9 +25,9 @@ public class DatasetController {
     @Path("/id/{datasetId}/dataset-versions/id/{id}")
     @RolesAllowed({ Role.STR_ITEM_WRITE })
     public void importData(
-            Collection<ItemDto> items,
+            ImportParameter importParameter,
             UUID id,
             UUID datasetId) {
-        importService.runImportFromItems(datasetId, id, items);
+        importService.runImportFromItems(datasetId, id, importParameter);
     }
 }

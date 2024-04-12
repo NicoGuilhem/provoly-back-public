@@ -10,13 +10,14 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
 import com.provoly.common.dataset.DatasetVersionDto;
+import com.provoly.common.dataset.DatasetVersionInformationDto;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.user.Role;
 import com.provoly.virt.DataVirtProperties;
-import com.provoly.virt.entity.FileType;
 
 import org.jboss.logging.Logger;
+import org.jboss.resteasy.reactive.PartType;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 
@@ -42,9 +43,18 @@ public class ImportsController {
     @RolesAllowed({ Role.STR_ITEM_WRITE })
     public DatasetVersionDto importNewDataset(
             UUID datasetId,
-            @RestForm FileUpload file, @RestForm boolean normalizeGeo, @RestForm int chunkSize) {
-        return importService.runImportFromFile(datasetId, file.uploadedFile(), FileType.valueOf(file.contentType()),
-                normalizeGeo, checkOrGetDefaultChunkSize(chunkSize));
+            @RestForm FileUpload file, @RestForm boolean normalizeGeo, @RestForm int chunkSize,
+            @RestForm @PartType(MediaType.APPLICATION_JSON) DatasetVersionInformationDto datasetVersionInformation) {
+        if (file == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "File is mandatory");
+        }
+        if (datasetVersionInformation == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "datasetVersionInformation is mandatory");
+        }
+
+        return importService.runImportFromFile(datasetId,
+                new ImportFileParameters(file, normalizeGeo, checkOrGetDefaultChunkSize(chunkSize)),
+                datasetVersionInformation);
     }
 
     private int checkOrGetDefaultChunkSize(int chunkSize) {

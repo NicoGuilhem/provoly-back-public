@@ -61,6 +61,17 @@ public class DatasetVersionDto {
         this(id, dataset, oClass, null, null, state, false, null, null, null);
     }
 
+    public DatasetVersionDto(UUID id, UUID dataset, UUID oClass, DatasetState state, String producer, Instant productionDate,
+            String additionalInformation) {
+        this(id, dataset, oClass, null, null, state, false, productionDate, producer, additionalInformation);
+    }
+
+    public DatasetVersionDto(UUID id, UUID dataset, UUID oClass, DatasetState state,
+            DatasetVersionInformationDto datasetVersionInformationDto) {
+        this(id, dataset, oClass, null, null, state, false, datasetVersionInformationDto.productionDate(),
+                datasetVersionInformationDto.producer(), datasetVersionInformationDto.additionalInformation());
+    }
+
     public DatasetVersionDto(UUID id, UUID dataset, UUID oClass, DatasetState state, String producer, Instant productionDate) {
         this(id, dataset, oClass, null, null, state, false, productionDate, producer, null);
     }
@@ -72,6 +83,12 @@ public class DatasetVersionDto {
     public DatasetVersionDto(UUID id, UUID dataset, UUID oClass, DatasetState state,
             boolean withFile, Instant productionDate, String producer, String additionalInformation) {
         this(id, dataset, oClass, null, null, state, withFile, productionDate, producer, additionalInformation);
+    }
+
+    public DatasetVersionDto(UUID id, UUID dataset, UUID oClass, DatasetState state,
+            boolean withFile, DatasetVersionInformationDto datasetVersionInformationDto) {
+        this(id, dataset, oClass, null, null, state, withFile, datasetVersionInformationDto.productionDate(),
+                datasetVersionInformationDto.producer(), datasetVersionInformationDto.additionalInformation());
     }
 
     public DatasetVersionDto(UUID id, UUID dataset, UUID oClass, DatasetState state,

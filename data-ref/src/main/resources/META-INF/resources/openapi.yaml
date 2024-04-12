@@ -1902,7 +1902,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DatasetVersionInformationsDto'
+              $ref: '#/components/schemas/DatasetVersionInformationDto'
             examples:
               updateDatasetVersion:
                 summary: Update dataset version
@@ -5000,7 +5000,7 @@ components:
           $ref: '#/components/schemas/Instant'
         additionalInformation:
           type: string
-    DatasetVersionInformationsDto:
+    DatasetVersionInformationDto:
       type: object
       properties:
         producer:

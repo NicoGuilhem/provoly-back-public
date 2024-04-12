@@ -891,7 +891,7 @@ paths:
         content:
           application/json:
             schema:
-              type: array
+              type: object
               items:
                 $ref: '#/components/schemas/ItemDto'
             example : |
@@ -1326,6 +1326,8 @@ paths:
                 chunkSize:
                   type: integer
                   example: 12
+                datasetVersionInformation:
+                  $ref: '#/components/schemas/DatasetVersionInformationDto'
           application/shp:
             schema:
               type: object
@@ -1339,6 +1341,8 @@ paths:
                 chunkSize:
                   type: integer
                   example: 12
+                datasetVersionInformation:
+                  $ref: '#/components/schemas/DatasetVersionInformationDto'
       responses:
         "200":
           description: OK
@@ -2426,6 +2430,21 @@ components:
           $ref: '#/components/schemas/DatasetState'
         withFile:
           type: boolean
+        producer:
+          type: string
+        productionDate:
+          $ref: '#/components/schemas/Instant'
+        additionalInformation:
+          type: string
+    DatasetVersionInformationDto:
+      type: object
+      properties:
+        producer:
+          type: string
+        productionDate:
+          $ref: '#/components/schemas/Instant'
+        additionalInformation:
+          type: string
     DateInterval:
       enum:
         - SECOND
@@ -2518,6 +2537,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/GroupByValueDto'
+    ImportParameter:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemDto'
+        datasetVersionInformationDto:
+          $ref: '#/components/schemas/DatasetVersionInformationDto'
     ItemDto:
       type: object
       properties:

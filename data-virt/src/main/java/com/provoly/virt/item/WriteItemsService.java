@@ -12,17 +12,12 @@ import com.provoly.clients.DatasetService;
 import com.provoly.clients.DatasetVersionService;
 import com.provoly.clients.ModelService;
 import com.provoly.common.dataset.DatasetDto;
-import com.provoly.common.dataset.DatasetState;
-import com.provoly.common.dataset.DatasetType;
-import com.provoly.common.dataset.DatasetVersionDto;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.item.ItemDto;
-import com.provoly.common.metadata.MetadataSystem;
 import com.provoly.common.model.OClassDetailsDto;
 import com.provoly.virt.DataVirtProperties;
 import com.provoly.virt.entity.Item;
-import com.provoly.virt.entity.MetadataValueDto;
 import com.provoly.virt.partition.PartitionService;
 import com.provoly.virt.storage.InsertionError;
 import com.provoly.virt.storage.StorageWriteAdapter;
@@ -71,12 +66,6 @@ public class WriteItemsService {
         if (items.stream().map(Item::getDatasetVersion).collect(Collectors.groupingBy(uuid -> uuid)).size() > 1) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "Items list is provided with multiple dataset versions");
         }
-        Item anyItem = items.stream().findAny().get(); // Items presences checked above
-        MetadataValueDto metaDatasetVersionId = anyItem.getMetadata(MetadataSystem.DATASET_VERSION.getId());
-        DatasetDto datasetDto = datasetService
-                .searchByDatasetVersionId(UUID.fromString((String) metaDatasetVersionId.getValue()));
-
-        canAdd(datasetDto, anyItem.getDatasetVersion());
 
         return storageItemService.add(items);
     }
@@ -127,14 +116,5 @@ public class WriteItemsService {
         }
 
         return errors;
-    }
-
-    private void canAdd(DatasetDto dataset, UUID datasetVersionDtoId) {
-        if (dataset.getType().equals(DatasetType.CLOSED)) {
-            DatasetVersionDto datasetVersionDto = datasetVersionService.get(datasetVersionDtoId);
-            if (!datasetVersionDto.getState().equals(DatasetState.INDEXING)) {
-                throw new BusinessException(ErrorCode.NOT_MODIFIABLE, "Can't add to %s".formatted(dataset.getName()));
-            }
-        }
     }
 }

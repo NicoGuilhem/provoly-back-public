@@ -175,7 +175,7 @@ public class DatasetVersionControllerTest {
         dataset.setType(DatasetType.CLOSED);
         dataset.setUser(userService.getCurrentUser());
         datasetService.saveEntity(dataset);
-        var datasetVersionDto = new DatasetVersionInformationsDto("author", Instant.now());
+        var datasetVersionDto = new DatasetVersionInformationDto("author", Instant.now());
 
         given()
                 .pathParam("datasetVersionId", datasetVersionId)
@@ -200,7 +200,7 @@ public class DatasetVersionControllerTest {
         dataset.setType(DatasetType.CLOSED);
         dataset.setUser(userService.getCurrentUser());
         datasetService.saveEntity(dataset);
-        var datasetVersionDto = new DatasetVersionInformationsDto(null, Instant.now());
+        var datasetVersionDto = new DatasetVersionInformationDto(null, Instant.now());
 
         given()
                 .pathParam("datasetVersionId", datasetVersionId)

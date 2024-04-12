@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 
 import com.provoly.common.dataset.DatasetState;
 import com.provoly.common.dataset.DatasetType;
-import com.provoly.common.dataset.DatasetVersionInformationsDto;
+import com.provoly.common.dataset.DatasetVersionInformationDto;
 import com.provoly.common.error.BusinessException;
 import com.provoly.ref.dataset.Dataset;
 
@@ -142,7 +142,7 @@ class DatasetVersionServiceUTest {
         var oldDatasetVersion = initClosedDatasetVersion(datasetVersionId, datasetId);
         when(datasetVersionRepository.getById(oldDatasetVersion.getId())).thenReturn(oldDatasetVersion);
 
-        var newDatasetVersion = new DatasetVersionInformationsDto(null, Instant.now(), "additionalInformation");
+        var newDatasetVersion = new DatasetVersionInformationDto(null, Instant.now(), "additionalInformation");
 
         var error = Assertions.assertThrows(BusinessException.class,
                 () -> datasetVersionService.update(oldDatasetVersion, newDatasetVersion));
@@ -157,7 +157,7 @@ class DatasetVersionServiceUTest {
         var oldDatasetVersion = initClosedDatasetVersion(datasetVersionId, datasetId);
         when(datasetVersionRepository.getById(oldDatasetVersion.getId())).thenReturn(oldDatasetVersion);
 
-        var newDatasetVersion = new DatasetVersionInformationsDto("producer", null, "additionalInformation");
+        var newDatasetVersion = new DatasetVersionInformationDto("producer", null, "additionalInformation");
 
         var error = Assertions.assertThrows(BusinessException.class,
                 () -> datasetVersionService.update(oldDatasetVersion, newDatasetVersion));
@@ -172,7 +172,7 @@ class DatasetVersionServiceUTest {
         var oldDatasetVersion = initClosedDatasetVersion(datasetVersionId, datasetId);
         when(datasetVersionRepository.getById(oldDatasetVersion.getId())).thenReturn(oldDatasetVersion);
 
-        var newDatasetVersion = new DatasetVersionInformationsDto("producer", Instant.now(), "additionalInformation");
+        var newDatasetVersion = new DatasetVersionInformationDto("producer", Instant.now(), "additionalInformation");
 
         Assertions.assertDoesNotThrow(() -> datasetVersionService.update(oldDatasetVersion, newDatasetVersion));
     }

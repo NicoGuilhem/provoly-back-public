@@ -2,8 +2,6 @@ package com.provoly.virt.imports;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.nio.file.Path;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -12,22 +10,18 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 import com.provoly.clients.DatasetService;
 import com.provoly.clients.DatasetVersionService;
-import com.provoly.common.dataset.DatasetDto;
-import com.provoly.common.dataset.DatasetState;
-import com.provoly.common.dataset.DatasetType;
-import com.provoly.common.dataset.DatasetVersionDto;
+import com.provoly.common.dataset.*;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.error.ProvolyNotFoundException;
 import com.provoly.common.imports.ExtractMessageCode;
 import com.provoly.common.imports.ExtractedMessage;
+import com.provoly.common.imports.ImportParameter;
 import com.provoly.common.imports.ImportsMessage;
 import com.provoly.common.imports.MessageLevel;
-import com.provoly.common.item.ItemDto;
 import com.provoly.virt.ProvolySpanManager;
 import com.provoly.virt.dataset.DatasetController;
 import com.provoly.virt.dataset.ImportRequest;
-import com.provoly.virt.entity.FileType;
 import com.provoly.virt.event.VirtEventEmitter;
 import com.provoly.virt.file.FileService;
 
@@ -70,10 +64,10 @@ public class ImportService {
         this.bus = bus;
     }
 
-    public DatasetVersionDto runImportFromFile(UUID datasetId, Path file, FileType mediaType, boolean normalizeGeo,
-            Integer chunkSize) {
+    public DatasetVersionDto runImportFromFile(UUID datasetId, ImportFileParameters importFileParameters,
+            DatasetVersionInformationDto datasetVersionInformationDto) {
         log.infof("Importing new dataset for datasetId %s", datasetId);
-        if (file == null) {
+        if (importFileParameters.file() == null) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "File is required.");
         }
 
@@ -81,22 +75,23 @@ public class ImportService {
         UUID datasetVersionId = UUID.randomUUID();
 
         DatasetVersionDto dto = new DatasetVersionDto(datasetVersionId, datasetId, datasetDto.getoClass(),
-                DatasetState.LOADING, true);
+                DatasetState.LOADING, true, datasetVersionInformationDto.productionDate(),
+                datasetVersionInformationDto.producer(), datasetVersionInformationDto.additionalInformation());
 
         datasetVersionService.create(dto);
         Span span = spanManager.generateSpan("Minio upload",
-                Map.of("fileName", file.getFileName().toString()));
+                Map.of("fileName", importFileParameters.file().getFileName().toString()));
 
         log.infof("Uploading file to raw storage for datasetId %s", datasetId);
-        try (InputStream is = new FileInputStream(file.toFile())) {
-            fileService.associateFileToDataset(is, mediaType, dto);
+        try (InputStream is = new FileInputStream(importFileParameters.file().toFile())) {
+            fileService.associateFileToDataset(is, importFileParameters.mediaType(), dto);
         } catch (Exception e) {
             spanManager.recordException(span, e);
 
             virtEventEmitter.sendDatasetVersion(new DatasetVersionDto(dto.getId(), dto.getDataset(), DatasetState.ERROR));
             throw new BusinessException(ErrorCode.TECHNICAL,
                     "Error while saving file %s, can't create dataset version %s for dataset: %s due to : %s".formatted(
-                            file.getFileName().toString(),
+                            importFileParameters.file().getFileName().toString(),
                             datasetVersionId,
                             datasetId,
                             e.getMessage()),
@@ -108,12 +103,13 @@ public class ImportService {
         updateVersionState(dto, DatasetState.INDEXING);
         log.infof("Starting indexing %s", datasetId);
 
-        bus.publish("importFromFile", new ImportEvent(dto, normalizeGeo, chunkSize));
+        bus.publish("importFromFile",
+                new ImportEvent(dto, importFileParameters.normalizeGeo(), importFileParameters.chunkSize()));
 
         return datasetVersionService.get(dto.getId());
     }
 
-    public DatasetVersionDto runImportFromItems(UUID datasetId, UUID id, Collection<ItemDto> items) {
+    public DatasetVersionDto runImportFromItems(UUID datasetId, UUID id, ImportParameter importParameter) {
         log.infof("Asking dataset#%s import", id);
 
         DatasetDto dataset = datasetService.get(datasetId);
@@ -123,10 +119,11 @@ public class ImportService {
         if (DatasetType.CLOSED != dataset.getType()) {
             throw new BusinessException(ErrorCode.FORBIDDEN, "Import is only allowed on closed dataset.");
         }
-        DatasetVersionDto datasetVersionDto = new DatasetVersionDto(id, datasetId, dataset.getoClass(), DatasetState.INDEXING);
+        DatasetVersionDto datasetVersionDto = new DatasetVersionDto(id, datasetId, dataset.getoClass(), DatasetState.INDEXING,
+                importParameter.datasetVersionInformationDto());
         datasetVersionService.create(datasetVersionDto);
 
-        bus.publish("importFromItems", new ImportRequest(dataset, datasetVersionDto, items));
+        bus.publish("importFromItems", new ImportRequest(dataset, datasetVersionDto, importParameter.items()));
         return datasetVersionDto;
     }
 
