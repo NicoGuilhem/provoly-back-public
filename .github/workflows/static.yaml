@@ -25,9 +25,9 @@ jobs:
       - name: Login to Harbor
         uses: docker/login-action@v3
         with:
-          registry: ${{ vars.CI_REGISTRY_SERVER }}
-          username: ${{ secrets.CI_REGISTRY_USER }}
-          password: ${{ secrets.CI_REGISTRY_PASSWORD }}
+          registry: ${{ vars.REGISTRY_URL }}
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -58,11 +58,11 @@ jobs:
       - name: Run sonar analysis
         id: sonar
         env:
-          SONAR_URL: ${{ secrets.SONAR_URL }}
+          SONAR_URL: ${{ vars.SONAR_URL }}
           SONAR_ADMIN_TOKEN: ${{ secrets.SONAR_ADMIN_TOKEN }}
-          CI_REGISTRY_PASSWORD: ${{ secrets.CI_REGISTRY_PASSWORD }}
-          CI_REGISTRY_SERVER: ${{ vars.CI_REGISTRY_SERVER }}
-          CI_REGISTRY_USER: ${{ secrets.CI_REGISTRY_USER }}
+          CI_REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+          CI_REGISTRY_SERVER: ${{ vars.REGISTRY_URL }}
+          CI_REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
         run: |
           mvn -Dmaven.test.failure.ignore=true \
             verify org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.1.2184:sonar \

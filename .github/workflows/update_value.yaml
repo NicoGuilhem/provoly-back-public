@@ -54,7 +54,7 @@ jobs:
         id: update
         uses: peter-evans/repository-dispatch@v3
         with:
-          token: ${{ secrets.SA_PERSONAL_ACCESS_TOKEN }}
+          token: ${{ secrets.GH_DISPATCH_TOKEN }}
           repository: provoly/provoly-chart-values
           event-type: update-chart-value
           client-payload: |

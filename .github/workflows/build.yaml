@@ -48,9 +48,9 @@ jobs:
       - name: Login to Harbor
         uses: docker/login-action@v3
         with:
-          registry: ${{ vars.CI_REGISTRY_SERVER }}
-          username: ${{ secrets.CI_REGISTRY_USER }}
-          password: ${{ secrets.CI_REGISTRY_PASSWORD }}
+          registry: ${{ vars.REGISTRY_URL }}
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -120,9 +120,9 @@ jobs:
         run: mvn ${{ env.MAVEN_CLI_OPTS }} -DskipTests=${{ env.SKIP_TEST }} verify -pl data-ref -Dquarkus.container-image.additional-tags=${{ env.DOCKER_IMAGE_ADDITIONAL_TAGS }} -am  ${{ env.MAVEN_JIB_OPTIONS }} ${{ env.IMAGE_NAME }} -Pdocker-image
         if: steps.changed-ref-files.outputs.any_changed == 'true'
         env:
-          CI_REGISTRY_PASSWORD: ${{ secrets.CI_REGISTRY_PASSWORD }}
-          CI_REGISTRY_SERVER: ${{ vars.CI_REGISTRY_SERVER }}
-          CI_REGISTRY_USER: ${{ secrets.CI_REGISTRY_USER }}
+          CI_REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+          CI_REGISTRY_SERVER: ${{ vars.REGISTRY_URL }}
+          CI_REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
           CI_REGISTRY_PROJECT_NAME: provoly
 
       #  CHECK AND BUILD REQUIRED MODULES
@@ -143,9 +143,9 @@ jobs:
         id: modules-build
         run: mvn ${{ env.MAVEN_CLI_OPTS }} -DskipTests=${{ env.SKIP_TEST }} verify -pl ${{ env.MODULES }} -am ${{ env.MAVEN_JIB_OPTIONS }} ${{ env.IMAGE_NAME }} -Dquarkus.container-image.additional-tags=${{env.DOCKER_IMAGE_ADDITIONAL_TAGS}} -Pdocker-image
         env:
-          CI_REGISTRY_PASSWORD: ${{ secrets.CI_REGISTRY_PASSWORD }}
-          CI_REGISTRY_SERVER: ${{ vars.CI_REGISTRY_SERVER }}
-          CI_REGISTRY_USER: ${{ secrets.CI_REGISTRY_USER }}
+          CI_REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+          CI_REGISTRY_SERVER: ${{ vars.REGISTRY_URL }}
+          CI_REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
           CI_REGISTRY_PROJECT_NAME: provoly
 
       - name: Summary
