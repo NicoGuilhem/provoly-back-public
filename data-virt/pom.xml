@@ -164,33 +164,4 @@
       <url>https://repo.osgeo.org/repository/release/</url>
     </repository>
   </repositories>
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.openapitools</groupId>
-        <artifactId>openapi-generator-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>generate</goal>
-            </goals>
-            <configuration>
-              <inputSpec>${project.basedir}/src/main/resources/META-INF/resources/openapi.yaml</inputSpec>
-              <generatorName>asciidoc</generatorName>
-              <output>${project.basedir}/target/generated-docs</output>
-              <templateDirectory>${project.parent.basedir}/api-documentation-templates</templateDirectory>
-              <skipValidateSpec>true</skipValidateSpec>
-              <configOptions>
-                <gobalProperties>
-                  <debugModels>true</debugModels>
-                  <debugOperations>true</debugOperations>
-                </gobalProperties>
-              </configOptions>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
 </project>

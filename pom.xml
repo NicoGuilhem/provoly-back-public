@@ -26,7 +26,6 @@
         <module>provoly-transfo/provoly-transfo-runner</module>
 
         <module>provoly-common-test</module>
-        <module>docs</module>
         <module>coverage</module>
 
     </modules>

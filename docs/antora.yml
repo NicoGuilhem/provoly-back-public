@@ -5,8 +5,16 @@ nav:
   - modules/ROOT/nav.adoc
 ext:
   collector:
-    run:
-      command: mvn -DskipTests -B package
-    scan:
-      dir: docs/target/generated
-      base: modules/API/pages
+    - run:
+        command: npx @redocly/cli@latest build-docs --output=generated/data-ref.html data-ref/src/main/resources/META-INF/openapi.yaml
+    - run:
+        command: npx @redocly/cli@latest build-docs --output=generated/data-virt.html data-virt/src/main/resources/META-INF/openapi.yaml
+    - run:
+        command: npx @redocly/cli@latest build-docs --output=generated/provoly-exec.html provoly-exec/provoly-exec-engine/src/main/resources/META-INF/openapi.yaml
+    - run:
+        command: npx @redocly/cli@latest build-docs --output=generated/data-transfo.html provoly-transfo/provoly-transfo-engine/src/main/resources/META-INF/openapi.yaml
+    - run:
+        command: "cp -r ./generated /home/runner/_work/provoly-doc/provoly-doc/redoc"
+      scan:
+        dir: redoc
+        base: modules/API/pages

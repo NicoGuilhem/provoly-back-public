@@ -70,11 +70,20 @@ jobs:
           key: provoly-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             provoly-maven-
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
 
-      # RUN SPOTLESS
-      - name: Run Spotless
+      # VALIDATE SOURCE FORMAT
+      - name: Validate source format
         id: spotless
         run: mvn $MAVEN_CLI_OPTS -Dvalidate compile
+
+      # RUN OPENAPI SPECIFICATIONS LINTER
+      - name: Validate openapi specification files
+        id: redocly-lint
+        run: npx @redocly/cli lint --format github-actions
 
       - name: Prepare Short Sha
         id: shortSha
@@ -82,7 +91,6 @@ jobs:
           export "CI_SHORT_COMMIT_SHA=$(echo ${{ github.sha }} | cut -c1-8)"
           echo "CI_SHORT_COMMIT_SHA=$CI_SHORT_COMMIT_SHA" >> $GITHUB_ENV
           echo "DOCKER_IMAGE_ADDITIONAL_TAGS=dev-$CI_SHORT_COMMIT_SHA,latest" >> $GITHUB_ENV
-
 
       # CHECK AND BUILD REF IF NEEDED
       - name: Check Ref modification

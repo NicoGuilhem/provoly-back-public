@@ -81,6 +81,20 @@ mvn compile
 
 When submitting a merge request the CI build will fail if the code isn't properly formatted, so it is recommended that you always run a full Maven build before submitting a pull request.
 
+=== Verify the OpenApi Spec syntax validity
+
+[source,bash]
+----
+docker run --rm \
+   -v $PWD:/spec \
+   redocly/cli \
+   lint /spec/data-ref/src/main/resources/META-INF/openapi.yaml <1>
+----
+
+<1> Amend path to match your module spec
+
+
+
 === Services Available
 
 Below is listed an exhaustive list of the services available in the project.

@@ -33,40 +33,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.openapitools</groupId>
-                    <artifactId>openapi-generator-maven-plugin</artifactId>
-                    <version>7.3.0</version>
-                    <executions>
-                        <execution>
-                            <goals>
-                                <goal>generate</goal>
-                            </goals>
-                            <phase>package</phase>
-                            <configuration>
-                                <inputSpec>${project.basedir}/target/generated-sources/oas/openapi.json</inputSpec>
-                                <generatorName>asciidoc</generatorName>
-                                <output>${project.basedir}/target/generated-docs</output>
-                                <templateDirectory>${project.parent.basedir}/api-documentation-templates
-                                </templateDirectory>
-                                <skipValidateSpec>true</skipValidateSpec>
-                                <configOptions>
-                                    <gobalProperties>
-                                        <debugModels>true</debugModels>
-                                        <debugOperations>true</debugOperations>
-                                    </gobalProperties>
-                                </configOptions>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-    </build>
     <profiles>
         <profile>
             <id>default</id>

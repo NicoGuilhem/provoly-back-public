@@ -1,0 +1,514 @@
+---
+openapi: 3.0.3
+info:
+  title: Execution engine API
+  x-logo:
+    url: .\docs\modules\ROOT\images\provoly.png
+    backgroundColor: "#FFFFFF"
+    altText: "Provoly logo"
+  version: 0.25.0
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: http://localhost:8080
+    description: No sandbox environment as of now
+paths:
+  /about/version:
+    get:
+      summary: Returns the deployed application and helm package version
+      tags:
+      - Version
+      security: []
+      operationId: getVersion
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
+              examples:
+                response example:
+                  summary: response
+                  value:
+                    applicationVersion: dev
+                    chartVersion: dev
+  /job/executions:
+    get:
+      tags:
+      - Job Execution
+      summary: retourne la liste des exécutions de travail
+      operationId: listAllExecutions
+      description: "Service permettant de retourner la liste des JobExecution. Si\
+        \ il n'y a pas d'exécution de travail dans la liste, renvoie un tableau vide."
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobExecutionDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme:
+        - job_execution_read
+  /job/executions/id/{id}:
+    get:
+      tags:
+      - Job Execution
+      summary: retourne une exécution de travail
+      operationId: findExecution
+      description: "Service permettant de retourner le JobExecution en fonction de\
+        \ l'id. Si l'exécution de travail n'existe pas, retourne 404."
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobExecutionDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme:
+        - job_execution_read
+  /job/instances:
+    get:
+      tags:
+      - Job Instance
+      summary: Renvoie l'ensemble des JobInstance existant
+      description: "Service permettant de récupérer une collection de JobInstanceDTO,\
+        \ si aucune instance existant le contenu retourné est vide."
+      operationId: listAllJobInstances
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobInstanceDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme:
+        - job_instance_read
+    post:
+      tags:
+      - Job Instance
+      summary: Créé ou met à jour une nouvelle instance d'un travail.
+      description: Service permettant d'enregistrer une nouvelle instance d'un travail
+        (JobInstance) ou de la mettre à jour.
+      operationId: createOrUpdateJobInstance
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobInstanceDto'
+      responses:
+        "201":
+          description: Created
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme:
+        - job_instance_write
+  /job/instances/id/{id}/activation:
+    put:
+      tags:
+      - Job Instance
+      summary: Activating a job instance by id
+      operationId: activeJobInstance
+      description: "Activating a job instance by set activate attribute TRUE, if already\
+        \ activated return 409"
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme:
+        - job_instance_write
+    delete:
+      tags:
+      - Job Instance
+      summary: Deactivating a job instance by his ID.
+      operationId: deactivateJobInstance
+      description: "Deactivating a job instance by set activate attribute FALSE, if\
+        \ already deactivated return 409."
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme:
+        - job_instance_write
+  /job/instances/id/{jobInstanceUuid}:
+    get:
+      tags:
+      - Job Instance
+      summary: Renvoie le jobInstance correspondant à l'id fournie.
+      operationId: getJobInstance
+      description: "Le jobInstance possédant l'ID fournie est renvoyé à l'utilisateur,\
+        \ si aucun jobInstance ne correspond à l'ID une erreur 404 est levé"
+      parameters:
+      - name: jobInstanceUuid
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobInstanceDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme:
+        - job_instance_read
+    delete:
+      tags:
+        - Job Instance
+      summary: Supprime l'instance correspondant à l'ID envoyée
+      operationId: deleteJobInstance
+      description: "Suppression du jobInstance correspondant à l'ID dans l'URL, si\
+        \ n'existe pas une 404 est levé"
+      parameters:
+        - name: jobInstanceUuid
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - SecurityScheme:
+            - job_instance_write
+  /job/instances/id/{jobInstanceUuid}/execution:
+    get:
+      summary: Returns the last job ecution id details
+      operationId: findLastExecution
+      tags:
+      - Job Instance
+      parameters:
+      - name: jobInstanceUuid
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobExecutionDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme:
+        - job_execution_read
+  /job/instances/id/{jobInstanceUuid}/start:
+    put:
+      operationId: startJobInstance
+      tags:
+      - Job Instance
+      summary: Exécute une instance de travail (jobInstance) existante.
+      description: Exécute le jobInstance pointé par l'ID et renvoie une instance
+        d'exécution à l'utilisateur.
+      parameters:
+      - name: jobInstanceUuid
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobExecutionDetailsDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme:
+        - job_start
+  /job/models:
+    get:
+      tags:
+      - Job Model
+      summary: récupérer la liste des modèles de travaux existant
+      description: Service permettant de récuperer une collection de JobModelDTO
+      operationId: findAllModels
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobModelDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme:
+        - job_model_read
+    put:
+      tags:
+      - Job Model
+      summary: créé ou met à jour un nouveau model de travail
+      operationId: saveJobModel
+      description: Service permettant d'enregistrer un JobModelDto ou de le mettre
+        à jour
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobModelDto'
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme:
+        - job_model_write
+  /job/models/id/{id}:
+    get:
+      tags:
+      - Job Model
+      summary: retoune un modèle de travaux
+      operationId: findJobModelById
+      description: "Service permettant de retourner le jobModelDto en fonction de\
+        \ l'id. Si le modèle de travail n'existe pas, retourne 404."
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobModelDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme:
+        - job_model_read
+    delete:
+      tags:
+      - Job Model
+      summary: Supprime un modèle de travail
+      operationId: deleteJobModel
+      description: "Service permettant de supprimer un JobModelDto en fonction de\
+        \ son id. Si le modèle de travail n'existe pas, retourne 404."
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme:
+        - job_model_write
+components:
+  schemas:
+    DataSourceProvidingDto:
+      type: object
+      properties:
+        method:
+          $ref: '#/components/schemas/ProvidingMethod'
+        dataSourceId:
+          $ref: '#/components/schemas/UUID'
+    DatasetOutcomeDto:
+      type: object
+      properties:
+        method:
+          $ref: '#/components/schemas/OutcomeMethod'
+        datasetId:
+          $ref: '#/components/schemas/UUID'
+    ExecutionStatus:
+      enum:
+      - STARTED
+      - TERMINATED
+      - ERROR
+      type: string
+    Instant:
+      format: date-time
+      type: string
+      example: 2022-03-10T16:15:50Z
+    JobExecutionDetailsDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        instance:
+          $ref: '#/components/schemas/JobInstanceDetailsDto'
+        status:
+          $ref: '#/components/schemas/ExecutionStatus'
+        executionDate:
+          $ref: '#/components/schemas/Instant'
+    JobInstanceDetailsDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        model:
+          $ref: '#/components/schemas/JobModelDto'
+        inDataSources:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/DataSourceProvidingDto'
+        outDatasets:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/DatasetOutcomeDto'
+        parametersValue:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/ParameterValueDto'
+        active:
+          type: boolean
+    JobInstanceDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        model:
+          $ref: '#/components/schemas/UUID'
+        inDataSources:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/DataSourceProvidingDto'
+        outDatasets:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/DatasetOutcomeDto'
+        parametersValue:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/ParameterValueDto'
+    JobModelDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        image:
+          type: string
+        parameters:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/ParameterDto'
+    OutcomeMethod:
+      enum:
+      - KAFKA_TOPIC
+      type: string
+    ParameterDto:
+      type: object
+      properties:
+        name:
+          type: string
+    ParameterValueDto:
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+    ProvidingMethod:
+      enum:
+      - KAFKA_TOPIC
+      type: string
+    UUID:
+      format: uuid
+      pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+      type: string
+    Version:
+      type: object
+      properties:
+        applicationVersion:
+          type: string
+        chartVersion:
+          type: string
+  securitySchemes:
+    SecurityScheme:
+      type: openIdConnect
+      description: Authentication
+      openIdConnectUrl: /auth/realms/provoly/.well-known/openid-configuration

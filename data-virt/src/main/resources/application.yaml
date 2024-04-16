@@ -96,8 +96,6 @@ mp:
         otlp:
           enabled: false
           endpoint: http://localhost:4317
-    smallrye-openapi:
-      path: /openapi.yaml
 
     keycloak:
       devservices:

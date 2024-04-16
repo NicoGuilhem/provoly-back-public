@@ -1,0 +1,50 @@
+extends:
+  - recommended
+apis:
+  data-ref:
+    root: ./data-ref/src/main/resources/META-INF/openapi.yaml
+    rules:
+      no-ambiguous-paths:
+        severity: off
+      operation-4xx-response: off
+  data-virt:
+    root: ./data-virt/src/main/resources/META-INF/openapi.yaml
+    rules:
+      operation-4xx-response:
+        severity: off
+      no-server-example.com:
+        severity: off
+  transfo-engine:
+    root: ./provoly-transfo/provoly-transfo-engine/src/main/resources/META-INF/openapi.yaml
+    rules:
+      operation-4xx-response:
+        severity: off
+      no-server-example.com:
+        severity: off
+  exec-engine:
+    root: ./provoly-exec/provoly-exec-engine/src/main/resources/META-INF/openapi.yaml
+    rules:
+      operation-4xx-response:
+        severity: off
+      no-server-example.com:
+        severity: off
+theme:
+  openapi:
+    theme:
+      typography:
+        links:
+          color: '#0090cc'
+    schemaExpansionLevel: 2
+    generateCodeSamples:
+      languages:
+        - lang: curl
+        - lang: Java
+    typography:
+      fontFamily:
+        - Ubuntu
+        - sans-serif
+      fontSize: 1rem
+      lineHeight: 1.25rem
+      font-weight: 400
+      font-style: normal
+    

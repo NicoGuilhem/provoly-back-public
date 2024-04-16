@@ -1,15 +1,23 @@
 openapi: 3.0.3
 info:
   title: API Baseline
+  x-logo:
+    url: .\docs\modules\ROOT\images\provoly.png
+    backgroundColor: "#FFFFFF"
+    altText: "Provoly logo"
   description: CRUD Operation on repositories data
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
   version: 0.7.0
+  
 servers:
   - url: http://data-ref.provoly.com
 paths:
   /about/version:
     get:
       tags:
-        - Version Controller
+        - Version
       summary: Retrieve the application and chart versions
       operationId: com.provoly.version.VersionController_getVersion
       responses:
@@ -21,17 +29,16 @@ paths:
                 $ref: '#/components/schemas/Version'
               examples:
                 default:
-                  value: |
-                    {
-                      "applicationVersion": "0.4.8",
-                      "chartVersion": "0.4.8"
-                    }
+                  value:
+                    applicationVersion: "0.4.8"
+                    chartVersion: "0.4.8"
         "404":
           $ref: '#/components/responses/notFoundException'
+      security: []
   /model/categories:
     put:
       tags:
-        - Model Controller
+        - Model
       summary: Save a new category
       description: |
         They are used to categorise attributes of a data model. 
@@ -56,7 +63,7 @@ paths:
             - class_write
     get:
       tags:
-        - Model Controller
+        - Model
       summary: Retrieve all categories
       operationId: com.provoly.ref.model.ModelController_getCategories
       responses:
@@ -82,7 +89,7 @@ paths:
   /model/categories/{id}:
     get:
       tags:
-        - Model Controller
+        - Model
       summary: Retrieve a category based on its identifier
       operationId: com.provoly.ref.model.ModelController_getCategory
       parameters:
@@ -110,7 +117,7 @@ paths:
             - class_read
     delete:
       tags:
-        - Model Controller
+        - Model
       summary: Delete a category based on its identifier
       operationId: com.provoly.ref.model.ModelController_deleteCategory
       parameters:
@@ -132,19 +139,17 @@ paths:
               examples:
                 deleteDefaultCategory:
                   description: Occurs when you try to delete default category.
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "NOT_MODIFIABLE",
-                      "message": "This is default category id. It can't be deleted"
-                    }
+                  value:
+                    application: "data-ref"
+                    code: "NOT_MODIFIABLE"
+                    message: "This is default category id. It can't be deleted"
       security:
         - oidc:
             - class_write
   /model/field:
     post:
       tags:
-        - Model Controller
+        - Model
       summary: Save a new field
       description: |
         A field is required for defining an attribute in an oClass. 
@@ -158,20 +163,16 @@ paths:
             examples:
               default:
                 summary: Adding a field
-                value: |
-                  {
-                    "id": "1d186f4a-5d75-4d2f-af45-d78180e0f0e8",
-                    "name": "correct_field",
-                    "type": "keyword"
-                  }
+                value:
+                  id: "1d186f4a-5d75-4d2f-af45-d78180e0f0e8"
+                  name: "correct_field"
+                  type: "keyword"
               incorrect:
-                summary: Adding an incorrect field (type unknown)
-                value: |
-                  {
-                    "id": "1d186f4a-5d75-4d2f-af45-d78180e0f0e8",
-                    "name": "incorrect_field",
-                    "type": "char"
-                  }
+                summary: Adding an incorrect field (name null)
+                value:
+                  id: "1d186f4a-5d75-4d2f-af45-d78180e0f0e8"
+                  name: null
+                  type: "string"
       responses:
         "201":
           description: Created
@@ -187,7 +188,7 @@ paths:
   /model/fields:
     post:
       tags:
-        - Model Controller
+        - Model
       summary: Save a new collection of fields
       operationId: com.provoly.ref.model.ModelController_addFields
       requestBody:
@@ -197,22 +198,13 @@ paths:
               type: array
               items:
                 $ref: '#/components/schemas/FieldDto'
-            examples:
-              default:
-                summary: Adding a collection of fields
-                value: |
-                  [
-                    {
-                      "id": "1d186f4a-5d75-4d2f-af45-d78180e0f0e8",
-                      "name": "field_address",
-                      "type": "string"
-                    },
-                    {
-                      "id": "fcc51f53-9295-4caf-968e-873b601763b1",
-                      "name": "field_code",
-                      "type": "integer"
-                    }
-                  ]
+            example:
+              - id: "1d186f4a-5d75-4d2f-af45-d78180e0f0e8"
+                name: "field_address"
+                type: "string"
+              - id: "fcc51f53-9295-4caf-968e-873b601763b1"
+                name: "field_code"
+                type: "integer"
       responses:
         "201":
           description: Created
@@ -225,7 +217,7 @@ paths:
             - field_write
     get:
       tags:
-        - Model Controller
+        - Model
       summary: Retrieve all existing fields
       operationId: com.provoly.ref.model.ModelController_getFields
       responses:
@@ -251,7 +243,7 @@ paths:
   /model/fields/{id}:
     get:
       tags:
-        - Model Controller
+        - Model
       summary: Retrieve a field based on its identifier
       operationId: com.provoly.ref.model.ModelController_getFieldById
       parameters:
@@ -280,7 +272,7 @@ paths:
             - item_write
     delete:
       tags:
-        - Model Controller
+        - Model
       summary: Delete a field based on its identifier
       description: Deleting a field is only possible if it's not used in a oclass or named query.
       operationId: com.provoly.ref.model.ModelController_deleteFieldById
@@ -311,7 +303,7 @@ paths:
   /model/fields/{id}/associations:
     get:
       tags:
-        - Model Controller
+        - Model
       summary: Retrieve all field's associate items
       description: A field can be used in oClasses and named queries.
       operationId: com.provoly.ref.model.ModelController_getAssociationOfField
@@ -334,23 +326,15 @@ paths:
               examples:
                 default:
                   summary: Get associations of a field
-                  value: |
-                    {
-                        "associations": [
-                          {
-                              "id": "423b5c01-1816-41d4-b358-100000000005",
-                              "name": "Station de velos",
-                              "type": "OCLASS"
-                          },
-                          {
-                            "id": "423b5c01-1816-41d4-b358-100000000010",
-                            "name": "Test named query",
-                            "type": "NAMED_QUERY"
-                          }
-                        ],
-                        "usedElsewhere": false
-                    }
-
+                  value:
+                    associations:
+                      - id: "423b5c01-1816-41d4-b358-100000000005"
+                        name: "Station de velos"
+                        type: "OCLASS"
+                      - id: "423b5c01-1816-41d4-b358-100000000010"
+                        name: "Test named query"
+                        type: "NAMED_QUERY"
+                    usedElsewhere: false
         "401":
           description: Not Authorized
         "403":
@@ -364,7 +348,7 @@ paths:
   /model/fields/class/{id}:
     get:
       tags:
-        - Model Controller
+        - Model
       summary: Retrieve all existing fields for an oClass
       operationId: com.provoly.ref.model.ModelController_getFieldsForClass
       parameters:
@@ -398,7 +382,7 @@ paths:
   /model/class:
     post:
       tags:
-        - Model Controller
+        - Model
       summary: Save or update new oClass
       description: |
         An oClass is made up of attributes and is used to define the data model that will be inserted. 
@@ -418,44 +402,39 @@ paths:
                 description: |
                   With the \"car_id\" attribute able to have several values,
                   and \"date_accident\", \"location\" and \"weather\" that belong to same category.
-                value: |
-                  {
-                    "id": "c3ffd8e7-e334-4710-aeb1-8506a12ad39c",
-                    "name": "Accident",
-                    "icon": "path/to/icon",
-                    "attributes": [
-                      {
-                        "id": "7527bd0a-5059-4edd-a053-83189be6a920",
-                        "name": "date_accident",
-                        "technicalName": "date_accident",
-                        "field": "872ff200-b4cc-47e6-a45b-fe3ea9c1ab9f",
-                        "multiValued": false
-                      },
-                      {
-                        "id": "430b3c66-d621-466a-9fa0-1f2e3ae3b15d",
-                        "name": "location",
-                        "technicalName": "location",
-                        "field": "5510a2a9-dcbb-4861-bdb1-f0091a824767",
-                        "category": "cf666d66-838f-4d92-a4d2-a315df21fac9",
-                        "multiValued": false
-                      },
-                      {
-                        "id": "24b31150-5acc-4f13-bf9f-3987abb32ffe",
-                        "name": "weather",
-                        "technicalName": "weather",
-                        "field": "5510a2a9-dcbb-4861-bdb1-f0091a824767",
-                        "category": "cf666d66-838f-4d92-a4d2-a315df21fac9",
-                        "multiValued": false
-                      },
-                      {
-                        "id": "4b8b4f6c-7dfd-4613-9414-c9daf00016af",
-                        "name": "car_id",
-                        "technicalName": "car_id",
-                        "field": "7000506c-049b-47d3-b92d-a2e823b46b81",
-                        "multiValued": true
-                      }
-                    ]
-                  }
+                value:
+                  id: "c3ffd8e7-e334-4710-aeb1-8506a12ad39c"
+                  name: "Accident"
+                  icon: "path/to/icon"
+                  storage: ELASTIC
+                  attributes:
+                    - id: "7527bd0a-5059-4edd-a053-83189be6a920"
+                      name: "date_accident"
+                      technicalName: "date_accident"
+                      field: "872ff200-b4cc-47e6-a45b-fe3ea9c1ab9f"
+                      category: "4270b521-6424-4e86-8a83-44648e72d1a7"
+                      multiValued: false
+                      slug: "slug"
+                    - id: "430b3c66-d621-466a-9fa0-1f2e3ae3b15d"
+                      name: "location"
+                      technicalName: "location"
+                      field: "5510a2a9-dcbb-4861-bdb1-f0091a824767"
+                      category: "cf666d66-838f-4d92-a4d2-a315df21fac9"
+                      multiValued: false
+                      slug: "slug"
+                    - id: "24b31150-5acc-4f13-bf9f-3987abb32ffe"
+                      name: "weather"
+                      technicalName: "weather"
+                      field: "5510a2a9-dcbb-4861-bdb1-f0091a824767"
+                      category: "cf666d66-838f-4d92-a4d2-a315df21fac9"
+                      multiValued: false
+                      slug: "slug"
+                    - id: "4b8b4f6c-7dfd-4613-9414-c9daf00016af"
+                      name: "car_id"
+                      technicalName: "car_id"
+                      field: "7000506c-049b-47d3-b92d-a2e823b46b81"
+                      multiValued: true
+                      slug: "slug"
       responses:
         "201":
           description: created
@@ -466,12 +445,10 @@ paths:
               examples:
                 missingTechnicalName:
                   description: Occurs when you try to create a class without technical name in attribute.
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "BAD_REQUEST",
-                      "message": "Missing technical name in attribute 39257557-083b-4427-9493-1cedc92b25cf"
-                    }
+                  value:
+                    application: "data-ref"
+                    code: "BAD_REQUEST"
+                    message: "Missing technical name in attribute 39257557-083b-4427-9493-1cedc92b25cf"
         "401":
           description: Not Authorized
         "403":
@@ -481,7 +458,7 @@ paths:
             - class_write
     get:
       tags:
-        - Model Controller
+        - Model
       summary: Retrieve all defined oClasses
       operationId: com.provoly.ref.model.ModelController_get
       responses:
@@ -507,7 +484,7 @@ paths:
   /model/class/id/{id}:
     get:
       tags:
-        - Model Controller
+        - Model
       summary: Retrieve an oClass based on its identifier
       operationId: com.provoly.ref.model.ModelController_getById
       parameters:
@@ -537,7 +514,7 @@ paths:
             - datasource_read
     delete:
       tags:
-        - Model Controller
+        - Model
       summary: Delete an oClass based on its identifier
       description: |
         Delete a class is possible if not used elsewhere. Deleting a class means deleting the table that
@@ -567,7 +544,7 @@ paths:
   /model/class/id/{id}/details:
     get:
       tags:
-        - Model Controller
+        - Model
       summary: Retrieve an oClass based on its identifier with more details
       description: |
         This oClass contains more information about the attributes used in the oClass,
@@ -586,72 +563,55 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                items:
-                  $ref: '#/components/schemas/OClassDetailsDto'
+                $ref: '#/components/schemas/OClassDetailsDto'
               examples:
                 default:
                   summary: get detailed oClass of "Accident"
-                  value: |
-                    {
-                      "id": "c3ffd8e7-e334-4710-aeb1-8506a12ad39c",
-                      "slug": "7d2cda0aab_accident",
-                      "name": "Accident",
-                      "attributes": [
-                        {
-                          "oclass": "c3ffd8e7-e334-4710-aeb1-8506a12ad39c",
-                          "id": "7527bd0a-5059-4edd-a053-83189be6a920",
-                          "name": "date_accident",
-                          "slug": "5e8c3edc5d_date_accident",
-                          "multiValued": false,
-                          "field": {
-                            "id": "872ff200-b4cc-47e6-a45b-fe3ea9c1ab9f",
-                            "name": "date",
-                            "type": "instant",
-                            "slug": "279ff1f102_date"
-                          }
-                        },
-                        {
-                          "oclass": "c3ffd8e7-e334-4710-aeb1-8506a12ad39c",
-                          "id": "430b3c66-d621-466a-9fa0-1f2e3ae3b15d",
-                          "name": "location",
-                          "slug": "c7746c45c2_location",
-                          "multiValued": false,
-                          "field": {
-                            "id": "5510a2a9-dcbb-4861-bdb1-f0091a824767",
-                            "name": "string",
-                            "type": "string",
-                            "slug": "279ff1f103_string"
-                          }
-                        },
-                        {
-                          "oclass": "c3ffd8e7-e334-4710-aeb1-8506a12ad39c",
-                          "id": "24b31150-5acc-4f13-bf9f-3987abb32ffe",
-                          "name": "weather",
-                          "slug": "b32bc15ba2_weather",
-                          "multiValued": false,
-                          "field": {
-                            "id": "5510a2a9-dcbb-4861-bdb1-f0091a824767",
-                            "name": "string",
-                            "type": "string",
-                            "slug": "279ff1f103_string"
-                          }
-                        },
-                        {
-                          "oclass": "c3ffd8e7-e334-4710-aeb1-8506a12ad39c",
-                          "id": "4b8b4f6c-7dfd-4613-9414-c9daf00016af",
-                          "name": "car_id",
-                          "slug": "3c7587eddf_car_id",
-                          "multiValued": true,
-                          "field": {
-                            "id": "6994ede1-7689-489f-8003-115e7cd4646b",
-                            "name": "identifier",
-                            "type": "string",
-                            "slug": "279ff1f102_identifier"
-                          }
-                        }
-                      ]
-                    }
+                  value:
+                    id: c3ffd8e7-e334-4710-aeb1-8506a12ad39c
+                    slug: 7d2cda0aab_accident
+                    name: Accident
+                    attributes:
+                    - oclass: c3ffd8e7-e334-4710-aeb1-8506a12ad39c
+                      id: 7527bd0a-5059-4edd-a053-83189be6a920
+                      name: date_accident
+                      slug: 5e8c3edc5d_date_accident
+                      multiValued: false
+                      field:
+                        id: 872ff200-b4cc-47e6-a45b-fe3ea9c1ab9f
+                        name: date
+                        type: instant
+                        slug: 279ff1f102_date
+                    - oclass: c3ffd8e7-e334-4710-aeb1-8506a12ad39c
+                      id: 430b3c66-d621-466a-9fa0-1f2e3ae3b15d
+                      name: location
+                      slug: c7746c45c2_location
+                      multiValued: false
+                      field:
+                        id: 5510a2a9-dcbb-4861-bdb1-f0091a824767
+                        name: string
+                        type: string
+                        slug: 279ff1f103_string
+                    - oclass: c3ffd8e7-e334-4710-aeb1-8506a12ad39c
+                      id: 24b31150-5acc-4f13-bf9f-3987abb32ffe
+                      name: weather
+                      slug: b32bc15ba2_weather
+                      multiValued: false
+                      field:
+                        id: 5510a2a9-dcbb-4861-bdb1-f0091a824767
+                        name: string
+                        type: string
+                        slug: 279ff1f103_string
+                    - oclass: c3ffd8e7-e334-4710-aeb1-8506a12ad39c
+                      id: 4b8b4f6c-7dfd-4613-9414-c9daf00016af
+                      name: car_id
+                      slug: 3c7587eddf_car_id
+                      multiValued: true
+                      field:
+                        id: 6994ede1-7689-489f-8003-115e7cd4646b
+                        name: identifier
+                        type: string
+                        slug: 279ff1f102_identifier
         "401":
           description: Not Authorized
         "403":
@@ -666,7 +626,7 @@ paths:
   /model/class/id/{id}/attribute:
     put:
       tags:
-        - Model Controller
+        - Model
       summary: Save a new attribute to a class
       operationId: com.provoly.ref.model.ModelController_addAttribute
       parameters:
@@ -682,26 +642,25 @@ paths:
             schema:
               $ref: '#/components/schemas/AttributeDefDto'
             examples:
-              default:
+              addAttribute:
                 summary: Adding an attribute to a class
-                value: |
-                  {
-                    "id": "ba681f33-fe70-42f8-a277-05c607ba29cf",
-                    "name": "attribute_example",
-                    "field": "423b5c01-1816-41d4-b358-200000000010",
-                    "category": "991eb4b2-253c-4875-b708-8209fa5bfd51",
-                    "multiValued": false
-                  }
+                value:
+                  id: "ba681f33-fe70-42f8-a277-05c607ba29cf"
+                  name: "attribute_example"
+                  technicalName: "attribute_example"
+                  field: "423b5c01-1816-41d4-b358-200000000010"
+                  category: "991eb4b2-253c-4875-b708-8209fa5bfd51"
+                  multiValued: false
+                  slug: "ba681f33_attribute_example"
               incorrect:
-                summary: Adding an incorrect attribute to a class (field ID unknown)
-                value: |
-                  {
-                    "id": "423b5c01-1816-41d4-b358-200000000010",
-                    "name": "attribute_example",
-                    "field": "",
-                    "category": "991eb4b2-253c-4875-b708-8209fa5bfd51",
-                    "multiValued": false
-                  }
+                summary: Adding an incorrect attribute to a class (field missing)
+                value:
+                  id: "ba681f33-fe70-42f8-a277-05c607ba29cf"
+                  name: "attribute_example"
+                  technicalName: "attribute_example"
+                  category: "991eb4b2-253c-4875-b708-8209fa5bfd51"
+                  multiValued: false
+                  slug: "ba681f33_attribute_example"
       responses:
         "204":
           description: No Content
@@ -717,7 +676,7 @@ paths:
   /model/class/id/{classId}/attribute/id/{attributeId}:
     delete:
       tags:
-        - Model Controller
+        - Model
       summary: Delete an attribute based on its identifier
       operationId: com.provoly.ref.model.ModelController_deleteAttribute
       parameters:
@@ -743,12 +702,10 @@ paths:
               examples:
                 usedField:
                   description: Occurs when we try to delete an attribute used by a link, a namedquery or an abac rule.
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "BAD_REQUEST",
-                      "message": "The attribute 423b5c01-1816-41d4-b358-100000000021 is used by one or more search(es) and abac rule(s), remove them to delete the attribute"
-                    }
+                  value:
+                    application: "data-ref"
+                    code: "BAD_REQUEST"
+                    message: "The attribute 423b5c01-1816-41d4-b358-100000000021 is used by one or more search(es) and abac rule(s), remove them to delete the attribute"
         "401":
           description: Not Authorized
         "403":
@@ -761,8 +718,9 @@ paths:
   /model/class/datasets/count:
     get:
       tags:
-        - Model Controller
+        - Model
       operationId: com.provoly.ref.model.ModelController_getDatasetCountByClass
+      summary: Retrieving the number of dataset in a class
       responses:
         "200":
           description: OK
@@ -784,7 +742,7 @@ paths:
   /model/class/field/{id}:
     get:
       tags:
-        - Model Controller
+        - Model
       summary: Retrieve all classes based on the identifier of a field
       operationId: com.provoly.ref.model.ModelController_getByField
       parameters:
@@ -815,7 +773,7 @@ paths:
   /model/class/{id}/associations:
     get:
       tags:
-        - Model Controller
+        - Model
       summary: Retrieve all usages of a class
       operationId: com.provoly.ref.model.ModelController_getClassAssociations
       parameters:
@@ -831,38 +789,25 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AssociationsDto'
+                $ref: '#/components/schemas/AssociationsDto'
               examples:
                 associationsClass:
                   description: The parameter usedElsewhere in the response body is a boolean used to indicate if the class is used in a private object.
-                  value: |
-                    {
-                      "associations": [
-                            {
-                              "id": "2f021992-5fb0-42d3-9646-0affccb98101",
-                              "name": "LINK",
-                              "type": "LINK"
-                            },
-                            {
-                              "id": "2f021992-5fb0-42d3-9646-0affccb98111",
-                              "name": "Name of the namedquery",
-                              "type": "NAMED_QUERY"
-                            },
-                            {
-                              "id": "2f121992-5fb0-42d3-9646-0affccb98111",
-                              "name": "Name of the dataset",
-                              "type": "DATASET"
-                            },
-                            {
-                              "id": "2f121992-5fb0-42d3-9646-0affccb98111",
-                              "name": "Name of the abac_rule",
-                              "type": "ABAC"
-                            }
-                      ],
-                      "usedElsewhere": false
-                    }
+                  value:
+                    associations:
+                      - id: "2f021992-5fb0-42d3-9646-0affccb98101"
+                        name: "LINK"
+                        type: "LINK"
+                      - id: "2f021992-5fb0-42d3-9646-0affccb98111"
+                        name: "Name of the namedquery"
+                        type: "NAMED_QUERY"
+                      - id: "2f121992-5fb0-42d3-9646-0affccb98111"
+                        name: "Name of the dataset"
+                        type: "DATASET"
+                      - id: "2f121992-5fb0-42d3-9646-0affccb98111"
+                        name: "Name of the abac_rule"
+                        type: "ABAC"
+                    usedElsewhere: false
         "401":
           description: Not Authorized
         "403":
@@ -875,7 +820,7 @@ paths:
   /model/id/{classId}/metadata/id/{metadataDefId}:
     put:
       tags:
-        - Model Controller
+        - Model
       operationId: com.provoly.ref.dataset.ModelController_setMetadataToClass
       summary: Add metadata to a class
       parameters:
@@ -897,10 +842,8 @@ paths:
             examples:
               add_metadata:
                 summary: Adding metadata to a class
-                value: |
-                  {
-                    "value": "22"
-                  }
+                value:
+                  value: "22"
       responses:
         "204":
           description: No Content
@@ -913,12 +856,10 @@ paths:
               examples:
                 wrongMetadataType:
                   description: Occurs when you try to add metadata with a type not supported
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "FORBIDDEN",
-                      "message": "Metadata value should be of type : {{type}}"
-                    }
+                  value:
+                    application: "data-ref"
+                    code: "FORBIDDEN"
+                    message: "Metadata value should be of type : {{type}}"
         "404":
           $ref: '#/components/responses/notFoundException'
       security:
@@ -926,7 +867,7 @@ paths:
             - class_write
     delete:
       tags:
-        - Model Controller
+        - Model
       operationId: com.provoly.ref.dataset.ModelController_deleteMetadataToClass
       summary: Delete metadata of a class
       parameters:
@@ -955,7 +896,7 @@ paths:
   /model/attribute/{id}/associations:
     get:
       tags:
-        - Model Controller
+        - Model
       summary: Retrieve all usages of an attribute
       operationId: com.provoly.ref.model.ModelController_getAttributeAssociations
       parameters:
@@ -971,33 +912,22 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AssociationsDto'
+                $ref: '#/components/schemas/AssociationsDto'
               examples:
                 attributeAssociations:
                   description: The parameter usedElsewhere in the response body is a boolean used to indicate if the dataset is used in a private object.
-                  value: |
-                    {
-                      "associations": [
-                            {
-                              "id": "2f021992-5fb0-42d3-9646-0affccb98101",
-                              "name": "LINK",
-                              "type": "LINK"
-                            },
-                            {
-                              "id": "2f021992-5fb0-42d3-9646-0affccb98111",
-                              "name": "Name of the namedquery",
-                              "type": "NAMED_QUERY"
-                            },
-                            {
-                              "id": "2f121992-5fb0-42d3-9646-0affccb98111",
-                              "name": "Name of the abac_rule",
-                              "type": "ABAC"
-                            }
-                      ],
-                      "usedElsewhere": false
-                    }
+                  value:
+                    associations:
+                      - id: "2f021992-5fb0-42d3-9646-0affccb98101"
+                        name: "LINK"
+                        type: "LINK"
+                      - id: "2f021992-5fb0-42d3-9646-0affccb98111"
+                        name: "Name of the namedquery"
+                        type: "NAMED_QUERY"
+                      - id: "2f121992-5fb0-42d3-9646-0affccb98111"
+                        name: "Name of the abac_rule"
+                        type: "ABAC"
+                    usedElsewhere: false
         "401":
           description: Not Authorized
         "403":
@@ -1010,7 +940,7 @@ paths:
   /model/storages:
     get:
       tags:
-        - Model Controller
+        - Model
       summary: Retrieve available storages
       description: Retrieve the list of available storages
       operationId: com.provoly.ref.model.ModelController_getStorages
@@ -1025,11 +955,9 @@ paths:
                   type: string
               examples:
                 listStorages:
-                  value: |
-                    [
-                        "POSTGIS",
-                        "ELASTIC"
-                    ]
+                  value:
+                    - POSTGIS
+                    - ELASTIC
         "401":
           description: Not Authorized
         "403":
@@ -1042,7 +970,7 @@ paths:
   /customclass/all/param:
     get:
       tags:
-        - Custom Class Controller
+        - Custom Class
       summary: Retrieve all custom classes
       operationId: com.provoly.ref.customclass.CustomClassController_getAll
       responses:
@@ -1056,35 +984,20 @@ paths:
                   $ref: '#/components/schemas/CustomClass'
               examples:
                 default:
-                  value: |
-                    [
-                      {
-                        "domain":"symbol",
-                        "oClass":"e9479a55-f260-4de7-a5b0-24bd58e5e405",
-                        "content":{
-                          "isDefault":true,
-                          "iconUrl":"internal:image.png",
-                          "iconSize":[
-                            25,
-                            25
-                          ]
-                        }
-                      },
-                      {
-                        "domain":"tooltips",
-                        "oClass":"42a6035a-fc3d-4694-a447-3a2189900da3",
-                        "content":{
-                          "type":"attribute",
-                          "options":{
-                            "attributes":[
-                              "Seats Number",
-                              "Seats Number IRVE",
-                              "Seats Number PMR"
-                            ]
-                          }
-                        }
-                      }
-                    ]
+                  value:
+                    - domain: "symbol"
+                      oClass: "e9479a55-f260-4de7-a5b0-24bd58e5e405"
+                      content: |
+                        "{
+                          "isDefault": true,
+                          "iconUrl": "internal:image.png",
+                          "iconSize": [ 25, 25 ]
+                        }"
+                    - domain: "tooltips"
+                      oClass: "42a6035a-fc3d-4694-a447-3a2189900da3"
+                      content: |
+                        "{"type": "attribute","options": {attributes: ["Seats Number","Seats Number IRVE","Seats Number PMR"]}}"
+                        
         "401":
           description: Not Authorized
         "403":
@@ -1099,7 +1012,7 @@ paths:
   /customclass/all/param/{domain}:
     get:
       tags:
-        - Custom Class Controller
+        - Custom Class
       summary: Retrieve the list of custom classes for a domain
       operationId: com.provoly.ref.customclass.CustomClassController_getByDomain
       parameters:
@@ -1117,33 +1030,23 @@ paths:
             application/json:
               examples:
                 default:
-                  value: |
-                    [
-                      {
-                        "domain":"symbol",
-                        "oClass":"e9479a55-f260-4de7-a5b0-24bd58e5e405",
-                        "content":{
-                          "isDefault":true,
-                          "iconUrl":"internal:image.png",
-                          "iconSize":[
-                            25,
-                            25
-                          ]
-                        }
-                      },
-                      {
-                        "domain":"symbol",
-                        "oClass":"42a6035a-fc3d-4694-a447-3a2189900da3",
-                         "content":{
-                            "isDefault":true,
-                            "iconUrl":"internal:image2.png",
-                            "iconSize":[
-                              25,
-                              25
-                            ]
-                          }
-                      }
-                    ]
+                  value:
+                    - domain: "symbol"
+                      oClass: "e9479a55-f260-4de7-a5b0-24bd58e5e405"
+                      content:
+                        isDefault: true
+                        iconUrl: "internal:image.png"
+                        iconSize:
+                          - 25
+                          - 25
+                    - domain: "symbol"
+                      oClass: "42a6035a-fc3d-4694-a447-3a2189900da3"
+                      content:
+                        isDefault: true
+                        iconUrl: "internal:image2.png"
+                        iconSize:
+                          - 25
+                          - 25
         "401":
           description: Not Authorized
         "403":
@@ -1156,7 +1059,7 @@ paths:
   /customclass/id/{id}/param/{domain}:
     put:
       tags:
-        - Custom Class Controller
+        - Custom Class
       summary: Save a new custom class by adding its configuration JSON file
       operationId: com.provoly.ref.customclass.CustomClassController_addCustomClass
       parameters:
@@ -1180,21 +1083,11 @@ paths:
             examples:
               default:
                 summary: add custom class with "tooltips" domain.
-                value: |
-                  {
-                    "domain": "tooltips",
-                    "oClass": "42a6035a-fc3d-4694-a447-3a2189900da3",
-                    "content": {
-                      "type": "attribute",
-                      "options": {
-                        "attributes": [
-                          "Seats Number",
-                          "Seats Number IRVE",
-                          "Seats Number PMR"
-                        ]
-                      }
-                    }
-                  }
+                value: 
+                  domain: "tooltips"
+                  oClass: "42a6035a-fc3d-4694-a447-3a2189900da3"
+                  content: |
+                    "{"type": "attribute","options": {attributes: ["Seats Number","Seats Number IRVE","Seats Number PMR"]}}"
       responses:
         "204":
           description: No Content
@@ -1205,12 +1098,10 @@ paths:
               examples:
                 wrongJSON:
                   description: Occurs when the format of the JSON file is incorrect
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "BAD_REQUEST",
-                      "message": "Json content is invalid"
-                    }
+                  value:
+                    application: "data-ref"
+                    code: "BAD_REQUEST"
+                    message: "Json content is invalid"
         "401":
           description: Not Authorized
         "403":
@@ -1220,7 +1111,7 @@ paths:
             - class_write
     get:
       tags:
-        - Custom Class Controller
+        - Custom Class
       summary: Retrieve a JSON file describing a custom class based on its identifier and its domain
       operationId: com.provoly.ref.customclass.CustomClassController_getCustomClass
       parameters:
@@ -1255,7 +1146,7 @@ paths:
   /datasets:
     post:
       tags:
-        - Dataset Controller
+        - Dataset
       summary: Save a new dataset for a specific oClass
       description: |
         A dataset is a coherent, versioned (functionally) set of data belonging to the same class.
@@ -1269,49 +1160,31 @@ paths:
             examples:
               closedDataset:
                 summary: Adding a closed dataset
-                value: |
-                  {
-                    "id": "423b5c01-1816-41d4-b358-200000000010",
-                    "name": "closed dataset",
-                    "oClass": "991eb4b2-253c-4875-b708-8209fa5bfd51",
-                    "type": "CLOSED"
-                  }
+                value:
+                  id: "423b5c01-1816-41d4-b358-200000000010"
+                  name: "closed dataset"
+                  oClass: "991eb4b2-253c-4875-b708-8209fa5bfd51"
+                  type: "CLOSED"
               datasetWithMetadata:
                 summary: Adding a closed dataset with metadata
-                value: |
-                  {
-                    "id": "423b5c01-1816-41d4-b358-200000000010",
-                    "name": "closed dataset",
-                    "oClass": "991eb4b2-253c-4875-b708-8209fa5bfd51",
-                    "type": "CLOSED",
-                    "metadata": [
-                      "value": "20",
-                      "metadataDefId": "c18b19eb-0c2a-4877-a7cb-3603ba94cb1c"
-                    ]
-                  }
+                value:
+                  id: "423b5c01-1816-41d4-b358-200000000010"
+                  name: "closed dataset"
+                  oClass: "991eb4b2-253c-4875-b708-8209fa5bfd51"
+                  type: "CLOSED"
+                  metadata:
+                    - value: "20"
+                      metadataDefId: "c18b19eb-0c2a-4877-a7cb-3603ba94cb1c"
               datasetWithGroups:
                 summary: Adding a closed dataset with groups
-                value: |
-                  {
-                    "id": "423b5c01-1816-41d4-b358-200000000010",
-                    "name": "closed dataset",
-                    "oClass": "991eb4b2-253c-4875-b708-8209fa5bfd51",
-                    "type": "CLOSED",
-                    "groups": [
-                      "ALL",
-                      "test"
-                    ]
-                  }
-              invalidDataset:
-                summary: Adding an incorrect dataset (with invalid type)
-                value: |
-                  {
-                    "id": "423b5c01-1816-41d4-b358-200000000010",
-                    "name": "closed incorrect dataset",
-                    "oClass": "991eb4b2-253c-4875-b708-8209fa5bfd51",
-                    "type": "UNKNOWN",
-                    "groups": "[group_test]"
-                  }
+                value:
+                  id: "423b5c01-1816-41d4-b358-200000000010"
+                  name: "closed dataset"
+                  oClass: "991eb4b2-253c-4875-b708-8209fa5bfd51"
+                  type: "CLOSED"
+                  groups:
+                    - "ALL"
+                    - "test"
       responses:
         "201":
           description: Created
@@ -1327,18 +1200,16 @@ paths:
                 sameOClassName:
                   summary: Save dataset with wrong name
                   description: Occurs when you try to save a dataset that has the same name as its OClass
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "CONFLICT",
-                      "message": "Name {{datasetName}} already exists for class {{oClassName}}"
-                    }
+                  value:
+                    application: "data-ref"
+                    code: "CONFLICT"
+                    message: "Name {{datasetName}} already exists for class {{oClassName}}"
       security:
         - oidc:
             - dataset_write
     put:
       tags:
-        - Dataset Controller
+        - Dataset
       summary: Update a dataset based on its identifier
       description: You can only update the dataset name, description, metadata and groups, you cannot change its id, type or OClass.
       operationId: com.provoly.ref.dataset.DatasetController_update
@@ -1350,29 +1221,24 @@ paths:
             examples:
               dataset_update:
                 summary: Updating a dataset name
-                value: |
-                  {
-                    "id": "423b5c01-1816-41d4-b358-200000000010",
-                    "name": "we change dataset name",
-                    "oClass": "991eb4b2-253c-4875-b708-8209fa5bfd51",
-                    "type": "CLOSED"
-                  }
+                value:
+                  id: "423b5c01-1816-41d4-b358-200000000010"
+                  name: "we change dataset name"
+                  oClass: "991eb4b2-253c-4875-b708-8209fa5bfd51"
+                  type: "CLOSED"
               group_update:
                 summary: Update dataset groups
                 description: |
                   Updating groups.
                   If you add an empty group list, the current groups in the dataset will be deleted.
                   If the group list is null, the dataset's current groups will not be modified.
-                value: |
-                  {
-                    "id": "423b5c01-1816-41d4-b358-200000000010",
-                    "name": "we change dataset name",
-                    "oClass": "991eb4b2-253c-4875-b708-8209fa5bfd51",
-                    "type": "CLOSED",
-                    "groups": [
-                      "AUTHENTICATED"
-                    ]
-                  }
+                value:
+                  id: "423b5c01-1816-41d4-b358-200000000010"
+                  name: "we change dataset name"
+                  oClass: "991eb4b2-253c-4875-b708-8209fa5bfd51"
+                  type: "CLOSED"
+                  groups:
+                    - "AUTHENTICATED"
       responses:
         "200":
           description: No Content
@@ -1384,13 +1250,10 @@ paths:
                 deleteGroupReferencedByDashboard:
                   summary: Delete group used by a dashboard
                   description: When groups are deleted from a dataset, a list of groups is returned if they were used by a dashboard.
-                  value: |
-                    { "missingGroupsByEntity": 
-                      {
-                        "dataset_id": ["group1"],
-                        "dataset_id2": ["group1", "group2"]
-                      }
-                    }
+                  value:
+                    missingGroupsByEntity:
+                      "f12cef0c-6204-4e09-9807-2da6a9c0e6d0": [ "group1" ]
+                      "f12cef0c-6204-4e09-9807-2da6a9c0e6d1": [ "group1", "group2" ]
         "401":
           description: Not Authorized
         "403":
@@ -1401,12 +1264,10 @@ paths:
                 changeType:
                   summary: Update dataset with different type
                   description: Occurs when you try to update a dataset with a different type
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "FORBIDDEN",
-                      "message": "The dataset's type is immutable"
-                    }
+                  value:
+                    application: "data-ref"
+                    code: "FORBIDDEN"
+                    message: "The dataset's type is immutable"
         "404":
           $ref: '#/components/responses/notFoundException'
       security:
@@ -1414,7 +1275,7 @@ paths:
             - dataset_write
     get:
       tags:
-        - Dataset Controller
+        - Dataset
       summary: Get all datasets
       operationId: com.provoly.ref.dataset.DatasetController_getAll
       responses:
@@ -1425,16 +1286,12 @@ paths:
               examples:
                 getAllDatasets:
                   summary: Get all datasets
-                  value: |
-                    [
-                      {
-                        "id": "618af062-d722-43d2-8e4d-cb65d07230ac",
-                        "name": "classification des sols",
-                        "oClass": "9d37e039-272b-463e-942e-6c6af0c2f440",
-                        "type": "CLOSED",
-                        "metadata": []
-                      }
-                    ]
+                  value:
+                    - id: "618af062-d722-43d2-8e4d-cb65d07230ac"
+                      name: "classification des sols"
+                      oClass: "9d37e039-272b-463e-942e-6c6af0c2f440"
+                      type: "CLOSED"
+                      metadata": []
         "401":
           description: Not Authorized
         "403":
@@ -1445,7 +1302,7 @@ paths:
   /datasets/id/{id}:
     get:
       tags:
-        - Dataset Controller
+        - Dataset
       operationId: com.provoly.ref.dataset.DatasetController_get
       summary: Retrieve a dataset based on its identifier.
       description: Also returns the metadata attached to the dataset, if any.
@@ -1470,7 +1327,7 @@ paths:
             - search
     delete:
       tags:
-        - Dataset Controller
+        - Dataset
       summary: Delete a dataset based on its identifier
       description: Deleting a dataset is not possible if dataset-version are associated with it
       operationId: com.provoly.ref.dataset.DatasetController_delete
@@ -1494,12 +1351,10 @@ paths:
                 deleteDataset:
                   summary: Delete dataset with dataset-version
                   description: Occurs when you try to delete a dataset who owns dataset-version
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "BAD_REQUEST",
-                      "message": "You're not allowed to delete dataset {{datasetId}} because it owns one or more dataset version"
-                    }
+                  value:
+                    application: "data-ref"
+                    code: "BAD_REQUEST"
+                    message: "You're not allowed to delete dataset {{datasetId}} because it owns one or more dataset version"
         "403":
           description: Not Allowed
         "404":
@@ -1510,7 +1365,7 @@ paths:
   /datasets/id/{id}/dataset-version:
     get:
       tags:
-        - Dataset Controller
+        - Dataset
       summary: Retrieve the last active dataset version based on its dataset id
       operationId: com.provoly.ref.dataset.DatasetController_getDatasetVersionByDatasetId
       parameters:
@@ -1535,7 +1390,7 @@ paths:
   /datasets/id/{id}/dataset-versions:
     get:
       tags:
-        - Dataset Controller
+        - Dataset
       summary: Retrieve all dataset versions by the identifier of its dataset
       operationId: com.provoly.ref.dataset.DatasetController_getAllById
       parameters:
@@ -1562,7 +1417,7 @@ paths:
   /datasets/{id}/associations:
     get:
       tags:
-        - Dataset Controller
+        - Dataset
       summary: Retrieve all usages of a dataset
       operationId: com.provoly.ref.dataset.DatasetController_getAssociationsByDatasetId
       parameters:
@@ -1585,27 +1440,18 @@ paths:
                 attributeAssociations:
                   summary: Attribute associations
                   description: The parameter usedElsewhere in the response body is a boolean used to indicate if the attribute is used in a private object.
-                  value: |
-                    {
-                      "associations": [
-                            {
-                              "id": "2f021992-5fb0-42d3-9646-0affccb98101",
-                              "name": "Name du widget",
-                              "type": "WIDGET"
-                            },
-                            {
-                              "id": "2f021992-5fb0-42d3-9646-0affccb98111",
-                              "name": "Name of the namedquery",
-                              "type": "NAMED_QUERY"
-                            },
-                            {
-                              "id": "2f121992-5fb0-42d3-9646-0affccb98111",
-                              "name": "Name of the dashboard",
-                              "type": "DASHBOARD"
-                            }
-                      ],
-                      "usedElsewhere": false
-                    }
+                  value:
+                    associations:
+                      - id: "2f021992-5fb0-42d3-9646-0affccb98101"
+                        name: "Name du widget"
+                        type: "WIDGET"
+                      - id: "2f021992-5fb0-42d3-9646-0affccb98111"
+                        name: "Name of the namedquery"
+                        type: "NAMED_QUERY"
+                      - id: "2f121992-5fb0-42d3-9646-0affccb98111"
+                        name: "Name of the dashboard"
+                        type: "DASHBOARD"
+                    usedElsewhere: false
         "401":
           description: Not Authorized
         "403":
@@ -1618,7 +1464,7 @@ paths:
   /datasets/id/{datasetId}/metadata/id/{metadataDefId}:
     put:
       tags:
-        - Dataset Controller
+        - Dataset
       operationId: com.provoly.ref.dataset.DatasetController_setMetadata
       summary: Add metadata to a dataset
       parameters:
@@ -1640,10 +1486,8 @@ paths:
             examples:
               add_metadata:
                 summary: Adding metadata to a dataset
-                value: |
-                  {
-                    "value": "22"
-                  }
+                value:
+                  value: "22"
       responses:
         "204":
           description: No Content
@@ -1658,7 +1502,7 @@ paths:
             - dataset_write
     delete:
       tags:
-        - Dataset Controller
+        - Dataset
       operationId: com.provoly.ref.dataset.DatasetController_deleteMetadata
       summary: Delete metadata of a dataset
       parameters:
@@ -1687,7 +1531,7 @@ paths:
   /datasets/class/{id}:
     get:
       tags:
-        - Dataset Controller
+        - Dataset
       summary: Retrieve all datasets associated to a class
       operationId: com.provoly.ref.dataset.DatasetController_getAllForClass
       parameters:
@@ -1713,7 +1557,7 @@ paths:
   /datasets/name/{name}:
     get:
       tags:
-        - Dataset Controller
+        - Dataset
       operationId: com.provoly.ref.dataset.DatasetController_getByName
       summary: Retrieve a dataset based on its name
       parameters:
@@ -1736,19 +1580,17 @@ paths:
               examples:
                 notFound:
                   description: Occurs when you try to find a dataset with the wrong name
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "NOT_FOUND",
-                      "message": "Dataset {{datasetName}} doesn't exists"
-                    }
+                  value:
+                    application: "data-ref"
+                    code: "NOT_FOUND"
+                    message: "Dataset {{datasetName}} doesn't exists"
       security:
         - oidc:
             - dataset_read
   /datasets/name/{datasetName}/dataset-version:
     get:
       tags:
-        - Dataset Controller
+        - Dataset
       summary: Retrieve the last active dataset version of a dataset by its name
       operationId: com.provoly.ref.dataset.DatasetController_getDatasetVersionByDatasetName
       parameters:
@@ -1772,45 +1614,17 @@ paths:
               examples:
                 notFound:
                   description: Occurs when you try to find a dataset version for a dataset that doesn't have any
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "NOT_FOUND",
-                      "message": "No dataset version available for dataset {{datasetName}}"
-                    }
+                  value:
+                    application: "data-ref"
+                    code: "NOT_FOUND"
+                    message: "No dataset version available for dataset {{datasetName}}"
       security:
         - oidc:
             - dataset_read
-  /datasets/{id}/dataset-versions/latest:
-    get:
-      tags:
-        - Dataset Controller
-      summary: Retrieve the last dataset version based on its dataset id
-      operationId: com.provoly.ref.dataset.DatasetController_getLastVersionCreated
-      parameters:
-        - name: id
-          in: path
-          description: UUID of the dataset
-          required: true
-          schema:
-            $ref: '#/components/schemas/UUID'
-      responses:
-        "200":
-          $ref: '#/components/responses/datasetVersionDetailsDto'
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-        "404":
-          $ref: '#/components/responses/notFoundException'
-      security:
-        - oidc:
-            - dataset_read
-            - dataset_write
   /dataset-versions:
     post:
       tags:
-        - Dataset Version Controller
+        - Dataset Version
       operationId: com.provoly.ref.dataset.DatasetVersionController_create
       summary: Save a new dataset version
       requestBody:
@@ -1821,19 +1635,14 @@ paths:
             examples:
               inactive:
                 summary: Adding an inactive dataset version
-                value: |
-                  {
-                    "id": "b1a08d9d-4c38-4d43-90f3-25015537ebfd" ,
-                    "dataset": "423b5c01-1816-41d4-b358-200000000010",
-                    "oClass": "991eb4b2-253c-4875-b708-8209fa5bfd51",
-                    "lastModified": "2023-04-27T13:56:13.861018Z",
-                    "version": 3,
-                    "state": "INACTIVE",
-                    "withFile": false,
-                    "producer": "the producer"
-                    "productionDate": "2023-04-27T13:56:13.861018Z",
-                    "additionalInformation": "some information"
-                  }
+                value:
+                  id: "b1a08d9d-4c38-4d43-90f3-25015537ebfd"
+                  dataset: "423b5c01-1816-41d4-b358-200000000010"
+                  oClass: "991eb4b2-253c-4875-b708-8209fa5bfd51"
+                  lastModified: "2023-04-27T13:56:13.861018Z"
+                  version: 3
+                  state: "INACTIVE"
+                  withFile: false
       responses:
         "201":
           description: Created
@@ -1845,30 +1654,17 @@ paths:
                 idSaved:
                   summary: Create dataset version without unique id
                   description: Occurs when you try to create a dataset version of a closed dataset with an id already saved
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "BAD_REQUEST",
-                      "message": "Dataset version {{datasetVersionId}} already exist."
-                    }
+                  value:
+                    application: "data-ref"
+                    code: "BAD_REQUEST"
+                    message: "Dataset version {{datasetVersionId}} already exist."
                 multipleVersionOnOpen:
                   summary: Create dataset version on an open dataset
                   description: Occurs when you try to create a second dataset version of an open dataset
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "BAD_REQUEST",
-                      "message": "Dataset {{datasetId}} can't have more than one version."
-                    }
-                closeWithoutInformation:
-                  summary: Create dataset version on an closed dataset without producer or productionDate
-                  description: Occurs when you try to create a closed dataset version without the mandatory attribute producer or productionDate
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "BAD_REQUEST",
-                      "message": "Producer and Production date are mandatory for closed dataset."
-                    }
+                  value:
+                    application: "data-ref"
+                    code: "BAD_REQUEST"
+                    message: "Dataset {{datasetId}} can't have more than one version."
         "401":
           description: Not Authorized
         "403":
@@ -1882,36 +1678,38 @@ paths:
                   summary: Create dataset version on a closed dataset
                   description: |
                     Occurs when you try to create a new dataset version on a closed dataset. This can also happen if you try to import data and an import is in progress on this dataset.
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "CONFLICT",
-                      "message": "Can't override existing dataset {{datasetVersionId}} or have parallel imports"
-                    }
+                  value:
+                    application: "data-ref"
+                    code: "CONFLICT"
+                    message: "Can't override existing dataset {{datasetVersionId}} or have parallel imports"
       security:
         - oidc:
             - item_write
     put:
       tags:
-        - Dataset Version Controller
-      operationId: com.provoly.ref.dataset.DatasetVersionController_update
-      summary: Update a dataset version
+        - Dataset Version
+      operationId: com.provoly.ref.dataset.DatasetVersionController_updateState
+      summary: Update the state of a dataset version
       description: |
-        Allow to modify some information of a dataset-version: producer, productionDate and additionalInformation
+        A dataset version has multiple states to indicate the level of availability of the data imported.
+        Each state can be modified to a specific set of other states. For example, if a dataset's state is `LOADING`,
+        it can only obtain the `INDEXING` or `ERROR` states.
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DatasetVersionInformationDto'
+              $ref: '#/components/schemas/DatasetVersionDto'
             examples:
               updateDatasetVersion:
                 summary: Update dataset version
-                value: |
-                  {
-                    "producer": "the producer"
-                    "productionDate": "2023-04-27T13:56:13.861018Z",
-                    "additionalInformation": "additional"
-                  }
+                value:
+                  id: "b1a08d9d-4c38-4d43-90f3-25015537ebfd"
+                  dataset: "423b5c01-1816-41d4-b358-200000000010"
+                  oClass: "991eb4b2-253c-4875-b708-8209fa5bfd51"
+                  lastModified: "2023-04-27T13:56:13.861018Z"
+                  version: 1
+                  state: "INACTIVE"
+                  withFile: false
       responses:
         "204":
           description: No Content
@@ -1922,23 +1720,43 @@ paths:
               examples:
                 incompatibleStates:
                   summary: Wrong transition of state
-                  description: Occurs when you try to update a close dataset version's without producer or productionDate
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "BAD_REQUEST",
-                      "message": "Producer and Production date are mandatory for closed dataset"
-                    }
+                  description: Occurs when you try to update a dataset version's state to a state it can't transition to
+                  value:
+                    application: "data-ref"
+                    code: "BAD_REQUEST"
+                    message: "Dataset cannot transition from LOADING to ACTIVE"
         "401":
           description: Not Authorized
         "403":
           description: Not Allowed
+          content:
+            application/json:
+              examples:
+                differentDatasetId:
+                  summary: Different dataset id
+                  description: Occurs when you try to update a dataset version's state with a different dataset as the one in the database
+                  value:
+                    application: "data-ref"
+                    code: "FORBIDDEN"
+                    message: "Dataset versions are immutable"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                sameState:
+                  summary: Update state with the actual state
+                  description: Occurs when you try to update a dataset version's state with the same state it already is in
+                  value:
+                    application: "data-ref"
+                    code: "CONFLICT"
+                    message: "Dataset {{datasetId}} is already in state: {{datasetState}}"
       security:
         - oidc:
             - item_write
     get:
       tags:
-        - Dataset Version Controller
+        - Dataset Version
       summary: Retrieve all dataset versions
       description: |
         A dataset version is an instantiation of a dataset. It allows us to have coherent and versioned class data. 
@@ -1959,7 +1777,7 @@ paths:
   /dataset-versions/id/{id}:
     get:
       tags:
-        - Dataset Version Controller
+        - Dataset Version
       operationId: com.provoly.ref.dataset.DatasetVersionController_get
       summary: Retrieve a dataset version based on its identifier. It also returns its associated metadata.
       parameters:
@@ -1984,7 +1802,7 @@ paths:
             - search
     delete:
       tags:
-        - Dataset Version Controller
+        - Dataset Version
       operationId: com.provoly.ref.dataset.DatasetVersionController_delete
       summary: Delete a dataset version based on its identifier
       parameters:
@@ -2004,16 +1822,14 @@ paths:
                 deletingDataset:
                   summary: Deleting dataset version
                   description: Return the dataset version currently deleting, this is an asynchrone operation.
-                  value: |
-                    {
-                      "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                      "dataset": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                      "oClass": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                      "lastModified": "2022-03-10T16:15:50Z",
-                      "version": 1,
-                      "state": "DELETING",
-                      "withFile": false
-                    }
+                  value:
+                    id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                    dataset: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                    oClass: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                    lastModified: "2022-03-10T16:15:50Z"
+                    version: 1
+                    state: "DELETING"
+                    withFile: false
         "400":
           description: Bad Request
           content:
@@ -2022,12 +1838,10 @@ paths:
                 wrongState:
                   summary: Delete a version dataset in the wrong state
                   description: Occurs when you try to delete a dataset version in state INDEXING, LOADING, DELETING
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "BAD_REQUEST",
-                      "message": "Unable to delete dataset version {{dataset_version_id}} because it's {{current_state}}"
-                    }
+                  value:
+                    application: "data-ref"
+                    code: "BAD_REQUEST"
+                    message: "Unable to delete dataset version {{dataset_version_id}} because it's {{current_state}}"
         "401":
           description: Not Authorized
         "404":
@@ -2038,7 +1852,7 @@ paths:
   /dataset-versions/id/{datasetVersionId}/metadata/id/{metadataDefId}:
     put:
       tags:
-        - Dataset Version Controller
+        - Dataset Version
       operationId: com.provoly.ref.dataset.DatasetVersionController_setMetadata
       summary: Add metadata to a dataset version
       parameters:
@@ -2059,10 +1873,8 @@ paths:
               $ref: '#/components/schemas/MetadataValueWriteDto'
             examples:
               default:
-                value: |
-                  {
-                    "value": "22"
-                  }
+                value:
+                  value: "22"
       responses:
         "204":
           description: No Content
@@ -2077,7 +1889,7 @@ paths:
             - dataset_write
     delete:
       tags:
-        - Dataset Version Controller
+        - Dataset Version
       operationId: com.provoly.ref.dataset.DatasetVersionController_deleteMetadata
       summary: Delete the metadata related to a dataset version
       parameters:
@@ -2102,12 +1914,10 @@ paths:
                 metadataNotAssigned:
                   summary: Not assigned metadata
                   description: Occurs when you try to delete a metadata not assigned to the dataset version
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "BAD_REQUEST",
-                      "message": "Metadata {{metadata_id}} is not assigned to DATASET_VERSION {{dataset_version_id}}"
-                    }
+                  value:
+                    application: "data-ref"
+                    code: "BAD_REQUEST"
+                    message: "Metadata {{metadata_id}} is not assigned to DATASET_VERSION {{dataset_version_id}}"
         "401":
           description: Not Authorized
         "403":
@@ -2120,7 +1930,7 @@ paths:
   /dataset-versions/id/{id}/activate:
     post:
       tags:
-        - Dataset Version Controller
+        - Dataset Version
       operationId: com.provoly.ref.dataset.DatasetVersionController_activate
       summary: Activate a dataset version based on its identifier
       description: |
@@ -2144,12 +1954,10 @@ paths:
                 incompatibleStates:
                   summary: Incompatible transition states
                   description: Occurs when you try to activate a dataset version that is not ready to be activated
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "BAD_REQUEST",
-                      "message": "Dataset cannot transition from LOADING to ACTIVE"
-                    }
+                  value:
+                    application: "data-ref"
+                    code: "BAD_REQUEST"
+                    message: "Dataset cannot transition from LOADING to ACTIVE"
         "401":
           description: Not Authorized
         "403":
@@ -2164,19 +1972,17 @@ paths:
                 alreadyActive:
                   summary: Already active
                   description: Occurs when you try to activate a dataset version that is already active
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "CONFLICT",
-                      "message": "Dataset {{datasetId}} is already in state: ACTIVE"
-                    }
+                  value:
+                    application: "data-ref"
+                    code: "CONFLICT"
+                    message: "Dataset {{datasetId}} is already in state: ACTIVE"
       security:
         - oidc:
             - dataset_read
   /dataset-versions/id/{id}/deactivate:
     post:
       tags:
-        - Dataset Version Controller
+        - Dataset Version
       operationId: com.provoly.ref.dataset.DatasetVersionController_deactivate
       summary: Deactivate a dataset version based on its identifier
       parameters:
@@ -2197,12 +2003,10 @@ paths:
                 incompatibleStates:
                   summary: Incompatible transition states
                   description: Occurs when you try to deactivate a dataset version that is not active
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "BAD_REQUEST",
-                      "message": "Dataset cannot transition from ERROR to INACTIVE"
-                    }
+                  value:
+                    application: "data-ref"
+                    code: "BAD_REQUEST"
+                    message: "Dataset cannot transition from ERROR to INACTIVE"
         "401":
           description: Not Authorized
         "403":
@@ -2217,20 +2021,17 @@ paths:
                 alreadyInactive:
                   summary: Already inactive
                   description: Occurs when you try to deactivate a dataset version that is already inactive
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "CONFLICT",
-                      "message": "Dataset {{datasetId}} is already in state: INACTIVE"
-                    }
-
+                  value:
+                    application: "data-ref"
+                    code: "CONFLICT"
+                    message: "Dataset {{datasetId}} is already in state: INACTIVE"
       security:
         - oidc:
             - dataset_read
   /dataset-versions/class/{classId}:
     get:
       tags:
-        - Dataset Version Controller
+        - Dataset Version
       operationId: com.provoly.ref.dataset.DatasetVersionController_getAllForClass
       summary: Retrieve all dataset versions related to the class contained in its dataset
       parameters:
@@ -2255,7 +2056,7 @@ paths:
   /dataset-versions/id/{datasetVersionId}/previews:
     get:
       tags:
-        - Dataset Version Controller
+        - Dataset Version
       operationId: com.provoly.ref.dataset.DatasetVersionController_getDatasetVersionPreviews
       summary: Returns the details of errors and warnings for a dataset version
       parameters:
@@ -2270,48 +2071,35 @@ paths:
           description: OK
           content:
             application/json:
-              examples:
-                datasetVersionPreviews:
-                  summary: Dataset version errors and warnings
-                  value: |
-                    [
-                      {
-                        "level": "ERROR",
-                        "messages": [
-                          {
-                            "level": "ERROR",
-                            "extractMessageCode": "NO_ATTRIBUTES",
-                            "type": null,
-                            "name": null,
-                            "recordId": null,
-                            "datasetVersionId": "aba17aa9-fe0f-4610-8f36-60a244e875bb"
-                          }
-                        ],
-                        "count": 1
-                      },
-                      {
-                        "level": "WARNING",
-                        "messages": [
-                          {
-                            "level": "WARNING",
-                            "extractMessageCode": "UNRECOGNIZED",
-                            "type": null,
-                            "name": "Geo Point",
-                            "recordId": null,
-                            "datasetVersionId": "ff8dc620-57b4-4132-8326-efb01daac5b9"
-                          },
-                          {
-                            "level": "WARNING",
-                            "extractMessageCode": "UNRECOGNIZED",
-                            "type": null,
-                            "name": "Geo Shape",
-                            "recordId": null,
-                            "datasetVersionId": "ff8dc620-57b4-4132-8326-efb01daac5b9"
-                          }
-                        ],
-                        "count": 2
-                      }
-                    ]
+              schema: 
+                type: array
+                items: 
+                  $ref: "#/components/schemas/MessageDto"
+              example:
+                - level: "ERROR"
+                  messages: 
+                    - level: "ERROR"
+                      extractMessageCode: "NO_ATTRIBUTES"
+                      type: 
+                      name: 
+                      recordId: 
+                      datasetVersionId: "aba17aa9-fe0f-4610-8f36-60a244e875bb"
+                  count: 1
+                - level: "WARNING"
+                  messages: 
+                    - level: "WARNING"
+                      extractMessageCode: "UNRECOGNIZED"
+                      type: 
+                      name: "Geo Point"
+                      recordId: 
+                      datasetVersionId: "ff8dc620-57b4-4132-8326-efb01daac5b9"
+                    - level: "WARNING"
+                      extractMessageCode: "UNRECOGNIZED"
+                      type: 
+                      name: "Geo Shape"
+                      recordId: 
+                      datasetVersionId: "ff8dc620-57b4-4132-8326-efb01daac5b9"
+                  count: 1
         "401":
           description: Not Authorized
         "403":
@@ -2324,7 +2112,7 @@ paths:
   /metadata:
     post:
       tags:
-        - Metadata Def Controller
+        - Metadata Def
       operationId: com.provoly.ref.metadata.MetadataDefController_addMetadata
       summary: Save a new metadata definition
       description: |
@@ -2338,20 +2126,16 @@ paths:
             examples:
               addMetadataDef:
                 summary: Add a valid metadata definition
-                value: |
-                  {
-                     "id": "ba681f33-fe70-42f8-a277-05c607ba29cf",
-                     "name": "metadata_test",
-                     "type": "STRING"
-                  }
+                value:
+                  id: ba681f33-fe70-42f8-a277-05c607ba29cf
+                  name: metadata_test
+                  type: STRING
               addInvliadMetadataDef:
-                summary: Add a metadata definition with invalid type
-                value: |
-                  {
-                     "id": "ba681f33-fe70-42f8-a277-05c607ba29cf",
-                     "name": "metadata_test",
-                     "type": "UNKNOWN"
-                  }
+                summary: Add a metadata definition with invalid name
+                value:
+                  id: ba681f33-fe70-42f8-a277-05c607ba29cf
+                  name: null
+                  type: INTEGER
       responses:
         "201":
           description: Created
@@ -2362,12 +2146,10 @@ paths:
               examples:
                 nameAlreadyExists:
                   summary: Add metadata definition with a name that already exists
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "NAME_ALREADY_USED",
-                      "message": "Name {{metadata_def_name}} already exists"
-                    }
+                  value:
+                    application: data-ref
+                    code: NAME_ALREADY_USED
+                    message: Name {{metadata_def_name}} already exists
         "401":
           description: Not Authorized
         "403":
@@ -2377,7 +2159,7 @@ paths:
             - metadata_item_ref_write
     get:
       tags:
-        - Metadata Def Controller
+        - Metadata Def
       summary: Retrieve all metadata definitions
       operationId: com.provoly.ref.metadata.MetadataDefController_getAll
       responses:
@@ -2403,7 +2185,7 @@ paths:
   /metadata/id/{metadataId}:
     get:
       tags:
-        - Metadata Def Controller
+        - Metadata Def
       operationId: com.provoly.ref.metadata.MetadataDefController_getById
       summary: Retrieve a metadata definition based on its identifier
       parameters:
@@ -2434,7 +2216,7 @@ paths:
   /metadata/name/{metadataName}:
     get:
       tags:
-        - Metadata Def Controller
+        - Metadata Def
       operationId: com.provoly.ref.metadata.MetadataDefController_getByName
       summary: Retrieve a metadata based on its name
       parameters:
@@ -2457,12 +2239,10 @@ paths:
               examples:
                 notFound:
                   summary: Not found
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "NOT_FOUND",
-                      "message": "Unknown metadata name : {{metadata_name}}"
-                    }
+                  value:
+                    application: data-ref
+                    code: NOT_FOUND
+                    message: 'Unknown metadata name : {{metadata_name}}'
         "401":
           description: Not Authorized
         "403":
@@ -2476,7 +2256,7 @@ paths:
   /metadata/slug/{metadataSlug}:
     get:
       tags:
-        - Metadata Def Controller
+        - Metadata Def
       operationId: com.provoly.ref.metadata.MetadataDefController_getBySlug
       summary: Retrieve a metadata based on its slug
       parameters:
@@ -2503,12 +2283,10 @@ paths:
               examples:
                 notFound:
                   summary: Not found
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "NOT_FOUND",
-                      "message": "Unknown metadata with slug : {{metadata_slug}}"
-                    }
+                  value:
+                    application: data-ref
+                    code: NOT_FOUND
+                    message: 'Unknown metadata with slug : {{metadata_slug}}'
       security:
         - oidc:
             - metadata_item_ref_read
@@ -2518,7 +2296,7 @@ paths:
   /predicates:
     post:
       tags:
-        - Predicate Controller
+        - Predicate
       summary: Save a new predicate
       description: Predicates are used to define abac rules. They can refer to context variables.
       operationId: com.provoly.ref.abac.predicate.PredicateController_addPredicate
@@ -2530,12 +2308,10 @@ paths:
             examples:
               default:
                 summary: Adding a predicate that use a context variable "defcon"
-                value: |
-                  {
-                    "id": "334c1229-61e7-4807-aeaa-edaf16ec2273",
-                    "name": "role_data-reader_defcon",
-                    "value": "user.hasRole('data-reader') && request.header('User-Agent').startsWith('Post') && var.defcom < 3"
-                  }
+                value:
+                  id: 334c1229-61e7-4807-aeaa-edaf16ec2273
+                  name: role_data-reader_defcon
+                  value: user.hasRole('data-reader') && request.header('User-Agent').startsWith('Post') && var.defcom < 3
       responses:
         "201":
           description: Created
@@ -2550,7 +2326,7 @@ paths:
             - data_access_write
     get:
       tags:
-        - Predicate Controller
+        - Predicate
       summary: Retrieve all defined predicates
       operationId: com.provoly.ref.abac.predicate.PredicateController_getAllPredicates
       responses:
@@ -2574,7 +2350,7 @@ paths:
   /abac/context:
     get:
       tags:
-        - Metadata Context Controller
+        - Metadata Context
       summary: Retrieve all defined context variables
       description: |
         Context variables are used in our predicates to give more context information. \
@@ -2592,13 +2368,10 @@ paths:
               examples:
                 default:
                   summary: Get INTEGER metadata context variable
-                  value: |
-                    {
-                      "name": "string",
-                      "type": "INTEGER",
-                      "value": 2
-                    }
-
+                  value:
+                    - name: "string"
+                      type: INTEGER
+                      value: 2
         "401":
           description: Not Authorized
         "403":
@@ -2612,7 +2385,7 @@ paths:
             - datasource_read
     put:
       tags:
-        - Metadata Context Controller
+        - Metadata Context
       summary: Save a new context variable
       operationId: com.provoly.ref.abac.MetadataContextController_addContextVariable
       requestBody:
@@ -2620,24 +2393,10 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ContextVariableDto'
-            examples:
-              default:
-                summary: Addition of INTEGER metadata context variable
-                value: |
-                  {
-                    "name": "metadataContextVariable",
-                    "type": "INTEGER",
-                    "value": 3
-                  }
-              unauthorized:
-                summary: Unauthorized addition
-                description: Unauthorized addition of context metadata, in which the type passed in parameter is incorrect.
-                value: |
-                  {
-                    "name": "metadataError",
-                    "type": "INCORRECT_TYPE",
-                    "value": 3                  
-                  }
+            example:
+              name: "metadataContextVariable"
+              type: "INTEGER"
+              value: 3
       responses:
         "204":
           description: No Content
@@ -2649,21 +2408,18 @@ paths:
           description: Technical Error. Triggered when the type passed in parameter is incorrect.
           content:
             application/json:
-              examples:
-                badType:
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "TECHNICAL",
-                      "message": "Mismatch between type and value : {{type}}"
-                    }
+              example:
+                value:
+                  application: "data-ref"
+                  code: "TECHNICAL"
+                  message: "Mismatch between type and value : {{type}}"
       security:
         - oidc:
             - metadata_context_write
   /abac/context/{variableName}:
     get:
       tags:
-        - Metadata Context Controller
+        - Metadata Context
       summary: Retrieve a context variable based on its name
       operationId: com.provoly.ref.abac.MetadataContextController_getContextVariable
       parameters:
@@ -2691,7 +2447,7 @@ paths:
             - metadata_context_read
     delete:
       tags:
-        - Metadata Context Controller
+        - Metadata Context
       summary: Delete a context variable based on its name
       operationId: com.provoly.ref.abac.MetadataContextController_deleteContextVariable
       parameters:
@@ -2712,19 +2468,17 @@ paths:
             application/json:
               examples:
                 usedInRule:
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "FORBIDDEN",
-                      "message": "this context is used in rule {{ruleId}}"
-                    }
+                  value:
+                    application: data-ref
+                    code: FORBIDDEN
+                    message: this context is used in rule {{ruleId}}
       security:
         - oidc:
             - metadata_context_write
   /abac/rules:
     get:
       tags:
-        - Abac Controller
+        - Abac
       summary: Retrieve all ABAC rules
       description: |
         The ABAC (Attribute-Based Access Control) are rules and predicates.
@@ -2750,7 +2504,7 @@ paths:
             - data_access_read
     post:
       tags:
-        - Abac Controller
+        - Abac
       summary: Save a new ABAC rule
       operationId: com.provoly.ref.abac.AbacController_addRule
       requestBody:
@@ -2761,62 +2515,44 @@ paths:
             examples:
               attributeAdd:
                 summary: Adding an ABAC rule of type attribute
-                value: |
-                  {
-                    "id": "077e4ac8-7499-4489-bd5f-ac37d2ca226d",
-                    "type": "ATTRIBUTE",
-                    "name": "Attribute example",
-                    "predicate": "077e4ac8-7499-4489-bd5f-ac37d2ca226e",
-                    "condition": {
-                      "type": "ATTRIBUTE",
-                      "attribute": "f897dc76-9c4a-4b7a-9797-fc577c0438e9",
-                      "operator": "EQUALS",
-                      "value": 1234567890
-                    }
-                  }
+                value:
+                  id: 077e4ac8-7499-4489-bd5f-ac37d2ca226d
+                  type: ATTRIBUTE
+                  name: Attribute example
+                  predicate: 077e4ac8-7499-4489-bd5f-ac37d2ca226e
+                  condition:
+                    type: ATTRIBUTE
+                    attribute: "f897dc76-9c4a-4b7a-9797-fc577c0438e9"
+                    operator: EQUALS
+                    value: "1234567890"
               composedAdd:
                 summary: Adding a composed ABAC rule
-                value: |
-                  {
-                    "id": "7ffcea67-2335-429f-888a-59121f522144",
-                    "name": "MyRule",
-                    "type": "ATTRIBUTE",
-                    "predicate": "7ffcea67-2335-429f-888a-59121f522143",
-                    "condition": {
-                      "type": "OR",
-                      "composed": [
-                        {
-                          "type": "AND",
-                          "composed": [
-                            {
-                              "type": "ATTRIBUTE",
-                              "oClass": "411a19f5-9d00-4028-b4b6-4b04101f6316",
-                              "attribute": "9d82213c-db91-42db-8675-5f2e70ae2f05",
-                              "value": 202000010265
-                            },
-                            {
-                              "type": "ATTRIBUTE",
-                              "oClass": "411a19f5-9d00-4028-b4b6-4b04101f6316",
-                              "attribute": "dbf3917f-1af8-495e-94af-67d8315a7772",
-                              "value": 3
-                            }
-                          ]
-                        },
-                        {
-                          "type": "ATTRIBUTE",
-                          "oClass": "411a19f5-9d00-4028-b4b6-4b04101f6316",
-                          "attribute": "9d82213c-db91-42db-8675-5f2e70ae2f05",
-                          "value": 202000010265
-                        },
-                        {
-                          "type": "ATTRIBUTE",
-                          "oClass": "411a19f5-9d00-4028-b4b6-4b04101f6316",
-                          "attribute": "dbf3917f-1af8-495e-94af-67d8315a7772",
-                          "value": 3
-                        }
-                      ]
-                    }
-                  }
+                value:
+                  id: 7ffcea67-2335-429f-888a-59121f522144
+                  name: MyRule
+                  type: ATTRIBUTE
+                  predicate: 7ffcea67-2335-429f-888a-59121f522143
+                  condition:
+                    type: OR
+                    composed:
+                    - type: AND
+                      composed:
+                      - type: ATTRIBUTE
+                        oClass: 411a19f5-9d00-4028-b4b6-4b04101f6316
+                        attribute: 9d82213c-db91-42db-8675-5f2e70ae2f05
+                        value: 202000010265
+                      - type: ATTRIBUTE
+                        oClass: 411a19f5-9d00-4028-b4b6-4b04101f6316
+                        attribute: dbf3917f-1af8-495e-94af-67d8315a7772
+                        value: 3
+                    - type: ATTRIBUTE
+                      oClass: 411a19f5-9d00-4028-b4b6-4b04101f6316
+                      attribute: 9d82213c-db91-42db-8675-5f2e70ae2f05
+                      value: 202000010265
+                    - type: ATTRIBUTE
+                      oClass: 411a19f5-9d00-4028-b4b6-4b04101f6316
+                      attribute: dbf3917f-1af8-495e-94af-67d8315a7772
+                      value: 3
       responses:
         "201":
           description: Created
@@ -2827,20 +2563,16 @@ paths:
               examples:
                 differentOClass:
                   description: Different OClass in AND/OR condition
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "BAD_REQUEST",
-                      "message": "Attributes are not on same OClass"
-                    }
+                  value:
+                    application: data-ref
+                    code: BAD_REQUEST
+                    message: Attributes are not on same OClass
                 differentTypes:
                   description: If the ABAC rule type is different from its condition type
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "BAD_REQUEST",
-                      "message": "RuleType ATTRIBUTE does not allowed Metadata condition"
-                    }
+                  value:
+                    application: data-ref
+                    code: BAD_REQUEST
+                    message: RuleType ATTRIBUTE does not allowed Metadata condition
         "401":
           description: Not Authorized
         "403":
@@ -2851,19 +2583,17 @@ paths:
             application/json:
               examples:
                 unknownType:
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "NOT_IMPLEMENTED",
-                      "message": "Unknown condition type {{condition.type}}"
-                    }
+                  value:
+                    application: data-ref
+                    code: NOT_IMPLEMENTED
+                    message: Unknown condition type {{condition.type}}
       security:
         - oidc:
             - data_access_write
   /abac/rules/class/{oClassId}:
     get:
       tags:
-        - Abac Controller
+        - Abac
       summary: Retrieve all ABAC rules for a class based on its identifier
       operationId: com.provoly.ref.abac.AbacController_getRulesFor
       parameters:
@@ -2902,7 +2632,7 @@ paths:
   /abac/rules/id/{ruleId}:
     get:
       tags:
-        - Abac Controller
+        - Abac
       summary: Retrieve an ABAC rule based on its identifier
       operationId: com.provoly.ref.abac.AbacController_getRule
       parameters:
@@ -2931,7 +2661,7 @@ paths:
   /abac/rules/{ruleId}:
     delete:
       tags:
-        - Abac Controller
+        - Abac
       summary: Delete an ABAC rule based on its identifier
       operationId: com.provoly.ref.abac.AbacController_deleteRule
       parameters:
@@ -2954,7 +2684,7 @@ paths:
   /predicates/id/{id}:
     get:
       tags:
-        - Predicate Controller
+        - Predicate
       summary: Retrieve a predicate based on its identifier
       operationId: com.provoly.ref.abac.predicate.PredicateController_getPredicate
       parameters:
@@ -2985,7 +2715,7 @@ paths:
   /meta-provisioning:
     get:
       tags:
-        - Meta Provisioning Controller
+        - Meta Provisioning
       summary: Retrieve the automatic metadata feeding rules for an item during its insertion
       operationId: com.provoly.ref.metaProvisioning.MetaProvisioningController_getAll
       responses:
@@ -3008,7 +2738,7 @@ paths:
             - metadata_item_ref_read
     post:
       tags:
-        - Meta Provisioning Controller
+        - Meta Provisioning
       summary: Save a new an automatic metadata feeding rule
       operationId: com.provoly.ref.metaProvisioning.MetaProvisioningController_add
       requestBody:
@@ -3018,14 +2748,11 @@ paths:
               $ref: '#/components/schemas/MetaProvisioningDto'
             examples:
               addFeedingRule:
-                value: |
-                  {
-                    "id": "cb8d2714-d1ce-11ec-9d64-0242ac120005",
-                    "name": "meta_date",
-                    "userProfile": "ba681f33-fe70-42f8-a277-05c607ba28cf",
-                    "metadata": "ba681f33-fe70-42f8-a277-05c607ba29cf"
-                  }
-
+                value:
+                  id: cb8d2714-d1ce-11ec-9d64-0242ac120005
+                  name: meta_date
+                  userProfile: ba681f33-fe70-42f8-a277-05c607ba28cf
+                  metadata: ba681f33-fe70-42f8-a277-05c607ba29cf
       responses:
         "201":
           description: Created
@@ -3039,7 +2766,7 @@ paths:
   /meta-provisioning/id/{id}:
     get:
       tags:
-        - Meta Provisioning Controller
+        - Meta Provisioning
       summary: Retrieve an automatic metadata feeding rule based on its identifier
       operationId: com.provoly.ref.metaProvisioning.MetaProvisioningController_getById
       parameters:
@@ -3067,7 +2794,7 @@ paths:
             - metadata_item_ref_read
     delete:
       tags:
-        - Meta Provisioning Controller
+        - Meta Provisioning
       summary: Delete an automatic feeding rule based on its identifier
       operationId: com.provoly.ref.metaProvisioning.MetaProvisioningController_delete
       parameters:
@@ -3092,7 +2819,7 @@ paths:
   /relation-types:
     get:
       tags:
-        - Relation Type Controller
+        - Relation Type
       summary: Retrieve all relation types
       operationId: com.provoly.ref.relation.RelationTypeController_getAll
       responses:
@@ -3117,7 +2844,7 @@ paths:
             - datasource_read
     post:
       tags:
-        - Relation Type Controller
+        - Relation Type
       summary: Save a new relation type
       operationId: com.provoly.ref.relation.RelationTypeController_save
       requestBody:
@@ -3128,18 +2855,14 @@ paths:
             examples:
               nominal:
                 summary: Adding a relation type
-                value: |
-                  {
-                    "id": "2f021992-5fb0-42d3-9646-0affccb98105",
-                    "name": "est accidentée"
-                  }
+                value:
+                  id: 2f021992-5fb0-42d3-9646-0affccb98105
+                  name: est accidentée
               incorrect:
-                summary: Adding a relation type with an incorrect id
-                value: |
-                  {
-                    "id": null,
-                    "name": "relation incorrecte"
-                  }
+                summary: Adding a relation type with an incorrect name
+                value:
+                  id: 2f021992-5fb0-42d3-9646-0affccb98105
+                  name: null
       responses:
         "201":
           description: Created
@@ -3153,7 +2876,7 @@ paths:
   /relation-types/id/{id}:
     get:
       tags:
-        - Relation Type Controller
+        - Relation Type
       summary: Retrieve a relation type based on its identifier
       operationId: com.provoly.ref.relation.RelationTypeController_getById
       parameters:
@@ -3181,7 +2904,7 @@ paths:
             - class_read
     delete:
       tags:
-        - Relation Type Controller
+        - Relation Type
       summary: Delete a relation type based on its identifier
       operationId: com.provoly.ref.relation.RelationTypeController_delete
       parameters:
@@ -3206,7 +2929,7 @@ paths:
   /links:
     get:
       tags:
-        - Link Controller
+        - Link
       summary: Retrieve all links
       description: |
         A link is a connections or relationships between attributes of classes. 
@@ -3232,7 +2955,7 @@ paths:
             - link_read
     post:
       tags:
-        - Link Controller
+        - Link
       summary: Save a new link defining a relationship
       operationId: com.provoly.ref.link.LinkController_saveLink
       requestBody:
@@ -3243,13 +2966,11 @@ paths:
             examples:
               add_link:
                 summary: Adding a link defining a relationship
-                value: |
-                  {
-                      "id": "334c1229-61e7-4807-aeaa-edaf16ec2273",
-                      "relationType": "2f021992-5fb0-42d3-9646-0affccb98105",
-                      "attributeSource": "f897dc76-9c4a-4b7a-9797-fc577c0438e9",
-                      "attributeDestination": "7319d99b-5400-40e4-a0e5-f9fb46b3d2d6"
-                  }
+                value:
+                  id: 334c1229-61e7-4807-aeaa-edaf16ec2273
+                  relationType: 2f021992-5fb0-42d3-9646-0affccb98105
+                  attributeSource: f897dc76-9c4a-4b7a-9797-fc577c0438e9
+                  attributeDestination: 7319d99b-5400-40e4-a0e5-f9fb46b3d2d6
       responses:
         "201":
           description: Created
@@ -3265,19 +2986,17 @@ paths:
                 alreadyExists:
                   summary: Link already exist
                   description: Occurs when you try to create a link that already exists
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "CONFLICT",
-                      "message": "Link from {{attributeSource}} to {{attributeDestination}} already exists"
-                    }
+                  value:
+                    application: data-ref
+                    code: CONFLICT
+                    message: Link from {{attributeSource}} to {{attributeDestination}} already exists
       security:
         - oidc:
             - link_write
   /links/id/{id}:
     get:
       tags:
-        - Link Controller
+        - Link
       summary: Retrieve a link based on its identifier
       operationId: com.provoly.ref.link.LinkController_getById
       parameters:
@@ -3306,7 +3025,7 @@ paths:
             - update_relation_aggregate
     delete:
       tags:
-        - Link Controller
+        - Link
       summary: delete a link based on its identifier
       operationId: com.provoly.ref.link.LinkController_deleteLink
       parameters:
@@ -3331,7 +3050,7 @@ paths:
   /data-sources/id/{dataSourceId}:
     get:
       tags:
-        - Data Source Controller
+        - Data Source
       summary: Retrieve a DataSource based on its identifier
       description: |
         DataSources are sources containing data that can be displayed in widgets. They include
@@ -3363,7 +3082,7 @@ paths:
   /users:
     get:
       tags:
-        - User Controller
+        - User
       operationId: com.provoly.ref.user.UserController_getAllUsers
       summary: Retrieve all users
       responses:
@@ -3387,7 +3106,7 @@ paths:
   /users/me:
     get:
       tags:
-        - User Controller
+        - User
       operationId: com.provoly.ref.user.UserController_getUserInfo
       summary: Retrieve the current user info
       responses:
@@ -3397,10 +3116,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserMeDto'
+      security: []
   /users/id/{userId}/metadata:
     get:
       tags:
-        - User Controller
+        - User
       operationId: com.provoly.ref.user.UserController_getProfileValuesByUserId
       summary: Retrieve all profile values of a user based on its identifier
       parameters:
@@ -3430,7 +3150,7 @@ paths:
   /users/id/{userId}/metadata/id/{metadataDefId}:
     put:
       tags:
-        - User Controller
+        - User
       operationId: com.provoly.ref.user.UserController_addProfileForUser
       summary: Save new profile values for a user based on its identifier
       parameters:
@@ -3452,16 +3172,12 @@ paths:
             examples:
               default:
                 summary: Adding metadata for a user
-                value: |
-                  {
-                    "value": "some value"
-                  }
+                value:
+                  value: "some value"
               incorrect:
                 summary: Adding null metadata for a user
-                value: |
-                  {
-                    "value": null
-                  }
+                value:
+                  value: null
       responses:
         "204":
           description: No Content
@@ -3474,7 +3190,7 @@ paths:
             - metadata_user_write
     delete:
       tags:
-        - User Controller
+        - User
       operationId: com.provoly.ref.user.UserController_deleteProfileForUser
       summary: Delete all profile values of a user based on its identifier
       parameters:
@@ -3503,8 +3219,9 @@ paths:
   /users/me/metadata:
     get:
       tags:
-        - User Controller
+        - User
       operationId: com.provoly.ref.user.UserController_getMines
+      summary: Retrieving metadata value of the current user
       responses:
         "200":
           description: OK
@@ -3528,7 +3245,7 @@ paths:
   /users/metadata:
     post:
       tags:
-        - User Profile Controller
+        - User Profile
       operationId: com.provoly.ref.user.metadata.UserProfileController_addUserProfile
       summary: Save a new user profile
       requestBody:
@@ -3539,20 +3256,16 @@ paths:
             examples:
               default:
                 summary: Adding metadata (profile) to the current user.
-                value: |
-                  {
-                    "id": "ba681f33-fe70-42f8-a277-05c607ba28cf",
-                    "name": "example_profile",
-                    "type": "STRING"
-                  }
+                value:
+                  id: ba681f33-fe70-42f8-a277-05c607ba28cf
+                  name: example_profile
+                  type: STRING
               incorrect:
                 summary: Adding wrong metadata to the current user.
-                value: |
-                  {
-                    "id": null,
-                    "name": "error_profile",
-                    "type": "STRING"
-                  }
+                value:
+                  id: ba681f33-fe70-42f8-a277-05c607ba28cf
+                  name: null
+                  type: STRING
       responses:
         "201":
           description: Created
@@ -3567,7 +3280,7 @@ paths:
             - metadata_user_ref_write
     get:
       tags:
-        - User Profile Controller
+        - User Profile
       operationId: com.provoly.ref.user.metadata.UserProfileController_getAll
       summary: Retrieve all user profiles
       responses:
@@ -3591,7 +3304,7 @@ paths:
   /users/metadata/{metadataId}:
     get:
       tags:
-        - User Profile Controller
+        - User Profile
       operationId: com.provoly.ref.user.metadata.UserProfileController_getDefById
       summary: Retrieve a user profile based on its identifier
       parameters:
@@ -3619,7 +3332,7 @@ paths:
   /users/me/namedquery:
     post:
       tags:
-        - Named Query Controller
+        - Named Query
       summary: Save a new named query
       operationId: com.provoly.ref.user.NamedQueryController_saveNamedQuery
       requestBody:
@@ -3630,23 +3343,20 @@ paths:
             examples:
               default:
                 summary: Adding a named query to the current user
-                value: |
-                  {
-                    "id": "09061554-298f-4f56-8cd2-51ccec998307",
-                    "name": "NamedQuery_example",
-                    "description": "Je suis une named query mono",
-                    "color": "rose",
-                    "favorite": false,
-                    "level": "PUBLIC",
-                    "request": {
-                      "type": "MONO_CLASS",
-                      "oClass": "193f3aad-0531-4fe5-b62c-141aa3cad454",
-                      "sort": {
-                        "attribute": "2792422e-f0a7-41b0-aa6b-51372f49c25a",
-                        "direction": "asc"
-                      }
-                    }
-                  }
+                value:
+                  id: '09061554-298f-4f56-8cd2-51ccec998307'
+                  name: NamedQuery_example
+                  description: Je suis une named query mono
+                  color: rose
+                  favorite: false
+                  visibility:
+                    type: PUBLIC
+                  request:
+                    type: MONO_CLASS
+                    oClass: 193f3aad-0531-4fe5-b62c-141aa3cad454
+                    sort:
+                      attribute: 2792422e-f0a7-41b0-aa6b-51372f49c25a
+                      direction: asc
       responses:
         "201":
           description: Created
@@ -3659,7 +3369,7 @@ paths:
             - search
     get:
       tags:
-        - Named Query Controller
+        - Named Query
       summary: Retrieve all named queries of the current user
       operationId: com.provoly.ref.user.NamedQueryController_getMines
       responses:
@@ -3683,7 +3393,7 @@ paths:
   /users/me/namedquery/{id}:
     get:
       tags:
-        - Named Query Controller
+        - Named Query
       summary: Retrieve a named query based on its identifier
       description: |
         This endpoint is used only by data-virt and allows executing a private namedQuery\
@@ -3715,7 +3425,7 @@ paths:
             - data_virt
     delete:
       tags:
-        - Named Query Controller
+        - Named Query
       summary: Delete a named query based on its identifier
       description: Currently, only private named queries can be deleted
       operationId: com.provoly.ref.user.NamedQueryController_deleteForMe
@@ -3739,7 +3449,7 @@ paths:
   /users/me/namedquery/{id}/execution:
     post:
       tags:
-        - Named Query Controller
+        - Named Query
       summary: Save the execution time of a named query based on its identifier
       operationId: com.provoly.ref.user.NamedQueryController_updateNamedQueryExecution
       parameters:
@@ -3764,7 +3474,7 @@ paths:
   /users/me/namedquery/{id}/favorite:
     post:
       tags:
-        - Named Query Controller
+        - Named Query
       summary: Set a named query as a favorite for the current user
       operationId: com.provoly.ref.user.NamedQueryController_addToMineFavorite
       parameters:
@@ -3788,7 +3498,7 @@ paths:
             - search
     delete:
       tags:
-        - Named Query Controller
+        - Named Query
       summary: Unset a named query as the favorite for the current user
       operationId: com.provoly.ref.user.NamedQueryController_removeFromMineFavorite
       parameters:
@@ -3811,7 +3521,7 @@ paths:
   /users/me/namedquery/{id}/info:
     get:
       tags:
-        - Named Query Controller
+        - Named Query
       summary: Retrieve all information of a named query based on its identifier
       operationId: com.provoly.ref.user.NamedQueryController_getUserNamedQueryById
       parameters:
@@ -3840,7 +3550,7 @@ paths:
   /users/me/dashboards:
     post:
       tags:
-        - Dashboard Controller
+        - Dashboard
       summary: Save a new dashboard
       description: |
         Saves a dashboard for the current user. Groups can be added, otherwise the dashboard is private by default. If the group added is "ALL", then the dashboard can be consulted by anyone. If the group added is "AUTHENTICATED", then everyone will have the right to view the dashboard except the anonymous user.
@@ -3854,117 +3564,77 @@ paths:
             examples:
               default:
                 summary: Adding a dashboard
-                value: |
-                  {
-                    "id": "f4f77417-0f5b-4d8e-9bde-a8dcf799632f",
-                    "userId": "6ae39cfa-df83-47ca-ad97-d18341756a75",
-                    "name":"dashboard example",
-                    "group": ["admin","AUTHENTICATED"],
-                    "manifest":{
-                      "windows":[
-                        {
-                          "widgets":[
-                            {
-                              "type":"map",
-                              "layout":{
-                                "x":1,
-                                "y":1,
-                                "height":2,
-                                "width":3
-                              },
-                              "options":{
-                                "style":"osm-bright",
-                                "fit":true,
-                                "layers":[
-                                  {
-                                    "type":"bubble",
-                                    "locationAttribute":"location",
-                                    "intensityAttribute":"integer",
-                                    "radiusFactor":0.005
-                                  }
-                                ]
-                              },
-                              "resultSet":"rs1"
-                            },
-                            {
-                              "type":"map",
-                              "layout":{
-                                "x":4,
-                                "y":1,
-                                "height":2,
-                                "width":3
-                              },
-                              "options":{
-                                "style":"osm-bright",
-                                "fit":true,
-                                "layers":[
-                                  {
-                                    "type":"heatmap",
-                                    "locationAttribute":"location",
-                                    "intensityAttribute":"integer",
-                                    "intensityAsc":true
-                                  }
-                                ]
-                              },
-                              "resultSet":"rs1"
-                            },
-                            {
-                              "type":"table",
-                              "layout":{
-                                "x":1,
-                                "y":3,
-                                "height":5,
-                                "width":10
-                              },
-                              "options":{
-                  
-                              },
-                              "resultSet":"rs1"
-                            }
-                          ]
-                        },
-                        {
-                          "widgets":[
-                            {
-                              "type":"map",
-                              "layout":{
-                                "x":1,
-                                "y":1,
-                                "height":7,
-                                "width":6
-                              },
-                              "options":{
-                                "style":"osm-bright",
-                                "fit":true,
-                                "layers":[
-                                  {
-                                    "type":"heatmap",
-                                    "locationAttribute":"location",
-                                    "intensityAttribute":"integer",
-                                    "intensityAsc":true
-                                  }
-                                ]
-                              },
-                              "resultSet":"rs1"
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    "metadata": [
-                        {
-                          "metadataDefId": "ba691f33-fe70-42f8-a277-05c607ba29cf",
-                          "value": "50"
-                        },
-                        {
-                          "metadataDefId": "ba691f33-fe70-42f8-a277-05c607ba28cf",
-                          "value": "30"
-                        }
-                      ],
-                    "groups": [
-                        "AUTHENTICATED"
-                      ]
-                  }
+                value:
+                  id: "f4f77417-0f5b-4d8e-9bde-a8dcf799632f"
+                  name: "dashboard example"
+                  image: "image"
+                  description: "description du widget"
+                  cover: true
+                  datasource: [ "aeab3b25-ebae-4878-b96d-0d4ced5a4ab7" ]
+                  manifest:
+                    windows:
+                      - widgets:
+                          - type: "map"
+                            layout:
+                              x: 1
+                              y: 1
+                              height: 2
+                              width: 3
+                            options:
+                              style: "osm-bright"
+                              fit: true
+                              layers:
+                                - type: "bubble"
+                                  locationAttribute: "location"
+                                  intensityAttribute: "integer"
+                                  radiusFactor: 0.005
+                            resultSet: "rs1"
+                          - type: "map"
+                            layout:
+                              x: 4
+                              y: 1
+                              height: 2
+                              width: 3
+                            options:
+                              style: "osm-bright"
+                              fit: true
+                              layers:
+                                - type: "heatmap"
+                                  locationAttribute: "location"
+                                  intensityAttribute: "integer"
+                                  intensityAsc: true
+                            resultSet: "rs1"
+                          - type: "table"
+                            layout:
+                              x: 1
+                              y: 3
+                              height: 5
+                              width: 10
+                            options": { }
+                            resultSet: "rs1"
+                      - widgets:
+                          - type: "map"
+                            layout:
+                              x: 1
+                              y: 1
+                              height: 7
+                              width: 6
+                            options:
+                              style: "osm-bright"
+                              fit: true
+                              layers:
+                                - type: "heatmap"
+                                  locationAttribute: "location"
+                                  intensityAttribute: "integer"
+                                  intensityAsc: true
+                            resultSet: "rs1"
+                  metadata:
+                    - metadataDefId: "ba691f33-fe70-42f8-a277-05c607ba29cf"
+                      value: "50"
+                    - metadataDefId: "ba691f33-fe70-42f8-a277-05c607ba28cf"
+                      value: "30"
+                  groups:
+                    - "AUTHENTICATED"
       responses:
         "201":
           description: Dashboard created or updated. It return groups missing to match those in the datasource.
@@ -3972,15 +3642,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GroupErrors'
-              examples:
-                default:
-                  value: |
-                    { "missingGroupsByEntity": 
-                      {
-                        "dataset_id": ["group1"],
-                        "dataset_id2": ["group1", "group2"]
-                      }
-                    }
+              example:
+                missingGroupsByEntity:
+                  "f12cef0c-6204-4e09-9807-2da6a9c0e6d0": [ "group1" ]
+                  "f12cef0c-6204-4e09-9807-2da6a9c0e6d1": [ "group1", "group2" ]
         "401":
           description: Not Authorized
         "403":
@@ -3992,7 +3657,7 @@ paths:
             - dashboard_write
     get:
       tags:
-        - Dashboard Controller
+        - Dashboard
       summary: Retrieve the dashboards of the current user
       operationId: com.provoly.ref.dashboard.DashboardController_getAllForCurrentUser
       responses:
@@ -4016,7 +3681,7 @@ paths:
   /users/me/dashboards/id/{dashboardId}/metadata/id/{metadataDefId}:
     put:
       tags:
-        - Dashboard Controller
+        - Dashboard
       operationId: com.provoly.ref.dashboard.DashboardController_setMetadata
       summary: Save new metadata values for a dashboard based on its identifier
       parameters:
@@ -4038,16 +3703,12 @@ paths:
             examples:
               default:
                 summary: Adding metadata for a dashboard
-                value: |
-                  {
-                    "value": "some value"
-                  }
+                value:
+                  "value": "some value"
               incorrect:
                 summary: Adding null metadata for a dashboard
-                value: |
-                  {
-                    "value": null
-                  }
+                value:
+                  "value": "null"
       responses:
         "204":
           description: No Content
@@ -4062,7 +3723,7 @@ paths:
             - dashboard_write
     delete:
       tags:
-        - Dashboard Controller
+        - Dashboard
       operationId: com.provoly.ref.dashboard.DashboardController_deleteMetadata
       summary: Delete metadata values for a dashboard based on its identifier
       parameters:
@@ -4091,7 +3752,7 @@ paths:
   /users/me/dashboards/id/{id}:
     get:
       tags:
-        - Dashboard Controller
+        - Dashboard
       summary: Retrieve a dashboard based on its identifier
       operationId: com.provoly.ref.dashboard.DashboardController_getById
       parameters:
@@ -4119,7 +3780,7 @@ paths:
             - dashboard_read
     delete:
       tags:
-        - Dashboard Controller
+        - Dashboard
       summary: Delete a dashboard based on its identifier
       operationId: com.provoly.ref.dashboard.DashboardController_delete
       parameters:
@@ -4141,12 +3802,10 @@ paths:
               examples:
                 notGranted:
                   summary: Not granted
-                  value: |
-                    {
-                      "application": "data-ref",
-                      "code": "FORBIDDEN",
-                      "message": "User is not granted to write DASHBOARD {{dashboard_id}}."
-                    }
+                  value:
+                    application: "data-ref"
+                    code: "FORBIDDEN"
+                    message: "User is not granted to write DASHBOARD {{dashboard_id}}."
         "404":
           $ref: '#/components/responses/notFoundException'
       security:
@@ -4155,7 +3814,7 @@ paths:
   /users/me/dashboards/id/{id}/manifest:
     get:
       tags:
-        - Dashboard Controller
+        - Dashboard
       summary: Retrieve the manifest of the dashboard based on its identifier
       operationId: com.provoly.ref.dashboard.DashboardController_getDashBoardManifest
       parameters:
@@ -4186,7 +3845,7 @@ paths:
   /widget/catalog:
     post:
       tags:
-        - Widget Controller
+        - Widget
       summary: Adding a JSON file describing a widget configuration
       operationId: com.provoly.ref.widget.WidgetController_addWidget
       requestBody:
@@ -4195,44 +3854,32 @@ paths:
             schema:
               $ref: '#/components/schemas/WidgetDto'
             examples:
-              default:
+              correctWidget:
                 summary: Adding a widget configuration
-                value: |
-                  {
-                     "id": "921e297f-4b21-4045-9896-5ec98910cae1",
-                     "name": "example_widget_config",
-                     "description": "this is a new widget configuration",
-                     "image": "",
-                     "content": "{\"type\":\"table\",\"layout\":{\"x\":1,\"y\":1,\"width\":1,\"height\":1},\"options\":{\"columns\":[{\"property\":\"date timestamp\",\"label\":\"date timestamp\",\"attributeId\":\"7d4ac9df-dfe7-430f-a4c5-4b8c2c77433c\"},{\"property\":\"identifiant\",\"label\":\"identifiant\",\"attributeId\":\"36d67f72-d5a8-4aed-ae47-dfedb95702cb\"}]},\"title\":\"issueBack115\",\"datasource\":[\"a1041310-3c83-4512-97be-9e665d20d0a5\"],\"header\":{\"datasourceSelection\":false,\"parameters\":true,\"window\":false,\"maximize\":false,\"addToCatalog\":false,\"delete\":false,\"changeSpot\":false},\"cover\":false}",
-                     "visibility": {
-                         "type": "PUBLIC",
-                         "users": null
-                     },
-                     "datasource": [
-                         "a1041310-3c83-4512-97be-9e665d20d0a5"
-                     ],
-                     "cover": false,
-                     "owner": true
-                  }
+                value:
+                  id: "921e297f-4b21-4045-9896-5ec98910cae1"
+                  name: "example_widget_config"
+                  description: "this is a new widget configuration"
+                  image: ""
+                  content: "{\"type\":\"table\",\"layout\":{\"x\":1,\"y\":1,\"width\":1,\"height\":1},\"options\":{\"columns\":[{\"property\":\"date timestamp\",\"label\":\"date timestamp\",\"attributeId\":\"7d4ac9df-dfe7-430f-a4c5-4b8c2c77433c\"},{\"property\":\"identifiant\",\"label\":\"identifiant\",\"attributeId\":\"36d67f72-d5a8-4aed-ae47-dfedb95702cb\"}]},\"title\":\"issueBack115\",\"datasource\":[\"a1041310-3c83-4512-97be-9e665d20d0a5\"],\"header\":{\"datasourceSelection\":false,\"parameters\":true,\"window\":false,\"maximize\":false,\"addToCatalog\":false,\"delete\":false,\"changeSpot\":false},\"cover\":false}"
+                  visibility:
+                    type: "PUBLIC"
+                    users: [ "f12cef0c-6204-4e09-9807-2da6a9c0e6d0" ]
+                  datasource: [ "a1041310-3c83-4512-97be-9e665d20d0a5" ]
+                  cover: false
               incorrect:
-                summary: Adding an incorrect widget configuration (null id and content)
-                value: |
-                  {
-                     "id": null,
-                     "name": "wrong_widget_config",
-                     "description": "this is an incorrect widget configuration",
-                     "image": "",
-                     "content": null,
-                     "visibility": {
-                         "type": "PUBLIC",
-                         "users": null
-                     },
-                     "datasource": [
-                         "a1041310-3c83-4512-97be-9e665d20d0a5"
-                     ],
-                     "cover": false,
-                     "owner": true
-                  }
+                summary: Adding an incorrect widget configuration (null content)
+                value:
+                  id: "921e297f-4b21-4045-9896-5ec98910cae1"
+                  name: "wrong_widget_config"
+                  description: "this is an incorrect widget configuration"
+                  image: ""
+                  content: null
+                  visibility:
+                    type: "PUBLIC"
+                    users: [ "f12cef0c-6204-4e09-9807-2da6a9c0e6d0" ]
+                  datasource: [ "a1041310-3c83-4512-97be-9e665d20d0a5" ]
+                  cover: false
       responses:
         "201":
           description: Created
@@ -4245,7 +3892,7 @@ paths:
             - widget_catalog_write
     get:
       tags:
-        - Widget Controller
+        - Widget
       summary: Retrieve all saved widgets
       operationId: com.provoly.ref.widget.WidgetController_getAll
       responses:
@@ -4269,7 +3916,7 @@ paths:
   /widget/catalog/id/{id}:
     get:
       tags:
-        - Widget Controller
+        - Widget
       summary: Retrieve a widget configuration based on its identifier
       operationId: com.provoly.ref.widget.WidgetController_getWidget
       parameters:
@@ -4297,7 +3944,7 @@ paths:
             - widget_catalog_read
     delete:
       tags:
-        - Widget Controller
+        - Widget
       summary: Delete a widget configuration based on its identifier
       operationId: com.provoly.ref.widget.WidgetController_deleteWidget
       parameters:
@@ -4322,7 +3969,7 @@ paths:
   /types:
     get:
       tags:
-        - Type Controller
+        - Type
       operationId: com.provoly.ref.model.TypeController_getAll
       summary: Retrieve all types
       responses:
@@ -4346,7 +3993,7 @@ paths:
   /groups:
     post:
       tags:
-        - Group Controller
+        - Group
       operationId: com.provoly.ref.model.GroupController_saveGroup
       summary: Add new group
       requestBody:
@@ -4357,11 +4004,9 @@ paths:
             examples:
               default:
                 summary: Add new group
-                value: |
-                  {
-                      "id": "6bc614e0-24a7-427d-bc6a-b65de4f3d2b0",
-                      "name": "test"
-                  }
+                value:
+                  id: "6bc614e0-24a7-427d-bc6a-b65de4f3d2b0"
+                  name: "test"
       responses:
         "200":
           description: Created
@@ -4374,7 +4019,7 @@ paths:
             - dashboard_write
     get:
       tags:
-        - Group Controller
+        - Group
       operationId: com.provoly.ref.model.GroupController_getAll
       summary: Retrieve all groups
       responses:
@@ -4396,7 +4041,7 @@ paths:
   /notification:
     post:
       tags:
-        - Notification Controller
+        - Notification
       summary: Save a new notification to the associated users
       operationId: com.provoly.ref.message.notification.NotificationController_addNotification
       requestBody:
@@ -4404,22 +4049,14 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/NotificationRequestDto'
-            examples:
-              default:
-                summary: Adding a notification to the associated users
-                value: |
-                  {
-                    "type": "notification",
-                    "id": "c5b4908f-c477-436b-b346-160803a82915",
-                    "notificationTextDto": {
-                      "code": "DASHBOARD_PUBLIC",
-                      "param": {
-                        "name": "presentationAdmin"
-                      },
-                      "link": null
-                    },
-                    "users": ["7b2c2947-d26d-41c8-8827-23b43b6ff5b3", "941cc554-b81d-4998-a65d-8f7861ab110d", "8c002d8a-a050-40e3-bf28-a6217bf8f6dc"]
-                  }
+            example:
+              id: "c5b4908f-c477-436b-b346-160803a82915"
+              users: [ "7b2c2947-d26d-41c8-8827-23b43b6ff5b3", "941cc554-b81d-4998-a65d-8f7861ab110d", "8c002d8a-a050-40e3-bf28-a6217bf8f6dc" ]
+              notificationTextDto:
+                code: "DASHBOARD_PUBLIC"
+                param:
+                  name: "presentationAdmin"
+              link: ""
       responses:
         "201":
           description: Created
@@ -4433,16 +4070,17 @@ paths:
   /notification/me:
     delete:
       tags:
-        - Notification Controller
+        - Notification
       summary: Delete all notifications related to the associated user
       operationId: com.provoly.ref.message.notification.NotificationController_acknowledgeAllNotification
       responses:
         "204":
           description: No Content
+      security: []
   /notification/me/id/{id}:
     delete:
       tags:
-        - Notification Controller
+        - Notification
       summary: Remove a notification from its associated user
       operationId: com.provoly.ref.message.notification.NotificationController_acknowledgeNotification
       parameters:
@@ -4457,6 +4095,7 @@ paths:
           description: No Content
         "404":
           $ref: '#/components/responses/notFoundException'
+      security: []
 components:
   responses:
     notFoundException:
@@ -4473,12 +4112,10 @@ components:
             wrongMetadataType:
               summary: Add metadata with unknown type
               description: Occurs when you try to add metadata with a type not supported
-              value: |
-                {
-                  "application": "data-ref",
-                  "code": "FORBIDDEN",
-                  "message": "Metadata value should be of type : {{type}}"
-                }
+              value:
+                application: "data-ref"
+                code: "FORBIDDEN"
+                message: "Metadata value should be of type : {{type}}"
     datasetDetailsDto:
       description: OK
       content:
@@ -4488,24 +4125,18 @@ components:
           examples:
             dataset:
               summary: Get a dataset with metadata
-              value: |
-                {
-                  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                  "oClass": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                  "type": "OPEN",
-                  "name": "open dataset of my class",
-                  "metadata": [
-                    {
-                      "value": 2,
-                      "metadataDef": {
-                        "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                        "name": "metadata_name",
-                        "type": "INTEGER",
-                        "description": "description of metadata"
-                      }
-                    }
-                  ]
-                }
+              value:
+                id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                oClass: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                type: "OPEN"
+                name: "open dataset of my class"
+                metadata:
+                  - value: "2"
+                    metadataDef:
+                      id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                      name: "metadata_name"
+                      type: "INTEGER"
+                      description: "description of metadata"
     listdatasetVersionDetailsDto:
       description: OK
       content:
@@ -4518,46 +4149,34 @@ components:
             getAllDatasetVersion:
               summary: Get list of dataset version disabled with warnings
               description: Example of a disabled dataset version that has warnings.
-              value: |
-                [
-                  {
-                    "id": "b1a08d9d-4c38-4d43-90f3-25015537ebfd" ,
-                    "dataset": "423b5c01-1816-41d4-b358-200000000010",
-                    "oClass": "991eb4b2-253c-4875-b708-8209fa5bfd51",
-                    "lastModified": "2023-04-27T13:56:13.861018Z",
-                    "version": 1,
-                    "state": "INACTIVE",
-                    "withFile": false,
-                    "hasWarnings": true
-                  }
-                ]
+              value:
+                - id: "b1a08d9d-4c38-4d43-90f3-25015537ebfd"
+                  dataset: "423b5c01-1816-41d4-b358-200000000010"
+                  oClass: "991eb4b2-253c-4875-b708-8209fa5bfd51"
+                  lastModified: "2023-04-27T13:56:13.861018Z"
+                  version: 1
+                  state: "INACTIVE"
+                  withFile: false
+                  hasWarnings: true
             datasetVersionWithMetadata:
               summary: Get list of dataset version with metadata
               description: Example of a dataset version with metadata
-              value: |
-                [
-                  {
-                    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                    "dataset": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                    "oClass": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                    "lastModified": "2022-03-10T16:15:50Z",
-                    "version": 0,
-                    "state": "LOADING",
-                    "withFile": true,
-                    "metadata": [
-                      {
-                        "value": 2,
-                        "metadataDef": {
-                          "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                          "name": "metadata_name",
-                          "type": "INTEGER",
-                          "description": "description of metadata",
-                          "slug": "string"
-                        }
-                      }
-                    ]
-                  }
-                ]
+              value:
+                - id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                  dataset: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                  oClass: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                  lastModified: "2022-03-10T16:15:50Z"
+                  version: 0
+                  state: "LOADING"
+                  withFile: true
+                  metadata:
+                    - value: "2"
+                      metadataDef:
+                        id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                        name: "metadata_name"
+                        type: "INTEGER"
+                        description: "description of metadata"
+                        slug: "string"
     datasetVersionDetailsDto:
       description: OK
       content:
@@ -4568,43 +4187,73 @@ components:
             getAllDatasetVersion:
               summary: Get dataset version with warnings
               description: Example of a dataset version that has warnings.
-              value: |
-                {
-                  "id": "b1a08d9d-4c38-4d43-90f3-25015537ebfd" ,
-                  "dataset": "423b5c01-1816-41d4-b358-200000000010",
-                  "oClass": "991eb4b2-253c-4875-b708-8209fa5bfd51",
-                  "lastModified": "2023-04-27T13:56:13.861018Z",
-                  "version": 1,
-                  "state": "ACTIVE",
-                  "withFile": false,
-                  "hasWarnings": true
-                }
+              value:
+                id: "b1a08d9d-4c38-4d43-90f3-25015537ebfd"
+                dataset: "423b5c01-1816-41d4-b358-200000000010"
+                oClass: "991eb4b2-253c-4875-b708-8209fa5bfd51"
+                lastModified: "2023-04-27T13:56:13.861018Z"
+                version: 1
+                state: "ACTIVE"
+                withFile: false
+                hasWarnings: true
             datasetVersionWithMetadata:
               summary: Get dataset version with metadata
               description: Example of a dataset version with metadata
-              value: |
-                {
-                  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                  "dataset": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                  "oClass": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                  "lastModified": "2022-03-10T16:15:50Z",
-                  "version": 2,
-                  "state": "ACTIVE",
-                  "withFile": true,
-                  "metadata": [
-                    {
-                      "value": 2,
-                      "metadataDef": {
-                        "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                        "name": "metadata_name",
-                        "type": "INTEGER",
-                        "description": "description of metadata",
-                        "slug": "string"
-                      }
-                    }
-                  ]
-                }
+              value:
+                id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                dataset: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                oClass: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                lastModified: "2022-03-10T16:15:50Z"
+                version: 2
+                state: "ACTIVE"
+                withFile: true
+                metadata:
+                  - value: "2"
+                    metadataDef:
+                      id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                      name: "metadata_name"
+                      type: "INTEGER"
+                      description: "description of metadata"
+                      slug: "string"
   schemas:
+    MessageLevel:
+      enum:
+        - ERROR
+        - WARNING
+        - DELETING
+        - DELETE
+      type: string
+    MessageDto:
+      type: object
+      properties:
+        level:
+          $ref: "#/components/schemas/MessageLevel"
+        messages:
+          type: array
+          properties:
+            level:
+              $ref: "#/components/schemas/MessageLevel"
+            extractedMessageCode:
+              enum:
+                - UNRECOGNIZED
+                - MEDIA_TYPE
+                - FORMAT
+                - STORAGE
+                - NO_VALUES
+                - NO_ATTRIBUTES
+            type:
+              $ref: "#/components/schemas/Type"
+            name:
+              type: string
+              example: "my rule"
+            recordId:
+              type: string
+            datasetVersionId:
+              $ref: "#/components/schemas/UUID"
+        count: 
+          type: integer
+          minimum: 1
+          maximum: 20
     Error:
       type: object
       properties:
@@ -4721,7 +4370,7 @@ components:
           type: boolean
           default: false
     AssociationDto:
-      type: object
+      type: array
       properties:
         id:
           $ref: '#/components/schemas/UUID'
@@ -4740,10 +4389,25 @@ components:
             - WIDGET
           example: OCLASS
     ConditionDto:
+      oneOf:
+        - $ref: "#/components/schemas/AttributeConditionDto"
+        - $ref: "#/components/schemas/MetadataConditionDto"
+        - $ref: "#/components/schemas/ComposedConditionDto"
+        - $ref: "#/components/schemas/TrueConditionDto"
+      discriminator:
+        propertyName: type
+        mapping:
+          ATTRIBUTE: "#/components/schemas/AttributeConditionDto"
+          OR: "#/components/schemas/ComposedConditionDto"
+          AND: "#/components/schemas/ComposedConditionDto"
+          METADATA: "#/components/schemas/MetadataConditionDto"
+          TRUE: "#/components/schemas/TrueConditionDto"
+    TrueConditionDto:
+      description: Condition based on attribute used when params type equals ATTRIBUTE
       type: object
       properties:
         type:
-          $ref: '#/components/schemas/ConditionType'
+          $ref: "#/components/schemas/ConditionType"    
     ConditionType:
       enum:
         - "TRUE"
@@ -4751,6 +4415,65 @@ components:
         - AND
         - ATTRIBUTE
         - METADATA
+      type: string
+    AttributeConditionDto:
+      description: Condition based on attribute used when params type equals ATTRIBUTE
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ConditionType'
+        attribute:
+          $ref: '#/components/schemas/UUID'
+        value:
+          type: string
+        upperValue:
+          title: string
+        location:
+          type: string
+        operator:
+          $ref: "#/components/schemas/Operator"
+    ComposedConditionDto:
+      description: Composed condition based on ConditionDto used when params type equals OR or AND. ConditionDto can again be one of TRUE, AND, OR, ATTRIBUTE or METADATA.
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ConditionType'
+        composed:
+          type: array
+          properties:
+            items:
+              $ref: '#/components/schemas/ConditionDto'
+    MetadataConditionDto:
+      description: Condition based on metadata used when params type equals METADATA
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ConditionType'
+        metadata:
+          $ref: '#/components/schemas/UUID'
+        value:
+          type: string
+        operator:
+          $ref: "#/components/schemas/Operator"
+    Operator:
+      enum:
+        - EQUALS
+        - NOT_EQUALS
+        - CONTAINS
+        - START_WITH
+        - END_WITH
+        - GREATER_THAN
+        - LOWER_THAN
+        - INSIDE
+        - OUTSIDE
+        - DISTANCE
+        - EXISTS
+        - INTERSECTS
+        - I_EQUALS
+        - I_NOT_EQUALS
+        - I_CONTAINS
+        - I_START_WITH
+        - I_END_WITH
       type: string
     ContextVariableDto:
       type: object
@@ -4760,7 +4483,7 @@ components:
         type:
           $ref: '#/components/schemas/VariableTypeDto'
         value:
-          type: object
+          type: integer
     CountDto:
       type: object
       properties:
@@ -4850,7 +4573,7 @@ components:
         manifest:
           type: object
           additionalProperties:
-            type: object
+            type: array
         datasource:
           type: array
           items:
@@ -4939,6 +4662,8 @@ components:
         - ACTIVE
         - ERROR
         - INACTIVE
+        - DELETING
+        - DELETE_ERROR
       type: string
       example: ACTIVE
     DatasetType:
@@ -4994,21 +4719,6 @@ components:
         withFile:
           type: boolean
           example: false
-        producer:
-          type: string
-        productionDate:
-          $ref: '#/components/schemas/Instant'
-        additionalInformation:
-          type: string
-    DatasetVersionInformationDto:
-      type: object
-      properties:
-        producer:
-          type: string
-        productionDate:
-          $ref: '#/components/schemas/Instant'
-        additionalInformation:
-          type: string
     FieldDto:
       type: object
       required:
@@ -5020,6 +4730,7 @@ components:
           $ref: '#/components/schemas/UUID'
         name:
           type: string
+          nullable: true
           example: "my field"
         type:
           $ref: '#/components/schemas/Type'
@@ -5031,14 +4742,6 @@ components:
           example: "EPSG:1233"
           default: "EPSG:4326"
           description: "Required only for Geo field. Should be a valid CRS"
-        productionDate:
-          $ref: '#/components/schemas/Instant'
-        producer:
-          type: string
-          example: "the_author"
-        additionalInformation:
-          type: string
-          example: "Some additional information"
     FullSearchConditionDto:
       type: object
       properties:
@@ -5046,12 +4749,16 @@ components:
           type: string
     GroupErrors:
       type : object
+      properties:
+        missingGroupsByEntity:
+          $ref: '#/components/schemas/missingGroupsByEntity'
+    missingGroupsByEntity:
+      type: object
       additionalProperties:
-        description: missing group list
-        example: ["admin"]
         type: array
         items:
           type: string
+      example: { "2e4c638c-a86d-45d4-82fc-897cba698838": [ "ALL" ], "2e4c638c-a86d-45d4-82fc-897cba698839": [ "ALL" ] }
     Instant:
       format: date-time
       type: string
@@ -5107,6 +4814,7 @@ components:
           $ref: '#/components/schemas/UUID'
         name:
           type: string
+          nullable: true
           example: "my metadata definition"
         type:
           $ref: '#/components/schemas/VariableTypeDto'
@@ -5134,9 +4842,11 @@ components:
           $ref: '#/components/schemas/MetadataDefDto'
     MetadataValueWriteDto:
       type: object
+      nullable: true
       properties:
         value:
           type: string
+          nullable: true
         metadataDefId:
           $ref: '#/components/schemas/UUID'
     NamedQueryDetailsDto:
@@ -5263,6 +4973,8 @@ components:
           $ref: '#/components/schemas/UUID'
         name:
           type: string
+        storage:
+          $ref: '#/components/schemas/Storage'
         icon:
           type: string
         attributes:
@@ -5310,15 +5022,139 @@ components:
           $ref: '#/components/schemas/UUID'
         name:
           type: string
+          nullable: true
         slug:
           type: string
-    SearchRequestDto:
+    ExcludeGeo:
+      description: Parameter to exclude geographic data from queries.
+      type: boolean
+      default: true
+    MonoClassRequestDto:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/SearchRequestType'
+          default: MONO_CLASS
+        fullSearch:
+          $ref: '#/components/schemas/FullSearchConditionDto'
+        oClass:
+          $ref: '#/components/schemas/UUID'
+        datasetVersionIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/UUID'
+        condition:
+          $ref: '#/components/schemas/ConditionDto'
+        sort:
+          $ref: '#/components/schemas/SortDto'
+        searchAfter:
+          type: string
+          nullable: true
+        excludeGeo:
+          $ref: '#/components/schemas/ExcludeGeo'
+        id:
+          $ref: '#/components/schemas/UUID'
+        limit:
+          format: int32
+          type: integer
+          example: 1000
+        withCount:
+          type: boolean
+          default: false
+        requestedAttributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/UUID'
+        geoFormat:
+          $ref: '#/components/schemas/GeoFormat'
+    MultiClassRequestDto:
       type: object
       properties:
         type:
           $ref: '#/components/schemas/SearchRequestType'
         fullSearch:
           $ref: '#/components/schemas/FullSearchConditionDto'
+        multiType:
+          $ref: '#/components/schemas/MultiSearchType'
+        oClasses:
+          type: array
+          items:
+            $ref: '#/components/schemas/UUID'
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldConditionDto'
+        excludeGeo:
+          $ref: '#/components/schemas/ExcludeGeo'
+        id:
+          $ref: '#/components/schemas/UUID'
+        limit:
+          format: int32
+          type: integer
+          example: 1000
+        withCount:
+          type: boolean
+          default: false
+        requestedAttributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/UUID'
+        geoFormat:
+          $ref: '#/components/schemas/GeoFormat'
+    SearchRequestDto:
+      oneOf:
+        - $ref: '#/components/schemas/MonoClassRequestDto'
+        - $ref: '#/components/schemas/MultiClassRequestDto'
+      discriminator:
+        propertyName: type
+        mapping:
+          MONO_CLASS: '#/components/schemas/MonoClassRequestDto'
+          MULTI_CLASS: '#/components/schemas/MultiClassRequestDto'
+    FieldConditionDto:
+      type: object
+      properties:
+        field:
+          $ref: '#/components/schemas/UUID'
+        value:
+          type: string
+        upperValue:
+          type: string
+        location:
+          type: string
+        operator:
+          $ref: '#/components/schemas/Operator'
+    Direction:
+      enum:
+        - asc
+        - desc
+      type: string
+      default: asc
+    SortDto:
+      type: object
+      properties:
+        attribute:
+          $ref: '#/components/schemas/UUID'
+        direction:
+          $ref: '#/components/schemas/Direction'
+        type:
+          $ref: '#/components/schemas/SortType'
+    SortType:
+      enum:
+        - ATTRIBUTE
+        - METADATA
+        - ITEM_ID
+      type: string
+      default: ATTRIBUTE
+    MultiSearchType:
+      enum:
+        - OR
+        - AND
+      type: string
+    GeoFormat:
+      enum:
+        - GEO_JSON
+        - WKT
+        - WKB
     SearchRequestType:
       enum:
         - MONO_CLASS
@@ -5408,6 +5244,7 @@ components:
         name:
           type: string
           example: "defcon"
+          nullable: true
         type:
           $ref: '#/components/schemas/VariableTypeDto'
         description:
@@ -5497,6 +5334,7 @@ components:
           type: string
         content:
           type: string
+          nullable: true
         visibility:
           $ref: '#/components/schemas/VisibilityDto'
         datasource:

@@ -15,13 +15,8 @@ quarkus:
       default-schema: provoly_exec
 
   smallrye-openapi:
-    operation-id-strategy: package_class_method
-    oidc-open-id-connect-url: /auth/realms/provoly/.well-known/openid-configuration
-    security-scheme: oidc
-    security-scheme-name: oidc
-    store-schema-directory: target/generated-sources/oas
-    info-title: API du moteur d'exécution
-    info-description: Permet de lancer et de monitorer des exécutions de traitements.
+    store-schema-directory: target/generated/
+
 mp:
   messaging:
     incoming:

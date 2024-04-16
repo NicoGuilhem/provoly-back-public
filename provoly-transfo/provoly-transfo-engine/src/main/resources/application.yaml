@@ -19,8 +19,6 @@ quarkus:
       port: 8097
     flyway:
       repair-at-start: true
-    smallrye-openapi:
-      path: /openapi.yaml
 
     log:
       category:

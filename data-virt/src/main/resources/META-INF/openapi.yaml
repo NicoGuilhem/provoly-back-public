@@ -2,19 +2,27 @@
 openapi: 3.0.3
 info:
   title: Virtualize API
+  x-logo:
+    url: .\docs\modules\ROOT\images\provoly.png
+    backgroundColor: "#FFFFFF"
+    altText: "Provoly logo"
   description: |
-    \"Moving`\" data access, Virtualizes data access to underlying persistence engines.
+    \"Moving\" data access, Virtualizes data access to underlying persistence engines.
   version: 0.9.0
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
 servers:
-  - url: http://data-virt.provoly:8080
-    description: Auto generated value
+  - url: http://localhost:8080
+    description: No sandbox environment as of now
 paths:
   /about/version:
     get:
       summary: Return current version of data virt
       tags:
-        - Version Controller
+        - Version
       operationId: com.provoly.version.VersionController_getVersion
+      security: []
       responses:
         "200":
           description: OK
@@ -25,16 +33,15 @@ paths:
               examples:
                 nominal:
                   summary: Nominal response
-                  value: |
-                    {
-                      "applicationVersion": "0.4.8",
-                      "chartVersion": "0.4.8"
-                    }
+                  value:
+                    applicationVersion: 0.4.8"
+                    chartVersion: 0.4.8
+
   /data-sources/id/{dataSourceId}:
     get:
       summary: Proxy for getting dataset, dataset version or a named query from its id.
       tags:
-        - Data Source Controller
+        - Data Source
       operationId: com.provoly.virt.datasource.DataSourceController_getDataSourceDetail
       parameters:
         - name: dataSourceId
@@ -52,29 +59,22 @@ paths:
               examples:
                 datasetVersion:
                   summary: Get dataset version
-                  value: |
-                    {
-                      "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                      "type": "DATASET_VERSION",
-                      "oClass": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-                    }
+                  value:
+                    id: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+                    type: DATASET_VERSION
+                    oClass: 3fa85f64-5717-4562-b3fc-2c963f66afa6
                 namedQuery:
                   summary: Get named query
-                  value: |
-                    {
-                      "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                      "type": "SEARCH",
-                      "oClass": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-                    }
+                  value:
+                    id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                    type: "SEARCH"
+                    oClass: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
                 dataset:
                   summary: Get dataset
-                  value: |
-                    {
-                      "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                      "type": "DATASET",
-                      "oClass": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-                    }
-
+                  value:
+                    id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                    type: "DATASET"
+                    oClass: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
         "401":
           description: Not Authorized
         "403":
@@ -92,7 +92,7 @@ paths:
         Get 200 items from data source.
         It's possible to filter, and set more than one filter in query parameters.
       tags:
-        - Data Source Controller
+        - Data Source
       operationId: com.provoly.virt.datasource.DataSourceController_getItems
       parameters:
         - name: dataSourceId
@@ -114,87 +114,65 @@ paths:
               examples:
                 itemSearchResult:
                   summary: Item search result
-                  value: |
-                    {
-                      "items": {
-                        "oclass_id_1": [
-                          {
-                            "oClass": "oclass_id_1",
-                            "id": "dataset_version_id_1@item_id_1",
-                            "metadata": {
-                              "_insertion_date": "2023-06-27T07:14:00.228606022",
-                              "datasetdef_id": "dataset_id_1",
-                              "_dataset_id": "dataset_version_id_1",
-                              "_item_id": "dataset_version_id_1@item_id_1",
-                              "_class": "oclass_id_1"
-                            },
-                            "attributes": {
-                              "Classification": {
-                                "value": "Conifères",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              },
-                              "Pourcentage surface": {
-                                "value": "6.82",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              },
-                              "Année": {
-                                "value": "2020",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              }
-                            },
-                            "datasetId": "dataset_version_id_1",
-                            "itemId": "item_id_1"
-                          },
-                          {
-                            "oClass": "oclass_id_1",
-                            "id": "dataset_version_id_1@item_id_1",
-                            "metadata": {
-                              "_insertion_date": "2023-06-27T07:14:00.228606022",
-                              "datasetdef_id": "dataset_id_1",
-                              "_dataset_id": "dataset_version_id_1",
-                              "_item_id": "dataset_version_id_1@item_id_1",
-                              "_class": "oclass_id_1"
-                            },
-                            "attributes": {
-                              "Classification": {
-                                "value": "Conifères",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              },
-                              "Pourcentage surface": {
-                                "value": "6.66",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              },
-                              "Année": {
-                                "value": "2021",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              }
-                            },
-                            "datasetId": "dataset_version_id_1",
-                            "itemId": "item_id_1"
-                          }
-                        ]
-                      },
-                      "relations": [],
-                      "count": {
-                        "oclass_id_1": {
-                          "count": 115,
-                          "accurate": true
-                        }
-                      },
-                      "searchAfter": null
-                    }
+                  value:
+                    items:
+                      oclass_id_1:
+                        - oClass: "23fee6a5-5edc-4b37-a74c-47d8022e81b3"
+                          id: "1c012961-aced-4492-9a73-dff067a2a611@61837c2e-408c-4f13-9fea-fac4f69c38a8"
+                          metadata:
+                            _insertion_date: "2023-06-27T07:14:00.228606022"
+                            datasetdef_id: "23fee6a5-5edc-4b37-a74c-47d8022e81b4"
+                            _dataset_id: "23fee6a5-5edc-4b37-a74c-47d8022e81b4"
+                            _item_id: "23fee6a5-5edc-4b37-a74c-47d8022e81b4"
+                            _class: "23fee6a5-5edc-4b37-a74c-47d8022e81b4"
+                          attributes:
+                            Classification:
+                              type: VALUE
+                              value: "Conifères"
+                              metadata: { }
+                              visible: true
+                            Pourcentage surface:
+                              value: "6.82"
+                              type: VALUE
+                              metadata: { }
+                              visible: true
+                            Année:
+                              value: "2020"
+                              type: VALUE
+                              metadata: { }
+                              visible: true
+                          itemId: "61837c2e-408c-4f13-9fea-fac4f69c38a8"
+                        - oClass: "961e7d76-2bde-4b56-bc08-ed073c50056a"
+                          id: "1c012961-aced-4492-9a73-dff067a2a611@61837c2e-408c-4f13-9fea-fac4f69c38a8"
+                          metadata:
+                            _insertion_date: '2023-06-27T07:14:00.228606022'
+                            datasetdef_id: dataset_id_1
+                            _dataset_id: dataset_version_id_1
+                            _item_id: "1c012961-aced-4492-9a73-dff067a2a611@61837c2e-408c-4f13-9fea-fac4f69c38a8"
+                            _class: "961e7d76-2bde-4b56-bc08-ed073c50056a"
+                          attributes:
+                            Classification:
+                              value: Conifères
+                              type: VALUE
+                              metadata: { }
+                              visible: true
+                            Pourcentage surface:
+                              value: '6.66'
+                              type: VALUE
+                              metadata: { }
+                              visible: true
+                            Année:
+                              value: '2021'
+                              type: VALUE
+                              metadata: { }
+                              visible: true
+                          itemId: "61837c2e-408c-4f13-9fea-fac4f69c38a8"
+                    relations: [ ]
+                    count:
+                      oclass_id_1:
+                        count: 115
+                        accurate: true
+                    searchAfter: null
         "401":
           description: Not Authorized
         "403":
@@ -219,7 +197,7 @@ paths:
         This property has a ttl: once the time has elapsed, you'll have to restart the search from the beginning.
         It's also possible to add one or more filters in query parameters and sort your results.
       tags:
-        - Data Source Controller
+        - Data Source
       operationId: com.provoly.virt.datasource.DataSourceController_getItemsSearch
       parameters:
         - name: dataSourceId
@@ -233,139 +211,114 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                excludeGeo:
-                  $ref: '#/components/parameters/excludeGeo'
-                type:
-                  $ref: '#/components/schemas/SearchRequestType'
-                fullSearch:
-                  $ref: '#/components/schemas/FullSearchConditionDto'
               oneOf:
-                - $ref: '#/components/schemas/MonoClassRequestDto'
-                - $ref: '#/components/schemas/MultiClassRequestDto'
+              - $ref: '#/components/schemas/MonoClassRequestDto'
+              - $ref: '#/components/schemas/MultiClassRequestDto'
+              discriminator:
+                propertyName: type
+                mapping:
+                  MONO_CLASS: '#/components/schemas/MonoClassRequestDto'
+                  MULTI_CLASS: '#/components/schemas/MultiClassRequestDto'
             examples:
               monoWithoutCondition:
                 summary: Mono request without condition
                 description: Returns items from oclass oclass_id_1.
-                value: |
-                  {
-                      "type":"MONO_CLASS",
-                      "oClass": "oclass_id_1"
-                  }
+                value:
+                  type: MONO_CLASS
+                  oClass: "23fee6a5-5edc-4b37-a74c-47d8022e81b4"
               monoWithDatasetVersions:
                 summary: Mono request with datasetVersionIds
                 description: Returns items from oclass oclass_id_1 only in dataset_version_id
-                value: |
-                  {
-                      "type":"MONO_CLASS",
-                      "oClass": "oclass_id_1",
-                      "datasetVersionIds": ["dataset_version_id"]
-                  }
+                value:
+                  type: MONO_CLASS
+                  oClass: "23fee6a5-5edc-4b37-a74c-47d8022e81b4"
+                  datasetVersionIds:
+                    - "23fee6a5-5edc-4b37-a74c-47d8022e81b4"
               monoSimpleCondition:
                 summary: Mono request with condition
                 description: |
                   Returns items from oclass 
                   oclass_id_1 that match attribute_id_1 condition.
-                value: |
-                  {
-                    "type": "MONO_CLASS",
-                    "oClass": "oclass_id_1",
-                    "condition": {
-                      "type": "ATTRIBUTE",
-                      "attribute": "attribute_id_1",
-                      "operator": "EQUALS",
-                      "value": "Avant"
-                    }
-                  }
+                value:
+                  type: MONO_CLASS
+                  oClass: "23fee6a5-5edc-4b37-a74c-47d8022e81b4"
+                  condition:
+                    type: ATTRIBUTE
+                    value: "Avant"
+                    upperValue: "upperValue"
+                    attribute: "23fee6a5-5edc-4b37-a74c-47d8022e81b4"
+                    location: "location"
+                    operator: EQUALS
+                  sort:
+                    attribute: "53915c05-64cd-4be9-86a6-4c5c326920ed"
+                    direction: "asc"
+                    type: ATTRIBUTE
+                  searchAfter: null
               monoSimpleConditionWithSearchAfter:
                 summary: Mono request with condition and searchAfter
                 description: |
                   Returns items from oclass 
                   oclass_id_1 that match attribute_id_1 condition.
-                value: |
-                  {
-                    "type": "MONO_CLASS",
-                    "oClass": "oclass_id_1",
-                    "condition": {
-                      "type": "ATTRIBUTE",
-                      "attribute": "attribute_id_1",
-                      "operator": "EQUALS",
-                      "value": "Avant"
-                    },
-                     "searchAfter":"search_after_value"
-                  }
+                value:
+                  type: MONO_CLASS
+                  oClass: "23fee6a5-5edc-4b37-a74c-47d8022e81b4"
+                  condition:
+                    type: ATTRIBUTE
+                    attribute: "53915c05-64cd-4be9-86a6-4c5c326920ed"
+                    operator: EQUALS
+                    value: Avant
+                  searchAfter: search_after_value
               monoOrComposedCondition:
                 summary: Mono request with composed condition
                 description: |
                   Returns items from oclass 
                   oclass_id_1 that match attribute_id_1 OR attribute_id_2 conditions.
-                value: |
-                  {
-                    "type": "MONO_CLASS",
-                    "oClass": "oclass_id_1",
-                    "condition": {
-                      "type": "OR",
-                      "composed": [
-                        {
-                          "type": "ATTRIBUTE",
-                          "attribute": "attribute_id_1",
-                          "operator": "INSIDE",
-                          "value": 2020,
-                          "upperValue" : 2023
-                        },
-                        {
-                          "type": "ATTRIBUTE",
-                          "attribute": "attribute_id_2",
-                          "operator": "GREATER_THAN",
-                          "value": "2020"
-                        }
-                      ]
-                    }
-                  }
+                value:
+                  type: MONO_CLASS
+                  oClass: "53915c05-64cd-4be9-86a6-4c5c326920ed"
+                  condition:
+                    type: OR
+                    composed:
+                      - type: ATTRIBUTE
+                        attribute: "53915c05-64cd-4be9-86a6-4c5c326920ed"
+                        operator: INSIDE
+                        value: 2020
+                        upperValue: 2023
+                      - type: ATTRIBUTE
+                        attribute: "53915c05-64cd-4be9-86a6-4c5c326920ed"
+                        operator: GREATER_THAN
+                        value: '2020'
               multiWithFieldsAndClass:
                 summary: Multi request with field condition
                 description: |
                   Returns items from oclasses 
                   oclass_id_1 and oclass_id_2 that match field_id_1 AND field_id_2 condition. 
                   Default operator is EQUALS.
-                value: |
-                  {
-                    "type": "MULTI_CLASS",
-                    "multiType": "AND",
-                    "oClasses": [ "oclass_id_1", "oclass_id_2"],
-                    "fields": [
-                      {
-                        "field": "field_id_1",
-                        "value": "2020"
-                      },
-                      {
-                        "field": "field_id_2",
-                        "value": "2022"
-                      }
-                    ]
-                  }
+                value:
+                  type: MULTI_CLASS
+                  multiType: AND
+                  oClasses:
+                    - "7e16273c-63f0-4f56-98a5-958574595aad"
+                    - "c7d7a979-4491-4c9d-be90-d49b879b03ed"
+                  fields:
+                    - field: "c93e60f4-67e9-4154-846b-43122918a712"
+                      value: '2020'
+                    - field: "0c91ae2a-a5bf-4011-9c72-12b835ea97ad"
+                      value: '2022'
               multiWithFieldsAllClass:
                 summary: Multi request with field condition on all class
                 description: |
                   Returns items from all oclasses that match field_id_1 OR field_id_2 condition. 
                   Default operator is EQUALS.
-                value: |
-                  {
-                   "type": "MULTI_CLASS",
-                   "multiType": "OR",
-                   "oClasses": [],
-                   "fields": [
-                     {
-                       "field": "field_id_1",
-                       "value": "2020"
-                     },
-                     {
-                       "field": "field_id_2",
-                       "value": "2022"
-                     }
-                   ]
-                  }
+                value:
+                  type: MULTI_CLASS
+                  multiType: OR
+                  oClasses: [ ]
+                  fields:
+                    - field: "c93e60f4-67e9-4154-846b-43122918a712"
+                      value: '2020'
+                    - field: "0c91ae2a-a5bf-4011-9c72-12b835ea97ad"
+                      value: '2022'
       responses:
         "200":
           description: OK
@@ -376,87 +329,65 @@ paths:
               examples:
                 itemSearchResult:
                   summary: Item search result
-                  value: |
-                    {
-                      "items": {
-                        "oclass_id_1": [
-                          {
-                            "oClass": "oclass_id_1",
-                            "id": "dataset_version_id_1@item_id_1",
-                            "metadata": {
-                              "_insertion_date": "2023-06-27T07:14:00.228606022",
-                              "datasetdef_id": "dataset_id_1",
-                              "_dataset_id": "dataset_version_id_1",
-                              "_item_id": "dataset_version_id_1@item_id_1",
-                              "_class": "oclass_id_1"
-                            },
-                            "attributes": {
-                              "Classification": {
-                                "value": "Conifères",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              },
-                              "Pourcentage surface": {
-                                "value": "6.82",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              },
-                              "Année": {
-                                "value": "2020",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              }
-                            },
-                            "datasetId": "dataset_version_id_1",
-                            "itemId": "item_id_1"
-                          },
-                          {
-                            "oClass": "oclass_id_1",
-                            "id": "dataset_version_id_1@item_id_1",
-                            "metadata": {
-                              "_insertion_date": "2023-06-27T07:14:00.228606022",
-                              "datasetdef_id": "dataset_id_1",
-                              "_dataset_id": "dataset_version_id_1",
-                              "_item_id": "dataset_version_id_1@item_id_1",
-                              "_class": "oclass_id_1"
-                            },
-                            "attributes": {
-                              "Classification": {
-                                "value": "Conifères",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              },
-                              "Pourcentage surface": {
-                                "value": "6.66",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              },
-                              "Année": {
-                                "value": "2021",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              }
-                            },
-                            "datasetId": "dataset_version_id_1",
-                            "itemId": "item_id_1"
-                          }
-                        ]
-                      },
-                      "relations": [],
-                      "count": {
-                        "oclass_id_1": {
-                          "count": 115,
-                          "accurate": true
-                        }
-                      },
-                      "searchAfter": null
-                    }
+                  value:
+                    items:
+                      "cdc75747-26b3-4dc7-990c-189028d7a882":
+                        - oClass: "cdc75747-26b3-4dc7-990c-189028d7a882"
+                          id: "7ebf0872-bfe8-418a-b7cc-32b32d9e57fa@ba306efd-0bf7-4844-b067-8a4eb0d546c7"
+                          metadata:
+                            _insertion_date: "2023-06-27T07:14:00.228606022"
+                            datasetdef_id: "cd32bd15-4e44-44c6-8c4d-4866a425af06"
+                            _dataset_id: "7ebf0872-bfe8-418a-b7cc-32b32d9e57fa"
+                            _item_id: "7ebf0872-bfe8-418a-b7cc-32b32d9e57fa@ba306efd-0bf7-4844-b067-8a4eb0d546c7"
+                            _class: "cdc75747-26b3-4dc7-990c-189028d7a882"
+                          attributes:
+                            Classification:
+                              value: Conifères
+                              type: VALUE
+                              metadata: { }
+                              visible: true
+                            Pourcentage surface:
+                              value: '6.82'
+                              type: VALUE
+                              metadata: { }
+                              visible: true
+                            Année:
+                              value: '2020'
+                              type: VALUE
+                              metadata: { }
+                              visible: true
+                          itemId: "8bbafd7a-82b2-4f4d-badd-96a5d09326ab"
+                        - oClass: "8bbafd7a-82b2-4f4d-badd-96a5d09326ac"
+                          id: "7ebf0872-bfe8-418a-b7cc-32b32d9e57fa@ba306efd-0bf7-4844-b067-8a4eb0d546c7"
+                          metadata:
+                            _insertion_date: "2023-06-27T07:14:00.228606022"
+                            datasetdef_id: "cd32bd15-4e44-44c6-8c4d-4866a425af06"
+                            _dataset_id: "7ebf0872-bfe8-418a-b7cc-32b32d9e57fa"
+                            _item_id: "7ebf0872-bfe8-418a-b7cc-32b32d9e57fa@ba306efd-0bf7-4844-b067-8a4eb0d546c7"
+                            _class: "8bbafd7a-82b2-4f4d-badd-96a5d09326ac"
+                          attributes:
+                            Classification:
+                              value: Conifères
+                              type: VALUE
+                              metadata: { }
+                              visible: true
+                            Pourcentage surface:
+                              value: '6.66'
+                              type: VALUE
+                              metadata: { }
+                              visible: true
+                            Année:
+                              value: '2021'
+                              type: VALUE
+                              metadata: { }
+                              visible: true
+                          itemId: "ba306efd-0bf7-4844-b067-8a4eb0d546c7"
+                    relations: [ ]
+                    count:
+                      oclass_id_1:
+                        count: 115
+                        accurate: true
+                    searchAfter:
         "401":
           description: Not Authorized
         "403":
@@ -474,7 +405,7 @@ paths:
         Named query must reference a mono class request. Only aggregatedBy is required.
         The default operation is count.
       tags:
-        - Data Source Controller
+        - Data Source
       operationId: com.provoly.virt.datasource.DataSourceController_getItemsAggregate
       parameters:
         - name: dataSourceId
@@ -558,75 +489,43 @@ paths:
               examples:
                 default:
                   description: aggregation with only aggregatedBy. Return the count of each trees.
-                  value: |
-                    { 
-                      "operation": "count",
-                      "values": [
-                        {
-                          "key": "coniferes",
-                          "value": 4
-                        },
-                        {
-                          "key": "feuillus",
-                           "value": 8
-                        }
-                      ]
-                    }
+                  value:
+                    operation: count
+                    values:
+                      - key: coniferes
+                        value: 4
+                      - key: feuillus
+                        value: 8
                 interval:
                   summary: With interval
                   description: Returns the sum of occupied areas in intervals of 10
-                  value : |
-                    {
-                      "operation": "count",
-                      "values": [
-                        {
-                          "key": 0.0,
-                          "value": 51
-                        },
-                        {
-                          "key": 10.0,
-                          "value": 5
-                        },
-                        {
-                          "key": 20.0,
-                          "value": 5
-                        }
-                      ]
-                    }
+                  value:
+                    operation: count
+                    values:
+                      - key: 0
+                        value: 51
+                      - key: 10
+                        value: 5
+                      - key: 20
+                        value: 5
                 groupBy:
                   summary: With group By
                   description: Returns for each tree the sum of its occupied area grouped by year.
-                  value: |
-                    { 
-                    "operation": "sum",
-                    "values": [
-                      {
-                        "key": "coniferes",
-                        "groupBy": [
-                          {
-                            "key": 2018,
-                            "value": 3783.4
-                          },
-                          {
-                            "key": 2019,
-                            "value": 3256.18
-                          }
-                        ]
-                      },
-                      {
-                        "key": "feuillus",
-                        "groupBy": [
-                          {
-                            "key": 2018,
-                            "value": 2798.82
-                          },
-                          {
-                            "key": 2019,
-                            "value": 2999.87
-                          }
-                        ]
-                      }
-                    ]}
+                  value:
+                    operation: sum
+                    values:
+                      - key: coniferes
+                        groupBy:
+                          - key: 2018
+                            value: "3783.4"
+                          - key: 2019
+                            value: "3256.18"
+                      - key: feuillus
+                        groupBy:
+                          - key: 2018
+                            value: "2798.82"
+                          - key: 2019
+                            value: 2999.87
         "401":
           description: Not Authorized
         "403":
@@ -637,49 +536,37 @@ paths:
           description: Bad Request
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/AggregationResultDto'
               examples:
                 badNumericType:
                   summary: Non-numeric attribute
-                  value: |
-                    {
-                      "application": "data-virt",
-                      "code": "BAD_REQUEST",
-                      "message": "It's not possible to aggregate on the non-numeric attribute {{attribute}} which has type keyword"
-                    }
+                  value:
+                    application: data-virt
+                    code: BAD_REQUEST
+                    message: It's not possible to aggregate on the non-numeric attribute {{attribute}} which has type keyword
                 badDateType:
                   summary: Bad attribute type
-                  value: |
-                    {
-                      "application": "data-virt",
-                      "code": "BAD_REQUEST",
-                      "message": "Aggregating on date is unavailable for attribute {{attribute}} that is not a date."
-                    }
+                  value:
+                    application: data-virt
+                    code: BAD_REQUEST
+                    message: Aggregating on date is unavailable for attribute {{attribute}} that is not a date.
                 invalidSortAndGroupBy:
                   summary: Sort with groupBy
-                  value: |
-                    {
-                      "application": "data-virt",
-                      "code": "BAD_REQUEST",
-                      "message": "Sort is not available when a groupBy has been set" 
-                    }
+                  value:
+                    application: data-virt
+                    code: BAD_REQUEST
+                    message: Sort is not available when a groupBy has been set
                 invalidDateInterval:
                   summary: Wrong DateInterval value
-                  value: |
-                    {
-                      "application": "data-virt",
-                      "code": "BAD_REQUEST",
-                      "message": "{{dateInterval}} is not a valid DateInterval value"
-                    }
+                  value:
+                    application: data-virt
+                    code: BAD_REQUEST
+                    message: "{{dateInterval}} is not a valid DateInterval value"
                 invalidAggregatedBy:
                   summary: Wrong AggregateBy type
-                  value: |
-                    {
-                      "application": "data-virt",
-                      "code": "BAD_REQUEST",
-                      "message": "Aggregate by is not available for types STRING, RAW, or GEO type"
-                    }
+                  value:
+                    application: data-virt
+                    code: BAD_REQUEST
+                    message: Aggregate by is not available for types STRING, RAW, or GEO type
       security:
         - oidc:
             - search
@@ -691,7 +578,7 @@ paths:
         This endpoint is not restricted by the limit of max item number in a result.
         It returns all items from a datasource using server sent event. An order is necessary.
       tags:
-        - Data Source Controller
+        - Data Source
       operationId: com.provoly.virt.datasource.DataSourceController_getPaginateItems
       parameters:
         - name: dataSourceId
@@ -714,87 +601,65 @@ paths:
               examples:
                 itemSearchResult:
                   summary: Item search result
-                  value: |
-                    [{
-                      "items": {
-                        "oclass_id_1": [
-                          {
-                            "oClass": "oclass_id_1",
-                            "id": "dataset_version_id_1@item_id_1",
-                            "metadata": {
-                              "_insertion_date": "2023-06-27T07:14:00.228606022",
-                              "datasetdef_id": "dataset_id_1",
-                              "_dataset_id": "dataset_version_id_1",
-                              "_item_id": "dataset_version_id_1@item_id_1",
-                              "_class": "oclass_id_1"
-                            },
-                            "attributes": {
-                              "Classification": {
-                                "value": "Conifères",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              },
-                              "Pourcentage surface": {
-                                "value": "6.82",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              },
-                              "Année": {
-                                "value": "2020",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              }
-                            },
-                            "datasetId": "dataset_version_id_1",
-                            "itemId": "item_id_1"
-                          },
-                          {
-                            "oClass": "oclass_id_1",
-                            "id": "dataset_version_id_1@item_id_1",
-                            "metadata": {
-                              "_insertion_date": "2023-06-27T07:14:00.228606022",
-                              "datasetdef_id": "dataset_id_1",
-                              "_dataset_id": "dataset_version_id_1",
-                              "_item_id": "dataset_version_id_1@item_id_1",
-                              "_class": "oclass_id_1"
-                            },
-                            "attributes": {
-                              "Classification": {
-                                "value": "Conifères",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              },
-                              "Pourcentage surface": {
-                                "value": "6.66",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              },
-                              "Année": {
-                                "value": "2021",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              }
-                            },
-                            "datasetId": "dataset_version_id_1",
-                            "itemId": "item_id_1"
-                          }
-                        ]
-                      },
-                      "relations": [],
-                      "count": {
-                        "oclass_id_1": {
-                          "count": 115,
-                          "accurate": true
-                        }
-                      },
-                      "searchAfter": null
-                      }]
+                  value:
+                    - items:
+                        oclass_id_1:
+                          - oClass: "914fd928-3b18-4e2c-a545-45db993a34a2"
+                            id: dataset_version_id_1@item_id_1
+                            metadata:
+                              _insertion_date: "2023-06-27T07:14:00.228606022"
+                              datasetdef_id: "914fd928-3b18-4e2c-a545-45db993a34a3"
+                              _dataset_id: "914fd928-3b18-4e2c-a545-45db993a35a3"
+                              _item_id: dataset_version_id_1@item_id_1
+                              _class: "914fd928-3b18-4e2c-a545-45db993a34a7"
+                            attributes:
+                              Classification:
+                                value: "Conifères"
+                                type: VALUE
+                                metadata: { }
+                                visible: true
+                              Pourcentage surface:
+                                value: "6.82"
+                                type: VALUE
+                                metadata: { }
+                                visible: true
+                              Année:
+                                value: "2020"
+                                type: VALUE
+                                metadata: { }
+                                visible: true
+                            itemId: item_id_1
+                          - oClass: "4c3d3ebc-0b37-404b-b12b-b107c76d7a6d"
+                            id: dataset_version_id_1@item_id_1
+                            metadata:
+                              _insertion_date: '2023-06-27T07:14:00.228606022'
+                              datasetdef_id: "79c1ab48-e13c-40fa-bb62-981cf6bc7943"
+                              _dataset_id: "79c1ab48-e13c-40fa-bb62-981cf6bc7948"
+                              _item_id: dataset_version_id_1@item_id_1
+                              _class: oclass_id_1
+                            attributes:
+                              Classification:
+                                value: "Conifères"
+                                type: VALUE
+                                metadata: { }
+                                visible: true
+                              Pourcentage surface:
+                                value: "6.66"
+                                type: VALUE
+                                metadata: { }
+                                visible: true
+                              Année:
+                                value: "2021"
+                                type: VALUE
+                                metadata: { }
+                                visible: true
+                            itemId: item_id_1
+                      relations: [ ]
+                      count:
+                        oclass_id_1:
+                          count: 115
+                          accurate: true
+                      searchAfter: null
         "400":
           description: Bad Request
           content:
@@ -802,12 +667,10 @@ paths:
               examples:
                 noSort:
                   summary: Search all without sorting
-                  value: |
-                    {
-                      "application": "data-virt",
-                      "code": "BAD_REQUEST",
-                      "message": "It's not possible to search all items without sorting"
-                    }
+                  value:
+                    application: data-virt
+                    code: BAD_REQUEST
+                    message: It's not possible to search all items without sorting
         "401":
           description: Not Authorized
         "404":
@@ -823,7 +686,7 @@ paths:
         This endpoint is used to retrieve a list of possible values for an attribute in a datasource.
         The datasource available for this endpoint are Dataset and DatasetVersion
       tags:
-        - Data Source Controller
+        - Data Source
       operationId: com.provoly.virt.datasource.DataSourceController_searchForAttributeValues
       requestBody:
         content:
@@ -843,7 +706,7 @@ paths:
               examples:
                 result:
                   summary: List of values
-                  value: |
+                  value:
                     [
                       "marie", "marianne", "marin"
                     ]
@@ -854,12 +717,10 @@ paths:
               examples:
                 noAttributeId:
                   summary: No attributeId provided
-                  value: |
-                    {
-                      "application": "data-virt",
-                      "code": "BAD_REQUEST",
-                      "message": "You need to provide an attributeId of the class"
-                    }
+                  value:
+                    application: data-virt
+                    code: BAD_REQUEST
+                    message: You need to provide an attributeId of the class
         "401":
           description: Not Authorized
         "404":
@@ -870,7 +731,7 @@ paths:
   /datasets/id/{datasetId}/dataset-versions/id/{id}:
     post:
       tags:
-        - Dataset Controller
+        - Dataset
       summary: Trigger asynchronous items insertion
       description: Import data by adding ItemDto list directly in a new version of a closed dataset
       operationId: com.provoly.virt.dataset.DatasetController_importData
@@ -891,31 +752,35 @@ paths:
         content:
           application/json:
             schema:
-              type: object
+              type: array
               items:
                 $ref: '#/components/schemas/ItemDto'
-            example : |
-              [
-                {
-                  "id": "{{datasetId}}@item_id",
-                  "oClass": "oclass_id",
-                  "metadata": {},
-                  "attributes": {
-                    "Adresse": {
-                        "type": "VALUE",
-                        "metadata": {},
-                        "value": "2 rue toto 30000 Nîmes",
-                        "visible": false
-                    },
-                    "Nb place disponibles": {
-                        "type": "VALUE",
-                        "metadata": {},
-                        "value": 5,
-                        "visible": false
-                    }
-                  }
-                }
-              ]
+            example:
+              - oClass: "4c20ec9d-ff2d-405b-9d59-e8153b05c560"
+                id: "f320a245-bfe8-476b-ad85-b700bf92b2b0@e787d244-a871-42db-b5bd-81caa2328990"
+                metadata:
+                  _insertion_date: '2023-06-27T07:14:00.228606022'
+                  datasetdef_id: "f320a245-bfe8-476b-ad85-b700bf92b2b0"
+                  _dataset_id: "e787d244-a871-42db-b5bd-81caa2328990"
+                  _item_id: "f320a245-bfe8-476b-ad85-b700bf92b2b0@e787d244-a871-42db-b5bd-81caa2328990"
+                  _class: "06a7a9ef-811e-4c83-923c-5204dc5b95af"
+                attributes:
+                  Classification:
+                    value: Conifères
+                    type: VALUE
+                    metadata: {}
+                    visible: true
+                  Pourcentage surface:
+                    value: '6.82'
+                    type: VALUE
+                    metadata: {}
+                    visible: true
+                  Année:
+                    value: '2020'
+                    type: VALUE
+                    metadata: {}
+                    visible: true
+                itemId: "765dada9-0f13-4b17-839c-56e2d8467ff9"
       responses:
         "201":
           description: Created
@@ -926,12 +791,10 @@ paths:
               examples:
                 mismatchOclassId:
                   summary: Oclass id doesn't match dataset
-                  value: |
-                    {
-                      "application": "data-virt",
-                      "code": "BAD_REQUEST",
-                      "message": "Item {{item_id}} cannot be added due to different OClassId with its Dataset"
-                    }
+                  value:
+                    application: data-virt
+                    code: BAD_REQUEST
+                    message: Item {{item_id}} cannot be added due to different OClassId with its Dataset
         "401":
           description: Not Authorized
         "403":
@@ -941,20 +804,16 @@ paths:
               examples:
                 noClosedDataset:
                   summary: Import on non closed dataset
-                  value: |
-                    {
-                      "application": "data-virt",
-                      "code": "FORBIDDEN",
-                      "message": "Import is only allowed on closed dataset"
-                    }
+                  value:
+                    application: data-virt
+                    code: FORBIDDEN
+                    message: Import is only allowed on closed dataset
                 idNotMatch:
                   summary: ItemId mismatch with datasetId
-                  value: |
-                    {
-                      "application": "data-virt",
-                      "code": "FORBIDDEN",
-                      "message": "Item id {{item_id}} doesn't match dataset id {{dataset_id}}"
-                    }
+                  value:
+                    application: data-virt
+                    code: FORBIDDEN
+                    message: Item id {{item_id}} doesn't match dataset id {{dataset_id}}
         "404":
           $ref: '#/components/responses/notFoundException'
         "409":
@@ -965,7 +824,7 @@ paths:
   /file:
     post:
       tags:
-        - File Controller
+        - File
       summary: Upload file
       description: Save file which will be linked to an item
       operationId: com.provoly.virt.file.FileController_receiveFile
@@ -993,12 +852,10 @@ paths:
               examples:
                 missingFile:
                   summary: Missing file
-                  value: |
-                    {
-                      "application": "data-virt",
-                      "code": "BAD_REQUEST",
-                      "message": "File is required."
-                    }
+                  value:
+                    application: data-virt
+                    code: BAD_REQUEST
+                    message: File is required.
         "401":
           description: Not Authorized
         "403":
@@ -1009,7 +866,7 @@ paths:
   /file/id/{id}:
     get:
       tags:
-        - File Controller
+        - File
       summary: Download file
       description: |
         Download file linked to an item by using the id generated during the upload.
@@ -1058,7 +915,7 @@ paths:
   /file/icons:
     post:
       tags:
-        - File Controller
+        - File
       summary: Upload icon or illustration
       description: |
         Service used for saving an icon for oClass customization or
@@ -1066,7 +923,7 @@ paths:
       operationId: com.provoly.virt.file.FileController_receiveIcon
       parameters:
         - name: type
-          in : query
+          in: query
           description: Image category
           schema:
             required:
@@ -1106,19 +963,15 @@ paths:
             application/json:
               examples:
                 missingType:
-                  value: |
-                    {
-                      "application": "data-virt",
-                      "code": "BAD_REQUEST",
-                      "message": "Type is required."
-                    }
+                  value:
+                    application: data-virt
+                    code: BAD_REQUEST
+                    message: Type is required.
                 invalidFile:
-                  value: |
-                    {
-                      "application": "data-virt",
-                      "code": "BAD_REQUEST",
-                      "message": "File type : {{file_mimetype}} is not supported for icon imports."
-                    }
+                  value:
+                    application: data-virt
+                    code: BAD_REQUEST
+                    message: "File type : {{file_mimetype}} is not supported for icon imports."
         "401":
           description: Not Authorized
         "403":
@@ -1131,7 +984,7 @@ paths:
             - widget_catalog_write
     get:
       tags:
-        - File Controller
+        - File
       summary: Get all icons and illustrations names
       description: |
         Return the name of all uploaded icons and illustrations, with their corresponding type.
@@ -1158,17 +1011,13 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ImageInfoDto'
-              example: |
-                [
-                  {
-                    "image": "icon.png",
-                    "type": ["icon"]
-                  },
-                 {
-                    "image": "arbre.png",
-                    "type": ["illustration"]
-                  }
-                ]
+              example:
+                - image: icon.png
+                  type:
+                    - icon
+                - image: arbre.png
+                  type:
+                    - illustration
         "401":
           description: Not Authorized
         "403":
@@ -1183,7 +1032,7 @@ paths:
   /file/icons/{name}:
     get:
       tags:
-        - File Controller
+        - File
       summary: Download icon or illustration
       description: Download the icon or illustration by using the id generated during the upload
       operationId: com.provoly.virt.file.FileController_getIcon
@@ -1217,7 +1066,7 @@ paths:
             - widget_catalog_read
     delete:
       tags:
-        - File Controller
+        - File
       summary: Delete icon or illustration
       description: This endpoint is only used for cleaning s3 server.
       operationId: com.provoly.virt.file.FileController_deleteIcon
@@ -1247,7 +1096,7 @@ paths:
   /file/icons/{id}/{type}:
     put:
       tags:
-        - File Controller
+        - File
       summary: Set type to an icon or illustration
       description: |
         Type is necessary when uploading an icon or illustration,
@@ -1276,12 +1125,10 @@ paths:
               examples:
                 typeAlreadyExists:
                   summary: Wrong type
-                  value: |
-                    {
-                      "application": "data-virt",
-                      "code": "BAD_REQUEST",
-                      "message": "Type {{type}} already exists for file {{file_id}}"
-                    }
+                  value:
+                    application: data-virt
+                    code: BAD_REQUEST
+                    message: Type {{type}} already exists for file {{file_id}}
         "401":
           description: Not Authorized
         "403":
@@ -1296,7 +1143,7 @@ paths:
   /imports/dataset/id/{datasetId}:
     post:
       tags:
-        - Imports Controller
+        - Imports
       summary: Asynchronous data import
       description: |
         Asynchronous data import that support csv file and zipped shapefile. It returns the
@@ -1362,7 +1209,7 @@ paths:
   /items:
     post:
       tags:
-        - Items Controller
+        - Items
       summary: Synchronous insertion of ItemDto collection
       description: Add items in the dataset version of a modifiable dataset.
       operationId: com.provoly.virt.item.ItemsController_insert
@@ -1391,12 +1238,10 @@ paths:
               examples:
                 noModifiableDataset:
                   summary: Non-modifiable dataset
-                  value: |
-                    {
-                      "application": "data-virt",
-                      "code": "FORBIDDEN",
-                      "message": "Can't add to dataset {{datast_name}}"
-                    }
+                  value:
+                    application: data-virt
+                    code: FORBIDDEN
+                    message: Can't add to dataset {{datast_name}}
         "404":
           $ref: '#/components/responses/notFoundException'
       security:
@@ -1405,7 +1250,7 @@ paths:
   /items/id/{id}:
     get:
       tags:
-        - Items Controller
+        - Items
       summary: Return item
       operationId: com.provoly.virt.item.ItemsController_get
       parameters:
@@ -1435,7 +1280,7 @@ paths:
   /items/id/{id}/relations:
     get:
       tags:
-        - Items Controller
+        - Items
       summary: Return all items related to the requested item
       operationId: com.provoly.virt.item.ItemsController_searchWithRelations
       parameters:
@@ -1465,7 +1310,7 @@ paths:
   /items/id/{itemId}/attributes/name/{attributeName}/metadata/name/{metadataName}/{value}:
     post:
       tags:
-        - Metadata Controller
+        - Metadata
       summary: Add metadata on specific attribute on specific item
       operationId: com.provoly.virt.metadata.MetadataController_setMetadataToAttribute
       parameters:
@@ -1503,12 +1348,10 @@ paths:
               examples:
                 UnknownMetadata:
                   summary: Unknown metadata
-                  value: |
-                    {
-                      "application": "data-virt",
-                      "code": "BAD_REQUEST",
-                      "message": "Unknown metadata {{metadata_name}}"
-                    }
+                  value:
+                    application: data-virt
+                    code: BAD_REQUEST
+                    message: Unknown metadata {{metadata_name}}
         "401":
           description: Not Authorized
         "403":
@@ -1522,19 +1365,17 @@ paths:
               examples:
                 attributeNotFound:
                   summary: Attribute not found
-                  value: |
-                    {
-                      "application": "data-virt",
-                      "code": "TECHNICAL",
-                      "message": "Attribute {{name}} not found in {{Oclass_name}}"
-                    }
+                  value:
+                    application: data-virt
+                    code: TECHNICAL
+                    message: Attribute {{name}} not found in {{Oclass_name}}
       security:
         - oidc:
             - item_write
   /items/id/{itemId}/metadata/name/{metadataName}/{value}:
     post:
       tags:
-        - Metadata Controller
+        - Metadata
       summary: Add metadata on specific item
       operationId: com.provoly.virt.metadata.MetadataController_setMetadataToItem
       parameters:
@@ -1566,12 +1407,10 @@ paths:
               examples:
                 UnknownMetadata:
                   summary: Unknown metadata
-                  value: |
-                    {
-                      "application": "data-virt",
-                      "code": "BAD_REQUEST",
-                      "message": "Unknown metadata {{metadata_name}}"
-                    }
+                  value:
+                    application: data-virt
+                    code: BAD_REQUEST
+                    message: Unknown metadata {{metadata_name}}
         "401":
           description: Not Authorized
         "403":
@@ -1584,7 +1423,7 @@ paths:
   /items/search:
     post:
       tags:
-        - Search Controller
+        - Search
       summary: Get n items that match search criteria
       description: |
         It is possible to search on one or more classes.
@@ -1604,7 +1443,7 @@ paths:
               type: object
               properties:
                 excludeGeo:
-                  $ref: '#/components/parameters/excludeGeo'
+                  $ref: '#/components/schemas/ExcludeGeo'
                 type:
                   $ref: '#/components/schemas/SearchRequestType'
                 fullSearch:
@@ -1616,124 +1455,95 @@ paths:
               monoWithoutCondition:
                 summary: Mono request without condition
                 description: Returns items from oclass oclass_id_1.
-                value: |
-                  {
-                      "type":"MONO_CLASS",
-                      "oClass": "oclass_id_1"
-                  }
+                value:
+                  type: MONO_CLASS
+                  oClass: "e6188d57-13d1-4fe0-affc-36356e9273d4"
               monoWithDatasetVersions:
                 summary: Mono request with datasetVersionIds
                 description: Returns items from oclass oclass_id_1 only in dataset_version_id
-                value: |
-                  {
-                      "type":"MONO_CLASS",
-                      "oClass": "oclass_id_1",
-                      "datasetVersionIds": ["dataset_version_id"]
-                  }
+                value:
+                  type: MONO_CLASS
+                  oClass: "bcb81d09-cbfd-4f4d-ba4a-3cce96a5f6af"
+                  datasetVersionIds:
+                    - "bcb81d09-cbfd-4f4d-ba4a-3cce99a5f6af"
               monoSimpleCondition:
                 summary: Mono request with condition
                 description: |
                   Returns items from oclass 
                   oclass_id_1 that match attribute_id_1 condition.
-                value: |
-                  {
-                    "type": "MONO_CLASS",
-                    "oClass": "oclass_id_1",
-                    "condition": {
-                      "type": "ATTRIBUTE",
-                      "attribute": "attribute_id_1",
-                      "operator": "EQUALS",
-                      "value": "Avant"
-                    }
-                  }
+                value:
+                  type: MONO_CLASS
+                  oClass: "48c700cf-4cd7-490f-80eb-93bf8a969f7f"
+                  condition:
+                    type: ATTRIBUTE
+                    attribute: "48c700cf-4cd7-490f-80eb-93bf8a968f7f"
+                    operator: EQUALS
+                    value: Avant
               monoSimpleConditionWithSearchAfter:
                 summary: Mono request with condition and searchAfter
                 description: |
                   Returns items from oclass 
                   oclass_id_1 that match attribute_id_1 condition.
-                value: |
-                  {
-                    "type": "MONO_CLASS",
-                    "oClass": "oclass_id_1",
-                    "condition": {
-                      "type": "ATTRIBUTE",
-                      "attribute": "attribute_id_1",
-                      "operator": "EQUALS",
-                      "value": "Avant"
-                    },
-                     "searchAfter":"search_after_value"
-                  }
+                value:
+                  type: MONO_CLASS
+                  oClass: "a22c83d3-847a-458b-b7dd-ba8dfc31ce42"
+                  condition:
+                    type: ATTRIBUTE
+                    attribute: "d1eeaa48-80c7-4731-8662-af23f09de8b6"
+                    operator: EQUALS
+                    value: Avant
+                  searchAfter: search_after_value
               monoOrComposedCondition:
                 summary: Mono request with composed condition
                 description: |
                   Returns items from oclass 
                   oclass_id_1 that match attribute_id_1 OR attribute_id_2 conditions.
-                value: |
-                  {
-                    "type": "MONO_CLASS",
-                    "oClass": "oclass_id_1",
-                    "condition": {
-                      "type": "OR",
-                      "composed": [
-                        {
-                          "type": "ATTRIBUTE",
-                          "attribute": "attribute_id_1",
-                          "operator": "INSIDE",
-                          "value": 2020,
-                          "upperValue" : 2023
-                        },
-                        {
-                          "type": "ATTRIBUTE",
-                          "attribute": "attribute_id_2",
-                          "operator": "GREATER_THAN",
-                          "value": "2020"
-                        }
-                      ]
-                    }
-                  }
+                value:
+                  type: MONO_CLASS
+                  oClass: "f7516a51-a735-4a14-9201-c32b32e3f45c"
+                  condition:
+                    type: OR
+                    composed:
+                    - type: ATTRIBUTE
+                      attribute: "5d4f58f2-63e2-45e6-81b5-31e38c5300b6"
+                      operator: INSIDE
+                      value: 2020
+                      upperValue: 2023
+                    - type: ATTRIBUTE
+                      attribute: "fdf02227-1dc9-40f6-90d5-bb747367df19"
+                      operator: GREATER_THAN
+                      value: '2020'
               multiWithFieldsAndClass:
                 summary: Multi request with field condition
                 description: |
                   Returns items from oclasses 
                   oclass_id_1 and oclass_id_2 that match field_id_1 AND field_id_2 condition. 
                   Default operator is EQUALS.
-                value: |
-                  {
-                    "type": "MULTI_CLASS",
-                    "multiType": "AND",
-                    "oClasses": [ "oclass_id_1", "oclass_id_2"],
-                    "fields": [
-                      {
-                        "field": "field_id_1",
-                        "value": "2020"
-                      },
-                      {
-                        "field": "field_id_2",
-                        "value": "2022"
-                      }
-                    ]
-                  }
+                value:
+                  type: MULTI_CLASS
+                  multiType: AND
+                  oClasses:
+                  - "8edcd4be-e1be-4f2a-a9c2-586df33842cf"
+                  - "d60b8549-280e-489e-92ca-7d85feb09e87"
+                  fields:
+                  - field: "5d0b6aa6-c8c2-43a1-93ee-b18e453ba9a9"
+                    value: '2020'
+                  - field: "f8ad4cc3-966b-4e19-88c5-67b2030e3fac"
+                    value: '2022'
               multiWithFieldsAllClass:
                 summary: Multi request with field condition on all class
                 description: |
                   Returns items from all oclasses that match field_id_1 OR field_id_2 condition. 
                   Default operator is EQUALS.
-                value: |
-                  {
-                   "type": "MULTI_CLASS",
-                   "multiType": "OR",
-                   "oClasses": [],
-                   "fields": [
-                     {
-                       "field": "field_id_1",
-                       "value": "2020"
-                     },
-                     {
-                       "field": "field_id_2",
-                       "value": "2022"
-                     }
-                   ]
-                  }
+                value:
+                  type: MULTI_CLASS
+                  multiType: OR
+                  oClasses: []
+                  fields:
+                  - field: "09c53a03-d239-478d-a46c-95e5d8415350"
+                    value: '2020'
+                  - field: "c0272022-6c9b-4868-9014-595467177e2a"
+                    value: '2022'
       responses:
         "200":
           description: OK
@@ -1744,165 +1554,120 @@ paths:
               examples:
                 monoSearchResult:
                   summary: Mono search result
-                  value: |
-                    {
-                      "items": {
-                        "oclass_id_1": [
-                          {
-                            "oClass": "oclass_id_1",
-                            "id": "dataset_version_id_1@item_id_1",
-                            "metadata": {
-                              "_insertion_date": "2023-06-27T07:14:00.228606022",
-                              "datasetdef_id": "dataset_id_1",
-                              "_dataset_id": "dataset_version_id_1",
-                              "_item_id": "dataset_version_id_1@item_id_1",
-                              "_class": "oclass_id_1"
-                            },
-                            "attributes": {
-                              "Classification": {
-                                "value": "Conifères",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              },
-                              "Pourcentage surface": {
-                                "value": "6.82",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              },
-                              "Année": {
-                                "value": "2020",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              }
-                            },
-                            "datasetId": "dataset_version_id_1",
-                            "itemId": "item_id_1"
-                          },
-                          {
-                            "oClass": "oclass_id_1",
-                            "id": "dataset_version_id_1@item_id_1",
-                            "metadata": {
-                              "_insertion_date": "2023-06-27T07:14:00.228606022",
-                              "datasetdef_id": "dataset_id_1",
-                              "_dataset_id": "dataset_version_id_1",
-                              "_item_id": "dataset_version_id_1@item_id_1",
-                              "_class": "oclass_id_1"
-                            },
-                            "attributes": {
-                              "Classification": {
-                                "value": "Conifères",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              },
-                              "Pourcentage surface": {
-                                "value": "6.66",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              },
-                              "Année": {
-                                "value": "2021",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              }
-                            },
-                            "datasetId": "dataset_version_id_1",
-                            "itemId": "item_id_1"
-                          }
-                        ]
-                      },
-                      "relations": [],
-                      "count": {
-                        "oclass_id_1": {
-                          "count": 115,
-                          "accurate": true
-                        }
-                      },
-                      "searchAfter": null
-                    }
-
+                  value:
+                    items:
+                      "4c20ec9d-ff2d-405b-9d59-e8153b05c560":
+                        - oClass: "4c20ec9d-ff2d-405b-9d59-e8153b05c560"
+                          id: "f320a245-bfe8-476b-ad85-b700bf92b2b0@e787d244-a871-42db-b5bd-81caa2328990"
+                          metadata:
+                            _insertion_date: '2023-06-27T07:14:00.228606022'
+                            datasetdef_id: "f320a245-bfe8-476b-ad85-b700bf92b2b0"
+                            _dataset_id: "e787d244-a871-42db-b5bd-81caa2328990"
+                            _item_id: "f320a245-bfe8-476b-ad85-b700bf92b2b0@e787d244-a871-42db-b5bd-81caa2328990"
+                            _class: "06a7a9ef-811e-4c83-923c-5204dc5b95af"
+                          attributes:
+                            Classification:
+                              value: Conifères
+                              type: VALUE
+                              metadata: {}
+                              visible: true
+                            Pourcentage surface:
+                              value: '6.82'
+                              type: VALUE
+                              metadata: {}
+                              visible: true
+                            Année:
+                              value: '2020'
+                              type: VALUE
+                              metadata: {}
+                              visible: true
+                          itemId: "765dada9-0f13-4b17-839c-56e2d8467ff9"
+                        - oClass: "4c20ec9d-ff2d-405b-9d59-e8153b05c560"
+                          id: "f320a245-bfe8-476b-ad85-b700bf92b2b0@765dada9-0f13-4b17-839c-56e2d8467ff9"
+                          metadata:
+                            _insertion_date: "2023-06-27T07:14:00.228606022"
+                            datasetdef_id: "e759cb7a-ec90-4cce-8c08-4b267e4f295c"
+                            _dataset_id: "f320a245-bfe8-476b-ad85-b700bf92b2b0"
+                            _item_id: "f320a245-bfe8-476b-ad85-b700bf92b2b0@765dada9-0f13-4b17-839c-56e2d8467ff9"
+                            _class: "4c20ec9d-ff2d-405b-9d59-e8153b05c560"
+                          attributes:
+                            Classification:
+                              value: Conifères
+                              type: VALUE
+                              metadata: {}
+                              visible: true
+                            Pourcentage surface:
+                              value: '6.66'
+                              type: VALUE
+                              metadata: {}
+                              visible: true
+                            Année:
+                              value: '2021'
+                              type: VALUE
+                              metadata: {}
+                              visible: true
+                          itemId: "765dada9-0f13-4b17-839c-56e2d8467ff9"
+                    relations: []
+                    count:
+                      "4c20ec9d-ff2d-405b-9d59-e8153b05c560":
+                        count: 115
+                        accurate: true
+                    searchAfter: null
                 multiSearchResult:
                   summary: Multi search result
-                  value: |
-                    {
-                        "items": {
-                            "oclass_id_1": [
-                                {
-                                    "oClass": "oclass_id_1",
-                                    "id": "dataset_id_1@item_id_1",
-                                    "metadata": {
-                                        "_insertion_date": "2023-06-27T07:14:00.228606022",
-                                        "datasetdef_id": "dataset_id_1",
-                                        "_dataset_id": "dataset_version_id_1",
-                                        "_item_id": "dataset_version_id_1@item_id1",
-                                        "_class": "oclass_id_1"
-                                    },
-                                    "attributes": {
-                                        "Classification": {
-                                            "value": "Conifères",
-                                            "type": "VALUE",
-                                            "metadata": {},
-                                            "visible": true
-                                        },
-                                        "Pourcentage surface": {
-                                            "value": 6.82,
-                                            "type": "VALUE",
-                                            "metadata": {},
-                                            "visible": true
-                                        }
-                                    },
-                                    "datasetId": "dataset_version_id_1",
-                                    "itemId": "dataset_version_id_1@item_id_1"
-                                }
-                            ],
-                            "oclass_id_2": [
-                                {
-                                    "oClass": "oclass_id_2",
-                                    "id": "dataset_id_2@item_id_1",
-                                    "metadata": {
-                                        "_insertion_date": "2023-06-27T07:14:00.228606022",
-                                        "datasetdef_id": "dataset_id_2",
-                                        "_dataset_id": "dataset_version_id_2",
-                                        "_item_id": "dataset_version_id_2@item_id_1",
-                                        "_class": "oclass_id_2"
-                                    },
-                                    "attributes": {
-                                        "Espece": {
-                                            "value": "Conifères",
-                                            "type": "VALUE",
-                                            "metadata": {},
-                                            "visible": true
-                                        },
-                                        "Taille moyenne (m)": {
-                                            "value": 2.50,
-                                            "type": "VALUE",
-                                            "metadata": {},
-                                            "visible": true
-                                        }
-                                    },
-                                    "datasetId": "dataset_version_id_2",
-                                    "itemId": "item_id_1"
-                                }
-                            ]
-                        },
-                        "relations": [],
-                        "count": {
-                            "oclass_id_1": {
-                                "count": 115,
-                                "accurate": true
-                            },
-                            "oclass_id_2": {
-                                "count": 200,
-                                "accurate": true
-                            }
-                        },
-                        "searchAfter": null
-                    }
+                  value:
+                    items:
+                      "4c20ec9d-ff2d-405b-9d59-e8153b05c560":
+                        - oClass: "4c20ec9d-ff2d-405b-9d59-e8153b05c560"
+                          id: "0b4d45e6-81e0-4b0f-ae98-13066d103993@76a72163-e6d6-498c-9c1e-77a4e7793789"
+                          metadata:
+                            _insertion_date: "2023-06-27T07:14:00.228606022"
+                            datasetdef_id: "0b4d45e6-81e0-4b0f-ae98-13066d103993"
+                            _dataset_id: "d93a2fca-3562-45a0-bbd4-cb4135171dd3"
+                            _item_id: "d93a2fca-3562-45a0-bbd4-cb4135171dd3@76a72163-e6d6-498c-9c1e-77a4e7793789"
+                            _class: "4c20ec9d-ff2d-405b-9d59-e8153b05c560"
+                          attributes:
+                            Classification:
+                              value: Conifères
+                              type: VALUE
+                              metadata: {}
+                              visible: true
+                            Pourcentage surface:
+                              value: "6.82"
+                              type: VALUE
+                              metadata: {}
+                              visible: true
+                          itemId: "d93a2fca-3562-45a0-bbd4-cb4135171dd3@76a72163-e6d6-498c-9c1e-77a4e7793789"
+                      "a1716102-b543-4b44-8e6d-33c0034f56f5":
+                        - oClass: "4c20ec9d-ff2d-405b-9d59-e8153b05c560"
+                          id: "0b4d45e6-81e0-4b0f-ae98-13066d103993@76a72163-e6d6-498c-9c1e-77a4e7793789"
+                          metadata:
+                            _insertion_date: '2023-06-27T07:14:00.228606022'
+                            datasetdef_id: "0b4d45e6-81e0-4b0f-ae98-13066d103993"
+                            _dataset_id: "d93a2fca-3562-45a0-bbd4-cb4135171dd3"
+                            _item_id: "d93a2fca-3562-45a0-bbd4-cb4135171dd3@76a72163-e6d6-498c-9c1e-77a4e7793789"
+                            _class: "4c20ec9d-ff2d-405b-9d59-e8153b05c560"
+                          attributes:
+                            Espece:
+                              value: Conifères
+                              type: VALUE
+                              metadata: {}
+                              visible: true
+                            Taille moyenne (m):
+                              value: "2.5"
+                              type: VALUE
+                              metadata: {}
+                              visible: true
+                          itemId: "76a72163-e6d6-498c-9c1e-77a4e7793789"
+                    relations: []
+                    count:
+                      "ee6a3dd6-0660-4fef-b93c-fb5625c7610a":
+                        count: 115
+                        accurate: true
+                      "ee6a3dd6-0660-4fef-b93c-fb5625c7611a":
+                        count: 200
+                        accurate: true
+                    searchAfter: null
         "400":
           description: Bad Request
           content:
@@ -1910,28 +1675,22 @@ paths:
               examples:
                 SearchAfterWithoutSort:
                   summary: Error pagination
-                  value: |
-                    {
-                      "application": "data-virt",
-                      "code": "BAD_REQUEST",
-                      "message": "Pagination isn't possible without sorting"
-                    }
+                  value:
+                    application: data-virt
+                    code: BAD_REQUEST
+                    message: Pagination isn't possible without sorting
                 datasetVersionOclassMismatch:
                   summary: Dataset version and class mismatch
-                  value: |
-                    {
-                      "application": "data-virt",
-                      "code": "BAD_REQUEST",
-                      "message": "Dataset version and class mismatch {{classId}} <-> {{dataset_version_id}}"
-                    }
+                  value:
+                    application: data-virt
+                    code: BAD_REQUEST
+                    message: Dataset version and class mismatch {{classId}} <-> {{dataset_version_id}}
                 invalidLimit:
                   summary: Limit error
-                  value: |
-                    {
-                      "application": "data-virt",
-                      "code": "BAD_REQUEST",
-                      "message": "Limit can't be negative or exceed 1000."
-                    }
+                  value:
+                    application: data-virt
+                    code: BAD_REQUEST
+                    message: Limit can't be negative or exceed 1000.
         "401":
           description: Not Authorized
         "403":
@@ -1945,35 +1704,29 @@ paths:
               examples:
                 unknownRequestType:
                   summary: Unknown request type
-                  value: |
-                    {
-                      "application": "data-virt",
-                      "code": "TECHNICAL",
-                      "message": "Unknown request type {{request_type}}"
-                    }
+                  value:
+                    application: data-virt
+                    code: TECHNICAL
+                    message: Unknown request type {{request_type}}
                 unknownOperator:
                   summary: Unknown operator
-                  value: |
-                    {
-                      "application": "data-virt",
-                      "code": "TECHNICAL",
-                      "message": "Operator {{operator}} is not supported"
-                    }
+                  value:
+                    application: data-virt
+                    code: TECHNICAL
+                    message: Operator {{operator}} is not supported
                 unknowConditionType:
                   summary: Unknown condition type
-                  value: |
-                    {
-                      "application": "data-virt",
-                      "code": "BAD_REQUEST",
-                      "message": "Unknown condition type {{condition_type}}"
-                    }
+                  value:
+                    application: data-virt
+                    code: BAD_REQUEST
+                    message: Unknown condition type {{condition_type}}
       security:
         - oidc:
             - search
   /items/search/named/{nameQueryId}:
     get:
       tags:
-        - Search Controller
+        - Search
       summary: Returns items that match named query
       description: |
         Search criteria are stored in a named query. 
@@ -1998,165 +1751,120 @@ paths:
               examples:
                 monoSearchResult:
                   summary: Mono search result
-                  value: |
-                    {
-                      "items": {
-                        "oclass_id_1": [
-                          {
-                            "oClass": "oclass_id_1",
-                            "id": "dataset_version_id_1@item_id_1",
-                            "metadata": {
-                              "_insertion_date": "2023-06-27T07:14:00.228606022",
-                              "datasetdef_id": "dataset_id_1",
-                              "_dataset_id": "dataset_version_id_1",
-                              "_item_id": "dataset_version_id_1@item_id_1",
-                              "_class": "oclass_id_1"
-                            },
-                            "attributes": {
-                              "Classification": {
-                                "value": "Conifères",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              },
-                              "Pourcentage surface": {
-                                "value": "6.82",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              },
-                              "Année": {
-                                "value": "2020",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              }
-                            },
-                            "datasetId": "dataset_version_id_1",
-                            "itemId": "item_id_1"
-                          },
-                          {
-                            "oClass": "oclass_id_1",
-                            "id": "dataset_version_id_1@item_id_1",
-                            "metadata": {
-                              "_insertion_date": "2023-06-27T07:14:00.228606022",
-                              "datasetdef_id": "dataset_id_1",
-                              "_dataset_id": "dataset_version_id_1",
-                              "_item_id": "dataset_version_id_1@item_id_1",
-                              "_class": "oclass_id_1"
-                            },
-                            "attributes": {
-                              "Classification": {
-                                "value": "Conifères",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              },
-                              "Pourcentage surface": {
-                                "value": "6.66",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              },
-                              "Année": {
-                                "value": "2021",
-                                "type": "VALUE",
-                                "metadata": {},
-                                "visible": true
-                              }
-                            },
-                            "datasetId": "dataset_version_id_1",
-                            "itemId": "item_id_1"
-                          }
-                        ]
-                      },
-                      "relations": [],
-                      "count": {
-                        "oclass_id_1": {
-                          "count": 115,
-                          "accurate": true
-                        }
-                      },
-                      "searchAfter": null
-                      }
-
+                  value:
+                    items:
+                      "a1716102-b543-4b44-8e6d-33c0034f56f5":
+                        - oClass: "765dada9-0f13-4b17-839c-56e2d8467ff9"
+                          id: "dataset_version_id_1@b6ce58ac-edf7-49e3-8a23-580145bdd573"
+                          metadata:
+                            _insertion_date: '2023-06-27T07:14:00.228606022'
+                            datasetdef_id: dataset_id_1
+                            _dataset_id: "a4cd5d5b-3cb0-4d70-af9d-838c7d162e59"
+                            _item_id: "a4cd5d5b-3cb0-4d70-af9d-838c7d162e59@b6ce58ac-edf7-49e3-8a23-580145bdd573"
+                            _class: "a1716102-b543-4b44-8e6d-33c0034f56f5"
+                          attributes:
+                            Classification:
+                              value: Conifères
+                              type: VALUE
+                              metadata: {}
+                              visible: true
+                            Pourcentage surface:
+                              value: '6.82'
+                              type: VALUE
+                              metadata: {}
+                              visible: true
+                            Année:
+                              value: '2020'
+                              type: VALUE
+                              metadata: {}
+                              visible: true
+                          itemId: "b6ce58ac-edf7-49e3-8a23-580145bdd573"
+                        - oClass: "a1716102-b543-4b44-8e6d-33c0034f56f5"
+                          id: "a4cd5d5b-3cb0-4d70-af9d-838c7d162e59@b6ce58ac-edf7-49e3-8a23-580145bdd573"
+                          metadata:
+                            _insertion_date: '2023-06-27T07:14:00.228606022'
+                            datasetdef_id: dataset_id_1
+                            _dataset_id: "a4cd5d5b-3cb0-4d70-af9d-838c7d162e59"
+                            _item_id: "a4cd5d5b-3cb0-4d70-af9d-838c7d162e59@b6ce58ac-edf7-49e3-8a23-580145bdd573"
+                            _class: "a1716102-b543-4b44-8e6d-33c0034f56f5"
+                          attributes:
+                            Classification:
+                              value: Conifères
+                              type: VALUE
+                              metadata: {}
+                              visible: true
+                            Pourcentage surface:
+                              value: '6.66'
+                              type: VALUE
+                              metadata: {}
+                              visible: true
+                            Année:
+                              value: '2021'
+                              type: VALUE
+                              metadata: {}
+                              visible: true
+                          itemId: "b6ce58ac-edf7-49e3-8a23-580145bdd573"
+                    relations: []
+                    count:
+                      "a1716102-b543-4b44-8e6d-33c0034f56f5":
+                        count: 115
+                        accurate: true
+                    searchAfter: null
                 multiSearchResult:
                   summary: Multi search result
-                  value: |
-                    {
-                        "items": {
-                            "oclass_id_1": [
-                                {
-                                    "oClass": "oclass_id_1",
-                                    "id": "dataset_id_1@item_id_1",
-                                    "metadata": {
-                                        "_insertion_date": "2023-06-27T07:14:00.228606022",
-                                        "datasetdef_id": "dataset_id_1",
-                                        "_dataset_id": "dataset_version_id_1",
-                                        "_item_id": "dataset_version_id_1@item_id1",
-                                        "_class": "oclass_id_1"
-                                    },
-                                    "attributes": {
-                                        "Classification": {
-                                            "value": "Conifères",
-                                            "type": "VALUE",
-                                            "metadata": {},
-                                            "visible": true
-                                        },
-                                        "Pourcentage surface": {
-                                            "value": 6.82,
-                                            "type": "VALUE",
-                                            "metadata": {},
-                                            "visible": true
-                                        }
-                                    },
-                                    "datasetId": "dataset_version_id_1",
-                                    "itemId": "dataset_version_id_1@item_id_1"
-                                }
-                            ],
-                            "oclass_id_2": [
-                                {
-                                    "oClass": "oclass_id_2",
-                                    "id": "dataset_id_2@item_id_1",
-                                    "metadata": {
-                                        "_insertion_date": "2023-06-27T07:14:00.228606022",
-                                        "datasetdef_id": "dataset_id_2",
-                                        "_dataset_id": "dataset_version_id_2",
-                                        "_item_id": "dataset_version_id_2@item_id_1",
-                                        "_class": "oclass_id_2"
-                                    },
-                                    "attributes": {
-                                        "Espece": {
-                                            "value": "Conifères",
-                                            "type": "VALUE",
-                                            "metadata": {},
-                                            "visible": true
-                                        },
-                                        "Taille moyenne (m)": {
-                                            "value": 2.50,
-                                            "type": "VALUE",
-                                            "metadata": {},
-                                            "visible": true
-                                        }
-                                    },
-                                    "datasetId": "dataset_version_id_2",
-                                    "itemId": "item_id_1"
-                                }
-                            ]
-                        },
-                        "relations": [],
-                        "count": {
-                            "oclass_id_1": {
-                                "count": 115,
-                                "accurate": true
-                            },
-                            "oclass_id_2": {
-                                "count": 200,
-                                "accurate": true
-                            }
-                        },
-                        "searchAfter": null
-                    }
+                  value:
+                    items:
+                      "a1716102-b543-4b44-8e6d-33c0034f56f5":
+                        - oClass: "a1716102-b543-4b44-8e6d-33c0034f56f5"
+                          id: "11c09acb-bd92-4416-bc2a-2108c0233ce8@b6ce58ac-edf7-49e3-8a23-580145bdd573"
+                          metadata:
+                            _insertion_date: "2023-06-27T07:14:00.228606022"
+                            datasetdef_id: "11c09acb-bd92-4416-bc2a-2108c0233ce8"
+                            _dataset_id: "deaaf677-41fb-4ae5-96c6-3d926da10fac"
+                            _item_id: "deaaf677-41fb-4ae5-96c6-3d926da10fac@2c0ef64c-2949-43c2-aed8-97ed26ca68f7"
+                            _class: "a1716102-b543-4b44-8e6d-33c0034f56f5"
+                          attributes:
+                            Classification:
+                              value: Conifères
+                              type: VALUE
+                              metadata: {}
+                              visible: true
+                            Pourcentage surface:
+                              value: "6.82"
+                              type: VALUE
+                              metadata: {}
+                              visible: true
+                          itemId: "deaaf677-41fb-4ae5-96c6-3d926da10fac@b6ce58ac-edf7-49e3-8a23-580145bdd573"
+                      "a1716102-b543-4b44-8e6d-33c0034f56f7":
+                        - oClass: "a1716102-b543-4b44-8e6d-33c0034f56f5"
+                          id: "11c09acb-bd92-4416-bc2a-2108c0233ce8@b6ce58ac-edf7-49e3-8a23-580145bdd573"
+                          metadata:
+                            _insertion_date: "2023-06-27T07:14:00.228606022"
+                            datasetdef_id: "11c09acb-bd92-4416-bc2a-2108c0233ce8"
+                            _dataset_id: "deaaf677-41fb-4ae5-96c6-3d926da10fac"
+                            _item_id: "deaaf677-41fb-4ae5-96c6-3d926da10fac@b6ce58ac-edf7-49e3-8a23-580145bdd573"
+                            _class: "a1716102-b543-4b44-8e6d-33c0034f56f5"
+                          attributes:
+                            Espece:
+                              value: Conifères
+                              type: VALUE
+                              metadata: {}
+                              visible: true
+                            Taille moyenne (m):
+                              value: "2.5"
+                              type: VALUE
+                              metadata: {}
+                              visible: true
+                          itemId: "b6ce58ac-edf7-49e3-8a23-580145bdd573"
+                    relations: []
+                    count:
+                      "a1716102-b543-4b44-8e6d-33c0034f56f5":
+                        count: 115
+                        accurate: true
+                      "a1716102-b543-4b44-8e6d-33c0034f56f7":
+                        count: 200
+                        accurate: true
+                    searchAfter: null
         "400":
           description: Bad Request
           content:
@@ -2164,12 +1872,10 @@ paths:
               examples:
                 invalidLimit:
                   summary: Error limit
-                  value: |
-                    {
-                      "application": "data-virt",
-                      "code": "BAD_REQUEST",
-                      "message": "Limit can't be negative or exceed 1000."
-                    }
+                  value:
+                    application: data-virt
+                    code: BAD_REQUEST
+                    message: Limit can't be negative or exceed 1000.
         "401":
           description: Not Authorized
         "403":
@@ -2182,7 +1888,7 @@ paths:
   /relations:
     post:
       tags:
-        - Relations Controller
+        - Relations
       summary: Save a list of relations
       description: |
         Registers a relation between two attributes of different oClasses 
@@ -2208,7 +1914,7 @@ paths:
             - item_write
     delete:
       tags:
-        - Relations Controller
+        - Relations
       summary: Delete relation between two attributes
       description: Deleting a relation implies the dissociation between items linked by the relation.
       operationId: com.provoly.virt.relation.RelationsController_delete
@@ -2230,7 +1936,7 @@ paths:
   /relations/aggregate:
     post:
       tags:
-        - Relation Aggregate Controller
+        - Relation Aggregate
       summary: Update relations between items. Called by `data-link`
       description: |
         Data Link automatically analyze which relation is deprecated, 
@@ -2267,11 +1973,7 @@ components:
       in: query
       name: limit
       schema:
-        format: int32
-        type: integer
-        default: 200
-        maximum: 1000
-        example: 10
+        $ref: '#/components/schemas/Limit'
     sortString:
       in: query
       name: order
@@ -2307,9 +2009,7 @@ components:
       in: query
       name: excludeGeo
       schema:
-        description: Parameter to exclude geographic data from queries.
-        type: boolean
-        default: true
+        $ref: '#/components/schemas/ExcludeGeo'
     filterDto:
       in: query
       name: filter
@@ -2322,6 +2022,16 @@ components:
         example:
           - 'uuid,INSIDE,2020,2022'
   schemas:
+    ExcludeGeo:
+      description: Parameter to exclude geographic data from queries.
+      type: boolean
+      default: true
+    Limit:
+      format: int32
+      type: integer
+      default: 200
+      maximum: 1000
+      example: 10
     Error:
       type: object
       properties:
@@ -2357,20 +2067,73 @@ components:
           items:
             $ref: '#/components/schemas/ItemAggregationDto'
     AttributeDto:
+      oneOf:
+        - $ref: "#/components/schemas/AttributeSimpleValueDto"
+        - $ref: "#/components/schemas/AttributeMultiValueDto"
+      discriminator:
+        propertyName: type
+        mapping:
+          VALUE: "#/components/schemas/AttributeSimpleValueDto"
+          MULTI: "#/components/schemas/AttributeMultiValueDto"
+    AttributeSimpleValueDto:
       type: object
       properties:
         type:
           $ref: '#/components/schemas/AttributeType'
+        metadata:
+          type: object
+          additionalProperties:
+            type: object
+        value:
+          $ref: "#/components/schemas/anyType"
+        visible:
+          type: boolean
+          default: false
+    anyType:
+      anyOf:
+        - type: string
+        - type: number
+          format: double
+        - type: integer
+          format: int32
+        - type: boolean
+        - type: array
+          items: {}
+        - type: object
+    AttributeMultiValueDto:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/AttributeType'
+        values:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttributeSimpleValueDto"
     AttributeType:
       enum:
         - VALUE
         - MULTI
       type: string
     ConditionDto:
+      oneOf:
+        - $ref: "#/components/schemas/AttributeConditionDto"
+        - $ref: "#/components/schemas/MetadataConditionDto"
+        - $ref: "#/components/schemas/ComposedConditionDto"
+        - $ref: "#/components/schemas/TrueConditionDto"
+      discriminator:
+        propertyName: type
+        mapping:
+          ATTRIBUTE: "#/components/schemas/AttributeConditionDto"
+          OR: "#/components/schemas/ComposedConditionDto"
+          AND: "#/components/schemas/ComposedConditionDto"
+          METADATA: "#/components/schemas/MetadataConditionDto"
+          TRUE: "#/components/schemas/TrueConditionDto"
+    TrueConditionDto:
+      description: Condition based on attribute used when params type equals ATTRIBUTE
       type: object
       properties:
         type:
-          $ref: '#/components/schemas/ConditionType'
+          $ref: "#/components/schemas/ConditionType"    
     ConditionType:
       enum:
         - "TRUE"
@@ -2379,14 +2142,45 @@ components:
         - ATTRIBUTE
         - METADATA
       type: string
-    CountDto:
+    AttributeConditionDto:
+      description: Condition based on attribute used when params type equals ATTRIBUTE
       type: object
       properties:
-        count:
-          format: int64
-          type: integer
-        accurate:
-          type: boolean
+        type:
+          $ref: '#/components/schemas/ConditionType'
+        attribute:
+          $ref: '#/components/schemas/UUID'
+        value:
+          type: string
+        upperValue:
+          title: string
+        location:
+          type: string
+        operator:
+          $ref: "#/components/schemas/Operator"
+    ComposedConditionDto:
+      description: Composed condition based on ConditionDto used when params type equals OR or AND. ConditionDto can again be one of TRUE, AND, OR, ATTRIBUTE or METADATA.
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ConditionType'
+        composed:
+          type: array
+          properties:
+            items:
+              $ref: '#/components/schemas/ConditionDto'
+    MetadataConditionDto:
+      description: Condition based on metadata used when params type equals METADATA
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ConditionType'
+        metadata:
+          $ref: '#/components/schemas/UUID'
+        value:
+          type: string
+        operator:
+          $ref: "#/components/schemas/Operator"
     DataSourceDetailsDto:
       type: object
       properties:
@@ -2480,7 +2274,7 @@ components:
           type: string
           example: "mar"
         limit:
-          $ref: '#/components/parameters/limit'
+          $ref: '#/components/schemas/Limit'
         attributes:
           type: array
           items:
@@ -2510,9 +2304,9 @@ components:
       type: object
       properties:
         key:
-          type: object
+          $ref: "#/components/schemas/anyType"
         value:
-          type: object
+          $ref: "#/components/schemas/anyType"
     ImageInfoDto:
       type: object
       properties:
@@ -2530,22 +2324,13 @@ components:
       type: object
       properties:
         key:
-          type: object
+          $ref: "#/components/schemas/anyType"
         value:
-          type: object
+          $ref: "#/components/schemas/anyType"
         groupBy:
           type: array
           items:
             $ref: '#/components/schemas/GroupByValueDto'
-    ImportParameter:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/ItemDto'
-        datasetVersionInformationDto:
-          $ref: '#/components/schemas/DatasetVersionInformationDto'
     ItemDto:
       type: object
       properties:
@@ -2556,7 +2341,7 @@ components:
         metadata:
           type: object
           additionalProperties:
-            type: object
+            $ref: "#/components/schemas/anyType"
         attributes:
           type: object
           additionalProperties:
@@ -2590,14 +2375,22 @@ components:
         count:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/CountDto'
+            type: object
+            properties:
+              count:
+                format: int64
+                type: integer
+              accurate:
+                type: boolean
         searchAfter:
           type: string
+          nullable: true
     MonoClassRequestDto:
       type: object
       properties:
         type:
           $ref: '#/components/schemas/SearchRequestType'
+          default: MONO_CLASS
         fullSearch:
           $ref: '#/components/schemas/FullSearchConditionDto'
         oClass:
@@ -2605,15 +2398,16 @@ components:
         datasetVersionIds:
           type: array
           items:
-            format: uuid
-            pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-            type: string
+            $ref: '#/components/schemas/UUID'
         condition:
           $ref: '#/components/schemas/ConditionDto'
         sort:
           $ref: '#/components/schemas/SortDto'
         searchAfter:
           type: string
+          nullable: true
+        excludeGeo:
+          $ref: '#/components/schemas/ExcludeGeo'
     MultiClassRequestDto:
       type: object
       properties:
@@ -2626,13 +2420,13 @@ components:
         oClasses:
           type: array
           items:
-            format: uuid
-            pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-            type: string
+            $ref: '#/components/schemas/UUID'
         fields:
           type: array
           items:
             $ref: '#/components/schemas/FieldConditionDto'
+        excludeGeo:
+          $ref: '#/components/schemas/ExcludeGeo'
     MultiSearchType:
       enum:
         - OR
@@ -2716,6 +2510,13 @@ components:
           type: string
   securitySchemes:
     oidc:
-      type: openIdConnect
-      description: Authentication
-      openIdConnectUrl: /auth/realms/provoly/.well-known/openid-configuration
+      type: oauth2
+      description: User authentication
+      flows:
+        password:
+          scopes:
+            read: Grants read access
+            write: Grants write access
+            admin: Grants access to admin operations
+            # TODO put real scopes
+          tokenUrl: https://sso.dev.provoly.net/auth/realms/provoly
