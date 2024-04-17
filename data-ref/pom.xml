@@ -5,11 +5,11 @@
   <parent>
     <groupId>com.provoly</groupId>
     <artifactId>provoly-parent-build-quarkus</artifactId>
-    <version>0.25.0</version>
+    <version>0.25.1</version>
     <relativePath>../provoly-parent-build-quarkus</relativePath>
   </parent>
   <artifactId>data-ref</artifactId>
-  <version>0.25.0</version>
+  <version>0.25.1</version>
   <dependencies>
     <dependency>
       <groupId>com.provoly</groupId>
