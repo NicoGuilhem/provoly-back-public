@@ -18,18 +18,28 @@ public class DashboardWriteDto extends DashboardDto implements WithMetadata {
     @Default
     @JsonCreator
     public DashboardWriteDto(UUID id, String name, String image, String description, boolean cover,
-            List<UUID> datasource, Map<String, Object> manifest, List<MetadataValueWriteDto> metadata, List<String> groups) {
-        super(id, name, image, description, cover, datasource, groups);
+            List<UUID> datasource, Map<String, Object> manifest, List<MetadataValueWriteDto> metadata, List<String> groups,
+            String additionalInformation) {
+        super(id, name, image, description, cover, datasource, groups, additionalInformation);
         this.manifest = manifest;
         this.metadata = metadata;
     }
 
+    public DashboardWriteDto(UUID id, String name, String image, String description, boolean cover,
+            List<UUID> datasource, Map<String, Object> manifest, List<MetadataValueWriteDto> metadata, List<String> groups) {
+        this(id, name, image, description, cover, datasource, manifest, metadata, groups, null);
+    }
+
     public DashboardWriteDto(UUID id, String name) {
-        super(id, name);
+        super(id, name, null);
     }
 
     public DashboardWriteDto(UUID id, String name, List<UUID> datasource) {
-        super(id, name, datasource);
+        super(id, name, datasource, null);
+    }
+
+    public DashboardWriteDto(UUID id, String name, List<UUID> datasource, String additionalInformation) {
+        super(id, name, datasource, additionalInformation);
     }
 
     public Map<String, Object> getManifest() {

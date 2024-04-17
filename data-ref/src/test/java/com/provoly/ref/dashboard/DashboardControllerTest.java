@@ -25,7 +25,6 @@ import com.provoly.ref.dashboard.dto.DashboardReadDto;
 import com.provoly.ref.dashboard.dto.DashboardWriteDto;
 import com.provoly.ref.dataset.DatasetService;
 import com.provoly.ref.entity.EntityType;
-import com.provoly.ref.groups.GroupService;
 import com.provoly.ref.metadata.MetadataDefService;
 import com.provoly.ref.metadata.MetadataMapper;
 import com.provoly.ref.metadata.MetadataService;
@@ -73,8 +72,6 @@ class DashboardControllerTest {
     MetadataMapper metadataMapper;
     @InjectMock
     CurrentSubjectProvider currentSubjectProvider;
-    @Inject
-    GroupService groupService;
 
     @BeforeEach
     public void authenticate() {
@@ -91,7 +88,7 @@ class DashboardControllerTest {
     void initDashboard() {
         dashboardId = UUID.randomUUID();
         dashboardToSave = new DashboardWriteDto(dashboardId, DASHBOARD_NAME, "image", "description", false,
-                List.of(), Map.of("type", "private"), null, List.of("ALL"));
+                List.of(), Map.of("type", "private"), null, List.of("ALL"), "some more information");
         dashboardController.saveDashboard(dashboardToSave);
     }
 
@@ -102,6 +99,13 @@ class DashboardControllerTest {
 
         Collection<DashboardReadDto> dashboards = dashboardController.getAllForCurrentUser();
         assertThat(dashboards).extracting("id").contains(dashboardId);
+
+        DashboardReadDto dashboard = ((List<DashboardReadDto>) dashboards).get(0);
+
+        assertThat(dashboard.getAdditionalInformation()).isEqualTo("some more information");
+        assertThat(dashboard.getName()).isEqualTo(DASHBOARD_NAME);
+        assertThat(dashboard.getDescription()).isEqualTo("description");
+        assertThat(dashboard.getCover()).isFalse();
     }
 
     @Test
@@ -115,13 +119,15 @@ class DashboardControllerTest {
 
         //update
         DatasetDto datasetDto = initDataset();
-        DashboardWriteDto dashboardToUpdate = new DashboardWriteDto(dashboardId, DASHBOARD_NAME, List.of(datasetDto.getId()));
+        DashboardWriteDto dashboardToUpdate = new DashboardWriteDto(dashboardId, DASHBOARD_NAME, List.of(datasetDto.getId()),
+                "Some new information");
         dashboardController.saveDashboard(dashboardToUpdate);
 
         DashboardReadDto updatedDashboard = retrieveSavedOrUpdatedDashboard();
         assertThat(updatedDashboard.getCreationDate()).isEqualTo(savedDashboard.getCreationDate());
         assertThat(updatedDashboard.getModificationDate()).isAfter(savedDashboard.getModificationDate());
         assertThat(updatedDashboard.getDatasource()).containsExactly(datasetDto.getId());
+        assertThat(updatedDashboard.getAdditionalInformation()).isEqualTo("Some new information");
     }
 
     private DashboardReadDto retrieveSavedOrUpdatedDashboard() {
@@ -301,17 +307,17 @@ class DashboardControllerTest {
         DatasetDto datasetDto = initDataset();
 
         privateDashboard = new DashboardWriteDto(privateId, "private", "image", "description", false,
-                List.of(), Map.of("type", "private"), null, List.of());
+                List.of(), Map.of("type", "private"), null, List.of(), "Some more information");
         dashboardController.saveDashboard(privateDashboard);
 
         publicDashboard = new DashboardWriteDto(publicId, "public", "image", "description", false,
-                List.of(datasetDto.getId()), Map.of("type", "public"), null, List.of("ALL"));
+                List.of(datasetDto.getId()), Map.of("type", "public"), null, List.of("ALL"), "Some more information");
         dashboardController.saveDashboard(publicDashboard);
     }
 
     private void createDashboardsWithMetadata(List<MetadataValueWriteDto> metadataValueWriteDto) {
         privateDashboard = new DashboardWriteDto(privateId, "private", "image", "description", false,
-                List.of(), Map.of("type", "private"), metadataValueWriteDto, List.of());
+                List.of(), Map.of("type", "private"), metadataValueWriteDto, List.of(), "Some more information");
         dashboardController.saveDashboard(privateDashboard);
     }
 

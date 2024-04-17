@@ -16,26 +16,20 @@ import com.provoly.ref.dataset.Dataset;
 import com.provoly.ref.dataset.DatasetService;
 import com.provoly.ref.datasetversion.DatasetVersion;
 import com.provoly.ref.datasetversion.DatasetVersionRepository;
-import com.provoly.ref.datasetversion.DatasetVersionService;
 import com.provoly.ref.user.NamedQuery;
 import com.provoly.ref.user.NamedQueryService;
-
-import com.speedment.jpastreamer.application.JPAStreamer;
 
 @ApplicationScoped
 public class DataSourceService {
 
     private NamedQueryService namedQueryService;
 
-    private DatasetVersionService datasetVersionService;
-
     private DatasetService datasetService;
     private DatasetVersionRepository datasetVersionRepository;
 
-    public DataSourceService(NamedQueryService namedQueryService, DatasetVersionService datasetVersionService,
-            DatasetService datasetService, JPAStreamer jpaStreamer, DatasetVersionRepository datasetVersionRepository) {
+    public DataSourceService(NamedQueryService namedQueryService,
+            DatasetService datasetService, DatasetVersionRepository datasetVersionRepository) {
         this.namedQueryService = namedQueryService;
-        this.datasetVersionService = datasetVersionService;
         this.datasetService = datasetService;
         this.datasetVersionRepository = datasetVersionRepository;
     };

@@ -27,8 +27,8 @@ public class DashboardReadDto extends DashboardDto {
             Instant creationDate,
             Instant modificationDate,
             URI manifestUrl,
-            List<String> groups, boolean owner) {
-        super(id, name, image, description, cover, datasource, groups);
+            List<String> groups, boolean owner, String additionalInformation) {
+        super(id, name, image, description, cover, datasource, groups, additionalInformation);
         this.creationDate = creationDate;
         this.modificationDate = modificationDate;
         this.manifestUrl = manifestUrl;

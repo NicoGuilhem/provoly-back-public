@@ -13,7 +13,6 @@ import com.provoly.common.user.Role;
 import com.provoly.ref.datasetversion.DatasetVersionDetailsDto;
 import com.provoly.ref.datasetversion.DatasetVersionMapper;
 import com.provoly.ref.datasetversion.DatasetVersionRepository;
-import com.provoly.ref.datasetversion.DatasetVersionService;
 import com.provoly.ref.entity.EntityType;
 import com.provoly.ref.groups.GroupErrors;
 import com.provoly.ref.metadata.MetadataService;
@@ -28,18 +27,16 @@ public class DatasetController {
 
     private DatasetService datasetService;
     private DatasetMapper datasetMapper;
-    private DatasetVersionService datasetVersionService;
     private DatasetVersionMapper datasetVersionMapper;
     private MetadataService metadataService;
     private DatasetVersionRepository datasetVersionRepository;
 
     public DatasetController(DatasetService datasetService,
-            DatasetMapper datasetMapper, DatasetVersionService datasetVersionService,
+            DatasetMapper datasetMapper,
             DatasetVersionMapper datasetVersionMapper, MetadataService metadataService,
             DatasetVersionRepository datasetVersionRepository) {
         this.datasetService = datasetService;
         this.datasetMapper = datasetMapper;
-        this.datasetVersionService = datasetVersionService;
         this.datasetVersionMapper = datasetVersionMapper;
         this.metadataService = metadataService;
         this.datasetVersionRepository = datasetVersionRepository;

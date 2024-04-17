@@ -3635,6 +3635,7 @@ paths:
                       value: "30"
                   groups:
                     - "AUTHENTICATED"
+                  additionalInformation: "Some more information"
       responses:
         "201":
           description: Dashboard created or updated. It return groups missing to match those in the datasource.
@@ -4550,6 +4551,8 @@ components:
           type: array
           items:
             type: string
+        additionalInformation:
+          type: string
     DashboardWriteDto:
       type: object
       properties:
@@ -4582,6 +4585,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MetadataValueWriteDto'
+        additionalInformation:
+          type: string
     DataSourceDetailsDto:
       type: object
       properties:

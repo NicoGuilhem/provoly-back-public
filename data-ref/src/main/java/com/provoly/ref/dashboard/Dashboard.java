@@ -38,13 +38,16 @@ public class Dashboard extends EntityNamed {
     @ElementCollection(fetch = FetchType.EAGER)
     private Collection<UUID> datasource = new ArrayList<>();
 
+    private String additionalInformation;
+
     protected Dashboard() {
         super();
     }
 
     @Default
-    public Dashboard(UUID id, String name) {
+    public Dashboard(UUID id, String name, String additionalInformation) {
         super(id, name);
+        this.additionalInformation = additionalInformation;
     }
 
     public ProvolyUser getUser() {
@@ -112,4 +115,11 @@ public class Dashboard extends EntityNamed {
         this.datasource = datasource;
     }
 
+    public String getAdditionalInformation() {
+        return additionalInformation;
+    }
+
+    public void setAdditionalInformation(String additionalInformation) {
+        this.additionalInformation = additionalInformation;
+    }
 }

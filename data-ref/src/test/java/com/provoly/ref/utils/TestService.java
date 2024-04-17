@@ -24,7 +24,6 @@ import com.provoly.ref.dashboard.DashboardService;
 import com.provoly.ref.dataset.DatasetService;
 import com.provoly.ref.datasetversion.DatasetVersionMessageService;
 import com.provoly.ref.datasetversion.DatasetVersionRepository;
-import com.provoly.ref.datasetversion.DatasetVersionService;
 import com.provoly.ref.entity.EntityNamed;
 import com.provoly.ref.entity.EntityType;
 import com.provoly.ref.groups.Group;
@@ -65,8 +64,6 @@ public class TestService {
     SessionMock sessionMock;
     @Inject
     NamedQueryService namedQueryService;
-    @Inject
-    DatasetVersionService datasetVersionService;
     @Inject
     EntityManager entityManager;
     @Inject

@@ -16,11 +16,12 @@ public class DashboardDto {
     private boolean cover;
     private List<UUID> datasource;
     private List<String> groups;
+    private String additionalInformation;
 
     @Default
     @JsonCreator
     public DashboardDto(UUID id, String name, String image, String description, boolean cover,
-            List<UUID> datasource, List<String> groups) {
+            List<UUID> datasource, List<String> groups, String additionalInformation) {
         this.id = id;
         this.name = name;
         this.image = image;
@@ -28,17 +29,20 @@ public class DashboardDto {
         this.cover = cover;
         this.datasource = datasource;
         this.groups = groups;
+        this.additionalInformation = additionalInformation;
     }
 
-    public DashboardDto(UUID id, String name) {
+    public DashboardDto(UUID id, String name, String additionalInformation) {
         this.id = id;
         this.name = name;
+        this.additionalInformation = additionalInformation;
     }
 
-    public DashboardDto(UUID id, String name, List<UUID> datasource) {
+    public DashboardDto(UUID id, String name, List<UUID> datasource, String additionalInformation) {
         this.id = id;
         this.name = name;
         this.datasource = datasource;
+        this.additionalInformation = additionalInformation;
     }
 
     public UUID getId() {
@@ -71,5 +75,13 @@ public class DashboardDto {
 
     public void setGroups(List<String> groups) {
         this.groups = groups;
+    }
+
+    public String getAdditionalInformation() {
+        return additionalInformation;
+    }
+
+    public void setAdditionalInformation(String additionalInformation) {
+        this.additionalInformation = additionalInformation;
     }
 }
