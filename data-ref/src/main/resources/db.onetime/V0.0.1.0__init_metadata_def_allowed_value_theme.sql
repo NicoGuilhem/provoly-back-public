@@ -1,5 +1,5 @@
 insert into metadata_def_allowed_value (id, metadata_def_id, value)
-values ('6fe0ffc8-6d6f-4bd6-a329-d3c42e731dc7', 'f34754e6-be23-43c0-bb78-3d351e26c033', 'Environnements');
+values ('6fe0ffc8-6d6f-4bd6-a329-d3c42e731dc7', 'f34754e6-be23-43c0-bb78-3d351e26c033', 'Environnements et climat');
 
 insert into metadata_def_allowed_value (id, metadata_def_id, value)
 values ('231ccafa-3d42-4f82-b16b-db32a14eeef4', 'f34754e6-be23-43c0-bb78-3d351e26c033', 'Fluides');
