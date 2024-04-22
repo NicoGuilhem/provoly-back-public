@@ -72,6 +72,7 @@ public class ModelService {
     @Transactional
     public void saveClass(OClassWriteDto newClass) {
         OClass oclass = modelMapper.toModel(newClass);
+        verifyDuplicateAttributeTechnicalName(oclass);
         verifyAttributesName(oclass);
         verifyIdsAlreadyUsedInOtherOClass(oclass);
         verifyStorages(newClass);
@@ -102,6 +103,17 @@ public class ModelService {
             }
             metadataService.updateMetadataByEntityType(newClass, EntityType.CLASS);
         }
+    }
+
+    private void verifyDuplicateAttributeTechnicalName(OClass oclass) {
+        Set<String> technicalNames = new HashSet<>();
+        oclass.getAttributes().stream().map(AttributeDef::getTechnicalName).forEach(att -> {
+            if (technicalNames.contains(att)) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST,
+                        "The technical name %s appears in several attributes".formatted(att));
+            }
+            technicalNames.add(att);
+        });
     }
 
     private void verifyStorages(OClassWriteDto newClass) {

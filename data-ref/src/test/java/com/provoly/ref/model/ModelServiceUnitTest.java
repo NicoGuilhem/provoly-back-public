@@ -1,5 +1,7 @@
 package com.provoly.ref.model;
 
+import static com.provoly.common.error.ErrorCode.BAD_REQUEST;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -10,10 +12,12 @@ import java.util.UUID;
 
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.model.FieldDto;
+import com.provoly.common.model.OClassWriteDto;
 import com.provoly.common.model.Type;
 import com.provoly.ref.entity.EntityIdService;
 import com.provoly.ref.event.RefEventService;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -78,6 +82,27 @@ public class ModelServiceUnitTest {
         Collection<FieldDto> fields = List.of(fieldDto);
         modelService.addFields(fields);
         verify(entityIdService).saveEntity(field);
+    }
+
+    @Test
+    void saveClass_should_throw_if_duplicate_technicalName() {
+        AttributeDef firstAttribute = new AttributeDef(UUID.randomUUID());
+        firstAttribute.setName("nom");
+        firstAttribute.setTechnicalName("technicalName");
+
+        AttributeDef secondAttribute = new AttributeDef(UUID.randomUUID());
+        secondAttribute.setName("nom");
+        secondAttribute.setTechnicalName("technicalName");
+
+        var oclass = new OClass();
+        oclass.addAttribute(firstAttribute);
+        oclass.addAttribute(secondAttribute);
+
+        when(modelMapper.toModel(any(OClassWriteDto.class))).thenReturn(oclass);
+
+        var error = Assertions.assertThrows(BusinessException.class,
+                () -> modelService.saveClass(new OClassWriteDto(UUID.randomUUID(), "name", List.of())));
+        assertThat(error.getCode()).isEqualTo(BAD_REQUEST);
     }
 
 }

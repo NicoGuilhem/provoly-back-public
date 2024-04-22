@@ -388,6 +388,7 @@ paths:
         An oClass is made up of attributes and is used to define the data model that will be inserted. 
         An attribute belongs to a single class, and can be grouped by category. OClass names must be unique 
         and attributes ids must be unique.
+        All attributes must contain an unique technical name.
         If class with same id already exists, update it.
         Note: It's not possible to change fields.
       operationId: com.provoly.ref.model.ModelController_saveClass
