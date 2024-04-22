@@ -134,6 +134,7 @@ public class DatasetVersionService {
                     .formatted(datasetVersion.getId(), datasetVersion.getState()));
         }
         setDatasetVersionState(datasetVersion, DatasetState.DELETING);
+        datasetVersionRepository.save(datasetVersion);
         eventService.datasetVersionDeleted(datasetVersion);
         return datasetVersion;
     }

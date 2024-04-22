@@ -218,7 +218,6 @@ public class DatasetVersionControllerTest {
         initDataset(DatasetType.MODIFIABLE);
         generateDatasetVersionDto(false);
         saveDatasetVersion();
-        String datasetId = datasetVersionDto.getId().toString();
         given()
                 .pathParam("datasetVersionId", datasetVersionDto.getId())
                 .contentType(ContentType.JSON)
@@ -226,6 +225,8 @@ public class DatasetVersionControllerTest {
                 .delete("/dataset-versions/id/{datasetVersionId}")
                 .then()
                 .statusCode(200);
+
+        assertThat(datasetVersionRepository.getById(datasetVersionId).getState()).isEqualTo(DatasetState.DELETING);
     }
 
     @Test
