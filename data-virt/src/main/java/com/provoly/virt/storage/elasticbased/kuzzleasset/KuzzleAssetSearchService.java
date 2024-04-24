@@ -2,8 +2,6 @@ package com.provoly.virt.storage.elasticbased.kuzzleasset;
 
 import static com.provoly.virt.storage.elasticbased.kuzzleasset.KuzzleAssetLayout.ASSET_COLLECTION;
 
-import java.util.Map;
-
 import jakarta.enterprise.context.ApplicationScoped;
 
 import com.provoly.common.Storage;
@@ -20,34 +18,32 @@ import com.provoly.virt.storage.elasticbased.KuzzleQueryResultService;
 
 import org.jboss.logging.Logger;
 
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-
 @StorageQualifier(Storage.KUZZLE_ASSET)
 @ApplicationScoped
 public class KuzzleAssetSearchService implements StorageSearchService {
 
     private Logger log;
     private KuzzleAssetSearchQueryBuilder searchQueryBuilder;
-    private KuzzleAssetLayout kuzzleAssetLayout;
+    private KuzzleAssetLayout layout;
     private KuzzleQueryResultService kuzzleQueryResultService;
     private KuzzleClient kuzzleClient;
-    private String tenant;
+
     private ElasticSupport elasticSupport;
+    private String tenant;
 
     public KuzzleAssetSearchService(Logger log,
             KuzzleAssetSearchQueryBuilder searchQueryBuilder,
-            KuzzleAssetLayout kuzzleAssetLayout,
+            KuzzleAssetLayout layout,
             KuzzleQueryResultService kuzzleQueryResultService,
-            KuzzleClient kuzzleClient,
-            DataVirtProperties dataVirtProperties,
-            ElasticSupport elasticSupport) {
+            KuzzleClient kuzzleClient, ElasticSupport elasticSupport,
+            DataVirtProperties dataVirtProperties) {
         this.log = log;
         this.searchQueryBuilder = searchQueryBuilder;
-        this.kuzzleAssetLayout = kuzzleAssetLayout;
+        this.layout = layout;
         this.kuzzleQueryResultService = kuzzleQueryResultService;
         this.kuzzleClient = kuzzleClient;
-        this.tenant = dataVirtProperties.kuzzle().tenant().orElse("chalons");
         this.elasticSupport = elasticSupport;
+        this.tenant = dataVirtProperties.kuzzle().tenant().orElse("chalons");
     }
 
     @Override
@@ -56,7 +52,8 @@ public class KuzzleAssetSearchService implements StorageSearchService {
             MonoClassContextRequest monoClassContextRequest) {
         elasticSupport.validateSearchLimit(request);
         var result = new ItemsSearchResult();
-        var finalQuery = buildKuzzleSearchQuery(classDto, request, monoClassContextRequest);
+        var finalQuery = kuzzleQueryResultService.buildKuzzleSearchQuery(classDto, request, monoClassContextRequest,
+                searchQueryBuilder, layout);
 
         if (finalQuery.isEmpty()) {
             // No request should be made return an empty resultset
@@ -64,16 +61,8 @@ public class KuzzleAssetSearchService implements StorageSearchService {
             return result;
         }
         var response = kuzzleClient.kuzzleSearch(tenant, ASSET_COLLECTION, finalQuery, request.getLimit());
-        return kuzzleQueryResultService.convertToItemResult(response, classDto, request, kuzzleAssetLayout);
+        return kuzzleQueryResultService.convertToItemResult(response, classDto, request, layout);
 
-    }
-
-    public Map<String, Object> buildKuzzleSearchQuery(OClassDetailsDto classDto,
-            MonoClassRequestDto request,
-            MonoClassContextRequest monoClassContextRequest) {
-        Query query = kuzzleQueryResultService.buildSearchSourceBuilder(classDto, request,
-                monoClassContextRequest, searchQueryBuilder, kuzzleAssetLayout);
-        return kuzzleQueryResultService.convertQueryToKuzzleQuery(classDto, request, query, kuzzleAssetLayout);
     }
 
 }

@@ -4,10 +4,7 @@ import static com.provoly.virt.storage.StorageSupport.BOTTOM_RIGHT;
 import static com.provoly.virt.storage.StorageSupport.LAT;
 import static com.provoly.virt.storage.StorageSupport.LON;
 import static com.provoly.virt.storage.StorageSupport.TOP_LEFT;
-import static com.provoly.virt.storage.elasticbased.StorageLayout.AGGS;
-import static com.provoly.virt.storage.elasticbased.StorageLayout.GROUP_BY;
-import static com.provoly.virt.storage.elasticbased.StorageLayout.OPERATION_AGGS;
-import static com.provoly.virt.storage.elasticbased.StorageLayout.RESULT_KEY;
+import static com.provoly.virt.storage.elasticbased.StorageLayout.*;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -181,6 +178,31 @@ public class KuzzleQueryResultService {
         }
 
         return Query.of(q -> q.bool(masterQuery.build()));
+    }
+
+    public Map<String, Object> buildKuzzleSearchQuery(OClassDetailsDto classDto,
+            MonoClassRequestDto request,
+            MonoClassContextRequest monoClassContextRequest,
+            SearchQueryBuilder searchQueryBuilder,
+            KuzzleBasedLayout layout) {
+        Query query = buildSearchSourceBuilder(classDto, request, monoClassContextRequest, searchQueryBuilder, layout);
+        return convertQueryToKuzzleQuery(classDto, request, query, layout);
+    }
+
+    public Map<String, Object> buildKuzzleSearchAggregateQuery(OClassDetailsDto classDto,
+            MonoClassRequestDto request,
+            AggregationParamDto aggregation,
+            MonoClassContextRequest monoClassContextRequest,
+            AggregateQueryBuilder aggregateQueryBuilder,
+            SearchQueryBuilder searchQueryBuilder,
+            KuzzleBasedLayout layout) {
+
+        var finalQuery = buildKuzzleSearchQuery(classDto, request, monoClassContextRequest, searchQueryBuilder, layout);
+        var queryAggregation = aggregateQueryBuilder
+                .buildAggregationQuery(aggregation, classDto, DEFAULT_ORDER_NAME, request.getLimit());
+
+        finalQuery.putAll(convertAggregationToKuzzleAggregation(queryAggregation));
+        return finalQuery;
     }
 
     public Map<String, Object> convertAggregationToKuzzleAggregation(Map<String, Aggregation> queryAggregation) {

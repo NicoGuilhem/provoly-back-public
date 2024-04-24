@@ -134,7 +134,7 @@ class ElasticSearchService implements StorageSearchService {
 
     public Query buildSearchSourceBuilder(OClassDetailsDto classDto, MonoClassRequestDto request,
             MonoClassContextRequest monoClassContextRequest) {
-        log.debugf("Build search source builder");
+        log.debug("Build search source builder");
         var masterQuery = QueryBuilders.bool();
         if (request.getFullSearch() != null) {
             var fullTextQuery = fullTextQueryBuilder.buildQuery(classDto, request.getFullSearch(),

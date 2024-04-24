@@ -1,7 +1,5 @@
 package com.provoly.virt.storage.elasticbased.kuzzle;
 
-import java.util.Map;
-
 import jakarta.enterprise.context.ApplicationScoped;
 
 import com.provoly.common.Storage;
@@ -25,7 +23,7 @@ public class KuzzleSearchService implements StorageSearchService {
 
     private KuzzleSearchQueryBuilder searchQueryBuilder;
 
-    private KuzzleLayout kuzzleLayout;
+    private KuzzleLayout layout;
 
     private KuzzleQueryResultService kuzzleQueryResultService;
 
@@ -35,13 +33,12 @@ public class KuzzleSearchService implements StorageSearchService {
 
     public KuzzleSearchService(Logger log,
             KuzzleSearchQueryBuilder searchQueryBuilder,
-            KuzzleLayout kuzzleLayout,
+            KuzzleLayout layout,
             KuzzleQueryResultService kuzzleQueryResultService,
-            KuzzleClient kuzzleClient,
-            ElasticSupport elasticSupport) {
+            KuzzleClient kuzzleClient, ElasticSupport elasticSupport) {
         this.log = log;
         this.searchQueryBuilder = searchQueryBuilder;
-        this.kuzzleLayout = kuzzleLayout;
+        this.layout = layout;
         this.kuzzleQueryResultService = kuzzleQueryResultService;
         this.kuzzleClient = kuzzleClient;
         this.elasticSupport = elasticSupport;
@@ -52,23 +49,21 @@ public class KuzzleSearchService implements StorageSearchService {
             MonoClassRequestDto request,
             MonoClassContextRequest monoClassContextRequest) {
         elasticSupport.validateSearchLimit(request);
+
         var result = new ItemsSearchResult();
+        var finalQuery = kuzzleQueryResultService.buildKuzzleSearchQuery(classDto, request, monoClassContextRequest,
+                searchQueryBuilder, layout);
 
-        var query = kuzzleQueryResultService.buildSearchSourceBuilder(classDto, request, monoClassContextRequest,
-                searchQueryBuilder, kuzzleLayout);
-
-        if (query == null) {
+        if (finalQuery.isEmpty()) {
             // No request should be made return an empty resultset
             log.debugf("Query is null, return empty result");
             return result;
         }
 
-        Map<String, Object> finalQuery = kuzzleQueryResultService.convertQueryToKuzzleQuery(classDto, request, query,
-                kuzzleLayout);
-
         var response = kuzzleClient.kuzzleSearch(classDto.getSlug(), KuzzleLayout.COLLECTION_NAME, finalQuery,
                 request.getLimit());
-        return kuzzleQueryResultService.convertToItemResult(response, classDto, request, kuzzleLayout);
+        return kuzzleQueryResultService.convertToItemResult(response, classDto, request, layout);
 
     }
+
 }

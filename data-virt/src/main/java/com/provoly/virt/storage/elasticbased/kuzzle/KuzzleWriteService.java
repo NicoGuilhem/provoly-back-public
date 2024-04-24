@@ -1,6 +1,8 @@
 package com.provoly.virt.storage.elasticbased.kuzzle;
 
+import static com.provoly.common.model.Type.INSTANT;
 import static com.provoly.virt.storage.elasticbased.kuzzle.KuzzleLayout.COLLECTION_NAME;
+import static com.provoly.virt.storage.elasticbased.kuzzle.KuzzleLayout.TIMEZONE_IDENTIFIER;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -77,6 +79,10 @@ public class KuzzleWriteService implements StorageWriteService {
         if (value.getAttributeDef().field.getType().isGeo()) {
             var geo = (GeoHolder) value.readValueEvenIfNotVisible();
             return geo.getStringAs(GeoFormat.WKT);
+        }
+        if (value.getAttributeDef().field.getType() == INSTANT) {
+            return (((AttributeSimpleValue) entry.getValue()).readValueEvenIfNotVisible().toString())
+                    .replace(TIMEZONE_IDENTIFIER, "");
         }
         return ((AttributeSimpleValue) entry.getValue()).readValueEvenIfNotVisible();
     }

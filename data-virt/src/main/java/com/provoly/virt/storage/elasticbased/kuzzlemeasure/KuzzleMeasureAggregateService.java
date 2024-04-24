@@ -1,12 +1,8 @@
 package com.provoly.virt.storage.elasticbased.kuzzlemeasure;
 
-import static com.provoly.virt.storage.elasticbased.StorageLayout.DEFAULT_ORDER_NAME;
 import static com.provoly.virt.storage.elasticbased.kuzzlemeasure.KuzzleMeasureLayout.MEASURE_COLLECTION;
 
-import java.util.Map;
-
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Any;
 
 import com.provoly.common.Storage;
 import com.provoly.common.model.OClassDetailsDto;
@@ -27,23 +23,25 @@ import org.jboss.logging.Logger;
 public class KuzzleMeasureAggregateService implements StorageAggregateService {
 
     private Logger log;
-    private KuzzleMeasureAggregateBuilder kuzzleMeasureAggregateBuilder;
+    private KuzzleMeasureAggregateBuilder aggregateBuilder;
     private KuzzleClient kuzzleClient;
     private KuzzleQueryResultService kuzzleQueryResultService;
-    private KuzzleMeasureSearchService kuzzleMeasureSearchService;
+    private KuzzleMeasureSearchQueryBuilder searchQueryBuilder;
+    private KuzzleMeasureLayout layout;
     private String tenant;
 
     public KuzzleMeasureAggregateService(Logger log,
-            KuzzleMeasureAggregateBuilder kuzzleMeasureAggregateBuilder,
+            KuzzleMeasureAggregateBuilder aggregateBuilder,
             KuzzleClient kuzzleClient,
             KuzzleQueryResultService kuzzleQueryResultService,
-            @Any KuzzleMeasureSearchService kuzzleMeasureSearchService,
+            KuzzleMeasureSearchQueryBuilder kuzzleMeasureSearchQueryBuilder, KuzzleMeasureLayout layout,
             DataVirtProperties dataVirtProperties) {
         this.log = log;
-        this.kuzzleMeasureAggregateBuilder = kuzzleMeasureAggregateBuilder;
+        this.aggregateBuilder = aggregateBuilder;
         this.kuzzleClient = kuzzleClient;
         this.kuzzleQueryResultService = kuzzleQueryResultService;
-        this.kuzzleMeasureSearchService = kuzzleMeasureSearchService;
+        this.searchQueryBuilder = kuzzleMeasureSearchQueryBuilder;
+        this.layout = layout;
         this.tenant = dataVirtProperties.kuzzle().tenant().orElse("chalons");
     }
 
@@ -53,24 +51,11 @@ public class KuzzleMeasureAggregateService implements StorageAggregateService {
             MonoClassContextRequest monoClassContextRequest) {
         log.info("Build search request that combine query and aggregations");
 
-        var query = buildKuzzleRequest(classDto, request, aggregationParam, monoClassContextRequest);
+        var query = kuzzleQueryResultService.buildKuzzleSearchAggregateQuery(classDto, request, aggregationParam,
+                monoClassContextRequest, aggregateBuilder, searchQueryBuilder, layout);
         var resp = kuzzleClient.kuzzleSearch(tenant, MEASURE_COLLECTION, query, 0);
-
         return kuzzleQueryResultService.buildAggregationResultDto(aggregationParam, resp, classDto);
 
-    }
-
-    public Map<String, Object> buildKuzzleRequest(OClassDetailsDto classDto,
-            MonoClassRequestDto request,
-            AggregationParamDto aggregation,
-            MonoClassContextRequest monoClassContextRequest) {
-
-        var finalQuery = kuzzleMeasureSearchService.buildKuzzleSearchQuery(classDto, request, monoClassContextRequest);
-        var queryAggregation = kuzzleMeasureAggregateBuilder
-                .buildAggregationQuery(aggregation, classDto, DEFAULT_ORDER_NAME, request.getLimit());
-
-        finalQuery.putAll(kuzzleQueryResultService.convertAggregationToKuzzleAggregation(queryAggregation));
-        return finalQuery;
     }
 
 }

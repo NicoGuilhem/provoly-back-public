@@ -1,6 +1,6 @@
-package com.provoly.virt.storage.elasticbased.kuzzleasset;
+package com.provoly.virt.storage.elasticbased.kuzzle;
 
-import static com.provoly.virt.storage.elasticbased.kuzzleasset.KuzzleAssetLayout.ASSET_COLLECTION;
+import static com.provoly.virt.storage.elasticbased.kuzzle.KuzzleLayout.COLLECTION_NAME;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -9,7 +9,6 @@ import com.provoly.common.model.OClassDetailsDto;
 import com.provoly.common.search.AggregationParamDto;
 import com.provoly.common.search.AggregationResultDto;
 import com.provoly.common.search.MonoClassRequestDto;
-import com.provoly.virt.DataVirtProperties;
 import com.provoly.virt.search.mono.MonoClassContextRequest;
 import com.provoly.virt.storage.StorageAggregateService;
 import com.provoly.virt.storage.StorageQualifier;
@@ -18,30 +17,29 @@ import com.provoly.virt.storage.elasticbased.KuzzleQueryResultService;
 
 import org.jboss.logging.Logger;
 
-@StorageQualifier(Storage.KUZZLE_ASSET)
+@StorageQualifier(Storage.KUZZLE)
 @ApplicationScoped
-public class KuzzleAssetAggregateService implements StorageAggregateService {
+public class KuzzleAggregateService implements StorageAggregateService {
 
     private Logger log;
+    private KuzzleAggregateBuilder aggregateBuilder;
+    private KuzzleSearchQueryBuilder searchQueryBuilder;
+    private KuzzleLayout layout;
     private KuzzleClient kuzzleClient;
-    private KuzzleAssetAggregateBuilder aggregateBuilder;
-    private KuzzleAssetSearchQueryBuilder searchQueryBuilder;
-    private KuzzleAssetLayout layout;
     private KuzzleQueryResultService kuzzleQueryResultService;
-    private String tenant;
 
-    public KuzzleAssetAggregateService(Logger log,
-            KuzzleAssetAggregateBuilder aggregateBuilder,
-            KuzzleClient kuzzleClient, KuzzleAssetSearchQueryBuilder searchQueryBuilder, KuzzleAssetLayout layout,
-            KuzzleQueryResultService kuzzleQueryResultService,
-            DataVirtProperties dataVirtProperties) {
+    public KuzzleAggregateService(Logger log,
+            KuzzleAggregateBuilder aggregateBuilder,
+            KuzzleSearchQueryBuilder searchQueryBuilder,
+            KuzzleLayout layout,
+            KuzzleClient kuzzleClient,
+            KuzzleQueryResultService kuzzleQueryResultService) {
         this.log = log;
         this.aggregateBuilder = aggregateBuilder;
-        this.kuzzleClient = kuzzleClient;
         this.searchQueryBuilder = searchQueryBuilder;
         this.layout = layout;
+        this.kuzzleClient = kuzzleClient;
         this.kuzzleQueryResultService = kuzzleQueryResultService;
-        this.tenant = dataVirtProperties.kuzzle().tenant().orElse("chalons");
     }
 
     public AggregationResultDto aggregate(OClassDetailsDto classDto,
@@ -52,7 +50,7 @@ public class KuzzleAssetAggregateService implements StorageAggregateService {
 
         var query = kuzzleQueryResultService.buildKuzzleSearchAggregateQuery(classDto, request, aggregationParam,
                 monoClassContextRequest, aggregateBuilder, searchQueryBuilder, layout);
-        var resp = kuzzleClient.kuzzleSearch(tenant, ASSET_COLLECTION, query, 0);
+        var resp = kuzzleClient.kuzzleSearch(classDto.getSlug(), COLLECTION_NAME, query, 0);
         return kuzzleQueryResultService.buildAggregationResultDto(aggregationParam, resp, classDto);
 
     }
