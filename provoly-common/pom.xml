@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>provoly-common</artifactId>
-    <version>0.25.1</version>
+    <version>1.0.0</version>
 
     <parent>
         <groupId>com.provoly</groupId>
         <artifactId>provoly-parent</artifactId>
-        <version>0.25.1</version>
+        <version>1.0.0</version>
         <relativePath>../provoly-parent</relativePath>
     </parent>
 
