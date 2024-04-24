@@ -11,7 +11,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import com.provoly.clients.DatasetService;
 import com.provoly.clients.ModelService;
 import com.provoly.common.error.BusinessException;
-import com.provoly.common.kafka.KafkaTools;
 import com.provoly.replay.entity.ErrorReport;
 
 import io.smallrye.reactive.messaging.kafka.IncomingKafkaRecord;
@@ -26,6 +25,8 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
+
+import kafka.KafkaTools;
 
 @ApplicationScoped
 public class ErrorService {

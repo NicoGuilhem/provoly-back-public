@@ -5,7 +5,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -19,11 +18,14 @@ import com.provoly.common.user.Role;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class MetadataDefController {
-    @Inject
     MetadataDefService metadataDefService;
 
-    @Inject
     MetadataMapper mapper;
+
+    public MetadataDefController(MetadataDefService metadataDefService, MetadataMapper mapper) {
+        this.metadataDefService = metadataDefService;
+        this.mapper = mapper;
+    }
 
     @GET
     @RolesAllowed({ Role.STR_DASHBOARD_WRITE, Role.STR_DATASET_WRITE, Role.STR_ITEM_WRITE, Role.STR_METADATA_ITEM_REF_READ })

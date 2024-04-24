@@ -41,4 +41,6 @@ nb-configuration.xml
 .mavenrc
 .history/
 
+.quarkus
+
 generated/

@@ -7,7 +7,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 
-import com.provoly.common.kafka.KafkaTools;
 import com.provoly.replay.entity.ErrorLine;
 import com.provoly.replay.entity.ErrorReport;
 import com.provoly.replay.serializer.ErrorReportDeserializer;
@@ -26,6 +25,8 @@ import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.*;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
+
+import kafka.KafkaTools;
 
 @ApplicationScoped
 public class SummaryProcessor {

@@ -17,8 +17,8 @@ import com.provoly.common.exec.ExecContextOutputDatasetInfo;
 import com.provoly.common.exec.ExecEvent;
 import com.provoly.common.imports.ImportParameter;
 import com.provoly.common.item.ItemDto;
-import com.provoly.common.kafka.KafkaTools;
 import com.provoly.exec.deserializer.ItemDtoDeserializer;
+import com.provoly.exec.kafka.KafkaTools;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;

@@ -98,7 +98,6 @@ public class ManualStartTest extends AbstractStartTest {
         WatchEvent watchEvent = new WatchEvent(null, "MODIFIED");
         watchEvent.setObject(new PodBuilder()
                 .withNewMetadata()
-                .withNamespace("test")
                 .withName("pod-mock")
                 .addToLabels(PROVOLY_EXEC_JOB, jobExecutionId.toString())
                 .endMetadata()
@@ -110,8 +109,17 @@ public class ManualStartTest extends AbstractStartTest {
                 .endStatus()
                 .build());
 
+        /*
+         * Nous devons configurer le mock avant le démarrage du JobInstance afin que la websocket soit prête pour le watcher de
+         * JobMonitor
+         * Nous devons donc attendre 500ms avant de déclarer la 'terminaison' du pod afin que l'ordre des évènements dans le
+         * topic Kafka soit respecté
+         * Il ne semble pas possible d'indiquer au mock d'attendre explicitement un evènement donnée qui permette d'envoyer la
+         * terminaison après
+         * le démarrage du job.
+         */
         mockServer.expect().get().withPath(
-                "/api/v1/namespaces/test/pods?labelSelector=provoly.net%2Fprovoly-exec-job&allowWatchBookmarks=true&watch=true")
+                "/api/v1/namespaces/test/pods?allowWatchBookmarks=true&labelSelector=provoly.net%2Fprovoly-exec-job&watch=true")
                 .andUpgradeToWebSocket()
                 .open()//.immediately()
                 .waitFor(500)

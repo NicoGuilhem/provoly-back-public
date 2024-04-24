@@ -4,7 +4,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import com.provoly.common.item.ItemDto;
-import com.provoly.common.kafka.KafkaTools;
 import com.provoly.common.link.LinkDetailsDto;
 import com.provoly.common.model.AttributeDefDetailsDto;
 import com.provoly.common.relation.RelationsAggregateDto;
@@ -18,6 +17,8 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.jboss.logging.Logger;
+
+import kafka.KafkaTools;
 
 @ApplicationScoped
 public class TopologyProducer {

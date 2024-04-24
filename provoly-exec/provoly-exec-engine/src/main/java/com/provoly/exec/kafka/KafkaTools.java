@@ -1,4 +1,4 @@
-package com.provoly.common.kafka;
+package com.provoly.exec.kafka;
 
 import static org.apache.kafka.common.config.TopicConfig.CLEANUP_POLICY_CONFIG;
 import static org.apache.kafka.common.config.TopicConfig.CLEANUP_POLICY_DELETE;
@@ -19,16 +19,12 @@ import org.apache.kafka.clients.admin.Admin;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.config.SaslConfigs;
-import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsConfig;
-import org.apache.kafka.streams.Topology;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
@@ -48,7 +44,6 @@ public class KafkaTools {
     private final Optional<String> kafkaSaslMechanism;
     private final Optional<String> kafkaSaslJassConfig;
     private final Optional<String> kafkaSaslLoginCallbackHandlerClass;
-    private final Set<String> alreadyExistsTopic = new HashSet<>();
     private static final String ERROR_CONNECTION_KAFKA = "Unable to connect to kafka broker";
 
     public KafkaTools(
@@ -89,11 +84,6 @@ public class KafkaTools {
         return new KafkaProducer(props);
     }
 
-    public <T> KafkaConsumer<String, T> getConsumer(Class<T> clazz) {
-        log.info("Creating a new kafka consumer");
-        return new KafkaConsumer(getConsumerProperties());
-    }
-
     public Map<String, Object> getConsumerProperties() {
         log.info("Get default kafka consumer properties");
         return getDefaultProperties(ConsumerConfig.configNames());
@@ -124,49 +114,6 @@ public class KafkaTools {
         }
     }
 
-    public synchronized void createTopicIfNeeded(String topicName) {
-        if (alreadyExistsTopic.contains(topicName)) {
-            log.debugf("Topic with name %s already exists", topicName);
-            return;
-        }
-
-        try (var client = getAdmin()) {
-            if (!client.listTopics().names().get().contains(topicName)) {
-                log.infof("Creating topic %s", topicName);
-                short replication = 1;
-                NewTopic newTopic = new NewTopic(topicName, 3, replication);
-                newTopic.configs(TOPIC_CONFIG);
-                client.createTopics(List.of(newTopic)).all().get();
-            }
-            alreadyExistsTopic.add(topicName);
-        } catch (InterruptedException | ExecutionException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException(ERROR_CONNECTION_KAFKA, e);
-        }
-    }
-
-    public synchronized boolean isTopicsExists(String... names) {
-        try (var client = getAdmin()) {
-            return client.listTopics().names().get().containsAll(Arrays.asList(names));
-        } catch (InterruptedException | ExecutionException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException(ERROR_CONNECTION_KAFKA, e);
-        }
-    }
-
-    public KafkaStreams buildStream(String id, Topology topology) {
-        return new KafkaStreams(topology, buildStreamProperties(id));
-    }
-
-    public Properties buildStreamProperties(String streamId) {
-        Properties streamsProperties = new Properties();
-        streamsProperties.putAll(kafkaConfig);
-        streamsProperties.put(StreamsConfig.APPLICATION_ID_CONFIG, streamConfig.applicationId + "-" + streamId);
-        streamsProperties.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
-        streamsProperties.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());
-        return streamsProperties;
-    }
-
     private Map<String, Object> getDefaultProperties(Set<String> configNames) {
         Map<String, Object> props = new HashMap<>();
         for (Map.Entry<String, Object> entry : kafkaConfig.entrySet()) {
@@ -193,17 +140,5 @@ public class KafkaTools {
         kafkaSaslJassConfig.ifPresent(value -> kafkaConfig.put(SaslConfigs.SASL_JAAS_CONFIG, value));
         kafkaSaslLoginCallbackHandlerClass
                 .ifPresent(value -> kafkaConfig.put(SaslConfigs.SASL_LOGIN_CALLBACK_HANDLER_CLASS, value));
-    }
-
-    public String buildTopicErrorName(String itemTopicName) {
-        return "dlq-" + itemTopicName;
-    }
-
-    public String getTopicErrorName(String className) {
-        return "dlq-ds-" + className;
-    }
-
-    public String getTopicItemName(String className) {
-        return "ds-" + className;
     }
 }

@@ -10,14 +10,14 @@ import java.util.concurrent.ExecutionException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 
-import com.provoly.common.kafka.KafkaTools;
-
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.common.annotation.Identifier;
 
 import org.apache.kafka.clients.admin.NewTopic;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
+
+import kafka.KafkaTools;
 
 @ApplicationScoped
 public class RelationAggregateTopicCreator {

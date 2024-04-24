@@ -9,7 +9,6 @@ import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 
 import com.provoly.clients.LinkService;
-import com.provoly.common.kafka.KafkaTools;
 import com.provoly.common.link.LinkDetailsDto;
 
 import io.quarkus.runtime.ShutdownEvent;
@@ -19,6 +18,8 @@ import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.Topology;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
+
+import kafka.KafkaTools;
 
 @ApplicationScoped
 public class LinkToRelationService {

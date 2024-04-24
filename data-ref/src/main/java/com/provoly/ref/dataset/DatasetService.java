@@ -8,10 +8,7 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.*;
 import jakarta.transaction.Transactional;
 
 import com.provoly.common.dataset.DatasetDto;
@@ -27,7 +24,6 @@ import com.provoly.ref.dashboard.Dashboard_;
 import com.provoly.ref.datasetversion.DatasetVersion;
 import com.provoly.ref.datasetversion.DatasetVersionRepository;
 import com.provoly.ref.datasetversion.DatasetVersionService;
-import com.provoly.ref.entity.EntityId;
 import com.provoly.ref.entity.EntityIdService;
 import com.provoly.ref.entity.EntityNamed_;
 import com.provoly.ref.entity.GrantService;
@@ -46,8 +42,6 @@ import com.provoly.ref.widget.WidgetCatalog_;
 
 import org.jboss.logging.Logger;
 
-import com.speedment.jpastreamer.application.JPAStreamer;
-
 @ApplicationScoped
 public class DatasetService {
 
@@ -55,7 +49,6 @@ public class DatasetService {
     private DatasetVersionService datasetVersionService;
     private EntityIdService entityIdService;
     private AssociationService associationService;
-    private JPAStreamer jpaStreamer;
     private DatasetVersionRepository datasetVersionRepository;
     private GroupService groupService;
     private Logger log;
@@ -66,14 +59,13 @@ public class DatasetService {
     public DatasetService(EntityManager em, DatasetVersionService datasetVersionService,
             EntityIdService entityIdService, AssociationService associationService,
             DatasetVersionRepository datasetVersionRepository, GroupService groupService,
-            DatasetMapper datasetMapper, JPAStreamer jpaStreamer, Logger log, UserService userService,
+            DatasetMapper datasetMapper, Logger log, UserService userService,
             GrantService grantService) {
         this.em = em;
         this.datasetVersionService = datasetVersionService;
         this.entityIdService = entityIdService;
         this.associationService = associationService;
         this.datasetVersionRepository = datasetVersionRepository;
-        this.jpaStreamer = jpaStreamer;
         this.groupService = groupService;
         this.log = log;
         this.userService = userService;
@@ -152,10 +144,14 @@ public class DatasetService {
 
     public Dataset getByName(String name) {
         UserDto currentUserDto = userService.getCurrentUserDto();
-
-        return jpaStreamer.stream(Dataset.class)
-                .filter(dataset -> dataset.getName().equals(name)) // should use metamodel, but is blocked by https://github.com/speedment/jpa-streamer/issues/391
-                .findFirst()
+        var cb = em.getCriteriaBuilder();
+        var q = cb.createQuery(Dataset.class);
+        var root = q.from(Dataset.class);
+        q = q.where(cb.equal(root.get(Dataset_.name), name));
+        return em.createQuery(q)
+                .setMaxResults(1)
+                .getResultStream()
+                .findAny()
                 .flatMap(dataset -> grantService.canSee(dataset, DATASET, currentUserDto) ? Optional.of(dataset)
                         : Optional.empty())
                 .orElseThrow(() -> new ProvolyNotFoundException("Dataset %s doesn't exists".formatted(name)));
@@ -214,9 +210,14 @@ public class DatasetService {
 
     public Dataset getById(UUID datasetId) {
         UserDto currentUserDto = userService.getCurrentUserDto();
-        return jpaStreamer.stream(Dataset.class)
-                .filter(dataset -> dataset.getId().equals(datasetId)) // should use metamodel, but is blocked by https://github.com/speedment/jpa-streamer/issues/391
-                .findFirst()
+        var cb = em.getCriteriaBuilder();
+        var q = cb.createQuery(Dataset.class);
+        var root = q.from(Dataset.class);
+        q = q.where(cb.equal(root.get(Dataset_.id), datasetId));
+        return em.createQuery(q)
+                .setMaxResults(1)
+                .getResultStream()
+                .findAny()
                 .flatMap(dataset -> grantService.canSee(dataset, DATASET, currentUserDto) ? Optional.of(dataset)
                         : Optional.empty())
                 .orElseThrow(() -> new ProvolyNotFoundException("Dataset : %s inexistant.".formatted(datasetId)));
@@ -225,9 +226,13 @@ public class DatasetService {
 
     public Dataset findById(UUID datasetId) {
         UserDto currentUserDto = userService.getCurrentUserDto();
-
-        return jpaStreamer.stream(Dataset.class)
-                .filter(dataset -> dataset.getId().equals(datasetId))
+        var cb = em.getCriteriaBuilder();
+        var q = cb.createQuery(Dataset.class);
+        var root = q.from(Dataset.class);
+        q = q.where(cb.equal(root.get(Dataset_.ID), datasetId));
+        return em.createQuery(q)
+                .setMaxResults(1)
+                .getResultStream()
                 .filter(dataset -> grantService.canSee(dataset, DATASET, currentUserDto))
                 .findFirst()
                 .orElse(null);
@@ -266,10 +271,13 @@ public class DatasetService {
 
     public Collection<UUID> getAllFilterByDatasource(Collection<UUID> datasource) {
         //We need to filter the datasource on dataset because groups are implemented only on dataset
-        return jpaStreamer.stream(Dataset.class)
-                .map(EntityId::getId)
-                .filter(datasource::contains)
-                .toList();
+        var cb = em.getCriteriaBuilder();
+        var q = cb.createQuery(UUID.class);
+        var root = q.from(Dataset.class);
+        Path<UUID> idPath = root.get(Dataset_.ID);
+        q = q.select(idPath);
+        q = q.where(cb.in(root.get(Dataset_.ID)).value(datasource));
+        return em.createQuery(q).getResultList();
     }
 
     private boolean canDeleteDataset(UUID datasetId) {

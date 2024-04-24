@@ -4,6 +4,8 @@ import java.util.*;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.criteria.Path;
 import jakarta.transaction.Transactional;
 
 import com.provoly.common.error.BusinessException;
@@ -11,16 +13,14 @@ import com.provoly.common.error.ErrorCode;
 import com.provoly.common.metadata.MetadataValueWriteDto;
 import com.provoly.common.metadata.UserProfileValueReadDto;
 import com.provoly.common.user.UserDto;
-import com.provoly.ref.entity.EntityId;
 import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityId_;
 import com.provoly.ref.groups.GroupService;
 import com.provoly.ref.user.metadata.*;
 import com.provoly.security.AnonymousConfiguration;
 import com.provoly.security.CurrentSubjectProvider;
 
 import org.jboss.logging.Logger;
-
-import com.speedment.jpastreamer.application.JPAStreamer;
 
 /**
  * {@link ProvolyUser} in the sense database.
@@ -35,8 +35,6 @@ public class UserService {
     private EntityManager em;
     private AnonymousConfiguration anonymousConf;
 
-    private JPAStreamer jpaStreamer;
-
     private GroupService groupService;
 
     public UserService(Logger log,
@@ -45,8 +43,7 @@ public class UserService {
             UserProfileMapper userProfileMapper,
             EntityIdService entityIdService,
             EntityManager em,
-            AnonymousConfiguration anonymousConf,
-            JPAStreamer jpaStreamer, GroupService groupService) {
+            AnonymousConfiguration anonymousConf, GroupService groupService) {
         this.log = log;
         this.currentSubjectProvider = currentSubjectProvider;
         this.userProfileService = userProfileService;
@@ -54,7 +51,6 @@ public class UserService {
         this.entityIdService = entityIdService;
         this.em = em;
         this.anonymousConf = anonymousConf;
-        this.jpaStreamer = jpaStreamer;
         this.groupService = groupService;
     }
 
@@ -87,9 +83,11 @@ public class UserService {
 
     @Transactional
     public List<ProvolyUser> getAll() {
-        return jpaStreamer.stream(ProvolyUser.class)
-                .filter(user -> !user.getSubject().equals(user.getId().toString()))
-                .toList();
+        var cb = em.getCriteriaBuilder();
+        var q = cb.createQuery(ProvolyUser.class);
+        var root = q.from(ProvolyUser.class);
+        q = q.where(cb.notEqual(root.get(ProvolyUser_.subject), root.get(EntityId_.id).as(String.class)));
+        return em.createQuery(q).getResultList();
     }
 
     private UserDto getCurrentUserDto(String claim) {
@@ -101,9 +99,11 @@ public class UserService {
     }
 
     private ProvolyUser getOrCreateProvolyUserByClaim(String subject) {
-        var users = jpaStreamer.stream(ProvolyUser.class)
-                .filter(ProvolyUser$.subject.equal(subject))
-                .toList();
+        var cb = em.getCriteriaBuilder();
+        var q = cb.createQuery(ProvolyUser.class);
+        var root = q.from(ProvolyUser.class);
+        q = q.where(cb.equal(root.get(ProvolyUser_.subject), subject));
+        var users = em.createQuery(q).getResultList();
 
         switch (users.size()) {
             case 0 -> {
@@ -164,9 +164,11 @@ public class UserService {
 
     @Transactional
     public List<UserProfileValue> getMetadataValueByUserId(UUID userId) {
-        return jpaStreamer.stream(UserProfileValue.class)
-                .filter(UserProfileValue$.provolyUserId.equal(userId))
-                .toList();
+        var cb = em.getCriteriaBuilder();
+        var q = cb.createQuery(UserProfileValue.class);
+        var root = q.from(UserProfileValue.class);
+        q = q.where(cb.equal(root.get(UserProfileValue_.provolyUserId), userId));
+        return em.createQuery(q).getResultList();
     }
 
     public List<UserProfileValueReadDto> getUserProfileValueReadDtos(UUID userId) {
@@ -210,17 +212,28 @@ public class UserService {
     }
 
     private Optional<UserProfileValue> getUserProfileAssignedToUser(UUID userId, UUID userProfileId) {
-        return jpaStreamer.stream(UserProfileValue.class)
-                .filter(UserProfileValue$.provolyUserId.equal(userId))
-                .filter(UserProfileValue$.userProfileId.equal(userProfileId))
-                .findFirst();
+        var cb = em.getCriteriaBuilder();
+        var q = cb.createQuery(UserProfileValue.class);
+        var root = q.from(UserProfileValue.class);
+        q = q.where(cb.and(
+                cb.equal(root.get(UserProfileValue_.provolyUserId), userId),
+                cb.equal(root.get(UserProfileValue_.userProfileId), userProfileId)));
+        try {
+            return Optional.of(em.createQuery(q).setMaxResults(1).getSingleResult());
+        } catch (NoResultException e) {
+            return Optional.empty();
+        }
+
     }
 
     public List<UUID> getAllUserIdExceptCurrent() {
-        return jpaStreamer.stream(ProvolyUser.class)
-                .filter(ProvolyUser$.subject.notEqual(currentSubjectProvider.getSub()))
-                .map(EntityId::getId)
-                .toList();
+        var cb = em.getCriteriaBuilder();
+        var q = cb.createQuery(UUID.class);
+        var root = q.from(ProvolyUser.class);
+        Path<UUID> idPath = root.get(ProvolyUser_.ID);
+        q = q.select(idPath);
+        q = q.where(cb.notEqual(root.get(ProvolyUser_.subject), currentSubjectProvider.getSub()));
+        return em.createQuery(q).getResultList();
     }
 
 }

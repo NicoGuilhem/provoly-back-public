@@ -14,18 +14,15 @@ import com.provoly.ref.model.OClass;
 
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.speedment.jpastreamer.application.JPAStreamer;
 
 @ApplicationScoped
 public class CustomClassService {
     @PersistenceContext
     protected EntityManager em;
     private ObjectMapper objectMapper;
-    private JPAStreamer jpaStreamer;
 
-    public CustomClassService(ObjectMapper objectMapper, JPAStreamer jpaStreamer) {
+    public CustomClassService(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
-        this.jpaStreamer = jpaStreamer;
     }
 
     public void addCustomClass(UUID id, String domain, String content) {
@@ -52,13 +49,18 @@ public class CustomClassService {
 
     @Transactional
     public List<CustomClass> getAllCustomClass() {
-        return jpaStreamer.stream(CustomClass.class).toList();
+        var cb = em.getCriteriaBuilder();
+        var q = cb.createQuery(CustomClass.class);
+        return em.createQuery(q).getResultList();
     }
 
     public List<CustomClass> getAllCustomClassByDomain(String domain) {
-        return jpaStreamer.stream(CustomClass.class)
-                .filter(CustomClass$.domain.equal(domain))
-                .toList();
+        var cb = em.getCriteriaBuilder();
+        var q = cb.createQuery(CustomClass.class);
+        var root = q.from(CustomClass.class);
+        q = q.where(
+                cb.equal(root.get(CustomClass_.domain), domain));
+        return em.createQuery(q).getResultList();
     }
 
     @Transactional
@@ -75,10 +77,13 @@ public class CustomClassService {
 
     @Transactional
     public List<CustomClass> findByOClassAndDomain(UUID oClass, String domain) {
-        return jpaStreamer.stream(CustomClass.class)
-                .filter(CustomClass$.oClass.equal(oClass))
-                .filter(CustomClass$.domain.equal(domain))
-                .toList();
+        var cb = em.getCriteriaBuilder();
+        var q = cb.createQuery(CustomClass.class);
+        var root = q.from(CustomClass.class);
+        q = q.where(cb.and(
+                cb.equal(root.get(CustomClass_.oClass), oClass)),
+                cb.equal(root.get(CustomClass_.domain), domain));
+        return em.createQuery(q).getResultList();
     }
 
     @Transactional
@@ -90,8 +95,11 @@ public class CustomClassService {
     }
 
     public List<CustomClass> findByoClassId(UUID oClassId) {
-        return jpaStreamer.stream(CustomClass.class)
-                .filter(CustomClass$.oClass.equal(oClassId))
-                .toList();
+        var cb = em.getCriteriaBuilder();
+        var q = cb.createQuery(CustomClass.class);
+        var root = q.from(CustomClass.class);
+        q = q.where(
+                cb.equal(root.get(CustomClass_.oClass), oClassId));
+        return em.createQuery(q).getResultList();
     }
 }

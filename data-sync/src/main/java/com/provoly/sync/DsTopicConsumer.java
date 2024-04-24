@@ -11,7 +11,6 @@ import jakarta.inject.Inject;
 
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
-import com.provoly.common.kafka.KafkaTools;
 
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.reactive.messaging.kafka.KafkaRecord;
@@ -23,6 +22,8 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
+
+import kafka.KafkaTools;
 
 @ApplicationScoped
 public class DsTopicConsumer {

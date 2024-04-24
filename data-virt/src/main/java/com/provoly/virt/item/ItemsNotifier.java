@@ -9,7 +9,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import com.provoly.common.item.ItemDto;
-import com.provoly.common.kafka.KafkaTools;
+import com.provoly.virt.kafka.KafkaTools;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;

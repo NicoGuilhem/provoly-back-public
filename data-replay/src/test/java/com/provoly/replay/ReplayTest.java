@@ -11,7 +11,6 @@ import java.util.UUID;
 import jakarta.inject.Inject;
 
 import com.provoly.common.item.ItemDto;
-import com.provoly.common.kafka.KafkaTools;
 import com.provoly.common.model.OClassWriteDto;
 import com.provoly.test.AuthService;
 import com.provoly.test.ProvolyKafkaCompanionResource;
@@ -32,6 +31,8 @@ import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import kafka.KafkaTools;
 
 @QuarkusTest
 @QuarkusTestResource(ProvolyTestContainers.class)

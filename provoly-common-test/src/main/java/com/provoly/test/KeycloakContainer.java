@@ -67,7 +67,8 @@ public class KeycloakContainer extends GenericContainer<KeycloakContainer> {
         withLabel(KEYCLOAK_SERVICE_LABEL, KEYCLOAK_VALUE);
         addEnv(KEYCLOAK_QUARKUS_ADMIN_PROP, KEYCLOAK_ADMIN_USER);
         addEnv(KEYCLOAK_QUARKUS_ADMIN_PASSWORD_PROP, KEYCLOAK_ADMIN_PASSWORD);
-        withCommand("start --http-enabled=true --hostname-strict=false --hostname-strict-https=false");
+        withStartupTimeout(Duration.ofSeconds(120));
+        withCommand("start-dev --http-enabled=true --hostname-strict=false --hostname-strict-https=false");
 
         URL realmPathUrl = null;
         if ((realmPathUrl = Thread.currentThread().getContextClassLoader().getResource(realmPath)) != null) {
