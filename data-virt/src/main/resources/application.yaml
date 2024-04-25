@@ -22,9 +22,6 @@ quarkus:
   http:
     limits:
       max-body-size: 2G
-  kafka-streams:
-    health:
-      enabled: false
 
   cache:
     caffeine:

@@ -11,7 +11,6 @@ import java.util.concurrent.ExecutionException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 
-import io.quarkus.kafka.streams.runtime.KafkaStreamsRuntimeConfig;
 import io.smallrye.common.annotation.Identifier;
 
 import org.apache.kafka.clients.CommonClientConfigs;
@@ -23,7 +22,6 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.apache.kafka.streams.StreamsConfig;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
@@ -38,7 +36,6 @@ public class KafkaTools {
             CLEANUP_POLICY_CONFIG, CLEANUP_POLICY_DELETE,
             RETENTION_BYTES_CONFIG, "-1",
             RETENTION_MS_CONFIG, "-1");
-    private final KafkaStreamsRuntimeConfig streamConfig;
     private final Optional<String> kafkaSecurityProtocol;
     private final Optional<String> kafkaSaslMechanism;
     private final Optional<String> kafkaSaslJassConfig;
@@ -49,14 +46,12 @@ public class KafkaTools {
     public KafkaTools(
             Logger log,
             @Identifier("default-kafka-broker") Map<String, Object> kafkaConfig,
-            KafkaStreamsRuntimeConfig streamConfig,
             @ConfigProperty(name = "mp.messaging.connector.smallrye-kafka.security.protocol") Optional<String> kafkaSecurityProtocol,
             @ConfigProperty(name = "mp.messaging.connector.smallrye-kafka.sasl.mechanism") Optional<String> kafkaSaslMechanism,
             @ConfigProperty(name = "mp.messaging.connector.smallrye-kafka.sasl.jaas.config") Optional<String> kafkaSaslJassConfig,
             @ConfigProperty(name = "mp.messaging.connector.smallrye-kafka.sasl.login.callback.handler.class") Optional<String> kafkaSaslLoginCallbackHandlerClass) {
         this.log = log;
         this.kafkaConfig = kafkaConfig;
-        this.streamConfig = streamConfig;
 
         this.kafkaSecurityProtocol = kafkaSecurityProtocol;
         this.kafkaSaslMechanism = kafkaSaslMechanism;
@@ -124,12 +119,6 @@ public class KafkaTools {
     }
 
     private void addSecurityProperties() {
-        streamConfig.securityProtocol.ifPresent(value -> kafkaConfig.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, value));
-        streamConfig.sasl.mechanism.ifPresent(value -> kafkaConfig.put(SaslConfigs.SASL_MECHANISM, value));
-        streamConfig.sasl.jaasConfig.ifPresent(value -> kafkaConfig.put(SaslConfigs.SASL_JAAS_CONFIG, value));
-        streamConfig.sasl.loginCallbackHandlerClass
-                .ifPresent(value -> kafkaConfig.put(SaslConfigs.SASL_LOGIN_CALLBACK_HANDLER_CLASS, value));
-
         kafkaSecurityProtocol
                 .ifPresent(value -> kafkaConfig.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, value));
         kafkaSaslMechanism.ifPresent(value -> kafkaConfig.put(SaslConfigs.SASL_MECHANISM, value));

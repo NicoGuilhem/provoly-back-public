@@ -5,10 +5,8 @@ import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
-// TODO : DatasetFactory is duplicated in provoly-transfo-runner : remove duplication
 @ApplicationScoped
 public class DatasetFactory {
-
     public static final UUID BIKE_STATION_DATASOURCE_ID = UUID.fromString("423b5c01-1816-41d4-b358-100000000000");
     public static final int BIKE_STATION_SIZE = 3;
     public static final int BIKE_STATION_NB_ATTRIBUTES = 3;
@@ -31,5 +29,4 @@ public class DatasetFactory {
                         12,
                         11));
     }
-
 }

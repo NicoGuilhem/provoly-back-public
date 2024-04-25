@@ -1,10 +1,15 @@
 package com.provoly.security;
 
+import static com.provoly.common.user.Role.STR_ADMINISTRATE;
+
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
+import com.provoly.common.user.Role;
 import com.provoly.common.user.SystemGroup;
 
 import io.quarkus.oidc.runtime.OidcJwtCallerPrincipal;
@@ -56,6 +61,9 @@ public class RolesAugmentor implements SecurityIdentityAugmentor {
             builder.addAttribute(Claims.family_name.name(), principal.getClaim(Claims.family_name.name()));
             builder.addAttribute(Claims.given_name.name(), principal.getClaim(Claims.given_name.name()));
             builder.addAttribute(Claims.email.name(), principal.getClaim(Claims.email.name()));
+            if (identity.getRoles().contains(STR_ADMINISTRATE)) {
+                builder.addRoles(Arrays.stream(Role.values()).map(r -> r.toString().toLowerCase()).collect(Collectors.toSet()));
+            }
             return builder::build;
         } else {
             return QuarkusSecurityIdentity.builder(identity)::build;

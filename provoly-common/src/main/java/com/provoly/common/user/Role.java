@@ -44,7 +44,8 @@ public enum Role {
     USER_READ,
     USER_WRITE,
     WIDGET_CATALOG_READ,
-    WIDGET_CATALOG_WRITE;
+    WIDGET_CATALOG_WRITE,
+    ADMINISTRATE;
 
     // We declare role as String, because enum cannot be used in RoleAllowed annotation
     public static final String STR_CLASS_READ = "class_read";
@@ -89,6 +90,7 @@ public enum Role {
     public static final String STR_USER_WRITE = "user_write";
     public static final String STR_WIDGET_CATALOG_READ = "widget_catalog_read";
     public static final String STR_WIDGET_CATALOG_WRITE = "widget_catalog_write";
+    public static final String STR_ADMINISTRATE = "administrate";
 
     public static boolean exists(String role) {
         for (Role value : values()) {

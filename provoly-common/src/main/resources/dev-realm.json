@@ -750,7 +750,7 @@
     } ],
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
-    "realmRoles" : [ "stream_read", "job_instance_read", "field_read", "job_execution_read", "user_write", "data_access_read", "widget_catalog_read", "job_instance_write", "class_read", "dashboard_write", "default-roles-provoly", "metadata_context_write", "notification_read", "job_model_write", "link_read", "user_read", "dataset_read", "infra_write", "job_start", "field_write", "infra_read", "metadata_item_ref_read", "metadata_item_ref_write", "metadata_user_read", "datasource_read", "class_write", "metadata_user_ref_write", "data_access_write", "integ_error_write", "widget_catalog_write", "metadata_user_ref_read", "item_write", "dataset_write", "integ_error_read", "metadata_user_write", "link_write", "dashboard_read", "metadata_context_read", "search", "job_model_read", "notification_write" ],
+    "realmRoles" : [ "administrate" ],
     "notBefore" : 0,
     "groups" : [ "/jjGroup", "/mpGroup" ]
   }, {
