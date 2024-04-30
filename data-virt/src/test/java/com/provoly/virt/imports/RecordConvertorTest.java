@@ -209,8 +209,8 @@ public class RecordConvertorTest {
         values.add("polygon");
         values.add("multipolygon");
 
-        List<ExtractedMessage> result = recordConvertor.validateHeaders(values,
-                oClassDetailsDto.getAttributes().stream().map(attribute -> attribute.name).toList());
+        List<ExtractedMessage> result = recordConvertor.validateAttributeNames(values,
+                oClassDetailsDto.getAttributes().stream().map(attribute -> attribute.name));
 
         assertThat(result).isEmpty();
     }
@@ -229,8 +229,8 @@ public class RecordConvertorTest {
         values.add("polygon");
         values.add("multipolygon");
 
-        List<ExtractedMessage> result = recordConvertor.validateHeaders(values,
-                oClassDetailsDto.getAttributes().stream().map(attribute -> attribute.name).toList());
+        List<ExtractedMessage> result = recordConvertor.validateAttributeNames(values,
+                oClassDetailsDto.getAttributes().stream().map(attribute -> attribute.name));
 
         assertThat(result).isEmpty();
     }
@@ -253,8 +253,8 @@ public class RecordConvertorTest {
         values.add("instant");
         values.add("decimal");
 
-        List<ExtractedMessage> result = recordConvertor.validateHeaders(values,
-                oClassDetailsDto.getAttributes().stream().map(attribute -> attribute.name).toList());
+        List<ExtractedMessage> result = recordConvertor.validateAttributeNames(values,
+                oClassDetailsDto.getAttributes().stream().map(attribute -> attribute.name));
 
         assertEquals(1, result.size());
         assertEquals(MessageLevel.WARNING, result.get(0).messageLevel());

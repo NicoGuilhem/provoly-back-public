@@ -7,7 +7,7 @@ on:
       - '*'
 
 env:
-  PROJECT_LIST: "data-ref,data-virt,data-link,data-sync,data-replay,provoly-exec/provoly-exec-engine,provoly-exec/provoly-exec-file-provision,provoly-exec/provoly-exec-data-outcome,provoly-transfo/provoly-transfo-common,provoly-transfo/provoly-transfo-engine,provoly-transfo/provoly-transfo-runner"
+  PROJECT_LIST: "data-ref,data-virt,data-link,data-replay,provoly-exec/provoly-exec-engine,provoly-exec/provoly-exec-file-provision,provoly-exec/provoly-exec-data-outcome,provoly-transfo/provoly-transfo-common,provoly-transfo/provoly-transfo-engine,provoly-transfo/provoly-transfo-runner"
   MAVEN_CLI_OPTS: "-Dstyle.color=always --batch-mode --errors --show-version -DinstallAtEnd=true -DdeployAtEnd=true"
   JAVA_VERSION: 21
 

@@ -25,7 +25,6 @@ public class UpdateDeploymentsService {
         tagNames.put("data-ref", System.getenv().get("DATA_REF_IMAGE_TAG_NAME"));
         tagNames.put("data-virt", System.getenv().get("DATA_VIRT_IMAGE_TAG_NAME"));
         tagNames.put("data-link", System.getenv().get("DATA_LINK_IMAGE_TAG_NAME"));
-        tagNames.put("data-sync", System.getenv().get("DATA_SYNC_IMAGE_TAG_NAME"));
         tagNames.put("data-replay", System.getenv().get("DATA_REPLAY_IMAGE_TAG_NAME"));
         tagNames.put("provoly-exec/provoly-exec-engine", System.getenv().get("PROVOLY_EXEC_ENGINE_IMAGE_TAG_NAME"));
         tagNames.put("provoly-exec/provoly-exec-file-provision", System.getenv().get("PROVOLY_EXEC_FILE_PROVISION_IMAGE_TAG_NAME"));

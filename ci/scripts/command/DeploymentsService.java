@@ -26,7 +26,6 @@ public class DeploymentsService {
         tagNames.put("data-ref", "dataRefImagetag");
         tagNames.put("data-virt", "dataVirtImagetag");
         tagNames.put("data-link", "dataLinkImagetag");
-        tagNames.put("data-sync", "dataSyncImagetag");
         tagNames.put("data-replay", "dataReplayImagetag");
         tagNames.put("provoly-exec/provoly-exec-engine", "provolyExecEngineImagetag");
         tagNames.put("provoly-exec/provoly-exec-file-provision", "provolyExecFileProvisionImagetag");

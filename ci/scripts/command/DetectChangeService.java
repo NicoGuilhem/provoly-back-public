@@ -35,7 +35,6 @@ public class DetectChangeService {
     public static final List<String> modules = List.of(
             "data-virt",
             "data-link",
-            "data-sync",
             "data-replay",
             "provoly-exec/provoly-exec-engine",
             "provoly-exec/provoly-exec-file-provision",

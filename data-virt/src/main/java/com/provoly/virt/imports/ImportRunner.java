@@ -1,6 +1,7 @@
 package com.provoly.virt.imports;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -76,14 +77,14 @@ public class ImportRunner {
         log.info("Get dataset %s and associated OClass".formatted(datasetVersionId));
         DatasetVersionDto datasetVersionDto = datasetVersionService.get(datasetVersionId);
         OClassDetailsDto oClassDto = modelService.getDetails(datasetVersionDto.getoClass());
-        List<String> oClassAttributes = oClassDto.getAttributes().stream().map(attribute -> attribute.technicalName).toList();
+        Stream<String> oClassAttributes = oClassDto.getAttributes().stream().map(attribute -> attribute.technicalName);
         log.infof("Get dataset associated file: %s", datasetVersionId);
 
         try (FileWalker fileWalker = fileDispatcher.dispatch(fileService.getFile(datasetVersionDto.getId().toString()),
-                oClassAttributes)) {
+                oClassAttributes.toList())) {
             log.info("Validate file attributes");
-            List<ExtractedMessage> headerMessages = recordConvertor.validateHeaders(fileWalker.getAttributes(),
-                    oClassAttributes);
+            List<ExtractedMessage> headerMessages = recordConvertor.validateAttributeNames(fileWalker.getAttributes(),
+                    oClassDto.getAttributes().stream().map(attribute -> attribute.technicalName));
 
             if (!headerMessages.isEmpty()) {
                 log.warn("Problems detected while validating file headers.");

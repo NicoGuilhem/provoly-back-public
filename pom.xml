@@ -16,7 +16,6 @@
         <module>data-ref</module>
         <module>data-virt</module>
         <module>data-link</module>
-        <module>data-sync</module>
         <module>data-replay</module>
         <module>provoly-exec/provoly-exec-engine</module>
         <module>provoly-exec/provoly-exec-file-provision</module>

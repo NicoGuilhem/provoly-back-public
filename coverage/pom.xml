@@ -37,11 +37,6 @@
         </dependency>
         <dependency>
             <groupId>com.provoly</groupId>
-            <artifactId>data-sync</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.provoly</groupId>
             <artifactId>data-virt</artifactId>
             <version>${project.version}</version>
         </dependency>

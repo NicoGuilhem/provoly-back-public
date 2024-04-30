@@ -11,6 +11,20 @@ public class AttributeDefDto {
     public boolean multiValued;
     public String slug;
 
+    public AttributeDefDto() {
+    }
+
+    public AttributeDefDto(UUID id, String name, String technicalName, UUID field, UUID category, boolean multiValued,
+            String slug) {
+        this.id = id;
+        this.name = name;
+        this.technicalName = technicalName;
+        this.field = field;
+        this.category = category;
+        this.multiValued = multiValued;
+        this.slug = slug;
+    }
+
     @Override
     public String toString() {
         return name;

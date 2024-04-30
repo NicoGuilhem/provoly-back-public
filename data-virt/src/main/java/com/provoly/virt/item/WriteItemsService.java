@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import com.provoly.clients.DatasetService;
-import com.provoly.clients.DatasetVersionService;
 import com.provoly.clients.ModelService;
 import com.provoly.common.dataset.DatasetDto;
 import com.provoly.common.error.BusinessException;
@@ -40,8 +39,6 @@ public class WriteItemsService {
 
     private DataVirtProperties dataVirtProperties;
 
-    private DatasetVersionService datasetVersionService;
-
     private ItemTransformer itemTransformer;
 
     public WriteItemsService(Logger log,
@@ -50,7 +47,6 @@ public class WriteItemsService {
             StorageWriteAdapter storageItemService,
             PartitionService partitionService,
             DataVirtProperties dataVirtProperties,
-            @RestClient DatasetVersionService datasetVersionService,
             ItemTransformer itemTransformer) {
         this.log = log;
         this.modelService = modelService;
@@ -58,7 +54,6 @@ public class WriteItemsService {
         this.storageItemService = storageItemService;
         this.partitionService = partitionService;
         this.dataVirtProperties = dataVirtProperties;
-        this.datasetVersionService = datasetVersionService;
         this.itemTransformer = itemTransformer;
     }
 

@@ -105,7 +105,6 @@ Below is listed an exhaustive list of the services available in the project.
 | Application | Description | Local port
 | data-virt         | data search application                                                 | 8080
 | data-ref         | application to reference data models, metadata and rules             | 8180
-| data-sync         | synchronisation service allowing data insertion                         | 8280
 | provoly-monitor     | applications' monitoring service                                     | 8380
 | data-link         | service to reconcile data relations                             | 8580
 | data-replay     | service to replay or drop data that couldn't be inserted     | 8680

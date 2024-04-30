@@ -1,12 +1,12 @@
 package com.provoly.virt.event;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import com.provoly.clients.CacheClearer;
 import com.provoly.common.model.OClassDetailsDto;
 import com.provoly.common.ref.*;
+import com.provoly.virt.kafka.KafkaTools;
 import com.provoly.virt.storage.StorageModelAdapter;
 
 import org.eclipse.microprofile.reactive.messaging.Channel;
@@ -18,18 +18,22 @@ import org.jboss.logging.Logger;
 public class RefChangeListener {
 
     private Logger log;
-
     private StorageModelAdapter storageModelAdapter;
+    private KafkaTools kafkaTools;
     private CacheClearer cacheClearer;
-    @Inject
-    @Channel(RefChangeEvent.TOPIC_NAME + "-out")
-    Emitter<RefChangeEvent> eventEmitter;
 
-    public RefChangeListener(Logger log, CacheClearer cacheClearer,
-            StorageModelAdapter storageModelAdapter) {
+    private Emitter<RefChangeEvent> eventEmitter;
+
+    public RefChangeListener(Logger log,
+            CacheClearer cacheClearer,
+            StorageModelAdapter storageModelAdapter,
+            KafkaTools kafkaTools,
+            @Channel(RefChangeEvent.TOPIC_NAME + "-out") Emitter<RefChangeEvent> eventEmitter) {
         this.log = log;
         this.cacheClearer = cacheClearer;
         this.storageModelAdapter = storageModelAdapter;
+        this.kafkaTools = kafkaTools;
+        this.eventEmitter = eventEmitter;
     }
 
     @Incoming(RefChangeEvent.TOPIC_NAME)

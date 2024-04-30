@@ -14,6 +14,17 @@ public class FieldDto {
     public String slug;
     public String crs; // CRS in format as "EPSG:2154"
 
+    public FieldDto() {
+    }
+
+    public FieldDto(UUID id, String name, String type, String slug, String crs) {
+        this.id = id;
+        this.name = name;
+        this.type = type;
+        this.slug = slug;
+        this.crs = crs;
+    }
+
     public Type getType() {
         return Type.from(type);
     }

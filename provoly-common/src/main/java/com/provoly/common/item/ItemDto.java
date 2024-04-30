@@ -31,8 +31,8 @@ public class ItemDto {
         this.oClass = datasetVersionDto.getoClass();
     }
 
-    public ItemDto(UUID oClass, UUID datasetId, String id, Map<String, AttributeDto> attributes) {
-        this.id = datasetId + "@" + id;
+    public ItemDto(UUID oClass, UUID datasetVersionId, String id, Map<String, AttributeDto> attributes) {
+        this.id = datasetVersionId + "@" + id;
         this.oClass = oClass;
         this.attributes = attributes;
     }

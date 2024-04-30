@@ -7,7 +7,6 @@ Each application has its dependencies. You can refer to this exhaustive list of 
 | data-ref                  |  elastic-search
 | data-link                 |  data-ref
 | data-replay               | data-ref
-| data-sync                 | data-ref, data-virt
 | data-virt                 | data-ref
 | provoly-transfo-engine        | data-ref, provoly-exec-engine
 | provoly-exec-engine           | data-ref, data-virt

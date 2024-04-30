@@ -5,6 +5,8 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -33,29 +35,31 @@ public class RecordConvertor {
         this.log = log;
     }
 
-    public List<ExtractedMessage> validateHeaders(List<String> headers, List<String> oClassAttributes) {
-
-        List<ExtractedMessage> headerMessages = new ArrayList<>();
-        HashSet<String> headersHashSet = new HashSet<>(headers);
-        HashSet<String> oClassAttributHashSet = new HashSet<>(oClassAttributes);
+    public List<ExtractedMessage> validateAttributeNames(Collection<String> headers, Stream<String> oClassAttributes) {
 
         log.debug("Check if at least one oclass attribute is present");
-        var attributeFiltered = headers
-                .stream()
-                .filter(oClassAttributHashSet::contains)
-                .toList();
-        if (attributeFiltered.isEmpty()) {
-            headerMessages.add(new ExtractedMessage(MessageLevel.ERROR,
+        long count = headers.size();
+        if (count == 0) {
+            return List.of(new ExtractedMessage(MessageLevel.ERROR,
                     ExtractMessageCode.NO_ATTRIBUTES));
         }
+
+        Set<String> oClassAttributHashSet = oClassAttributes.collect(Collectors.toSet());
+
         log.debug("Check whether any additional attributes are presents");
-        headerMessages.addAll(headersHashSet
+
+        List<ExtractedMessage> headerMessages = headers
                 .stream()
                 .filter(attr -> !oClassAttributHashSet.contains(attr))
                 .map(unknownAttr -> new ExtractedMessage(MessageLevel.WARNING,
                         ExtractMessageCode.UNRECOGNIZED,
                         new FileImportDto.ParamsTypeError(unknownAttr)))
-                .toList());
+                .collect(Collectors.toList());
+
+        if (headerMessages.size() == count) {
+            headerMessages.add(new ExtractedMessage(MessageLevel.ERROR,
+                    ExtractMessageCode.NO_ATTRIBUTES));
+        }
 
         return headerMessages;
     }

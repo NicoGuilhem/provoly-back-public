@@ -64,7 +64,7 @@ mp:
   messaging:
     incoming:
       ref-event:
-        failure-strategy: dead-letter-queue # nack events that triggers an error
+        failure-strategy: dead-letter-queue
         dead-letter-queue:
           value:
             serializer: io.quarkus.kafka.client.serialization.ObjectMapperSerializer
@@ -73,6 +73,17 @@ mp:
         auto:
           offset:
             reset: earliest
+      item:
+        pattern: true
+        topic: "dataset-.*"
+        value:
+          deserializer: io.quarkus.kafka.client.serialization.JsonObjectDeserializer
+        auto:
+          offset:
+            reset: earliest
+        failure-strategy: dead-letter-queue
+        connector: smallrye-kafka
+
     outgoing:
       ref-event-out:
         topic: ref-event

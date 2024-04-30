@@ -33,7 +33,8 @@ public interface DatasetVersionService {
     void activate(@PathParam("id") UUID id);
 
     @PUT
-    void update(DatasetVersionInformationDto datasetVersionInformation);
+    @Path("/id/{id}")
+    void update(@PathParam("id") UUID id, DatasetVersionInformationDto datasetVersionInformationsDto);
 
     @POST
     @Path("/id/{id}/deactivate")
