@@ -76,10 +76,12 @@ public class DatasetService {
         }
         dataset.setUser(currentUser);
         datasetRepository.save(dataset, false);
-        var rightsByGroup = datasetDto.getGroups().stream()
-                .collect(Collectors.toMap(groupName -> groupName, _ignored -> List.of(
-                        GroupRights.READ)));
-        groupService.updateEntityGroups(rightsByGroup, dataset.getId(), DATASET);
+        if (datasetDto.getGroups() != null) {
+            var rightsByGroup = datasetDto.getGroups().stream()
+                    .collect(Collectors.toMap(groupName -> groupName, _ignored -> List.of(
+                            GroupRights.READ)));
+            groupService.updateEntityGroups(rightsByGroup, dataset.getId(), DATASET);
+        }
         datasetHolder.ifPresent(datasetVersionService::createDatasetVersion);
     }
 

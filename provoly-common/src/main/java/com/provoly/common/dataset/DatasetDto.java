@@ -33,11 +33,11 @@ public class DatasetDto {
     }
 
     public DatasetDto(UUID id, String name, UUID oClass, DatasetType type) {
-        this(id, name, oClass, type, null, List.of(), List.of());
+        this(id, name, oClass, type, null, List.of(), null);
     }
 
     public DatasetDto(UUID id, String name, UUID oClass, DatasetType type, String description) {
-        this(id, name, oClass, type, description, List.of(), List.of());
+        this(id, name, oClass, type, description, List.of(), null);
     }
 
     public DatasetDto(UUID id, String name, UUID oClass, DatasetType type,
