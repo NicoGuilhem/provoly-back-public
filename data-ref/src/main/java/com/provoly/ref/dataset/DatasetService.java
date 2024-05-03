@@ -6,30 +6,21 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
-import jakarta.persistence.criteria.*;
 import jakarta.transaction.Transactional;
 
 import com.provoly.common.dataset.DatasetDto;
 import com.provoly.common.dataset.DatasetState;
 import com.provoly.common.dataset.DatasetType;
+import com.provoly.common.dataset.GroupRights;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.error.ProvolyNotFoundException;
 import com.provoly.common.user.SystemGroup;
-import com.provoly.common.user.UserDto;
-import com.provoly.ref.dashboard.Dashboard;
-import com.provoly.ref.dashboard.Dashboard_;
 import com.provoly.ref.datasetversion.DatasetVersion;
 import com.provoly.ref.datasetversion.DatasetVersionRepository;
 import com.provoly.ref.datasetversion.DatasetVersionService;
-import com.provoly.ref.entity.EntityIdService;
-import com.provoly.ref.entity.EntityNamed_;
-import com.provoly.ref.entity.GrantService;
-import com.provoly.ref.groups.Group;
-import com.provoly.ref.groups.GroupErrors;
-import com.provoly.ref.groups.GroupService;
+import com.provoly.ref.groups.*;
 import com.provoly.ref.model.AssociationDto;
 import com.provoly.ref.model.AssociationService;
 import com.provoly.ref.model.AssociationsDto;
@@ -37,40 +28,37 @@ import com.provoly.ref.model.AssociationsType;
 import com.provoly.ref.user.ProvolyUser;
 import com.provoly.ref.user.UserService;
 import com.provoly.ref.user.VisibilityType;
-import com.provoly.ref.widget.WidgetCatalog;
-import com.provoly.ref.widget.WidgetCatalog_;
 
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class DatasetService {
 
-    private EntityManager em;
     private DatasetVersionService datasetVersionService;
-    private EntityIdService entityIdService;
     private AssociationService associationService;
     private DatasetVersionRepository datasetVersionRepository;
     private GroupService groupService;
+    private GroupRepository groupRepository;
     private Logger log;
     private DatasetMapper datasetMapper;
     private UserService userService;
     private GrantService grantService;
+    private DatasetRepository datasetRepository;
 
-    public DatasetService(EntityManager em, DatasetVersionService datasetVersionService,
-            EntityIdService entityIdService, AssociationService associationService,
-            DatasetVersionRepository datasetVersionRepository, GroupService groupService,
+    public DatasetService(DatasetVersionService datasetVersionService, AssociationService associationService,
+            DatasetVersionRepository datasetVersionRepository, GroupService groupService, GroupRepository groupRepository,
             DatasetMapper datasetMapper, Logger log, UserService userService,
-            GrantService grantService) {
-        this.em = em;
+            GrantService grantService, DatasetRepository datasetRepository) {
         this.datasetVersionService = datasetVersionService;
-        this.entityIdService = entityIdService;
         this.associationService = associationService;
         this.datasetVersionRepository = datasetVersionRepository;
         this.groupService = groupService;
+        this.groupRepository = groupRepository;
         this.log = log;
         this.userService = userService;
         this.datasetMapper = datasetMapper;
         this.grantService = grantService;
+        this.datasetRepository = datasetRepository;
     }
 
     @Transactional
@@ -80,28 +68,23 @@ public class DatasetService {
         checkCanCreate(dataset);
         ProvolyUser currentUser = userService.getCurrentUser();
 
-        if (!entityIdService.exists(dataset) && (dataset.getType() != DatasetType.CLOSED)) {
+        if (!datasetRepository.exists(dataset) && (dataset.getType() != DatasetType.CLOSED)) {
             var datasetVersion = new DatasetVersion(UUID.randomUUID());
             datasetVersion.setDataset(dataset);
             datasetVersion.setState(DatasetState.ACTIVE);
             datasetHolder = Optional.of(datasetVersion);
         }
         dataset.setUser(currentUser);
-        entityIdService.saveEntity(dataset, false);
-        groupService.updateEntityGroups(datasetDto.getGroups(), dataset.getId(), DATASET);
+        datasetRepository.save(dataset, false);
+        var rightsByGroup = datasetDto.getGroups().stream()
+                .collect(Collectors.toMap(groupName -> groupName, _ignored -> List.of(
+                        GroupRights.READ)));
+        groupService.updateEntityGroups(rightsByGroup, dataset.getId(), DATASET);
         datasetHolder.ifPresent(datasetVersionService::createDatasetVersion);
     }
 
     private void checkCanCreate(Dataset dataset) {
-        var cb = em.getCriteriaBuilder();
-        var q = cb.createQuery(Long.class);
-        var metadataRoot = q.from(Dataset.class);
-        q.select(cb.count(metadataRoot));
-        q.where(
-                cb.equal(metadataRoot.get(Dataset_.O_CLASS), dataset.getoClass()),
-                cb.equal(metadataRoot.get(EntityNamed_.NAME), dataset.getName()));
-        var result = em.createQuery(q).getSingleResult();
-        if (result > 0) {
+        if (datasetRepository.isNameAlreadyExistForClass(dataset)) {
             throw new BusinessException(ErrorCode.CONFLICT,
                     "Name %s already exists for class %s".formatted(dataset.getName(), dataset.getoClass().getName()));
         }
@@ -122,36 +105,19 @@ public class DatasetService {
             throw new BusinessException(ErrorCode.BAD_REQUEST,
                     "You're not allowed to delete dataset %s because it owns one or more dataset version".formatted(id));
         }
-        entityIdService.removeEntity(id, Dataset.class);
+        datasetRepository.delete(id);
     }
 
     public Collection<Dataset> getAllClassAllowedDatasets(UUID id) {
         ProvolyUser user = userService.getCurrentUser();
         log.infof("Get datasets for user %s with groups %s", user.getId(),
                 user.getGroups().stream().map(Group::getName).toList());
-
-        return em.createNativeQuery(
-                "WITH ids AS (SELECT DISTINCT dataset.id FROM dataset " +
-                        "LEFT JOIN group_relations as gr ON dataset.id = gr.entity_id " +
-                        "WHERE gr.group_id in :groups_id OR dataset.user_id = :user_id ) " +
-                        "SELECT * FROM dataset where o_class_id = :oclass_id AND id in (SELECT id FROM ids)",
-                Dataset.class)
-                .setParameter("user_id", user.getId())
-                .setParameter("groups_id", user.getGroups().stream().map(Group::getId).toList())
-                .setParameter("oclass_id", id)
-                .getResultList();
+        return datasetRepository.getClassDatasetsForUser(user, id);
     }
 
     public Dataset getByName(String name) {
-        UserDto currentUserDto = userService.getCurrentUserDto();
-        var cb = em.getCriteriaBuilder();
-        var q = cb.createQuery(Dataset.class);
-        var root = q.from(Dataset.class);
-        q = q.where(cb.equal(root.get(Dataset_.name), name));
-        return em.createQuery(q)
-                .setMaxResults(1)
-                .getResultStream()
-                .findAny()
+        ProvolyUser currentUserDto = userService.getCurrentUser();
+        return datasetRepository.getByName(name)
                 .flatMap(dataset -> grantService.canSee(dataset, DATASET, currentUserDto) ? Optional.of(dataset)
                         : Optional.empty())
                 .orElseThrow(() -> new ProvolyNotFoundException("Dataset %s doesn't exists".formatted(name)));
@@ -166,19 +132,25 @@ public class DatasetService {
         if (!oldDataset.canUpdateTo(dataset)) {
             throw new BusinessException(ErrorCode.NOT_MODIFIABLE, "The dataset's type is immutable.");
         }
-        entityIdService.saveEntity(dataset);
-        groupService.updateEntityGroups(datasetDto.getGroups(), dataset.getId(), DATASET);
+        datasetRepository.save(dataset);
+        var rightsByGroup = datasetDto.getGroups() == null ? null
+                : datasetDto.getGroups().stream()
+                        .collect(Collectors.toMap(groupName -> groupName, _ignored -> List.of(
+                                GroupRights.READ)));
+        groupService.updateEntityGroups(rightsByGroup, dataset.getId(), DATASET);
         return getGroupsError(datasetDto);
     }
 
     private GroupErrors getGroupsError(DatasetDto dataset) {
-        List<Group> groups = groupService.getGroupByNames(dataset.getGroups());
+        List<Group> groups = groupRepository.getGroupByNames(dataset.getGroups());
         Collection<UUID> dashboardIds = findDashboardsAssociationByDatasetId(dataset.getId()).stream()
                 .map(AssociationDto::getId).toList();
         Map<UUID, Set<String>> groupsErrors = new HashMap<>();
 
         dashboardIds.forEach(dashboardId -> {
-            List<Group> dashboardGroups = groupService.getGroupsByEntityId(dashboardId).stream().toList();
+            List<Group> dashboardGroups = groupRepository.getGroupsByEntityId(dashboardId).stream()
+                    .map(GroupRelations::getGroup)
+                    .toList();
             getDashboardInconsistentGroups(dashboardGroups, groups)
                     .forEach(group -> groupsErrors.computeIfAbsent(dashboardId, ignored -> new HashSet<>()).add(group));
         });
@@ -209,15 +181,8 @@ public class DatasetService {
     }
 
     public Dataset getById(UUID datasetId) {
-        UserDto currentUserDto = userService.getCurrentUserDto();
-        var cb = em.getCriteriaBuilder();
-        var q = cb.createQuery(Dataset.class);
-        var root = q.from(Dataset.class);
-        q = q.where(cb.equal(root.get(Dataset_.id), datasetId));
-        return em.createQuery(q)
-                .setMaxResults(1)
-                .getResultStream()
-                .findAny()
+        ProvolyUser currentUserDto = userService.getCurrentUser();
+        return datasetRepository.getById(datasetId)
                 .flatMap(dataset -> grantService.canSee(dataset, DATASET, currentUserDto) ? Optional.of(dataset)
                         : Optional.empty())
                 .orElseThrow(() -> new ProvolyNotFoundException("Dataset : %s inexistant.".formatted(datasetId)));
@@ -225,40 +190,14 @@ public class DatasetService {
     }
 
     public Dataset findById(UUID datasetId) {
-        UserDto currentUserDto = userService.getCurrentUserDto();
-        var cb = em.getCriteriaBuilder();
-        var q = cb.createQuery(Dataset.class);
-        var root = q.from(Dataset.class);
-        q = q.where(cb.equal(root.get(Dataset_.ID), datasetId));
-        return em.createQuery(q)
-                .setMaxResults(1)
-                .getResultStream()
-                .filter(dataset -> grantService.canSee(dataset, DATASET, currentUserDto))
-                .findFirst()
+        ProvolyUser currentUser = userService.getCurrentUser();
+        return datasetRepository.getById(datasetId).filter(dataset -> grantService.canSee(dataset, DATASET, currentUser))
                 .orElse(null);
     }
 
     public List<Dataset> getAll() {
-        ProvolyUser user = userService.getCurrentUser();
-
-        return em.createNativeQuery(
-                "WITH ids AS (SELECT DISTINCT dataset.id FROM dataset " +
-                        "LEFT JOIN group_relations as gr ON dataset.id = gr.entity_id " +
-                        "WHERE gr.group_id in :groups_id OR dataset.user_id = :user_id ) " +
-                        "SELECT * FROM dataset WHERE id in (SELECT id FROM ids)",
-                Dataset.class)
-                .setParameter("user_id", user.getId())
-                .setParameter("groups_id", user.getGroups().stream().map(Group::getId).toList())
-                .getResultList();
-    }
-
-    @Transactional
-    public void saveEntity(Dataset entity) {
-        entityIdService.saveEntity(entity);
-    }
-
-    public boolean exists(Dataset entity) {
-        return entityIdService.exists(entity);
+        var user = userService.getCurrentUser();
+        return grantService.getAllUserAllowed(DATASET, user);
     }
 
     public AssociationsDto getDatasetAssociations(UUID datasetId) {
@@ -267,17 +206,6 @@ public class DatasetService {
         result.addAll(findDashboardsAssociationByDatasetId(datasetId));
         result.addAll(findWidgetsByDatasetId(datasetId));
         return associationService.mapAssociationDtoInAssociationsDto(result);
-    }
-
-    public Collection<UUID> getAllFilterByDatasource(Collection<UUID> datasource) {
-        //We need to filter the datasource on dataset because groups are implemented only on dataset
-        var cb = em.getCriteriaBuilder();
-        var q = cb.createQuery(UUID.class);
-        var root = q.from(Dataset.class);
-        Path<UUID> idPath = root.get(Dataset_.ID);
-        q = q.select(idPath);
-        q = q.where(cb.in(root.get(Dataset_.ID)).value(datasource));
-        return em.createQuery(q).getResultList();
     }
 
     private boolean canDeleteDataset(UUID datasetId) {
@@ -292,14 +220,7 @@ public class DatasetService {
     }
 
     public List<AssociationDto> findDashboardsAssociationByDatasetId(UUID datasetId) {
-        var cb = em.getCriteriaBuilder();
-        CriteriaQuery<Dashboard> criteriaQuery = cb.createQuery(Dashboard.class);
-        Root<Dashboard> dashboardRoot = criteriaQuery.from(Dashboard.class);
-        Join<Dashboard, UUID> dataSourceJoin = dashboardRoot.join(Dashboard_.datasource);
-        Predicate dataSourceIdPredicate = cb.equal(dataSourceJoin, datasetId);
-        criteriaQuery.select(dashboardRoot)
-                .where(dataSourceIdPredicate);
-        return em.createQuery(criteriaQuery).getResultList()
+        return datasetRepository.findAssociatedDashboards(datasetId)
                 .stream()
                 .map(dataset -> new AssociationDto(dataset.getId(), dataset.getName(), VisibilityType.PUBLIC,
                         AssociationsType.DASHBOARD))
@@ -307,14 +228,7 @@ public class DatasetService {
     }
 
     private List<AssociationDto> findWidgetsByDatasetId(UUID datasetId) {
-        var cb = em.getCriteriaBuilder();
-        CriteriaQuery<WidgetCatalog> criteriaQuery = cb.createQuery(WidgetCatalog.class);
-        Root<WidgetCatalog> widgetCatalogRoot = criteriaQuery.from(WidgetCatalog.class);
-        Join<WidgetCatalog, UUID> dataSourceJoin = widgetCatalogRoot.join(WidgetCatalog_.datasource);
-        Predicate dataSourceIdPredicate = cb.equal(dataSourceJoin, datasetId);
-        criteriaQuery.select(widgetCatalogRoot)
-                .where(dataSourceIdPredicate);
-        return em.createQuery(criteriaQuery).getResultList()
+        return datasetRepository.findAssociatedWidget(datasetId)
                 .stream()
                 .map(dataset -> new AssociationDto(dataset.getId(), dataset.getName(), VisibilityType.PUBLIC,
                         AssociationsType.WIDGET))

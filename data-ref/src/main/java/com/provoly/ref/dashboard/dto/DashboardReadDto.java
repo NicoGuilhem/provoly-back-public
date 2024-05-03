@@ -3,9 +3,11 @@ package com.provoly.ref.dashboard.dto;
 import java.net.URI;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import com.provoly.common.Default;
+import com.provoly.common.dataset.GroupRights;
 import com.provoly.common.metadata.MetadataValueReadDto;
 
 public class DashboardReadDto extends DashboardDto {
@@ -27,7 +29,7 @@ public class DashboardReadDto extends DashboardDto {
             Instant creationDate,
             Instant modificationDate,
             URI manifestUrl,
-            List<String> groups, boolean owner, String additionalInformation) {
+            Map<String, List<GroupRights>> groups, boolean owner, String additionalInformation) {
         super(id, name, image, description, cover, datasource, groups, additionalInformation);
         this.creationDate = creationDate;
         this.modificationDate = modificationDate;

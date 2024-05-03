@@ -13,10 +13,12 @@ import com.provoly.common.user.Role;
 @Path("/groups")
 public class GroupController {
 
-    private final GroupService groupService;
+    private GroupService groupService;
+    private GroupRepository groupRepository;
 
-    public GroupController(GroupService groupService) {
+    public GroupController(GroupService groupService, GroupRepository groupRepository) {
         this.groupService = groupService;
+        this.groupRepository = groupRepository;
     }
 
     @POST
@@ -28,6 +30,6 @@ public class GroupController {
     @GET
     @RolesAllowed({ Role.STR_DASHBOARD_READ, Role.STR_DATASET_WRITE })
     public List<Group> getAll() {
-        return groupService.getAll();
+        return groupRepository.getAll();
     }
 }

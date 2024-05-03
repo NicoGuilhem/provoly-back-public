@@ -17,17 +17,21 @@ public abstract class GroupRelations extends EntityId {
     @Enumerated(EnumType.STRING)
     protected WithGroupEntityType entityType;
 
-    protected UUID groupId;
+    @OneToOne
+    protected Group group;
 
     protected UUID entityId;
 
+    protected boolean canWrite;
+
     @Default
     @JsonCreator
-    protected GroupRelations(UUID id, WithGroupEntityType entityType, UUID groupId, UUID entityId) {
+    protected GroupRelations(UUID id, WithGroupEntityType entityType, Group group, UUID entityId, boolean canWrite) {
         super(id);
         this.entityType = entityType;
-        this.groupId = groupId;
+        this.group = group;
         this.entityId = entityId;
+        this.canWrite = canWrite;
     }
 
     protected GroupRelations() {
@@ -37,11 +41,15 @@ public abstract class GroupRelations extends EntityId {
         return entityType;
     }
 
-    public UUID getGroupId() {
-        return groupId;
+    public Group getGroup() {
+        return group;
     }
 
     protected UUID getEntityId() {
         return entityId;
+    }
+
+    public boolean canWrite() {
+        return canWrite;
     }
 }

@@ -239,7 +239,7 @@ public class AssociationService {
         try {
             switch (associationDto.getType()) {
                 case DASHBOARD ->
-                    isOwnByUser = dashboardService.getCurrentUserAllowedDashboardById(associationDto.getId()) != null;
+                    isOwnByUser = dashboardService.getDashboardById(associationDto.getId()) != null;
                 case WIDGET -> isOwnByUser = widgetService.getMineById(associationDto.getId()) != null;
                 case NAMED_QUERY -> isOwnByUser = namedQueryService.getMineById(associationDto.getId()) != null;
                 case OCLASS, ABAC, LINK -> isOwnByUser = true;

@@ -25,7 +25,7 @@ import com.provoly.common.search.VisibilityDto;
 import com.provoly.common.user.Role;
 import com.provoly.ref.dataset.Dataset;
 import com.provoly.ref.dataset.DatasetMapper;
-import com.provoly.ref.dataset.DatasetService;
+import com.provoly.ref.dataset.DatasetRepository;
 import com.provoly.ref.datasetversion.DatasetVersion;
 import com.provoly.ref.datasetversion.DatasetVersionMapper;
 import com.provoly.ref.datasetversion.DatasetVersionService;
@@ -66,7 +66,7 @@ public class WidgetControllerTest {
     @Inject
     DatasetVersionService datasetVersionService;
     @Inject
-    DatasetService datasetService;
+    DatasetRepository datasetRepository;
     @Inject
     DatasetMapper datasetMapper;
     @Inject
@@ -243,7 +243,7 @@ public class WidgetControllerTest {
         DatasetVersionDto datasetVersionDto = new DatasetVersionDto(datasetVersionId, datasetId, DatasetState.ACTIVE);
         Dataset dataset = datasetMapper.toModel(datasetDto);
         dataset.setUser(provolyUser);
-        datasetService.saveEntity(dataset);
+        datasetRepository.save(dataset);
         DatasetVersion datasetVersion = datasetVersionMapper.toModel(datasetVersionDto);
         datasetVersionService.createDatasetVersion(datasetVersion);
     }

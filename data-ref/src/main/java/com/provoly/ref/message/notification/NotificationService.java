@@ -158,7 +158,7 @@ public class NotificationService implements MessageListener {
     public void sendNotification(DashboardDto dashboard, boolean isCreated) {
         NotificationMessageCode messageCode;
         if (isCreated) {
-            messageCode = dashboard.getGroups() == null || dashboard.getGroups().isEmpty()
+            messageCode = dashboard.getAccessRightsByGroup() == null || dashboard.getAccessRightsByGroup().isEmpty()
                     ? NotificationMessageCode.DASHBOARD_PRIVATE
                     : NotificationMessageCode.DASHBOARD_PUBLIC;
         } else {

@@ -59,7 +59,7 @@ public class DatasetVersionControllerTest {
     @Inject
     DatasetVersionService datasetVersionService;
     @Inject
-    DatasetService datasetService;
+    DatasetRepository datasetRepository;
     @Inject
     DatasetVersionMapper datasetVersionMapper;
     @Inject
@@ -68,6 +68,8 @@ public class DatasetVersionControllerTest {
     DatasetVersionController datasetVersionController;
     @Inject
     MetadataDefController metadataDefController;
+    @Inject
+    DatasetService datasetService;
     @Inject
     DatasetVersionMessageService datasetVersionMessageService;
     @Inject
@@ -116,7 +118,7 @@ public class DatasetVersionControllerTest {
                 .toModel(new DatasetDto(datasetId, "DatasetTest",
                         oClass.getId(), datasetType));
         dataset.setUser(provolyUser);
-        datasetService.saveEntity(dataset);
+        datasetRepository.save(dataset);
     }
 
     private void generateDatasetVersionDto(boolean withFile) {
@@ -174,7 +176,7 @@ public class DatasetVersionControllerTest {
         dataset.setSlug(oClass.getSlug());
         dataset.setType(DatasetType.CLOSED);
         dataset.setUser(userService.getCurrentUser());
-        datasetService.saveEntity(dataset);
+        datasetRepository.save(dataset);
         var datasetVersionDto = new DatasetVersionInformationDto("author", Instant.now());
 
         given()
@@ -199,7 +201,7 @@ public class DatasetVersionControllerTest {
         dataset.setSlug(oClass.getSlug());
         dataset.setType(DatasetType.CLOSED);
         dataset.setUser(userService.getCurrentUser());
-        datasetService.saveEntity(dataset);
+        datasetRepository.save(dataset);
         var datasetVersionDto = new DatasetVersionInformationDto(null, Instant.now());
 
         given()

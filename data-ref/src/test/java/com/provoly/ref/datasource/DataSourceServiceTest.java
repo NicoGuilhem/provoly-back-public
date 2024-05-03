@@ -1,16 +1,16 @@
 package com.provoly.ref.datasource;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.UUID;
 
-import jakarta.inject.Inject;
-
 import com.provoly.common.datasource.DataSourceType;
 import com.provoly.common.error.BusinessException;
 import com.provoly.ref.dataset.Dataset;
+import com.provoly.ref.dataset.DatasetService;
 import com.provoly.ref.datasetversion.DatasetVersion;
 import com.provoly.ref.datasetversion.DatasetVersionRepository;
 import com.provoly.ref.model.OClass;
@@ -19,23 +19,27 @@ import com.provoly.ref.searchrequest.SearchRequest;
 import com.provoly.ref.user.NamedQuery;
 import com.provoly.ref.user.NamedQueryService;
 
-import io.quarkus.test.InjectMock;
-import io.quarkus.test.junit.QuarkusTest;
-
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-@QuarkusTest
 public class DataSourceServiceTest {
 
-    @InjectMock
-    NamedQueryService namedQueryService;
+    static NamedQueryService namedQueryService;
 
-    @InjectMock
-    DatasetVersionRepository datasetVersionRepository;
+    static DatasetVersionRepository datasetVersionRepository;
 
-    @Inject
-    DataSourceService dataSourceService;
+    static DatasetService datasetService;
+
+    static DataSourceService dataSourceService;
+
+    @BeforeAll
+    static void before() {
+        namedQueryService = mock(NamedQueryService.class);
+        datasetVersionRepository = mock(DatasetVersionRepository.class);
+        datasetService = mock(DatasetService.class);
+        dataSourceService = new DataSourceService(namedQueryService, datasetService, datasetVersionRepository);
+    }
 
     @Test
     public void getDatasourceDetail_WithDataSetId_ReturnDTOWithTypeDataset() {
@@ -74,6 +78,7 @@ public class DataSourceServiceTest {
 
         when(datasetVersionRepository.findById(id)).thenReturn(null);
         when(namedQueryService.findById(id)).thenReturn(null);
+        when(datasetService.findById(id)).thenReturn(null);
 
         Assertions.assertThatThrownBy(() -> dataSourceService.getDataSourceDetails(id)).isInstanceOf(BusinessException.class);
     }
@@ -84,6 +89,7 @@ public class DataSourceServiceTest {
 
         when(datasetVersionRepository.findById(id)).thenReturn(null);
         when(namedQueryService.findById(id)).thenReturn(null);
+        when(datasetService.findById(id)).thenReturn(null);
 
         Assertions.assertThatThrownBy(() -> dataSourceService.allDataSourcesExist(List.of(id)))
                 .isInstanceOf(BusinessException.class);

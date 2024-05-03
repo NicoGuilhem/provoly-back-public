@@ -17,7 +17,7 @@ import io.quarkus.test.security.TestSecurity;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
-public class GroupServiceTest {
+public class GroupControllerTest {
     @Inject
     GroupController groupController;
 

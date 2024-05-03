@@ -14,6 +14,7 @@ import jakarta.transaction.Transactional;
 import com.provoly.common.VariableType;
 import com.provoly.common.dataset.DatasetDto;
 import com.provoly.common.dataset.DatasetType;
+import com.provoly.common.dataset.GroupRights;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.metadata.MetadataDefDto;
 import com.provoly.common.metadata.MetadataValueReadDto;
@@ -88,7 +89,7 @@ class DashboardControllerTest {
     void initDashboard() {
         dashboardId = UUID.randomUUID();
         dashboardToSave = new DashboardWriteDto(dashboardId, DASHBOARD_NAME, "image", "description", false,
-                List.of(), Map.of("type", "private"), null, List.of("ALL"), "some more information");
+                List.of(), Map.of("type", "private"), null, Map.of("ALL", List.of(GroupRights.READ)), "some more information");
         dashboardController.saveDashboard(dashboardToSave);
     }
 
@@ -148,7 +149,7 @@ class DashboardControllerTest {
         testService.authenticate("iampolice", currentSubjectProvider);
         assertThatThrownBy(() -> dashboardController.getDashBoardManifest(privateId))
                 .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("User is not granted to get dashboard");
+                .hasMessageContaining("Dashboard : %s inexistant.".formatted(privateId));
 
     }
 
@@ -307,17 +308,18 @@ class DashboardControllerTest {
         DatasetDto datasetDto = initDataset();
 
         privateDashboard = new DashboardWriteDto(privateId, "private", "image", "description", false,
-                List.of(), Map.of("type", "private"), null, List.of(), "Some more information");
+                List.of(), Map.of("type", "private"), null, Map.of(), "Some more information");
         dashboardController.saveDashboard(privateDashboard);
 
         publicDashboard = new DashboardWriteDto(publicId, "public", "image", "description", false,
-                List.of(datasetDto.getId()), Map.of("type", "public"), null, List.of("ALL"), "Some more information");
+                List.of(datasetDto.getId()), Map.of("type", "public"), null, Map.of("ALL", List.of(GroupRights.READ)),
+                "Some more information");
         dashboardController.saveDashboard(publicDashboard);
     }
 
     private void createDashboardsWithMetadata(List<MetadataValueWriteDto> metadataValueWriteDto) {
         privateDashboard = new DashboardWriteDto(privateId, "private", "image", "description", false,
-                List.of(), Map.of("type", "private"), metadataValueWriteDto, List.of(), "Some more information");
+                List.of(), Map.of("type", "private"), metadataValueWriteDto, Map.of(), "Some more information");
         dashboardController.saveDashboard(privateDashboard);
     }
 

@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import com.provoly.ref.dashboard.dto.DashboardWriteDto;
@@ -21,7 +22,7 @@ public class MetadataServiceTest {
     public void updateMetadataByEntityType_with_no_metadata_skipping() {
         metadataService = spy(new MetadataService(null, null, null, null, mock(Logger.class)));
         var dashboard = new DashboardWriteDto(UUID.randomUUID(), "name", null, "description", false,
-                List.of(UUID.randomUUID()), null, null, List.of());
+                List.of(UUID.randomUUID()), null, null, Map.of());
 
         metadataService.updateMetadataByEntityType(dashboard, EntityType.DASHBOARD);
 

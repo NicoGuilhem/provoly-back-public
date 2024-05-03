@@ -18,7 +18,7 @@ import com.provoly.common.model.*;
 import com.provoly.common.ref.*;
 import com.provoly.common.user.Role;
 import com.provoly.ref.dataset.DatasetMapper;
-import com.provoly.ref.dataset.DatasetService;
+import com.provoly.ref.dataset.DatasetRepository;
 import com.provoly.ref.datasetversion.DatasetVersionController;
 import com.provoly.ref.datasetversion.DatasetVersionService;
 import com.provoly.ref.user.ProvolyUser;
@@ -63,7 +63,7 @@ public class RefEventTest {
     DatasetVersionController datasetVersionController;
 
     @Inject
-    DatasetService datasetService;
+    DatasetRepository datasetRepository;
     @Inject
     UserService userService;
     @Inject
@@ -251,7 +251,7 @@ public class RefEventTest {
         var datasetDto = new DatasetDto(UUID.randomUUID(), "stations activated", oClass.getId(), DatasetType.CLOSED);
         var dataset = datasetMapper.toModel(datasetDto);
         dataset.setUser(provolyUser);
-        datasetService.saveEntity(dataset);
+        datasetRepository.save(dataset);
         var datasetVersion = new DatasetVersionDto(UUID.randomUUID(), dataset.getId(), "author", Instant.now());
         datasetVersionController.create(datasetVersion);
 
@@ -282,7 +282,7 @@ public class RefEventTest {
         modelController.saveClass(oClass);
         var dataset = datasetMapper.toModel(new DatasetDto(UUID.randomUUID(), "stations", oClass.getId(), DatasetType.CLOSED));
         dataset.setUser(userService.getCurrentUser());
-        datasetService.saveEntity(dataset);
+        datasetRepository.save(dataset);
         UUID datasetVersionId = UUID.randomUUID();
         var datasetVersion = new DatasetVersionDto(datasetVersionId, dataset.getId(), "author", Instant.now());
         datasetVersionController.create(datasetVersion);

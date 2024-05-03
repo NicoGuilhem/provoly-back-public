@@ -21,7 +21,7 @@ import com.provoly.common.search.*;
 import com.provoly.common.user.Role;
 import com.provoly.ref.dataset.Dataset;
 import com.provoly.ref.dataset.DatasetMapper;
-import com.provoly.ref.dataset.DatasetService;
+import com.provoly.ref.dataset.DatasetRepository;
 import com.provoly.ref.model.ModelMapper;
 import com.provoly.ref.model.ModelService;
 import com.provoly.ref.utils.TestService;
@@ -56,7 +56,7 @@ public class NamedQueryControllerTest {
     TestService testService;
 
     @Inject
-    DatasetService datasetService;
+    DatasetRepository datasetRepository;
 
     @Inject
     DatasetMapper datasetMapper;
@@ -271,7 +271,7 @@ public class NamedQueryControllerTest {
                 DatasetType.CLOSED);
         Dataset dataset = datasetMapper.toModel(datasetDto);
         dataset.setUser(provolyUser);
-        datasetService.saveEntity(dataset);
+        datasetRepository.save(dataset);
         return datasetDto;
     }
 }

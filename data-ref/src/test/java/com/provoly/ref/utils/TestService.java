@@ -20,14 +20,15 @@ import com.provoly.common.model.Type;
 import com.provoly.ref.KeycloakClientBuilder;
 import com.provoly.ref.abac.AbacService;
 import com.provoly.ref.abac.predicate.PredicateService;
+import com.provoly.ref.dashboard.DashboardRepository;
 import com.provoly.ref.dashboard.DashboardService;
 import com.provoly.ref.dataset.DatasetService;
 import com.provoly.ref.datasetversion.DatasetVersionMessageService;
 import com.provoly.ref.datasetversion.DatasetVersionRepository;
 import com.provoly.ref.entity.EntityNamed;
 import com.provoly.ref.entity.EntityType;
-import com.provoly.ref.groups.Group;
 import com.provoly.ref.groups.GroupRelations;
+import com.provoly.ref.groups.GroupRepository;
 import com.provoly.ref.groups.GroupService;
 import com.provoly.ref.groups.GroupWrite;
 import com.provoly.ref.link.LinkService;
@@ -73,9 +74,13 @@ public class TestService {
     @Inject
     DashboardService dashboardService;
     @Inject
+    DashboardRepository dashboardRepository;
+    @Inject
     WidgetService widgetService;
     @Inject
     GroupService groupService;
+    @Inject
+    GroupRepository groupRepository;
     @Inject
     DatasetVersionMessageService datasetVersionMessageService;
     @Inject
@@ -99,7 +104,7 @@ public class TestService {
 
     public void ensureGroups(List<String> groupsName) {
 
-        var databaseGroupsNames = groupService.getGroupByNames(groupsName).stream().map(EntityNamed::getName).toList();
+        var databaseGroupsNames = groupRepository.getGroupByNames(groupsName).stream().map(EntityNamed::getName).toList();
         groupsName.stream()
                 .filter(groupName -> !databaseGroupsNames.contains(groupName))
                 .forEach(groupName -> groupService.addGroup(new GroupWrite(UUID.randomUUID(), groupName)));
@@ -198,9 +203,9 @@ public class TestService {
             entityManager.remove(entityManager.merge(dataset));
         });
         relationTypeService.getAll().forEach(relationType -> relationTypeService.delete(relationType.getId()));
-        dashboardService.getAll().forEach(dashboard -> {
-            List<Group> groups = groupService.getGroupsByEntityId(dashboard.getId());
-            groups.forEach(r -> {
+        dashboardRepository.getAll().forEach(dashboard -> {
+            List<GroupRelations> groups = groupRepository.getGroupsByEntityId(dashboard.getId());
+            groups.stream().map(GroupRelations::getGroup).forEach(r -> {
                 CriteriaBuilder cb = entityManager.getCriteriaBuilder();
                 CriteriaDelete<GroupRelations> delete = cb.createCriteriaDelete(GroupRelations.class);
                 Root<GroupRelations> e = delete.from(GroupRelations.class);

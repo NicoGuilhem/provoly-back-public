@@ -51,14 +51,14 @@ public class DashboardController {
     @RolesAllowed({ Role.STR_DASHBOARD_READ })
     @Path("/id/{id}")
     public DashboardReadDto getById(UUID id) {
-        return dashboardMapper.toReadDto(dashboardService.getCurrentUserAllowedDashboardById(id));
+        return dashboardMapper.toReadDto(dashboardService.getDashboardById(id));
     }
 
     @GET
     @RolesAllowed({ Role.STR_DASHBOARD_READ })
     @Path("/id/{id}/manifest")
     public Map<String, Object> getDashBoardManifest(UUID id) {
-        return dashboardService.getCurrentUserAllowedDashboardById(id).getManifest();
+        return dashboardService.getDashboardById(id).getManifest();
     }
 
     @DELETE

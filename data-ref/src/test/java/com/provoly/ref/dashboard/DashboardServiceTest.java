@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -14,6 +15,7 @@ import jakarta.transaction.Transactional;
 
 import com.provoly.common.dataset.DatasetDto;
 import com.provoly.common.dataset.DatasetType;
+import com.provoly.common.dataset.GroupRights;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.model.AttributeDefDto;
 import com.provoly.common.model.OClassWriteDto;
@@ -38,9 +40,13 @@ class DashboardServiceTest {
 
     @Inject
     DashboardService dashboardService;
+    @Inject
+    DashboardRepository dashboardRepository;
 
     @Inject
     GroupService groupService;
+    @Inject
+    GroupRepository groupRepository;
 
     @InjectMock
     CurrentSubjectProvider currentSubjectProvider;
@@ -58,8 +64,8 @@ class DashboardServiceTest {
     public void deleteDashboards() {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
 
-        dashboardService.getAll().forEach(d -> {
-            var groups = groupService.getGroupsByEntityId(d.getId());
+        dashboardRepository.getAll().forEach(d -> {
+            var groups = groupRepository.getGroupsByEntityId(d.getId());
             groups.forEach(group -> {
                 CriteriaBuilder cb = entityManager.getCriteriaBuilder();
                 CriteriaDelete<GroupRelations> delete = cb.createCriteriaDelete(GroupRelations.class);
@@ -75,10 +81,11 @@ class DashboardServiceTest {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
 
         dashboardService.saveOrUpdate(new DashboardWriteDto(UUID.randomUUID(), "authenticated", null, null, false,
-                List.of(), Map.of(), null, List.of(groups)));
+                List.of(), Map.of(), null,
+                Arrays.stream(groups).collect(Collectors.toMap(g -> g, g -> List.of(GroupRights.READ)))));
 
         dashboardService.saveOrUpdate(new DashboardWriteDto(UUID.randomUUID(), "all", null, null, false,
-                List.of(), Map.of(), null, List.of("ALL")));
+                List.of(), Map.of(), null, Map.of("ALL", List.of(GroupRights.READ))));
     }
 
     @Test
@@ -117,7 +124,7 @@ class DashboardServiceTest {
         //then
         assertThatThrownBy(
                 () -> dashboardService.saveOrUpdate(new DashboardWriteDto(UUID.randomUUID(), "AUTHENTICATED", null, null, false,
-                        List.of(), Map.of(), null, List.of("unknown"))))
+                        List.of(), Map.of(), null, Map.of("unknown", List.of(GroupRights.READ)))))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("Group unknown doesn't exist.");
     }
@@ -127,7 +134,7 @@ class DashboardServiceTest {
         // given
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
         dashboardService.saveOrUpdate(new DashboardWriteDto(UUID.randomUUID(), "authenticated", null, null, false,
-                List.of(), Map.of(), null, List.of()));
+                List.of(), Map.of(), null, Map.of()));
 
         //when
         testService.authenticate("iampolice", currentSubjectProvider);
@@ -144,7 +151,7 @@ class DashboardServiceTest {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
         UUID dashboardId = UUID.randomUUID();
         dashboardService.saveOrUpdate(new DashboardWriteDto(dashboardId, "authenticated", null, null, false,
-                List.of(), Map.of(), null, List.of()));
+                List.of(), Map.of(), null, Map.of()));
 
         //when
         testService.authenticate("iampolice", currentSubjectProvider);
@@ -152,7 +159,7 @@ class DashboardServiceTest {
         //then
         assertThatThrownBy(
                 () -> dashboardService.saveOrUpdate(new DashboardWriteDto(dashboardId, "authenticated", null, null, false,
-                        List.of(), Map.of(), null, List.of("ALL"))))
+                        List.of(), Map.of(), null, Map.of("ALL", List.of(GroupRights.READ)))))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining(
                         "User is not granted to write %s %s.".formatted(WithGroupEntityType.DASHBOARD, dashboardId));
@@ -168,7 +175,7 @@ class DashboardServiceTest {
 
         //when
         var result = dashboardService.saveOrUpdate(new DashboardWriteDto(UUID.randomUUID(), "authenticated", null, null, false,
-                List.of(datasetDto.getId()), Map.of(), null, List.of("AUTHENTICATED")));
+                List.of(datasetDto.getId()), Map.of(), null, Map.of("AUTHENTICATED", List.of(GroupRights.READ))));
 
         //then
         Map<UUID, Set<String>> missingGroup = new HashMap<>();
@@ -187,7 +194,7 @@ class DashboardServiceTest {
 
         //when
         var result = dashboardService.saveOrUpdate(new DashboardWriteDto(UUID.randomUUID(), "all", null, null, false,
-                List.of(datasetDto.getId()), Map.of(), null, List.of("ALL")));
+                List.of(datasetDto.getId()), Map.of(), null, Map.of("ALL", List.of(GroupRights.READ))));
 
         //then
         Map<UUID, Set<String>> missingGroup = new HashMap<>();
@@ -208,9 +215,9 @@ class DashboardServiceTest {
 
         //when
         dashboardService.saveOrUpdate(new DashboardWriteDto(dashboardId, "all", null, null, false,
-                List.of(datasetDto.getId()), Map.of(), null, List.of("ALL")));
+                List.of(datasetDto.getId()), Map.of(), null, Map.of("ALL", List.of(GroupRights.READ))));
         var result = dashboardService.saveOrUpdate(new DashboardWriteDto(dashboardId, "all", null, null, false,
-                List.of(datasetDto.getId(), datasetDto2.getId()), Map.of(), null, List.of("ALL")));
+                List.of(datasetDto.getId(), datasetDto2.getId()), Map.of(), null, Map.of("ALL", List.of(GroupRights.READ))));
 
         //then
         Map<UUID, Set<String>> missingGroup = new HashMap<>();
@@ -231,7 +238,8 @@ class DashboardServiceTest {
 
         //when
         var result = dashboardService.saveOrUpdate(new DashboardWriteDto(UUID.randomUUID(), "authenticated", null, null, false,
-                List.of(datasetDto.getId(), datasetDto2.getId()), Map.of(), null, List.of("no_group")));
+                List.of(datasetDto.getId(), datasetDto2.getId()), Map.of(), null,
+                Map.of("no_group", List.of(GroupRights.READ))));
 
         //then
         Map<UUID, Set<String>> missingGroup = new HashMap<>();
@@ -252,7 +260,8 @@ class DashboardServiceTest {
 
         //when
         var result = dashboardService.saveOrUpdate(new DashboardWriteDto(UUID.randomUUID(), "authenticated", null, null, false,
-                List.of(datasetDto.getId(), datasetDto2.getId()), Map.of(), null, List.of("un_group", "test")));
+                List.of(datasetDto.getId(), datasetDto2.getId()), Map.of(), null,
+                Map.of("un_group", List.of(GroupRights.READ), "test", List.of(GroupRights.READ))));
 
         //then
         assertThat(result)

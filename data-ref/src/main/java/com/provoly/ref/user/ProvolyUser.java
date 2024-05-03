@@ -1,11 +1,14 @@
 package com.provoly.ref.user;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
 import jakarta.persistence.*;
 
 import com.provoly.common.Default;
+import com.provoly.common.user.Role;
 import com.provoly.ref.entity.EntityId;
 import com.provoly.ref.groups.Group;
 
@@ -17,15 +20,18 @@ public class ProvolyUser extends EntityId {
     private String lastName;
     private String email;
     @Transient
-    private List<Group> groups;
+    private List<Group> groups = new ArrayList<>();
+    @Transient
+    private Collection<String> roles;
 
     @Default
-    public ProvolyUser(UUID id, String subject, String name, String lastName, String email) {
+    public ProvolyUser(UUID id, String subject, String name, String lastName, String email, Collection<String> roles) {
         super(id);
         this.subject = subject;
         this.name = name;
         this.lastName = lastName;
         this.email = email;
+        this.roles = roles;
     }
 
     public ProvolyUser() {
@@ -58,5 +64,17 @@ public class ProvolyUser extends EntityId {
 
     public void setGroups(List<Group> groups) {
         this.groups = groups;
+    }
+
+    public Collection<String> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Collection<String> roles) {
+        this.roles = roles;
+    }
+
+    public boolean isAdmin() {
+        return roles != null && roles.contains(Role.STR_ADMINISTRATE);
     }
 }

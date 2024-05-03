@@ -95,4 +95,8 @@ public class UserDto {
                 ", roles='" + roles + '\'' +
                 '}';
     }
+
+    public boolean isAdmin() {
+        return roles != null && roles.contains(Role.STR_ADMINISTRATE);
+    }
 }

@@ -15,7 +15,7 @@ import com.provoly.common.metadata.UserProfileValueReadDto;
 import com.provoly.common.user.UserDto;
 import com.provoly.ref.entity.EntityIdService;
 import com.provoly.ref.entity.EntityId_;
-import com.provoly.ref.groups.GroupService;
+import com.provoly.ref.groups.GroupRepository;
 import com.provoly.ref.user.metadata.*;
 import com.provoly.security.AnonymousConfiguration;
 import com.provoly.security.CurrentSubjectProvider;
@@ -35,7 +35,7 @@ public class UserService {
     private EntityManager em;
     private AnonymousConfiguration anonymousConf;
 
-    private GroupService groupService;
+    private GroupRepository groupRepository;
 
     public UserService(Logger log,
             CurrentSubjectProvider currentSubjectProvider,
@@ -43,7 +43,7 @@ public class UserService {
             UserProfileMapper userProfileMapper,
             EntityIdService entityIdService,
             EntityManager em,
-            AnonymousConfiguration anonymousConf, GroupService groupService) {
+            AnonymousConfiguration anonymousConf, GroupRepository groupRepository) {
         this.log = log;
         this.currentSubjectProvider = currentSubjectProvider;
         this.userProfileService = userProfileService;
@@ -51,7 +51,7 @@ public class UserService {
         this.entityIdService = entityIdService;
         this.em = em;
         this.anonymousConf = anonymousConf;
-        this.groupService = groupService;
+        this.groupRepository = groupRepository;
     }
 
     @Transactional
@@ -111,15 +111,17 @@ public class UserService {
                 var currentUser = new ProvolyUser(UUID.randomUUID(), subject,
                         currentSubjectProvider.getGivenName(),
                         currentSubjectProvider.getFamilyName(),
-                        currentSubjectProvider.getEmail());
+                        currentSubjectProvider.getEmail(),
+                        currentSubjectProvider.getRoles());
                 log.infof("First time for user %s => add it to local database", currentUser);
                 em.persist(currentUser);
-                currentUser.setGroups(groupService.getGroupByNames(currentSubjectProvider.getGroups()));
+                currentUser.setGroups(groupRepository.getGroupByNames(currentSubjectProvider.getGroups()));
                 return currentUser;
             }
             case 1 -> {
                 var user = users.getFirst();
-                user.setGroups(groupService.getGroupByNames(currentSubjectProvider.getGroups().stream().toList()));
+                user.setGroups(groupRepository.getGroupByNames(currentSubjectProvider.getGroups().stream().toList()));
+                user.setRoles(currentSubjectProvider.getRoles());
                 return users.getFirst();
             }
             default ->

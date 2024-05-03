@@ -17,7 +17,7 @@ public class Group extends EntityNamed {
 
     @Default
     @JsonCreator
-    protected Group(UUID id, String name, boolean system) {
+    public Group(UUID id, String name, boolean system) {
         super(id, name);
         this.system = system;
     }

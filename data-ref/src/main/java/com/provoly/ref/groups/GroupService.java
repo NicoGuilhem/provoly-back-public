@@ -1,142 +1,87 @@
 package com.provoly.ref.groups;
 
+import static com.provoly.common.user.SystemGroup.ALL;
+import static com.provoly.common.user.SystemGroup.AUTHENTICATED;
+
 import java.util.*;
+import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 
+import com.provoly.common.dataset.GroupRights;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
-import com.provoly.ref.entity.EntityIdService;
 
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class GroupService {
-    private EntityIdService entityIdService;
     private GroupMapper groupMapper;
     private Logger log;
     @PersistenceContext
-    private EntityManager em;
+    private GroupRepository groupRepository;
 
-    public GroupService(EntityIdService entityIdService, GroupMapper groupMapper, EntityManager em,
-            Logger log) {
-        this.entityIdService = entityIdService;
+    public GroupService(GroupMapper groupMapper,
+            Logger log, GroupRepository groupRepository) {
         this.groupMapper = groupMapper;
-        this.em = em;
+        this.groupRepository = groupRepository;
         this.log = log;
     }
 
     public void addGroup(GroupWrite groupWrite) {
-        entityIdService.saveEntity(groupMapper.toModel(groupWrite));
+        groupRepository.save(groupMapper.toModel(groupWrite));
     }
 
     public Group getById(UUID groupId) {
-        return entityIdService.getById(groupId, Group.class);
+        return groupRepository.getById(groupId);
     }
 
-    public void updateEntityGroups(List<String> groupsName, UUID entityId,
+    public void updateEntityGroups(Map<String, List<GroupRights>> groupsName, UUID entityId,
             WithGroupEntityType entityType) {
+
         if (groupsName == null) {
             log.debugf("No group provided for %s entity %s", entityType.name(), entityId);
             return;
         }
-        getGroupsByEntityId(entityId).forEach(groupRelations -> {
+        groupRepository.getGroupsByEntityId(entityId).forEach(groupRelations -> {
             log.debugf("Remove group %s association to %s %s", groupRelations.getId(), entityType, entityId);
-            deleteGroupFromEntity(entityId, groupRelations.getId());
+            groupRepository.deleteGroupFromEntity(entityId, groupRelations.getGroup());
         });
         associateGroupToEntity(groupsName, entityId, entityType);
     }
 
     @Transactional
-    public void associateGroupToEntity(List<String> groupsName, UUID entityId,
+    public void associateGroupToEntity(Map<String, List<GroupRights>> accessRightsByGroup, UUID entityId,
             WithGroupEntityType entityType) {
-        groupsName.forEach(name -> {
-            var groupId = getGroupByName(name).getId();
 
-            if (!isGroupAssignedToEntity(entityId, groupId)) {
-                log.debugf("Associate group %s to %s %s", groupId, entityType, entityId);
-                switch (entityType) {
-                    case WithGroupEntityType.DASHBOARD -> entityIdService
-                            .saveEntity(new DashboardGroupRelations(UUID.randomUUID(), groupId, entityId));
-                    case WithGroupEntityType.DATASET -> entityIdService
-                            .saveEntity(new DatasetGroupRelations(UUID.randomUUID(), groupId, entityId));
-                }
+        var rightsByExistingGroup = accessRightsByGroup.entrySet().stream()
+                .map(k -> new AbstractMap.SimpleEntry<>(groupRepository.getGroupByName(k.getKey()), k.getValue()))
+                .collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue));
+
+        var systemGroupWithWrite = rightsByExistingGroup.entrySet().stream()
+                .anyMatch(entry -> entry.getKey().isSystem()
+                        && entry.getValue().contains(GroupRights.WRITE));
+
+        if (systemGroupWithWrite) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST,
+                    "Write right cannot be assigned to %s and %s groups".formatted(AUTHENTICATED, ALL));
+        }
+
+        rightsByExistingGroup.forEach((group, rights) -> {
+            if (!groupRepository.isGroupAssignedToEntity(entityId, group)) {
+                log.debugf("Associate group %s to %s %s", group.getName(), entityType, entityId);
+                var canWrite = !group.isSystem() && rights.contains(GroupRights.WRITE);
+                groupRepository.saveGroupRelation(entityType, group, entityId, canWrite);
             }
         });
     }
 
-    private Group getGroupByName(String groupName) {
-        try {
-            var cb = em.getCriteriaBuilder();
-            var q = cb.createQuery(Group.class);
-            var rootQuery = q.from(Group.class);
-            q.where(cb.equal(rootQuery.get(Group_.name), groupName));
-            return em.createQuery(q).getSingleResult();
-        } catch (NoResultException e) {
-            throw new BusinessException(ErrorCode.NOT_FOUND, "Group %s doesn't exist.".formatted(groupName));
+    public Collection<String> getGroupsNames(Map<String, List<GroupRights>> groups) {
+        if (groups == null) {
+            return null;
         }
-    }
-
-    public List<Group> getGroupByNames(Collection<String> groupNames) {
-        var cb = em.getCriteriaBuilder();
-        var q = cb.createQuery(Group.class);
-        var rootQuery = q.from(Group.class);
-
-        if (groupNames == null) {
-            return List.of();
-        }
-        q.where(rootQuery.get(Group_.name).in(groupNames));
-        return em.createQuery(q).getResultList();
-    }
-
-    private void deleteGroupFromEntity(UUID entityId, UUID groupId) {
-        GroupRelations groupRelations = getGroupRelationsByEntityIdAndGroupId(entityId, groupId);
-
-        em.remove(em.merge(groupRelations));
-    }
-
-    public List<Group> getGroupsByEntityId(UUID entityId) {
-        return em.createNativeQuery(
-                "WITH ids AS (SELECT DISTINCT gd.id FROM group_def as gd " +
-                        "LEFT JOIN group_relations as gr ON gd.id = gr.group_id " +
-                        "WHERE gr.entity_id = :entity_id ) "
-                        + "SELECT * FROM group_def where id in (SELECT id FROM ids)",
-                Group.class)
-                .setParameter("entity_id", entityId)
-                .getResultList();
-    }
-
-    public List<Group> getAll() {
-        return entityIdService.getAll(Group.class);
-    }
-
-    private GroupRelations getGroupRelationsByEntityIdAndGroupId(UUID entityId, UUID groupId) {
-        try {
-            var cb = em.getCriteriaBuilder();
-            var q = cb.createQuery(GroupRelations.class);
-            var rootQuery = q.from(GroupRelations.class);
-            q.where(cb.and(
-                    cb.equal(rootQuery.get(GroupRelations_.entityId), entityId),
-                    cb.equal(rootQuery.get(GroupRelations_.groupId), groupId)));
-            return em.createQuery(q).getSingleResult();
-        } catch (NoResultException e) {
-            throw new BusinessException(ErrorCode.BAD_REQUEST, "Group %s is not assigned to %s".formatted(groupId, entityId));
-        }
-
-    }
-
-    private boolean isGroupAssignedToEntity(UUID entityId, UUID groupId) {
-        var cb = em.getCriteriaBuilder();
-        var q = cb.createQuery(Long.class);
-        var rootQuery = q.from(GroupRelations.class);
-        q.select(cb.count(rootQuery));
-        q.where(cb.and(
-                cb.equal(rootQuery.get(GroupRelations_.entityId), entityId),
-                cb.equal(rootQuery.get(GroupRelations_.groupId), groupId)));
-        return em.createQuery(q).getSingleResult() > 0;
+        return groups.keySet();
     }
 }

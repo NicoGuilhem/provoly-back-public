@@ -15,8 +15,8 @@ public class DashboardGroupRelations extends GroupRelations {
 
     @JsonCreator
     @Default
-    public DashboardGroupRelations(UUID id, UUID groupId, UUID dashboardId) {
-        super(id, WithGroupEntityType.DASHBOARD, groupId, dashboardId);
+    public DashboardGroupRelations(UUID id, Group group, UUID dashboardId, boolean canWrite) {
+        super(id, WithGroupEntityType.DASHBOARD, group, dashboardId, canWrite);
     }
 
     public DashboardGroupRelations() {

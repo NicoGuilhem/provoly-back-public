@@ -4548,19 +4548,25 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MetadataValueReadDto'
-        groups:
-          type: array
-          items:
-            type: string
+        accessRightsByGroup:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example: { "group": ["READ", "WRITE"] }
         additionalInformation:
           type: string
     DashboardWriteDto:
       type: object
       properties:
-        groups:
-          type: array
-          items:
-            type: string
+        accessRightsByGroup:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example: { "group": ["READ", "WRITE"] }
         id:
           $ref: '#/components/schemas/UUID'
         name:

@@ -18,7 +18,7 @@ import com.provoly.common.imports.*;
 import com.provoly.common.model.OClassWriteDto;
 import com.provoly.ref.dataset.Dataset;
 import com.provoly.ref.dataset.DatasetMapper;
-import com.provoly.ref.dataset.DatasetService;
+import com.provoly.ref.dataset.DatasetRepository;
 import com.provoly.ref.entity.EntityIdService;
 import com.provoly.ref.metadata.MetadataService;
 import com.provoly.ref.model.ModelMapper;
@@ -53,7 +53,7 @@ public class DatasetVersionErrorTest {
     @Inject
     DatasetVersionMapper datasetVersionMapper;
     @Inject
-    DatasetService datasetService;
+    DatasetRepository datasetRepository;
     @Inject
     TestService testService;
     @InjectMock
@@ -88,7 +88,7 @@ public class DatasetVersionErrorTest {
 
         Dataset dataset = datasetMapper.toModel(datasetDto);
         dataset.setUser(provolyUser);
-        datasetService.saveEntity(dataset);
+        datasetRepository.save(dataset);
         datasetVersionService.createDatasetVersion(datasetVersionMapper.toModel(datasetVersionDto));
         datasetVersionService.activateDatasetVersion(datasetVersionDto.getId());
     }

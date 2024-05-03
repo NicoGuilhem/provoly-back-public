@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.provoly.common.Default;
+import com.provoly.common.dataset.GroupRights;
 import com.provoly.common.metadata.MetadataValueWriteDto;
 import com.provoly.common.model.WithMetadata;
 
@@ -18,7 +19,8 @@ public class DashboardWriteDto extends DashboardDto implements WithMetadata {
     @Default
     @JsonCreator
     public DashboardWriteDto(UUID id, String name, String image, String description, boolean cover,
-            List<UUID> datasource, Map<String, Object> manifest, List<MetadataValueWriteDto> metadata, List<String> groups,
+            List<UUID> datasource, Map<String, Object> manifest, List<MetadataValueWriteDto> metadata,
+            Map<String, List<GroupRights>> groups,
             String additionalInformation) {
         super(id, name, image, description, cover, datasource, groups, additionalInformation);
         this.manifest = manifest;
@@ -26,7 +28,8 @@ public class DashboardWriteDto extends DashboardDto implements WithMetadata {
     }
 
     public DashboardWriteDto(UUID id, String name, String image, String description, boolean cover,
-            List<UUID> datasource, Map<String, Object> manifest, List<MetadataValueWriteDto> metadata, List<String> groups) {
+            List<UUID> datasource, Map<String, Object> manifest, List<MetadataValueWriteDto> metadata,
+            Map<String, List<GroupRights>> groups) {
         this(id, name, image, description, cover, datasource, manifest, metadata, groups, null);
     }
 

@@ -18,7 +18,7 @@ import com.provoly.common.error.BusinessException;
 import com.provoly.common.model.AttributeDefDto;
 import com.provoly.common.model.OClassWriteDto;
 import com.provoly.ref.dataset.DatasetMapper;
-import com.provoly.ref.dataset.DatasetService;
+import com.provoly.ref.dataset.DatasetRepository;
 import com.provoly.ref.model.ModelMapper;
 import com.provoly.ref.model.ModelService;
 import com.provoly.ref.model.OClass;
@@ -42,7 +42,7 @@ public class OClassControllerTest {
     @Inject
     ModelMapper mapper;
     @Inject
-    DatasetService datasetService;
+    DatasetRepository datasetRepository;
     @Inject
     UserService userService;
     @Inject
@@ -227,7 +227,7 @@ public class OClassControllerTest {
         var datasetDto = new DatasetDto(oClassDto.getId(), "name", oClass.getId(), DatasetType.MODIFIABLE);
         var dataset = datasetMapper.toModel(datasetDto);
         dataset.setUser(provolyUser);
-        datasetService.saveEntity(dataset);
+        datasetRepository.save(dataset);
 
         given()
                 .pathParam("id", oClassDto.getId())

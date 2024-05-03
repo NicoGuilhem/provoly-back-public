@@ -15,8 +15,8 @@ public class DatasetGroupRelations extends GroupRelations {
 
     @JsonCreator
     @Default
-    public DatasetGroupRelations(UUID id, UUID groupId, UUID dataset) {
-        super(id, WithGroupEntityType.DATASET, groupId, dataset);
+    public DatasetGroupRelations(UUID id, Group group, UUID dataset, boolean canWrite) {
+        super(id, WithGroupEntityType.DATASET, group, dataset, canWrite);
     }
 
     public DatasetGroupRelations() {

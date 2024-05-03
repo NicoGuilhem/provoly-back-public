@@ -9,6 +9,7 @@ quarkus:
       realm-name: provoly
       realm-path: dev-realm.json
       port: 9080
+      start-command: start-dev
   oidc:
     client-id: provoly
     token:

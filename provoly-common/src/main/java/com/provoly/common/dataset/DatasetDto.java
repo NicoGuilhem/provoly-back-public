@@ -1,5 +1,6 @@
 package com.provoly.common.dataset;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,12 +17,12 @@ public class DatasetDto {
     private DatasetType type;
     private String description;
     private List<MetadataValueWriteDto> metadata;
-    private List<String> groups;
+    private Collection<String> groups;
 
     @Default
     @JsonCreator
     public DatasetDto(UUID id, String name, UUID oClass, DatasetType type, String description,
-            List<MetadataValueWriteDto> metadata, List<String> groups) {
+            List<MetadataValueWriteDto> metadata, Collection<String> groups) {
         this.id = id;
         this.name = name;
         this.oClass = oClass;
@@ -39,16 +40,9 @@ public class DatasetDto {
         this(id, name, oClass, type, description, List.of(), List.of());
     }
 
-    public DatasetDto(UUID id, String name, UUID oClass, DatasetType type, List<String> groups) {
+    public DatasetDto(UUID id, String name, UUID oClass, DatasetType type,
+            Collection<String> groups) {
         this(id, name, oClass, type, null, List.of(), groups);
-    }
-
-    public List<String> getGroups() {
-        return groups;
-    }
-
-    public void setGroups(List<String> groups) {
-        this.groups = groups;
     }
 
     public List<MetadataValueWriteDto> getMetadata() {
@@ -99,4 +93,11 @@ public class DatasetDto {
         this.id = id;
     }
 
+    public Collection<String> getGroups() {
+        return groups;
+    }
+
+    public void setGroups(Collection<String> groups) {
+        this.groups = groups;
+    }
 }

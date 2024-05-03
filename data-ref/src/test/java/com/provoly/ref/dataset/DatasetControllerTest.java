@@ -8,16 +8,14 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import com.provoly.common.Storage;
 import com.provoly.common.VariableType;
-import com.provoly.common.dataset.DatasetDto;
-import com.provoly.common.dataset.DatasetState;
-import com.provoly.common.dataset.DatasetType;
-import com.provoly.common.dataset.DatasetVersionDto;
+import com.provoly.common.dataset.*;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ProvolyNotFoundException;
 import com.provoly.common.metadata.MetadataDefDto;
@@ -66,6 +64,8 @@ public class DatasetControllerTest {
     ModelMapper modelMapper;
     @Inject
     DatasetService datasetService;
+    @Inject
+    DatasetRepository datasetRepository;
     @Inject
     DatasetController datasetController;
     @Inject
@@ -122,7 +122,7 @@ public class DatasetControllerTest {
         ProvolyUser currentUser = userService.getCurrentUser();
         Dataset dataset = datasetMapper.toModel(datasetDto);
         dataset.setUser(currentUser);
-        datasetService.saveEntity(dataset);
+        datasetRepository.save(dataset);
         datasetVersionService.createDatasetVersion(datasetVersionMapper.toModel(datasetVersionDto));
         try {
             groupService.addGroup(new GroupWrite(UUID.randomUUID(), "new_group"));
@@ -211,7 +211,7 @@ public class DatasetControllerTest {
                 DatasetType.CLOSED);
         var dataset = datasetMapper.toModel(datasetDto);
         dataset.setUser(currentUser);
-        datasetService.saveEntity(dataset);
+        datasetRepository.save(dataset);
 
         var activeDatasetVersionDto = new DatasetVersionDto(UUID.randomUUID(), datasetDto.getId(), oClass.getId(),
                 DatasetState.ACTIVE, "author", Instant.now());
@@ -242,7 +242,7 @@ public class DatasetControllerTest {
                 DatasetType.CLOSED);
         var dataset = datasetMapper.toModel(datasetDto);
         dataset.setUser(currentUser);
-        datasetService.saveEntity(dataset);
+        datasetRepository.save(dataset);
 
         var activeDatasetVersionDto = new DatasetVersionDto(UUID.randomUUID(), datasetDto.getId(), oClass.getId(),
                 DatasetState.ACTIVE, "producer", Instant.now());
@@ -421,7 +421,7 @@ public class DatasetControllerTest {
                 DatasetType.CLOSED);
         var dataset = datasetMapper.toModel(datasetDto);
         dataset.setUser(provolyUser);
-        datasetService.saveEntity(dataset);
+        datasetRepository.save(dataset);
 
         var activeDatasetVersionDto = new DatasetVersionDto(UUID.randomUUID(), datasetDto.getId(), oClass.getId(),
                 DatasetState.ACTIVE, "author", Instant.now());
@@ -631,12 +631,12 @@ public class DatasetControllerTest {
 
     private GroupErrors updateGroup(UUID datasetId, String name, Set<String> groups) {
         DatasetDto dataset = new DatasetDto(datasetId, name, oClass.getId(), DatasetType.CLOSED,
-                groups == null ? null : groups.stream().toList());
+                groups == null ? null : groups);
         return datasetService.updateDataset(dataset);
     }
 
     private Dataset createDataset(UUID datasetId, String name, Set<String> groups) {
-        DatasetDto dataset = new DatasetDto(datasetId, name, oClass.getId(), DatasetType.CLOSED, groups.stream().toList());
+        DatasetDto dataset = new DatasetDto(datasetId, name, oClass.getId(), DatasetType.CLOSED, groups);
         datasetService.save(dataset);
         return datasetService.findById(datasetId);
     }
@@ -662,13 +662,14 @@ public class DatasetControllerTest {
 
     private void createDashboardDto(UUID dashboardId, Set<String> groups) {
         DashboardWriteDto dashboardDto = new DashboardWriteDto(dashboardId, "Dashboard test", "image",
-                "description", false, List.of(datasetDto.getId()), null, null, groups.stream().toList());
+                "description", false, List.of(datasetDto.getId()), null, null,
+                groups.stream().collect(Collectors.toMap(g -> g, g -> List.of(GroupRights.READ))));
         dashboardService.saveOrUpdate(dashboardDto);
     }
 
     private void createDashboardDto(UUID dashboardId) {
         DashboardWriteDto dashboardDto = new DashboardWriteDto(dashboardId, "Dashboard test", "image",
-                "description", false, List.of(datasetDto.getId()), null, null, List.of());
+                "description", false, List.of(datasetDto.getId()), null, null, Map.of());
         dashboardService.saveOrUpdate(dashboardDto);
     }
 }
