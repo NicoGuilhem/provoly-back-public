@@ -179,9 +179,10 @@ mp:
       files-bucket-name: "provoly"
       icons-bucket-name: "provoly"
       max-size-limit: 200
-      kuzzle:
-        host: localhost
-        tenant: chalons
+#      kuzzle: # We must now comment kuzzle conf else notifierService is launched...
+#        host: localhost
+#        tenant: chalons
+      notification: false
 
     application:
       version: dev

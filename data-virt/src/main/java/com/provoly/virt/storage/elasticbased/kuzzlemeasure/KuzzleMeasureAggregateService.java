@@ -9,7 +9,6 @@ import com.provoly.common.model.OClassDetailsDto;
 import com.provoly.common.search.AggregationParamDto;
 import com.provoly.common.search.AggregationResultDto;
 import com.provoly.common.search.MonoClassRequestDto;
-import com.provoly.virt.DataVirtProperties;
 import com.provoly.virt.search.mono.MonoClassContextRequest;
 import com.provoly.virt.storage.StorageAggregateService;
 import com.provoly.virt.storage.StorageQualifier;
@@ -34,15 +33,14 @@ public class KuzzleMeasureAggregateService implements StorageAggregateService {
             KuzzleMeasureAggregateBuilder aggregateBuilder,
             KuzzleClient kuzzleClient,
             KuzzleQueryResultService kuzzleQueryResultService,
-            KuzzleMeasureSearchQueryBuilder kuzzleMeasureSearchQueryBuilder, KuzzleMeasureLayout layout,
-            DataVirtProperties dataVirtProperties) {
+            KuzzleMeasureSearchQueryBuilder kuzzleMeasureSearchQueryBuilder, KuzzleMeasureLayout layout) {
         this.log = log;
         this.aggregateBuilder = aggregateBuilder;
         this.kuzzleClient = kuzzleClient;
         this.kuzzleQueryResultService = kuzzleQueryResultService;
         this.searchQueryBuilder = kuzzleMeasureSearchQueryBuilder;
         this.layout = layout;
-        this.tenant = dataVirtProperties.kuzzle().tenant().orElse("chalons");
+        this.tenant = kuzzleClient.getTenantName();
     }
 
     public AggregationResultDto aggregate(OClassDetailsDto classDto,

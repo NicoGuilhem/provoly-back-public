@@ -45,6 +45,9 @@ public interface DataVirtProperties {
     @WithDefault("relation")
     String relationIndexName();
 
+    @WithDefault("false")
+    Boolean notification();
+
     Kuzzle kuzzle();
 
     Optional<ElasticClientConfig> elasticsearch();

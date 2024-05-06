@@ -7,7 +7,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import com.provoly.common.Storage;
 import com.provoly.common.model.OClassDetailsDto;
 import com.provoly.common.search.MonoClassRequestDto;
-import com.provoly.virt.DataVirtProperties;
 import com.provoly.virt.entity.ItemsSearchResult;
 import com.provoly.virt.search.mono.MonoClassContextRequest;
 import com.provoly.virt.storage.StorageQualifier;
@@ -35,15 +34,14 @@ public class KuzzleAssetSearchService implements StorageSearchService {
             KuzzleAssetSearchQueryBuilder searchQueryBuilder,
             KuzzleAssetLayout layout,
             KuzzleQueryResultService kuzzleQueryResultService,
-            KuzzleClient kuzzleClient, ElasticSupport elasticSupport,
-            DataVirtProperties dataVirtProperties) {
+            KuzzleClient kuzzleClient, ElasticSupport elasticSupport) {
         this.log = log;
         this.searchQueryBuilder = searchQueryBuilder;
         this.layout = layout;
         this.kuzzleQueryResultService = kuzzleQueryResultService;
         this.kuzzleClient = kuzzleClient;
         this.elasticSupport = elasticSupport;
-        this.tenant = dataVirtProperties.kuzzle().tenant().orElse("chalons");
+        this.tenant = kuzzleClient.getTenantName();
     }
 
     @Override

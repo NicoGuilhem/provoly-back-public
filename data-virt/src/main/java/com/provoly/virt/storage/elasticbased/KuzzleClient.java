@@ -1,5 +1,7 @@
 package com.provoly.virt.storage.elasticbased;
 
+import static com.provoly.virt.storage.elasticbased.kuzzlemeasure.KuzzleMeasureLayout.MEASURE_COLLECTION;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,13 +32,21 @@ public class KuzzleClient {
     public KuzzleClient(DataVirtProperties dataVirtProperties, Logger log) {
         this.log = log;
         this.dataVirtProperties = dataVirtProperties;
-        WebSocket ws = new WebSocket(dataVirtProperties.kuzzle().host().orElse("localhost"));
+        var kuzzleHost = dataVirtProperties.kuzzle().host().orElseThrow(() -> new BusinessException(ErrorCode.TECHNICAL,
+                "Kuzzle host is mandatory to connect to Kuzzle"));
+        WebSocket ws = new WebSocket(kuzzleHost);
         this.kuzzle = new Kuzzle(ws);
         this.kuzzle.connect(); //Subsequent calls have no effect if the SDK is already connected.
     }
 
     public Kuzzle client() {
         return kuzzle;
+    }
+
+    public String getTenantName() {
+        return dataVirtProperties.kuzzle().tenant()
+                .orElseThrow(() -> new BusinessException(ErrorCode.TECHNICAL,
+                        "Tenant property is mandatory to use Kuzzle device manager"));
     }
 
     public SearchResult kuzzleSearch(String index, String collection, Map<String, Object> query, int limit) {
@@ -74,12 +84,7 @@ public class KuzzleClient {
         try {
             return (Map<String, Object>) kuzzle
                     .getCollectionController()
-                    .getMapping(dataVirtProperties
-                            .kuzzle()
-                            .tenant()
-                            .orElseThrow(() -> new BusinessException(ErrorCode.TECHNICAL,
-                                    "Tenant name is mandatory to get measure mapping")),
-                            "measures")
+                    .getMapping(getTenantName(), MEASURE_COLLECTION)
                     .get().get("properties");
         } catch (InterruptedException | ExecutionException e) {
             throw new BusinessException(ErrorCode.TECHNICAL, "Unable to get the measure collection mapping", e);

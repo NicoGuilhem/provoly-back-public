@@ -1,10 +1,13 @@
 package com.provoly.virt.storage.elasticbased.kuzzlemeasure;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
+import com.provoly.clients.DatasetVersionService;
+import com.provoly.clients.ModelService;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.metadata.MetadataDefDto;
@@ -22,6 +25,9 @@ import com.provoly.virt.storage.elasticbased.ElasticSupport;
 import com.provoly.virt.storage.elasticbased.KuzzleBasedLayout;
 import com.provoly.virt.storage.elasticbased.KuzzleClient;
 
+import io.kuzzle.sdk.coreClasses.maps.KuzzleMap;
+
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
@@ -40,10 +46,18 @@ public class KuzzleMeasureLayout extends KuzzleBasedLayout {
 
     private ElasticSupport elasticSupport;
     private KuzzleClient kuzzleClient;
+    private ModelService modelService;
+    private DatasetVersionService datasetVersionService;
     private Logger log;
 
-    public KuzzleMeasureLayout(KuzzleClient kuzzleClient, ElasticSupport elasticSupport, Logger log) {
+    public KuzzleMeasureLayout(KuzzleClient kuzzleClient,
+            ElasticSupport elasticSupport,
+            @RestClient ModelService modelService,
+            @RestClient DatasetVersionService datasetVersionService,
+            Logger log) {
         this.kuzzleClient = kuzzleClient;
+        this.modelService = modelService;
+        this.datasetVersionService = datasetVersionService;
         this.log = log;
         this.elasticSupport = elasticSupport;
     }
@@ -95,8 +109,8 @@ public class KuzzleMeasureLayout extends KuzzleBasedLayout {
 
     @Override
     public ComposedConditionDto getLayoutConditions(OClassDetailsDto classDto) {
-        MetadataValueReadDto metadataValueReadDtoAsset = getMetadataValue(classDto, MetadataSystem.ASSET_MODEL.getName());
-        MetadataValueReadDto metadataValueReadDtoMeasure = getMetadataValue(classDto, MetadataSystem.MEASURE_NAME.getName());
+        MetadataValueReadDto metadataValueReadDtoAsset = getMetadata(classDto, MetadataSystem.ASSET_MODEL.getName());
+        MetadataValueReadDto metadataValueReadDtoMeasure = getMetadata(classDto, MetadataSystem.MEASURE_NAME.getName());
         MetadataConditionDto assetModelCondition = new MetadataConditionDto(MetadataSystem.ASSET_MODEL,
                 metadataValueReadDtoAsset.getValue(),
                 Operator.EQUALS);
@@ -110,9 +124,9 @@ public class KuzzleMeasureLayout extends KuzzleBasedLayout {
     }
 
     @Override
-    public Item convertToItem(Map<String, Object> hit, OClassDetailsDto oClass, UUID dataserversionId) {
+    public Item convertToItem(Map<String, Object> hit, OClassDetailsDto oClass, UUID datasetversionId) {
         var id = hit.get(ID).toString();
-        Item item = new Item(new ItemId(dataserversionId, id), oClass);
+        Item item = new Item(new ItemId(datasetversionId, id), oClass);
 
         elasticSupport.setAttributeValue(oClass, item, MEASURED_AT, hit.get(MEASURED_AT));
 
@@ -121,6 +135,7 @@ public class KuzzleMeasureLayout extends KuzzleBasedLayout {
         }
 
         Map<String, Object> asset = (Map<String, Object>) hit.get(ASSET);
+        elasticSupport.setAttributeValue(oClass, item, "reference", asset.get("reference"));
 
         elasticSupport.setAttributeValue(oClass, item, ASSET_ID, asset.get(ID));
         for (Map.Entry<String, Object> prop : ((Map<String, Object>) asset.get(METADATA)).entrySet()) {
@@ -129,17 +144,43 @@ public class KuzzleMeasureLayout extends KuzzleBasedLayout {
         return item;
     }
 
-    private MetadataValueReadDto getMetadataValue(OClassDetailsDto classDto, String metadataName) {
-        return classDto.getMetadata()
-                .stream()
-                .filter(x -> x.getMetadataDef().name.equals(metadataName))
-                .findFirst()
-                .orElseThrow(() -> new BusinessException(ErrorCode.BAD_REQUEST, "Metadata value need to be defined."));
-    }
-
     @Override
     public String buildAggregateAttributePath(AttributeDefDetailsDto attribute) {
         return buildAttributePath(attribute);
+    }
+
+    public Item convertToItem(KuzzleMap result) {
+        String receivedMeasureName = result.getMap("_source").getString("type");
+
+        for (var oClass : modelService.getAllClasses()) {
+            var oClassDetails = modelService.getDetails(oClass.getId());
+            var measureName = getOptionalMetadata(oClassDetails, MetadataSystem.MEASURE_NAME.getName());
+            if (measureName.isPresent() && measureName.get().getValue().equals(receivedMeasureName)) {
+                log.debugf("Found class %s for measure %s", oClass.getName(), measureName);
+                UUID datasetVersionId = datasetVersionService.getAllActiveForClass(oClass.getId())
+                        .stream()
+                        .toList()
+                        .getFirst()
+                        .getId();
+
+                var patchedMap = result.getMap("_source").put("_id", result.getString("_id"));
+                return convertToItem(patchedMap, oClassDetails, datasetVersionId);
+
+            }
+        }
+        throw new BusinessException(ErrorCode.TECHNICAL, "Unable to find class for measure %s".formatted(receivedMeasureName));
+    }
+
+    private Optional<MetadataValueReadDto> getOptionalMetadata(OClassDetailsDto classDto, String metadataName) {
+        return classDto.getMetadata()
+                .stream()
+                .filter(x -> x.getMetadataDef().name.equals(metadataName))
+                .findFirst();
+    }
+
+    private MetadataValueReadDto getMetadata(OClassDetailsDto classDto, String metadataName) {
+        return getOptionalMetadata(classDto, metadataName)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BAD_REQUEST, "Metadata value need to be defined."));
     }
 
     private boolean attributeIsMappedAsMetadata(AttributeDefDetailsDto attribute) {

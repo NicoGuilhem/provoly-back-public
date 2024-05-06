@@ -68,9 +68,9 @@ provoly:
     elastic-enable-immediate-refresh-policy: true
     chunk-size: 10
     import-max-errors: 2
-    kuzzle: # only used when kuzzle tests are enabled
-      host: localhost
-      tenant: test
+#    kuzzle: # We must now comment kuzzle conf else notifierService is launched...
+#      host: localhost
+#      tenant: test
 
   application:
     version: test

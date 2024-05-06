@@ -119,7 +119,7 @@ public class MultiClassSearchService {
                     .toList();
         } else {
             return oClasses.stream()
-                    .map(uuid -> modelService.getDetails(uuid))
+                    .map(modelService::getDetails)
                     .toList();
         }
 

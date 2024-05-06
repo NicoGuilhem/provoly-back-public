@@ -2,7 +2,6 @@ package com.provoly.virt.imports.async;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -14,8 +13,8 @@ import com.provoly.common.dataset.DatasetType;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.imports.MessageLevel;
+import com.provoly.common.item.GeoFormat;
 import com.provoly.common.item.ItemDto;
-import com.provoly.common.model.OClassDetailsDto;
 import com.provoly.virt.imports.RecordConvertor;
 import com.provoly.virt.imports.model.ItemRecord;
 import com.provoly.virt.item.WriteItemsService;
@@ -34,8 +33,6 @@ import org.jboss.logging.Logger;
 public class AsyncImportService {
     public static final String ITEM_ID = "provoly-item-id";
     public static final String DATASET_VERSION_ID = "provoly-dataset-version-id";
-
-    private Map<UUID, OClassDetailsDto> knownOclasses = new HashMap<>();
 
     private Logger log;
     private WriteItemsService writeItemsService;
@@ -60,14 +57,11 @@ public class AsyncImportService {
         var items = new ArrayList<ItemDto>();
         var datasetVersionId = extractDatasetVersion(record.headers());
 
-        if (!knownOclasses.containsKey(datasetVersionId)) {
-            var dataset = datasetService.searchByDatasetVersionId(datasetVersionId);
-            if (dataset.getType() == DatasetType.CLOSED) {
-                throw new BusinessException(ErrorCode.FORBIDDEN, "Dataset %s can't be closed".formatted(dataset.getId()));
-            }
-            var oClassDetails = modelService.getDetails(dataset.getoClass());
-            knownOclasses.put(datasetVersionId, oClassDetails);
+        var dataset = datasetService.searchByDatasetVersionId(datasetVersionId);
+        if (dataset.getType() == DatasetType.CLOSED) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "Dataset %s can't be closed".formatted(dataset.getId()));
         }
+        var oClassDetails = modelService.getDetails(dataset.getoClass());
 
         var jsonItem = record.value();
         var id = getId(record.headers());
@@ -76,7 +70,7 @@ public class AsyncImportService {
 
         var messages = recordConvertor.validateAttributeNames(
                 itemRecord.values().keySet(),
-                knownOclasses.get(datasetVersionId).getAttributes().stream().map(attr -> attr.name))
+                oClassDetails.getAttributes().stream().map(attr -> attr.name))
                 .stream()
                 .filter(m -> m.messageLevel() == MessageLevel.ERROR)
                 .toList();
@@ -85,15 +79,15 @@ public class AsyncImportService {
             throw new BusinessException(ErrorCode.FORBIDDEN, "Error during attributes validation : %s".formatted(messages));
         }
 
-        var convertResult = recordConvertor.convert(itemRecord, knownOclasses.get(datasetVersionId));
+        var convertResult = recordConvertor.convert(itemRecord, oClassDetails, false, GeoFormat.WKT);
 
         if (convertResult.messages().isEmpty()) {
             var item = buildItemDto(convertResult.record().values(), // FIXME we convert record into itemdto to be converted again... https://github.com/Provoly/provoly-back/issues/245
-                    knownOclasses.get(datasetVersionId).getId(),
+                    oClassDetails.getId(),
                     "%s@%s".formatted(datasetVersionId, id));
             items.add(item);
         } else {
-            throw new BusinessException(ErrorCode.FORBIDDEN, "values invalid : %s".formatted(messages));
+            throw new BusinessException(ErrorCode.FORBIDDEN, "values invalid : %s".formatted(convertResult.messages()));
         }
 
         writeItemsService.addItemsDto(items);

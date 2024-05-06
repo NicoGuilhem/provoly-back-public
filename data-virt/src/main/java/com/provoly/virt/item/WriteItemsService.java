@@ -14,7 +14,6 @@ import com.provoly.common.dataset.DatasetDto;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.item.ItemDto;
-import com.provoly.common.model.OClassDetailsDto;
 import com.provoly.virt.DataVirtProperties;
 import com.provoly.virt.entity.Item;
 import com.provoly.virt.partition.PartitionService;
@@ -41,13 +40,16 @@ public class WriteItemsService {
 
     private ItemTransformer itemTransformer;
 
+    private ItemsNotifier itemsNotifier;
+
     public WriteItemsService(Logger log,
             @RestClient ModelService modelService,
             @RestClient DatasetService datasetService,
             StorageWriteAdapter storageItemService,
             PartitionService partitionService,
             DataVirtProperties dataVirtProperties,
-            ItemTransformer itemTransformer) {
+            ItemTransformer itemTransformer,
+            ItemsNotifier itemsNotifier) {
         this.log = log;
         this.modelService = modelService;
         this.datasetService = datasetService;
@@ -55,6 +57,7 @@ public class WriteItemsService {
         this.partitionService = partitionService;
         this.dataVirtProperties = dataVirtProperties;
         this.itemTransformer = itemTransformer;
+        this.itemsNotifier = itemsNotifier;
     }
 
     public List<InsertionError> addItems(Collection<Item> items) {
@@ -62,9 +65,18 @@ public class WriteItemsService {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "Items list is provided with multiple dataset versions");
         }
 
-        return storageItemService.add(items);
+        List<InsertionError> errors = storageItemService.add(items);
+
+        if (errors.isEmpty() && dataVirtProperties.notification()) {
+            // Send items to notification service
+            // TODO rework data-link, issue https://gitlab.groupeonepoint.com/cds-bdx/pole-edition/yap/yap-back/-/issues/431
+            itemsNotifier.notifyItemWrittenToStorage(items);
+        }
+
+        return errors;
     }
 
+    // TODO : This method should not exists. ItemDto is only for interface, it should not be used in the backend
     public List<InsertionError> addItemsDto(Collection<ItemDto> itemsDto) {
         log.debug("Start adding items");
 
@@ -85,8 +97,6 @@ public class WriteItemsService {
                     "All items must have same OclassId thant Dataset OclassId : %s".formatted(datasetDto.getoClass()));
         }
 
-        OClassDetailsDto oClassDto = modelService.getDetails(anyItem.getoClass());
-
         // Convert itemDto to item and send them to Elastic
         List<InsertionError> errors = partitionService.partition(itemsDto.stream().toList(), dataVirtProperties.chunkSize())
                 .stream()
@@ -97,19 +107,7 @@ public class WriteItemsService {
 
         if (!errors.isEmpty()) {
             log.infof("storage insertion error : %s", errors);
-        } else {
-            // Send items to notification service
-            log.debug("There were no errors during insertion, notify data-link that items are correctly written to storage");
-            var oClassDtoByUUID = itemsDto.stream()
-                    .collect(Collectors.toMap(item -> oClassDto.getId(), item -> oClassDto.getSlug(), (a, b) -> a));
-
-            itemsDto.stream()
-                    .collect(Collectors.groupingBy(e -> oClassDtoByUUID.get(e.getoClass())));
-
-            // TODO rework data-link, issue https://gitlab.groupeonepoint.com/cds-bdx/pole-edition/yap/yap-back/-/issues/431
-            //itemsNotifier.notifyItemWritedToElastic(itemDtoByOClassSlug);
         }
-
         return errors;
     }
 }

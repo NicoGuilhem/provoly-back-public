@@ -65,10 +65,15 @@ public class RecordConvertor {
     }
 
     public ConversionResult convert(ItemRecord itemRecord, OClassDetailsDto oClassDetailsDto) {
-        return this.convert(itemRecord, oClassDetailsDto, false);
+        return this.convert(itemRecord, oClassDetailsDto, false, GeoFormat.GEO_JSON);
     }
 
     public ConversionResult convert(ItemRecord itemRecord, OClassDetailsDto oClassDetailsDto, boolean normalizeGeo) {
+        return this.convert(itemRecord, oClassDetailsDto, normalizeGeo, GeoFormat.GEO_JSON);
+    }
+
+    public ConversionResult convert(ItemRecord itemRecord, OClassDetailsDto oClassDetailsDto, boolean normalizeGeo,
+            GeoFormat geoFormat) {
         if (itemRecord.values().entrySet().stream().noneMatch(entry -> entry.getValue() != null)) {
             log.error("No values in extracted record");
             return new ConversionResult(null,
@@ -78,16 +83,16 @@ public class RecordConvertor {
         List<ExtractedMessage> errors = new ArrayList<>();
         oClassDetailsDto.getAttributes().stream()
                 .filter(attribute -> itemRecord.values().get(attribute.technicalName) != null)
-                .forEach(attribute -> assignOrGetError(attribute, itemRecord, values, errors, normalizeGeo));
+                .forEach(attribute -> assignOrGetError(attribute, itemRecord, values, errors, normalizeGeo, geoFormat));
 
         return new ConversionResult(new ItemRecord(itemRecord.recordId(), values), errors); // retourne soit l'item soit la liste des erreurs
     }
 
-    private Object assignTo(Object value, Type type, boolean normalizeGeo, String crs) {
+    private Object assignTo(Object value, Type type, boolean normalizeGeo, String crs, GeoFormat geoFormat) {
         return switch (value) {
             case Integer i -> assignTo(i, type);
             case Long l -> assignTo(l, type);
-            case String s -> assignTo(s, type, normalizeGeo, crs);
+            case String s -> assignTo(s, type, normalizeGeo, crs, geoFormat);
             case Double d -> assignTo(d, type);
             case Date d -> assignTo(d, type);
             case Instant instant -> assignTo(instant, type);
@@ -116,7 +121,7 @@ public class RecordConvertor {
 
     }
 
-    private Object assignTo(String value, Type type, boolean normalizeGeo, String crs) {
+    private Object assignTo(String value, Type type, boolean normalizeGeo, String crs, GeoFormat geoFormat) {
         if (value.isBlank()) {
             return null;
         }
@@ -130,7 +135,7 @@ public class RecordConvertor {
                 yield ZonedDateTime.parse(value, isoFormat).toInstant();
             }
             case POINT, MULTIPOINT, LINESTRING, MULTILINESTRING, POLYGON, MULTIPOLYGON -> {
-                GeoHolder geo = new GeoHolder(value, crs, GeoFormat.GEO_JSON);
+                GeoHolder geo = new GeoHolder(value, crs, geoFormat);
                 checkGeometry(normalizeGeo, type, geo);
                 yield geo;
             }
@@ -173,12 +178,14 @@ public class RecordConvertor {
     private void assignOrGetError(AttributeDefDetailsDto attribute,
             ItemRecord itemRecord,
             Map<String, Object> values,
-            List<ExtractedMessage> errors, boolean normalizeGeo) {
+            List<ExtractedMessage> errors,
+            boolean normalizeGeo,
+            GeoFormat geoFormat) {
         Object value = itemRecord.values().get(attribute.technicalName);
         Type type = attribute.field.getType();
 
         try {
-            values.put(attribute.technicalName, assignTo(value, type, normalizeGeo, attribute.field.crs));
+            values.put(attribute.technicalName, assignTo(value, type, normalizeGeo, attribute.field.crs, geoFormat));
 
         } catch (BusinessException | IllegalArgumentException | DateTimeParseException exception) {
             FileImportDto.ParamsTypeError paramsError = new FileImportDto.ParamsTypeError(attribute.name,
