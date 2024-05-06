@@ -3634,8 +3634,9 @@ paths:
                       value: "50"
                     - metadataDefId: "ba691f33-fe70-42f8-a277-05c607ba28cf"
                       value: "30"
-                  groups:
-                    - "AUTHENTICATED"
+                  accessRightsByGroup:
+                    "ALL": [ "READ" ]
+                    "a_group": [ "READ", "WRITE" ]
                   additionalInformation: "Some more information"
       responses:
         "201":

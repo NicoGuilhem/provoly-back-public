@@ -48,7 +48,7 @@ public class GrantServiceUTest {
         dashboardRepository = mock(DashboardRepository.class);
         groupRepository = mock(GroupRepository.class);
         datasetRepository = mock(DatasetRepository.class);
-        grantService = new GrantService(userService, em, logger, dashboardRepository, groupRepository,
+        grantService = new GrantService(logger, dashboardRepository, groupRepository,
                 datasetRepository);
     }
 
@@ -61,19 +61,58 @@ public class GrantServiceUTest {
         Dashboard dashboard = new Dashboard(UUID.randomUUID(), "", "");
         dashboard.setUser(provolyUser);
 
-        Assertions.assertDoesNotThrow(() -> grantService.canWrite(dashboard, WithGroupEntityType.DASHBOARD));
+        Assertions.assertDoesNotThrow(() -> grantService.canWrite(dashboard, WithGroupEntityType.DASHBOARD, provolyUser));
     }
 
     @Test
     void can_see_same_user_isOk() {
-        ProvolyUser provolyUser = new ProvolyUser();
-
-        when(userService.getCurrentUser()).thenReturn(provolyUser);
-
+        ProvolyUser owner = new ProvolyUser(UUID.randomUUID(), "subject", "name", "last", "mail", List.of());
         Dashboard dashboard = new Dashboard(UUID.randomUUID(), "", "");
-        dashboard.setUser(provolyUser);
+        dashboard.setUser(owner);
 
-        Assertions.assertDoesNotThrow(() -> grantService.canSee(dashboard, WithGroupEntityType.DASHBOARD, new ProvolyUser()));
+        Assertions.assertTrue(grantService.canSee(dashboard, WithGroupEntityType.DASHBOARD, owner));
+    }
+
+    @Test
+    void can_see_admin_isOk() {
+        ProvolyUser user = new ProvolyUser(UUID.randomUUID(), "subject", "name", "last", "mail", List.of("administrate"));
+
+        ProvolyUser owner = new ProvolyUser(UUID.randomUUID(), "subject", "name", "lasr", "mail", List.of());
+        Dashboard dashboard = new Dashboard(UUID.randomUUID(), "", "");
+        dashboard.setUser(owner);
+
+        Assertions.assertTrue(grantService.canSee(dashboard, WithGroupEntityType.DASHBOARD, user));
+    }
+
+    @Test
+    void can_see_different_user_with_group_isOk() {
+        Group group = new Group(UUID.randomUUID(), "group", false);
+        ProvolyUser user = new ProvolyUser(UUID.randomUUID(), "subject", "name", "lasr", "mail", List.of());
+        user.setGroups(List.of(group));
+
+        ProvolyUser owner = new ProvolyUser(UUID.randomUUID(), "subject", "name", "last", "mail", List.of());
+        Dashboard dashboard = new Dashboard(UUID.randomUUID(), "", "");
+        dashboard.setUser(owner);
+
+        when(groupRepository.getEntityGroups(WithGroupEntityType.DASHBOARD, dashboard))
+                .thenReturn(List.of(new DashboardGroupRelations(UUID.randomUUID(), group, dashboard.getId(), false)));
+
+        Assertions.assertTrue(grantService.canSee(dashboard, WithGroupEntityType.DASHBOARD, user));
+    }
+
+    @Test
+    void can_see_different_user_without_group_isKo() {
+        Group group = new Group(UUID.randomUUID(), "group", false);
+        ProvolyUser user = new ProvolyUser(UUID.randomUUID(), "subject", "name", "lasr", "mail", List.of());
+
+        ProvolyUser owner = new ProvolyUser(UUID.randomUUID(), "subject", "name", "last", "mail", List.of());
+        Dashboard dashboard = new Dashboard(UUID.randomUUID(), "", "");
+        dashboard.setUser(owner);
+
+        when(groupRepository.getEntityGroups(WithGroupEntityType.DASHBOARD, dashboard))
+                .thenReturn(List.of(new DashboardGroupRelations(UUID.randomUUID(), group, dashboard.getId(), false)));
+
+        Assertions.assertFalse(grantService.canSee(dashboard, WithGroupEntityType.DASHBOARD, user));
     }
 
     @Test
@@ -133,9 +172,7 @@ public class GrantServiceUTest {
         Dataset dataset = new Dataset(UUID.randomUUID());
         dataset.setUser(user);
 
-        when(userService.getCurrentUser()).thenReturn(user);
-
-        Assertions.assertDoesNotThrow(() -> grantService.canWrite(dataset, WithGroupEntityType.DATASET));
+        Assertions.assertDoesNotThrow(() -> grantService.canWrite(dataset, WithGroupEntityType.DATASET, user));
     }
 
     @Test
@@ -145,10 +182,8 @@ public class GrantServiceUTest {
         Dataset dataset = new Dataset(UUID.randomUUID());
         dataset.setUser(new ProvolyUser());
 
-        when(userService.getCurrentUser()).thenReturn(user);
-
         var error = Assertions.assertThrows(BusinessException.class,
-                () -> grantService.canWrite(dataset, WithGroupEntityType.DATASET));
+                () -> grantService.canWrite(dataset, WithGroupEntityType.DATASET, user));
     }
 
     @Test
@@ -158,9 +193,7 @@ public class GrantServiceUTest {
         Dataset dataset = new Dataset(UUID.randomUUID());
         dataset.setUser(new ProvolyUser());
 
-        when(userService.getCurrentUser()).thenReturn(user);
-
-        Assertions.assertDoesNotThrow(() -> grantService.canWrite(dataset, WithGroupEntityType.DATASET));
+        Assertions.assertDoesNotThrow(() -> grantService.canWrite(dataset, WithGroupEntityType.DATASET, user));
     }
 
     @Test
@@ -172,7 +205,7 @@ public class GrantServiceUTest {
 
         when(userService.getCurrentUser()).thenReturn(user);
 
-        Assertions.assertDoesNotThrow(() -> grantService.canWrite(dashboard, WithGroupEntityType.DASHBOARD));
+        Assertions.assertDoesNotThrow(() -> grantService.canWrite(dashboard, WithGroupEntityType.DASHBOARD, user));
     }
 
     @Test
@@ -188,13 +221,14 @@ public class GrantServiceUTest {
         var groupRelation = new DashboardGroupRelations(UUID.randomUUID(), group, dashboard.getId(), true);
         when(groupRepository.getGroupsByEntityId(dashboard.getId())).thenReturn(List.of(groupRelation));
 
-        Assertions.assertThrows(BusinessException.class, () -> grantService.canWrite(dashboard, WithGroupEntityType.DASHBOARD));
+        Assertions.assertThrows(BusinessException.class,
+                () -> grantService.canWrite(dashboard, WithGroupEntityType.DASHBOARD, user));
     }
 
     @Test
     void canWrite_Dashboard_notOwner_inWriteGroup_isOk() {
         ProvolyUser user = new ProvolyUser(UUID.randomUUID(), "sub", "name", "last", "email", List.of());
-        ;
+
         var group = new Group();
         group.setName("my_group");
         user.setGroups(List.of(group));
@@ -206,6 +240,6 @@ public class GrantServiceUTest {
         var groupRelation = new DashboardGroupRelations(UUID.randomUUID(), group, dashboard.getId(), true);
         when(groupRepository.getGroupsByEntityId(dashboard.getId())).thenReturn(List.of(groupRelation));
 
-        Assertions.assertDoesNotThrow(() -> grantService.canWrite(dashboard, WithGroupEntityType.DASHBOARD));
+        Assertions.assertDoesNotThrow(() -> grantService.canWrite(dashboard, WithGroupEntityType.DASHBOARD, user));
     }
 }
