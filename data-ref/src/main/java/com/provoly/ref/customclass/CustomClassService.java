@@ -51,6 +51,7 @@ public class CustomClassService {
     public List<CustomClass> getAllCustomClass() {
         var cb = em.getCriteriaBuilder();
         var q = cb.createQuery(CustomClass.class);
+        q.from(CustomClass.class);
         return em.createQuery(q).getResultList();
     }
 
