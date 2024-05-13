@@ -2,6 +2,7 @@ package com.provoly.virt.imports;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.time.Instant;
 import java.util.*;
@@ -287,17 +288,6 @@ public class RecordConvertorTest {
     @Test
     void validate_withGeoNormalization_returnOK() {
         Map<String, Object> values = new HashMap<>();
-        /*
-         * values.put("string", "String");
-         * values.put("keyword", "keyword");
-         * values.put("integer", "1");
-         * values.put("long", 1);
-         * values.put("decimal", 1L);
-         * values.put("raw", "rawwwwwww");
-         * values.put("instant", Date.from(Instant.now()));
-         * values.put("point", point);
-         * values.put("multipoint", point);
-         */
         values.put("linestring", lineString);
         values.put("multilinestring", lineString);
         values.put("polygon", polygon);
@@ -334,4 +324,25 @@ public class RecordConvertorTest {
         assertThat(result.messages()).isEmpty();
     }
 
+    @Test
+    void test() {
+        Map<String, Object> values = new HashMap<>();
+        values.put("instant", "ohnobutaverylongtestthatwillbecutatsomepointbutyouneverknowwith");
+        values.put("integer", "1.5");
+        values.put("point", lineString);
+        values.put("long", 1.5);
+        values.put("decimal", "toto");
+
+        ItemRecord itemRecord = new ItemRecord("1", values);
+
+        var result = recordConvertor.convert(itemRecord, oClassDetailsDto, false);
+        assertFalse(result.messages().isEmpty());
+        assertEquals(5, result.messages().size());
+        assertEquals("toto",
+                result.messages().stream().filter(m -> m.params().getName().equals("decimal")).findFirst().get().params()
+                        .getReceivedValue());
+        assertEquals("ohnobutaverylongtestthatwillbecutatsomepointbutyou",
+                result.messages().stream().filter(m -> m.params().getName().equals("instant")).findFirst().get().params()
+                        .getReceivedValue());
+    }
 }

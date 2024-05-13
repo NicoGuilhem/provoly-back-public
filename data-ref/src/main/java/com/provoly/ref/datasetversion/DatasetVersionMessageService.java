@@ -50,8 +50,9 @@ public class DatasetVersionMessageService {
 
         datasetVersionMessage.setExtractMessageCode(message.code());
         if (message.params() != null) {
-            datasetVersionMessage.setName(message.params().name());
-            datasetVersionMessage.setType(message.params().type());
+            datasetVersionMessage.setName(message.params().getName());
+            datasetVersionMessage.setType(message.params().getType());
+            datasetVersionMessage.setReceivedValue(message.params().getReceivedValue());
         }
         return datasetVersionMessage;
     }

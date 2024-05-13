@@ -189,14 +189,16 @@ public class RecordConvertor {
 
         } catch (BusinessException | IllegalArgumentException | DateTimeParseException exception) {
             FileImportDto.ParamsTypeError paramsError = new FileImportDto.ParamsTypeError(attribute.name,
-                    attribute.field.getType());
+                    attribute.field.getType(), value.toString());
+            log.warnf("Could not assign value '%s' to type %s: %s", paramsError.getReceivedValue(), attribute.field.getType(),
+                    exception);
             errors.add(new ExtractedMessage(MessageLevel.ERROR, ExtractMessageCode.FORMAT, paramsError));
         }
     }
 
     private void checkGeometry(boolean normalizeGeo, Type type, GeoHolder geoHolder) {
         // Converting only multi geometry and when a normalisation is asked
-        if (normalizeGeo & type.isMultiGeo()) {
+        if (normalizeGeo && type.isMultiGeo()) {
             geoHolder.transformToMulti();
         }
 

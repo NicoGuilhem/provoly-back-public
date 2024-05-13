@@ -129,7 +129,7 @@ public class ImportRunner {
                                 new ImportsMessage(datasetVersionId, itemRecord.recordId(), convertedRecord.messages()));
 
                         errorsCount += convertedRecord.messages().size();
-                        log.infof("Errors detected on record, adding to errors stack. %s registered", errorsCount);
+                        log.debugf("Errors detected on record, adding to errors stack. %s registered", errorsCount);
                     }
                     if (errorsCount >= dataVirtProperties.importMaxErrors()) {
                         log.error("Errors size greater than max import error %s. Aborting process".formatted(

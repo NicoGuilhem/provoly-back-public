@@ -501,13 +501,13 @@ public class DatasetVersionControllerTest {
         List<ExtractedMessage> errors = new ArrayList<>();
         for (int i = 0; i < errorsCount; i++) {
             errors.add(new ExtractedMessage(MessageLevel.ERROR, ExtractMessageCode.FORMAT,
-                    new FileImportDto.ParamsTypeError(String.valueOf(i), Type.DECIMAL)));
+                    new FileImportDto.ParamsTypeError(String.valueOf(i), Type.DECIMAL, "test")));
         }
 
         List<ExtractedMessage> warnings = new ArrayList<>();
         for (int i = 0; i < warningCount; i++) {
             errors.add(new ExtractedMessage(MessageLevel.WARNING, ExtractMessageCode.UNRECOGNIZED,
-                    new FileImportDto.ParamsTypeError(String.valueOf(i), Type.DECIMAL)));
+                    new FileImportDto.ParamsTypeError(String.valueOf(i), Type.DECIMAL, "test")));
         }
 
         datasetVersionMessageService.save(new ImportsMessage(dsv.getId(), "1", errors));

@@ -25,6 +25,7 @@ public class DatasetVersionMessage extends EntityId {
     private String recordId;
 
     private UUID datasetVersionId;
+    private String receivedValue;
 
     public DatasetVersionMessage() {
     }
@@ -99,4 +100,11 @@ public class DatasetVersionMessage extends EntityId {
         this.level = level;
     }
 
+    public String getReceivedValue() {
+        return receivedValue;
+    }
+
+    public void setReceivedValue(String receivedValue) {
+        this.receivedValue = receivedValue;
+    }
 }

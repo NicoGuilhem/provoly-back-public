@@ -4253,6 +4253,9 @@ components:
               type: string
             datasetVersionId:
               $ref: "#/components/schemas/UUID"
+            receivedValue:
+              type: string
+              example: "A value that cannot be formated to int"
         count: 
           type: integer
           minimum: 1

@@ -117,7 +117,7 @@ public class DatasetVersionErrorTest {
 
         var datasetVersionError = datasetVersionErrorList.get(0);
         assertThat(datasetVersionError.getExtractMessageCode()).isEqualTo(extractedError.code());
-        assertThat(datasetVersionError.getName()).isEqualTo(extractedError.params().name());
-        assertThat(datasetVersionError.getType()).isEqualTo(extractedError.params().type());
+        assertThat(datasetVersionError.getName()).isEqualTo(extractedError.params().getName());
+        assertThat(datasetVersionError.getType()).isEqualTo(extractedError.params().getType());
     }
 }
