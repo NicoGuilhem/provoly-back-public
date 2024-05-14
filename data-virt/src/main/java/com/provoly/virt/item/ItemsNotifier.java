@@ -57,6 +57,7 @@ public class ItemsNotifier {
                 String itemJson = itemWriter.writeValueAsString(itemDto);
                 kafkaTools.createTopicIfNeeded(topicName); // TODO : Retention, policies, etc
                 var record = new ProducerRecord<>(topicName, itemDto.getId(), itemJson);
+                log.tracef("Send notification for item %s to topic %s", itemDto.getId(), topicName);
                 producer.send(record);
                 itemsCount.computeIfAbsent(topicName, k -> new AtomicLong(0)).addAndGet(1);
             }

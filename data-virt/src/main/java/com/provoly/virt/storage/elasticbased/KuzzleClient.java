@@ -17,10 +17,14 @@ import com.provoly.virt.storage.InsertionError;
 import io.kuzzle.sdk.Kuzzle;
 import io.kuzzle.sdk.coreClasses.SearchResult;
 import io.kuzzle.sdk.coreClasses.maps.KuzzleMap;
+import io.kuzzle.sdk.events.NetworkStateChangeEvent;
+import io.kuzzle.sdk.protocol.ProtocolState;
 import io.kuzzle.sdk.protocol.WebSocket;
 import io.quarkus.cache.CacheResult;
 
 import org.jboss.logging.Logger;
+
+import kotlin.Unit;
 
 @ApplicationScoped
 public class KuzzleClient {
@@ -28,15 +32,25 @@ public class KuzzleClient {
     private final Logger log;
     private final Kuzzle kuzzle;
     private final DataVirtProperties dataVirtProperties;
+    private Thread reconnectThread = null;
 
     public KuzzleClient(DataVirtProperties dataVirtProperties, Logger log) {
+        log.info("Initializing Kuzzle client");
         this.log = log;
         this.dataVirtProperties = dataVirtProperties;
         var kuzzleHost = dataVirtProperties.kuzzle().host().orElseThrow(() -> new BusinessException(ErrorCode.TECHNICAL,
                 "Kuzzle host is mandatory to connect to Kuzzle"));
-        WebSocket ws = new WebSocket(kuzzleHost);
+        WebSocket ws = new WebSocket(kuzzleHost, 7512, false, false);
         this.kuzzle = new Kuzzle(ws);
-        this.kuzzle.connect(); //Subsequent calls have no effect if the SDK is already connected.
+        ws.addListener(NetworkStateChangeEvent.class, event -> {
+            log.info("Network state changed: " + event.getState());
+            if (event.getState() == ProtocolState.CLOSE) {
+                startReconnectThreadToKuzzle(log);
+            }
+            return Unit.INSTANCE;
+        });
+
+        startReconnectThreadToKuzzle(log);
     }
 
     public Kuzzle client() {
@@ -71,7 +85,7 @@ public class KuzzleClient {
         }
     }
 
-    public boolean storageExists(String indexName) {
+    public boolean indexExists(String indexName) {
         try {
             return kuzzle.getIndexController().exists(indexName).get();
         } catch (InterruptedException | ExecutionException e) {
@@ -115,6 +129,29 @@ public class KuzzleClient {
             pryErrors.add(new InsertionError(kuzzleErrorMap.getString("reason"), documentId));
         }
         return pryErrors;
+    }
+
+    private void startReconnectThreadToKuzzle(Logger log) {
+        if (reconnectThread != null && reconnectThread.isAlive()) {
+            log.warn("Reconnect thread already started");
+            return;
+        }
+
+        log.info("Starting reconnect thread to kuzzle");
+        this.reconnectThread = new Thread(() -> {
+            while (kuzzle.getProtocol().getState() == ProtocolState.CLOSE) {
+                try {
+                    Thread.sleep(10000);
+                    kuzzle.connect();
+                } catch (Exception e) {
+                    log.error("Error while reconnecting to Kuzzle :" + e.getMessage());
+                }
+            }
+            // We are connected, exiting the thread
+            this.reconnectThread = null;
+        }, "kuzzle-reconnect");
+
+        this.reconnectThread.start();
     }
 
 }

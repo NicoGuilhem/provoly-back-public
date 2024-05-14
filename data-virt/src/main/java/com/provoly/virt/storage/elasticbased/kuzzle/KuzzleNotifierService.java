@@ -7,22 +7,25 @@ import java.util.HashMap;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 
-import com.provoly.common.error.BusinessException;
-import com.provoly.common.error.ErrorCode;
 import com.provoly.virt.DataVirtProperties;
 import com.provoly.virt.entity.AttributeMultiValue;
 import com.provoly.virt.entity.AttributeSimpleValue;
+import com.provoly.virt.entity.Item;
 import com.provoly.virt.item.ItemsNotifier;
 import com.provoly.virt.storage.elasticbased.KuzzleClient;
 import com.provoly.virt.storage.elasticbased.kuzzlemeasure.KuzzleMeasureLayout;
 
 import io.kuzzle.sdk.coreClasses.maps.KuzzleMap;
 import io.kuzzle.sdk.coreClasses.responses.Response;
+import io.kuzzle.sdk.events.NetworkStateChangeEvent;
 import io.kuzzle.sdk.handlers.NotificationHandler;
+import io.kuzzle.sdk.protocol.ProtocolState;
 import io.quarkus.runtime.StartupEvent;
 
 import org.jboss.logging.Logger;
 import org.jetbrains.annotations.NotNull;
+
+import kotlin.Unit;
 
 @ApplicationScoped
 public class KuzzleNotifierService implements NotificationHandler {
@@ -32,6 +35,8 @@ public class KuzzleNotifierService implements NotificationHandler {
     private final KuzzleClient kuzzleClient;
     private final KuzzleMeasureLayout measureLayout;
     private final ItemsNotifier notifier;
+
+    private boolean isSubscribed = false;
 
     public KuzzleNotifierService(Logger log,
             DataVirtProperties dataVirtProperties,
@@ -45,24 +50,36 @@ public class KuzzleNotifierService implements NotificationHandler {
         this.notifier = notifier;
     }
 
-    // FIXME : Manage resubscribe as Kuzzle can be restarted
-    // TODO : Manage exception on subscription
-
     void onStart(@Observes StartupEvent ev) {
-
-        // Kuzzle client is initialized only on first call
-        // We have to be sure to call it only when it is configured
         if (dataVirtProperties.kuzzle().host().isEmpty()) {
             log.info("Kuzzle is not configured, Kuzzle notifier service is disabled");
             return;
         }
 
-        if (!kuzzleClient.storageExists(kuzzleClient.getTenantName())) {
-            throw new BusinessException(ErrorCode.TECHNICAL, "Tenant %s not exists".formatted(kuzzleClient.getTenantName()));
+        log.info("Starting Kuzzle notifier service");
+        this.kuzzleClient.client().getProtocol().addListener(NetworkStateChangeEvent.class, event -> {
+            if (event.getState() == ProtocolState.OPEN) {
+                // onKuzzleConnect use KuzzleClient we already are in a Kuzzle listener
+                // Kuzzle client is not reentrant we need to move to another thread
+                new Thread(this::onKuzzleConnect).start();
+            }
+            return Unit.INSTANCE; // Needed for Kotlin interop with Java
+        });
+    }
+
+    private void onKuzzleConnect() {
+        log.info("Kuzzle is connected");
+        if (isSubscribed) {
+            // Subscriptions are persistant even across reconnection
+            // We need to subscribe only at the first connection
+            return;
         }
 
         log.infof("Registering to Kuzzle notifications");
         //FIXME: Kuzzle not reentrant, find better solution
+        // This line preload measure mapping in quarkus cache
+        // When this.run use getMeasureMapping in measureLayout.convertToItem
+        // Kuzzle is call in a reentrant way
         var tmp = kuzzleClient.getMeasureMapping();
 
         kuzzleClient.client()
@@ -70,7 +87,9 @@ public class KuzzleNotifierService implements NotificationHandler {
                 .subscribe(kuzzleClient.getTenantName(), MEASURE_COLLECTION, new HashMap<>(), this)
                 .whenComplete((aVoid, throwable) -> {
                     log.info("Subscribed to notifications on measures collection");
-                    if (throwable != null) {
+                    if (throwable == null) {
+                        this.isSubscribed = true;
+                    } else {
                         log.error("Error while subscribing to notifications: " + throwable.getMessage());
                     }
                 });
@@ -83,7 +102,7 @@ public class KuzzleNotifierService implements NotificationHandler {
     public void run(@NotNull Response response) {
         try {
             log.debugf("New measure received {}", response);
-            var item = measureLayout.convertToItem((KuzzleMap) response.getResult());
+            Item item = measureLayout.convertToItem((KuzzleMap) response.getResult());
             // Item are not read from a user and a security context but received from Kuzzle
             // We have to unlock visibility
             item.getAttributes(AttributeSimpleValue.class).forEach(attribute -> attribute.setVisible(true));

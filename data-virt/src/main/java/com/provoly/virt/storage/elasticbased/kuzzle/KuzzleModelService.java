@@ -42,7 +42,7 @@ class KuzzleModelService implements StorageModelService {
 
         String indexName = oClass.getSlug();
 
-        if (kuzzleClient.storageExists(indexName)) {
+        if (kuzzleClient.indexExists(indexName)) {
             throw new BusinessException(ErrorCode.NAME_ALREADY_USED, "Index %s already exists".formatted(indexName));
         }
 
