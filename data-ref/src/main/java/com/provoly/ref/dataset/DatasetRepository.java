@@ -15,6 +15,7 @@ import com.provoly.ref.dashboard.Dashboard_;
 import com.provoly.ref.entity.EntityIdService;
 import com.provoly.ref.entity.EntityNamed_;
 import com.provoly.ref.groups.Group;
+import com.provoly.ref.model.OClass_;
 import com.provoly.ref.user.ProvolyUser;
 import com.provoly.ref.widget.WidgetCatalog;
 import com.provoly.ref.widget.WidgetCatalog_;
@@ -70,6 +71,14 @@ public class DatasetRepository {
                 .getResultList();
     }
 
+    public List<Dataset> getAllForClass(UUID classId) {
+        var cb = em.getCriteriaBuilder();
+        var q = cb.createQuery(Dataset.class);
+        var root = q.from(Dataset.class);
+        q = q.where(cb.equal(root.get(Dataset_.oClass).get(OClass_.id), classId));
+        return em.createQuery(q).getResultList();
+    }
+
     public Optional<Dataset> getByName(String name) {
         var cb = em.getCriteriaBuilder();
         var q = cb.createQuery(Dataset.class);
@@ -92,7 +101,7 @@ public class DatasetRepository {
                 .findAny();
     }
 
-    public List<Dataset> getAllowedDataset(ProvolyUser userDto) {
+    public List<Dataset> getAllowedDatasetForUser(ProvolyUser userDto) {
         return em.createNativeQuery(
                 "WITH ids AS (SELECT DISTINCT dataset.id FROM dataset " +
                         "LEFT JOIN group_relations as gr ON dataset.id = gr.entity_id " +

@@ -13,6 +13,7 @@ import java.util.UUID;
 
 import jakarta.persistence.EntityManager;
 
+import com.provoly.common.dataset.DatasetType;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.user.Role;
 import com.provoly.ref.dashboard.Dashboard;
@@ -22,6 +23,7 @@ import com.provoly.ref.dataset.Dataset;
 import com.provoly.ref.dataset.DatasetRepository;
 import com.provoly.ref.datasetversion.DatasetVersionService;
 import com.provoly.ref.groups.*;
+import com.provoly.ref.model.OClass;
 import com.provoly.ref.user.ProvolyUser;
 import com.provoly.ref.user.UserService;
 
@@ -156,13 +158,13 @@ public class GrantServiceUTest {
         Dataset secondDataset = new Dataset(UUID.randomUUID());
 
         when(datasetRepository.getAll()).thenReturn(List.of(firstDataset, secondDataset));
-        when(datasetRepository.getAllowedDataset(any())).thenReturn(List.of(firstDataset));
+        when(datasetRepository.getAllowedDatasetForUser(any())).thenReturn(List.of(firstDataset));
         when(userService.getCurrentUser()).thenReturn(user);
 
         var result = grantService.getAllUserAllowed(WithGroupEntityType.DATASET, user);
         verify(datasetRepository, times(1)).getAll();
 
-        assertEquals(List.of(firstDataset), result);
+        assertEquals(List.of(firstDataset, secondDataset), result);
     }
 
     @Test
@@ -241,5 +243,31 @@ public class GrantServiceUTest {
         when(groupRepository.getGroupsByEntityId(dashboard.getId())).thenReturn(List.of(groupRelation));
 
         Assertions.assertDoesNotThrow(() -> grantService.canWrite(dashboard, WithGroupEntityType.DASHBOARD, user));
+    }
+
+    @Test
+    void getAllUserAllowed_DatasetByClass_withoutAdmin_return_allowed() {
+        OClass oclass = new OClass(UUID.randomUUID());
+        ProvolyUser user = new ProvolyUser();
+        var firstDataset = createDataset(oclass);
+        var secondDataset = createDataset(oclass);
+        ProvolyUser owner = new ProvolyUser(UUID.randomUUID(), "subject", "name", "last", "mail",
+                List.of(Role.STR_ADMINISTRATE));
+
+        when(datasetRepository.getAllForClass(any())).thenReturn(List.of(firstDataset, secondDataset));
+
+        var result = grantService.getUserAllowedDatasetsByClass(owner, oclass.getId());
+        verify(datasetRepository, times(1)).getAllForClass(any());
+
+        assertEquals(List.of(firstDataset, secondDataset), result);
+    }
+
+    private Dataset createDataset(OClass oclass) {
+        var dataset = new Dataset(UUID.randomUUID());
+        dataset.setUser(new ProvolyUser());
+        dataset.setoClass(oclass);
+        dataset.setName("Nom");
+        dataset.setType(DatasetType.CLOSED);
+        return dataset;
     }
 }

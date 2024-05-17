@@ -110,13 +110,6 @@ public class DatasetService {
         datasetRepository.delete(id);
     }
 
-    public Collection<Dataset> getAllClassAllowedDatasets(UUID id) {
-        ProvolyUser user = userService.getCurrentUser();
-        log.infof("Get datasets for user %s with groups %s", user.getId(),
-                user.getGroups().stream().map(Group::getName).toList());
-        return datasetRepository.getClassDatasetsForUser(user, id);
-    }
-
     public Dataset getByName(String name) {
         ProvolyUser currentUserDto = userService.getCurrentUser();
         return datasetRepository.getByName(name)
@@ -235,5 +228,10 @@ public class DatasetService {
                 .map(dataset -> new AssociationDto(dataset.getId(), dataset.getName(), VisibilityType.PUBLIC,
                         AssociationsType.WIDGET))
                 .toList();
+    }
+
+    public Collection<Dataset> getAllClassAllowedDatasets(UUID id) {
+        ProvolyUser provolyUser = userService.getCurrentUser();
+        return grantService.getUserAllowedDatasetsByClass(provolyUser, id);
     }
 }

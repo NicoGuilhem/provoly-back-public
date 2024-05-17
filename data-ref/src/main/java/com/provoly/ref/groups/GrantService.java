@@ -2,6 +2,7 @@ package com.provoly.ref.groups;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
@@ -81,11 +82,20 @@ public class GrantService {
 
     @Transactional
     public <T> List<T> getAllUserAllowed(WithGroupEntityType type, ProvolyUser user) {
-
         return (List<T>) switch (type) {
             case DASHBOARD -> getUserAllowedDashboards(user);
             case DATASET -> getUserAllowedDatasets(user);
         };
+    }
+
+    public Collection<Dataset> getUserAllowedDatasetsByClass(ProvolyUser user, UUID oclassId) {
+        if (user.isAdmin()) {
+            log.info("Admin user, getting all datasets");
+            return datasetRepository.getAllForClass(oclassId);
+        }
+        log.infof("Get datasets for user %s with groups %s", user.getId(),
+                user.getGroups().stream().map(Group::getName).toList());
+        return datasetRepository.getClassDatasetsForUser(user, oclassId);
     }
 
     private Collection<Dashboard> getUserAllowedDashboards(ProvolyUser user) {
@@ -100,9 +110,10 @@ public class GrantService {
 
     private Collection<Dataset> getUserAllowedDatasets(ProvolyUser user) {
         if (user.isAdmin()) {
-            datasetRepository.getAll();
+            log.info("Admin user, getting all datasets");
+            return datasetRepository.getAll();
         }
-        return datasetRepository.getAllowedDataset(user);
+        return datasetRepository.getAllowedDatasetForUser(user);
     }
 
     private boolean isEntityNotPrivate(List<GroupRelations> groupsByEntity) {
