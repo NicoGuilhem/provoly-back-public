@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -51,6 +52,7 @@ public class KuzzleClient {
         });
 
         startReconnectThreadToKuzzle(log);
+        startKeepAlive();
     }
 
     public Kuzzle client() {
@@ -131,6 +133,8 @@ public class KuzzleClient {
         return pryErrors;
     }
 
+    // Kuzzle reconnect option is not working, so we are implementing our own reconnect mechanism
+    // Delete this code when Kuzzle will fix the issue : https://github.com/kuzzleio/sdk-jvm/issues/86
     private void startReconnectThreadToKuzzle(Logger log) {
         if (reconnectThread != null && reconnectThread.isAlive()) {
             log.warn("Reconnect thread already started");
@@ -152,6 +156,31 @@ public class KuzzleClient {
         }, "kuzzle-reconnect");
 
         this.reconnectThread.start();
+    }
+
+    // Kuzzle sdk forget to implement keepAlive
+    // Temporary code waiting fix for : https://github.com/kuzzleio/sdk-jvm/issues/87
+    private void startKeepAlive() {
+        new Thread(() -> {
+            while (true) {
+                try {
+                    Thread.sleep(40 * 1000);
+                    switch (kuzzle.getProtocol().getState()) {
+                        case CLOSE:
+                            log.warn("Kuzzle connection is closed, skipping keep-alive");
+                            break;
+                        case OPEN:
+                            log.trace("Sending keep-alive to kuzzle");
+                            var date = kuzzle.getServerController().now().get(10, TimeUnit.SECONDS);
+                            log.debugf("Keep-alive sent to Kuzzle %s", date);
+                            break;
+                    }
+                } catch (Exception e) {
+                    log.error("Error while sending keep-alive to Kuzzle", e);
+                }
+            }
+        }, "kuzzle-keep-alive").start();
+
     }
 
 }
