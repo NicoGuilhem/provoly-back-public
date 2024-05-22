@@ -1,23 +1,40 @@
 package com.provoly.common.search;
 
 public enum Operator {
-    EQUALS,
-    I_EQUALS,
-    NOT_EQUALS,
-    I_NOT_EQUALS,
-    CONTAINS,
-    I_CONTAINS,
-    START_WITH,
-    I_START_WITH,
-    END_WITH,
-    I_END_WITH,
-    GREATER_THAN,
-    LOWER_THAN,
-    INSIDE,
-    OUTSIDE,
-    DISTANCE,
+    EQUALS(true),
+    I_EQUALS(true),
+    NOT_EQUALS(true),
+    I_NOT_EQUALS(true),
+    CONTAINS(true),
+    I_CONTAINS(true),
+    START_WITH(true),
+    I_START_WITH(true),
+    END_WITH(true),
+    I_END_WITH(true),
+    GREATER_THAN(false),
+    LOWER_THAN(false),
+    INSIDE(true),
+    OUTSIDE(true),
+    DISTANCE(false),
 
     // Partial implementation of Exists needed in security
-    EXISTS,
-    INTERSECTS
+    EXISTS(true),
+    INTERSECTS(false);
+
+    private final boolean multiValued;
+
+    Operator(boolean multiValued) {
+        this.multiValued = multiValued;
+    }
+
+    public boolean isWithUpperValue() {
+        return switch (this) {
+            case INSIDE, OUTSIDE -> true;
+            default -> false;
+        };
+    }
+
+    public boolean isMultiValued() {
+        return multiValued;
+    }
 }

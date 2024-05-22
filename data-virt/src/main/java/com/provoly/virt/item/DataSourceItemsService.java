@@ -178,7 +178,16 @@ public class DataSourceItemsService {
             throw new BusinessException(ErrorCode.BAD_REQUEST,
                     "Attribute %s doesn't belong to oClass %s".formatted(filter.attribute(), oClass.getId()));
         }
-        return new AttributeConditionDto(filter.attribute(), filter.value(), filter.operator(), filter.upperValue());
+        var orCondition = new OrConditionDto();
+
+        if (filter.operator().isWithUpperValue()) {
+            orCondition.composed
+                    .add(new AttributeConditionDto(filter.attribute(), filter.value(), filter.operator(), filter.upperValue()));
+        }
+        filter.values().forEach(
+                value -> orCondition.composed.add(new AttributeConditionDto(filter.attribute(), value, filter.operator())));
+
+        return orCondition;
     }
 
     private boolean isIdAttributeBelongToOClass(FilterDto f, OClassDetailsDto oClass) {
@@ -200,7 +209,7 @@ public class DataSourceItemsService {
         SortAggregate sortAggregate = new SortAggregate(Direction.asc, OrderBy.KEY);
         AggregationParamDto params = new AggregationParamDto(attributesFormatted.id, AggregateOperation.COUNT, null,
                 sortAggregate);
-        FilterDto filterDto = new FilterDto(attributesFormatted.id, Operator.I_CONTAINS, search, null);
+        FilterDto filterDto = new FilterDto(attributesFormatted.id, Operator.I_CONTAINS, search);
         if (limit == null) {
             limit = dataVirtProperties.maxSizeLimit();
         }

@@ -164,7 +164,7 @@ public class DataSourceItemServiceTest {
         dsMock.addDataSource(datasetVersionDto.getDataset(), DataSourceType.DATASET, vehicleClass.getId());
 
         var result = datasourceItemsService.getItems(datasetVersionDto.getDataset(), null,
-                List.of(new FilterDto(attributeIdVehicle.id, Operator.EQUALS, "AAA", null)), 0, false, null);
+                List.of(new FilterDto(attributeIdVehicle.id, Operator.EQUALS, "AAA")), 0, false, null);
 
         assertThat(result.size()).isEqualTo(1);
         assertThat(result.getItems().getFirst().getId().getAsString()).isEqualTo(vehicleTwo.getId());
@@ -186,7 +186,7 @@ public class DataSourceItemServiceTest {
     public void getItems_withDatasourceDefinition_AndFilters_ShouldReturnEmpty() {
         dsMock.addDataSource(datasetVersionDto.getDataset(), DataSourceType.DATASET, vehicleClass.getId());
         var result = datasourceItemsService.getItems(datasetVersionDto.getDataset(), null,
-                List.of(new FilterDto(attributeIdVehicle.id, Operator.EQUALS, "BBB", null)), 0, false, null);
+                List.of(new FilterDto(attributeIdVehicle.id, Operator.EQUALS, "BBB")), 0, false, null);
         assertThat(result.size()).isZero();
     }
 
@@ -203,7 +203,7 @@ public class DataSourceItemServiceTest {
     @Order(9)
     public void getItems_withDatasourceDefinition_AndFiltersNotBelongToClass_ShouldThrowError() {
         dsMock.addDataSource(datasetVersionDto.getDataset(), DataSourceType.DATASET, vehicleClass.getId());
-        List<FilterDto> filterDtos = List.of(new FilterDto(UUID.randomUUID(), Operator.EQUALS, "BBB", null));
+        List<FilterDto> filterDtos = List.of(new FilterDto(UUID.randomUUID(), Operator.EQUALS, "BBB"));
 
         assertThatThrownBy(
                 () -> datasourceItemsService.getItems(datasetVersionDto.getDataset(), null, filterDtos, 0, false, null))
@@ -218,7 +218,7 @@ public class DataSourceItemServiceTest {
         var request = new MultiClassRequestDto(List.of(vehicleClass.getId()), List.of());
         var namedQuery = testData.createNamedQuery(namedQueryName, request);
         dsMock.addDataSource(namedQuery.getId(), DataSourceType.SEARCH, vehicleClass.getId());
-        List<FilterDto> filterDtos = List.of(new FilterDto(attributeIdVehicle.id, Operator.EQUALS, "AAA", null));
+        List<FilterDto> filterDtos = List.of(new FilterDto(attributeIdVehicle.id, Operator.EQUALS, "AAA"));
 
         assertThatThrownBy(() -> datasourceItemsService.getItems(namedQuery.getId(),
                 null, filterDtos, 0, false, null))

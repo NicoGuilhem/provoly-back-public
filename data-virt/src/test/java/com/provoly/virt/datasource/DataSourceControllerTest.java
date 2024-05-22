@@ -380,7 +380,7 @@ public class DataSourceControllerTest {
         var dataStorage = dataStorages.get(storage);
 
         var condition = new AttributeConditionDto(dataStorage.attributeChoc.id, "12", Operator.EQUALS, null);
-        FilterDto filterDto = new FilterDto(dataStorage.attributeKeyword.id, Operator.I_CONTAINS, "mar", null);
+        FilterDto filterDto = new FilterDto(dataStorage.attributeKeyword.id, Operator.I_CONTAINS, "mar");
         SearchRequestDto searchRequestDto = new MonoClassRequestDto(dataStorage.datasetVersionDto.getoClass(), List.of(),
                 condition);
 
