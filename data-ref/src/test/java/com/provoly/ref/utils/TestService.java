@@ -39,6 +39,7 @@ import com.provoly.ref.metadata.MetadataValue;
 import com.provoly.ref.model.ModelService;
 import com.provoly.ref.relation.RelationTypeService;
 import com.provoly.ref.user.NamedQueryService;
+import com.provoly.ref.widget.WidgetRepository;
 import com.provoly.ref.widget.WidgetService;
 import com.provoly.security.CurrentSubjectProvider;
 
@@ -93,6 +94,8 @@ public class TestService {
     RelationTypeService relationTypeService;
     @Inject
     DatasetVersionRepository datasetVersionRepository;
+    @Inject
+    WidgetRepository widgetRepository;
 
     public OClassWriteDto createClassWriteDto(UUID id, String name, AttributeDefDto... attributeDefDtos) {
         return createClassWriteDto(id, name, Storage.ELASTIC, attributeDefDtos);
@@ -214,7 +217,7 @@ public class TestService {
             });
             dashboardService.delete(dashboard.getId());
         });
-        widgetService.getAll().forEach(widgetCatalog -> entityManager.remove(widgetCatalog));
+        widgetRepository.getAll().forEach(widgetCatalog -> entityManager.remove(widgetCatalog));
         namedQueryService.getNamedQueriesForCurrentUser().forEach(nq -> entityManager.remove(nq));
     }
 }

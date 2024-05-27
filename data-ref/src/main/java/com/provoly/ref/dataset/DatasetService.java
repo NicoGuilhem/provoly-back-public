@@ -103,7 +103,10 @@ public class DatasetService {
 
     @Transactional
     public void deleteDataset(UUID id) {
-        if (!canDeleteDataset(id)) {
+        var dataset = datasetRepository.getById(id).orElseThrow(() -> new ProvolyNotFoundException(Dataset.class, id));
+        grantService.canWrite(dataset, DATASET, userService.getCurrentUser());
+
+        if (isDatasetAssociateToDatasetVersion(id)) {
             throw new BusinessException(ErrorCode.BAD_REQUEST,
                     "You're not allowed to delete dataset %s because it owns one or more dataset version".formatted(id));
         }
@@ -203,15 +206,8 @@ public class DatasetService {
         return associationService.mapAssociationDtoInAssociationsDto(result);
     }
 
-    private boolean canDeleteDataset(UUID datasetId) {
-        try {
-            return datasetVersionRepository.getByDatasetId(datasetId) == null;
-        } catch (BusinessException error) {
-            if (error.getCode().equals(ErrorCode.NOT_FOUND)) {
-                return true;
-            }
-            throw error;
-        }
+    private boolean isDatasetAssociateToDatasetVersion(UUID datasetId) {
+        return !datasetVersionRepository.getAllByDatasetId(datasetId).isEmpty();
     }
 
     public List<AssociationDto> findDashboardsAssociationByDatasetId(UUID datasetId) {

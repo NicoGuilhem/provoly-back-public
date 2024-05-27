@@ -42,7 +42,7 @@ public class DatasetVersionRepository {
         var q = cb.createQuery(DatasetVersion.class);
         var rootQuery = q.from(DatasetVersion.class);
 
-        q.where(cb.and(cb.equal(rootQuery.get(DatasetVersion_.dataset).get(Dataset_.ID), datasetId)));
+        q.where(cb.and(cb.equal(rootQuery.get(DatasetVersion_.dataset).get(Dataset_.id), datasetId)));
         q.orderBy(cb.desc(rootQuery.get(DatasetVersion_.VERSION)));
 
         var query = entityIdService.getEm().createQuery(q).setMaxResults(1);

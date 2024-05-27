@@ -23,7 +23,6 @@ import com.provoly.common.metadata.MetadataValueWriteDto;
 import com.provoly.common.model.AttributeDefDto;
 import com.provoly.common.model.FieldDto;
 import com.provoly.common.model.OClassWriteDto;
-import com.provoly.common.search.VisibilityDto;
 import com.provoly.common.user.Role;
 import com.provoly.ref.dashboard.DashboardService;
 import com.provoly.ref.dashboard.dto.DashboardWriteDto;
@@ -37,10 +36,9 @@ import com.provoly.ref.metadata.MetadataDefController;
 import com.provoly.ref.model.*;
 import com.provoly.ref.user.ProvolyUser;
 import com.provoly.ref.user.UserService;
-import com.provoly.ref.user.VisibilityType;
 import com.provoly.ref.utils.TestService;
 import com.provoly.ref.widget.WidgetService;
-import com.provoly.ref.widget.dto.WidgetDto;
+import com.provoly.ref.widget.dto.WidgetWriteDto;
 import com.provoly.security.CurrentSubjectProvider;
 
 import io.quarkus.test.InjectMock;
@@ -648,15 +646,8 @@ public class DatasetControllerTest {
     }
 
     private void createWidgetDto(UUID widgetId) {
-        WidgetDto widgetDto = new WidgetDto();
-        widgetDto.id = widgetId;
-        widgetDto.name = "widget";
-        widgetDto.datasource = List.of(datasetDto.getId());
-        widgetDto.visibility = new VisibilityDto(VisibilityType.PUBLIC.name(), List.of());
-        widgetDto.description = "";
-        widgetDto.content = "";
-        widgetDto.cover = true;
-        widgetDto.image = "";
+        WidgetWriteDto widgetDto = new WidgetWriteDto(widgetId, "widget", "", "", "", List.of(datasetDto.getId()), true,
+                List.of("ALL"));
         widgetService.addWidget(widgetDto);
     }
 

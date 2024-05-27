@@ -26,6 +26,8 @@ import com.provoly.ref.groups.*;
 import com.provoly.ref.model.OClass;
 import com.provoly.ref.user.ProvolyUser;
 import com.provoly.ref.user.UserService;
+import com.provoly.ref.widget.WidgetCatalog;
+import com.provoly.ref.widget.WidgetRepository;
 
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Assertions;
@@ -41,6 +43,8 @@ public class GrantServiceUTest {
     DashboardRepository dashboardRepository;
     GroupRepository groupRepository;
     DatasetRepository datasetRepository;
+    WidgetRepository widgetRepository;
+    WidgetCatalog widgetCatalog;
     Logger logger = Logger.getLogger(DatasetVersionService.class);
 
     @BeforeEach
@@ -50,8 +54,10 @@ public class GrantServiceUTest {
         dashboardRepository = mock(DashboardRepository.class);
         groupRepository = mock(GroupRepository.class);
         datasetRepository = mock(DatasetRepository.class);
+        widgetRepository = mock(WidgetRepository.class);
+        widgetCatalog = mock(WidgetCatalog.class);
         grantService = new GrantService(logger, dashboardRepository, groupRepository,
-                datasetRepository);
+                datasetRepository, widgetRepository);
     }
 
     @Test
@@ -243,6 +249,48 @@ public class GrantServiceUTest {
         when(groupRepository.getGroupsByEntityId(dashboard.getId())).thenReturn(List.of(groupRelation));
 
         Assertions.assertDoesNotThrow(() -> grantService.canWrite(dashboard, WithGroupEntityType.DASHBOARD, user));
+    }
+
+    @Test
+    void can_see_widget_same_user_isOk() {
+        ProvolyUser owner = new ProvolyUser(UUID.randomUUID(), "subject", "name", "last", "mail", List.of());
+        WidgetCatalog widget = new WidgetCatalog(UUID.randomUUID());
+        widget.setUser(owner);
+
+        Assertions.assertTrue(grantService.canSee(widget, WithGroupEntityType.WIDGET, owner));
+    }
+
+    @Test
+    void getAllUserAllowed_Widget_asAdmin_return_all() {
+        ProvolyUser user = new ProvolyUser(UUID.randomUUID(), "sub", "name", "last", "email", List.of(Role.STR_ADMINISTRATE));
+
+        WidgetCatalog firstWidgetCatalog = new WidgetCatalog(UUID.randomUUID());
+        WidgetCatalog secondWidgetCatalog = new WidgetCatalog(UUID.randomUUID());
+
+        when(widgetRepository.getAll()).thenReturn(List.of(firstWidgetCatalog, secondWidgetCatalog));
+        when(widgetRepository.getAllowedWidgets(user)).thenReturn(List.of(firstWidgetCatalog));
+
+        var result = grantService.getAllUserAllowed(WithGroupEntityType.WIDGET, user);
+
+        verify(widgetRepository, times(1)).getAll();
+        assertEquals(List.of(firstWidgetCatalog, secondWidgetCatalog), result);
+    }
+
+    @Test
+    void getAllUserAllowed_Widget_withoutAdmin_return_allowed() {
+        ProvolyUser user = new ProvolyUser(UUID.randomUUID(), "sub", "name", "last", "email", List.of());
+        user.setRoles(Set.of());
+
+        WidgetCatalog firstWidgetCatalog = new WidgetCatalog(UUID.randomUUID());
+        WidgetCatalog secondWidgetCatalog = new WidgetCatalog(UUID.randomUUID());
+
+        when(widgetRepository.getAll()).thenReturn(List.of(firstWidgetCatalog, secondWidgetCatalog));
+        when(widgetRepository.getAllowedWidgets(any())).thenReturn(List.of(firstWidgetCatalog));
+
+        var result = grantService.getAllUserAllowed(WithGroupEntityType.WIDGET, new ProvolyUser());
+
+        verify(widgetRepository, times(1)).getAllowedWidgets(any());
+        assertEquals(List.of(firstWidgetCatalog), result);
     }
 
     @Test

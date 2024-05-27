@@ -46,6 +46,8 @@ public class GroupRepository {
                     .saveEntity(new DashboardGroupRelations(UUID.randomUUID(), group, entityId, canWrite));
             case WithGroupEntityType.DATASET -> entityIdService
                     .saveEntity(new DatasetGroupRelations(UUID.randomUUID(), group, entityId, canWrite));
+            case WithGroupEntityType.WIDGET -> entityIdService
+                    .saveEntity(new WidgetGroupRelations(UUID.randomUUID(), group, entityId, canWrite));
         }
     }
 

@@ -15,6 +15,8 @@ import com.provoly.ref.dataset.Dataset;
 import com.provoly.ref.dataset.DatasetRepository;
 import com.provoly.ref.entity.EntityNamed;
 import com.provoly.ref.user.ProvolyUser;
+import com.provoly.ref.widget.WidgetCatalog;
+import com.provoly.ref.widget.WidgetRepository;
 
 import org.jboss.logging.Logger;
 
@@ -25,20 +27,26 @@ public class GrantService {
     private DashboardRepository dashboardRepository;
     private GroupRepository groupRepository;
     private DatasetRepository datasetRepository;
+    private WidgetRepository widgetRepository;
 
     public GrantService(Logger log, DashboardRepository dashboardRepository,
             GroupRepository groupRepository,
-            DatasetRepository datasetRepository) {
+            DatasetRepository datasetRepository, WidgetRepository widgetRepository) {
         this.log = log;
         this.dashboardRepository = dashboardRepository;
         this.groupRepository = groupRepository;
         this.datasetRepository = datasetRepository;
+        this.widgetRepository = widgetRepository;
     }
 
     public void canWrite(EntityNamed entityNamed, WithGroupEntityType type, ProvolyUser user) {
+        if (user.isAdmin()) {
+            return;
+        }
         var canWrite = switch (type) {
             case DASHBOARD -> canWrite((Dashboard) entityNamed, user);
             case DATASET -> canWrite((Dataset) entityNamed, user);
+            case WIDGET -> canWrite((WidgetCatalog) entityNamed, user);
         };
 
         if (!canWrite) {
@@ -48,7 +56,7 @@ public class GrantService {
     }
 
     private boolean canWrite(Dashboard dashboard, ProvolyUser user) {
-        if (user.isAdmin() || user.equals(dashboard.getUser())) {
+        if (user.equals(dashboard.getUser())) {
             return true;
         }
 
@@ -59,8 +67,12 @@ public class GrantService {
                 .anyMatch(g -> user.getGroups().contains(g));
     }
 
+    private boolean canWrite(WidgetCatalog widgetCatalog, ProvolyUser user) {
+        return user.equals(widgetCatalog.getUser());
+    }
+
     private boolean canWrite(Dataset dataset, ProvolyUser user) {
-        return user.isAdmin() || user.equals(dataset.getUser());
+        return user.equals(dataset.getUser());
     }
 
     public boolean canSee(EntityNamed entityNamed, WithGroupEntityType type, ProvolyUser user) {
@@ -68,6 +80,7 @@ public class GrantService {
         boolean isUserOwner = switch (type) {
             case DASHBOARD -> (((Dashboard) entityNamed).getUser().equals(user));
             case DATASET -> (((Dataset) entityNamed).getUser().equals(user));
+            case WIDGET -> (((WidgetCatalog) entityNamed).getUser().equals(user));
         };
 
         if (user.isAdmin() || isUserOwner) {
@@ -85,6 +98,7 @@ public class GrantService {
         return (List<T>) switch (type) {
             case DASHBOARD -> getUserAllowedDashboards(user);
             case DATASET -> getUserAllowedDatasets(user);
+            case WIDGET -> getUserAllowedWidgets(user);
         };
     }
 
@@ -114,6 +128,13 @@ public class GrantService {
             return datasetRepository.getAll();
         }
         return datasetRepository.getAllowedDatasetForUser(user);
+    }
+
+    private Collection<WidgetCatalog> getUserAllowedWidgets(ProvolyUser user) {
+        if (user.isAdmin()) {
+            return widgetRepository.getAll();
+        }
+        return widgetRepository.getAllowedWidgets(user);
     }
 
     private boolean isEntityNotPrivate(List<GroupRelations> groupsByEntity) {

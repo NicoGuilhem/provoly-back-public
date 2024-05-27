@@ -4,29 +4,34 @@ import java.util.Collection;
 import java.util.UUID;
 
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
 import com.provoly.common.user.Role;
+import com.provoly.ref.user.ProvolyUser;
+import com.provoly.ref.user.UserService;
 import com.provoly.ref.widget.dto.WidgetDetailsDto;
-import com.provoly.ref.widget.dto.WidgetDto;
+import com.provoly.ref.widget.dto.WidgetWriteDto;
 
 @Path("/widget/catalog")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class WidgetController {
 
-    @Inject
-    WidgetService widgetService;
+    private WidgetService widgetService;
+    private WidgetMapper widgetMapper;
+    private UserService userService;
 
-    @Inject
-    WidgetMapper widgetMapper;
+    WidgetController(WidgetService widgetService, UserService userService, WidgetMapper widgetMapper) {
+        this.widgetService = widgetService;
+        this.userService = userService;
+        this.widgetMapper = widgetMapper;
+    }
 
     @POST
     @RolesAllowed({ Role.STR_WIDGET_CATALOG_WRITE })
-    public void addWidget(WidgetDto widgetDto) {
+    public void addWidget(WidgetWriteDto widgetDto) {
         widgetService.addWidget(widgetDto);
     }
 
@@ -35,8 +40,7 @@ public class WidgetController {
     @RolesAllowed({ Role.STR_WIDGET_CATALOG_READ })
     @Transactional
     public WidgetDetailsDto getWidget(UUID id) {
-        ProvolyUserWidgetCatalog provolyUserWidgetCatalog = widgetService.getMineById(id);
-        return widgetMapper.toDto(provolyUserWidgetCatalog.getWidgetCatalog(), provolyUserWidgetCatalog);
+        return widgetMapper.toDetailsDto(widgetService.getMineById(id));
     }
 
     @DELETE
@@ -50,7 +54,8 @@ public class WidgetController {
     @RolesAllowed({ Role.STR_WIDGET_CATALOG_READ })
     @Transactional
     public Collection<WidgetDetailsDto> getAll() {
-        return widgetMapper.toCollectionWidgetDetailsDto(widgetService.getWidgetForCurrentUser());
+        ProvolyUser provolyUser = userService.getCurrentUser();
+        return widgetMapper.toCollectionWidgetDetailsDto(widgetService.getAllowedWidgets(provolyUser));
     }
 
 }

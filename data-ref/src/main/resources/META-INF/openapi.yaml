@@ -3855,7 +3855,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/WidgetDto'
+              $ref: '#/components/schemas/WidgetDetailsDto'
             examples:
               correctWidget:
                 summary: Adding a widget configuration
@@ -3865,9 +3865,8 @@ paths:
                   description: "this is a new widget configuration"
                   image: ""
                   content: "{\"type\":\"table\",\"layout\":{\"x\":1,\"y\":1,\"width\":1,\"height\":1},\"options\":{\"columns\":[{\"property\":\"date timestamp\",\"label\":\"date timestamp\",\"attributeId\":\"7d4ac9df-dfe7-430f-a4c5-4b8c2c77433c\"},{\"property\":\"identifiant\",\"label\":\"identifiant\",\"attributeId\":\"36d67f72-d5a8-4aed-ae47-dfedb95702cb\"}]},\"title\":\"issueBack115\",\"datasource\":[\"a1041310-3c83-4512-97be-9e665d20d0a5\"],\"header\":{\"datasourceSelection\":false,\"parameters\":true,\"window\":false,\"maximize\":false,\"addToCatalog\":false,\"delete\":false,\"changeSpot\":false},\"cover\":false}"
-                  visibility:
-                    type: "PUBLIC"
-                    users: [ "f12cef0c-6204-4e09-9807-2da6a9c0e6d0" ]
+                  groups:
+                    - "ALL"
                   datasource: [ "a1041310-3c83-4512-97be-9e665d20d0a5" ]
                   cover: false
               incorrect:
@@ -3878,9 +3877,8 @@ paths:
                   description: "this is an incorrect widget configuration"
                   image: ""
                   content: null
-                  visibility:
-                    type: "PUBLIC"
-                    users: [ "f12cef0c-6204-4e09-9807-2da6a9c0e6d0" ]
+                  groups:
+                    - "ALL"
                   datasource: [ "a1041310-3c83-4512-97be-9e665d20d0a5" ]
                   cover: false
       responses:
@@ -5322,8 +5320,6 @@ components:
           type: string
         content:
           type: string
-        visibility:
-          $ref: '#/components/schemas/VisibilityDto'
         datasource:
           type: array
           items:
@@ -5337,30 +5333,11 @@ components:
           $ref: '#/components/schemas/Instant'
         modificationDate:
           $ref: '#/components/schemas/Instant'
-    WidgetDto:
-      type: object
-      properties:
-        id:
-          $ref: '#/components/schemas/UUID'
-        name:
-          type: string
-        description:
-          type: string
-        image:
-          type: string
-        content:
-          type: string
-          nullable: true
-        visibility:
-          $ref: '#/components/schemas/VisibilityDto'
-        datasource:
+        groups:
           type: array
           items:
-            format: uuid
-            pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
             type: string
-        cover:
-          type: boolean
+          example: ["first_group", "second_group"]
   securitySchemes:
     oidc:
       type: openIdConnect

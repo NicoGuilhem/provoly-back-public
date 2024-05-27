@@ -3,7 +3,6 @@ package com.provoly.ref.user;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -25,7 +24,8 @@ import com.provoly.ref.dataset.DatasetRepository;
 import com.provoly.ref.model.ModelMapper;
 import com.provoly.ref.model.ModelService;
 import com.provoly.ref.utils.TestService;
-import com.provoly.ref.widget.WidgetCatalog;
+import com.provoly.ref.widget.WidgetController;
+import com.provoly.ref.widget.dto.WidgetWriteDto;
 import com.provoly.security.CurrentSubjectProvider;
 
 import io.quarkus.test.InjectMock;
@@ -65,6 +65,8 @@ public class NamedQueryControllerTest {
     CurrentSubjectProvider currentSubjectProvider;
     @Inject
     UserService userService;
+    @Inject
+    WidgetController widgetController;
 
     private OClassWriteDto classDtoTest;
     private final UUID nqPublicId = UUID.randomUUID();
@@ -162,17 +164,11 @@ public class NamedQueryControllerTest {
     }
 
     @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_SEARCH })
+    @TestSecurity(user = "testUser", roles = { Role.STR_SEARCH, Role.STR_WIDGET_CATALOG_WRITE })
     public void admin_should_not_delete_private_used_named_query() {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
-        WidgetCatalog wc = new WidgetCatalog(widgetId);
-        wc.setName("widget");
-        wc.setContent("");
-        wc.setVisibilityType(VisibilityType.PRIVATE);
-        wc.setDatasource(List.of(nqPrivateId));
-        wc.setCreationDate(Instant.now());
-        wc.setModificationDate(Instant.now());
-        modelService.saveEntity(wc);
+        WidgetWriteDto wc = new WidgetWriteDto(widgetId, "widget", "", "", "", List.of(nqPrivateId), false, List.of());
+        widgetController.addWidget(wc);
 
         Assertions.assertThatThrownBy(() -> namedQueryController.deleteForMe(nqPrivateId))
                 .isInstanceOf(BusinessException.class);

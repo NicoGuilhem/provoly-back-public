@@ -1,21 +1,23 @@
 package com.provoly.ref.widget;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.UUID;
 
-import jakarta.persistence.*;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.Size;
 
 import com.provoly.common.Default;
-import com.provoly.common.error.BusinessException;
-import com.provoly.common.error.ErrorCode;
-import com.provoly.ref.entity.EntityShared;
+import com.provoly.ref.entity.EntityNamed;
 import com.provoly.ref.user.ProvolyUser;
 
 import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
-public class WidgetCatalog extends EntityShared {
+public class WidgetCatalog extends EntityNamed {
     /**
      * The max size of content is 100Ko.
      */
@@ -24,9 +26,8 @@ public class WidgetCatalog extends EntityShared {
     private String description;
     private String image;
 
-    @OneToMany(mappedBy = "widgetCatalog", cascade = CascadeType.ALL, orphanRemoval = true)
-    @MapKey(name = "user")
-    private Map<ProvolyUser, ProvolyUserWidgetCatalog> belongTo = new HashMap<>();
+    @ManyToOne
+    private ProvolyUser user;
 
     @Size(max = CONTENT_MAX_SIZE)
     private String content;
@@ -48,33 +49,6 @@ public class WidgetCatalog extends EntityShared {
     @Default
     public WidgetCatalog(UUID id) {
         super(id);
-    }
-
-    public void add(ProvolyUser user, boolean isOwner) {
-        belongTo.putIfAbsent(user, new ProvolyUserWidgetCatalog(user, this, isOwner));
-    }
-
-    public void remove(ProvolyUser user) {
-        belongTo.remove(user);
-    }
-
-    public ProvolyUserWidgetCatalog getForUser(ProvolyUser user) {
-        if (isPublic()) {
-            add(user, false);
-        }
-        var userWidgetCatalog = belongTo.get(user);
-        if (userWidgetCatalog == null) {
-            throw new BusinessException(ErrorCode.TECHNICAL, "Widget %s/%s doesn't belong to user %s"
-                    .formatted(this.id, this.name, user.getId()));
-        }
-        return userWidgetCatalog;
-    }
-
-    public boolean isOwner(ProvolyUser user) {
-        if (belongTo.get(user) != null) {
-            return belongTo.get(user).isOwner();
-        }
-        return false;
     }
 
     public String getContent() {
@@ -133,4 +107,11 @@ public class WidgetCatalog extends EntityShared {
         this.modificationDate = modificationDate;
     }
 
+    public ProvolyUser getUser() {
+        return user;
+    }
+
+    public void setUser(ProvolyUser user) {
+        this.user = user;
+    }
 }

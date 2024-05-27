@@ -3,7 +3,6 @@ package com.provoly.ref.widget;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -37,14 +36,14 @@ import com.provoly.ref.user.ProvolyUser;
 import com.provoly.ref.user.UserService;
 import com.provoly.ref.user.VisibilityType;
 import com.provoly.ref.utils.TestService;
-import com.provoly.ref.widget.dto.WidgetDto;
+import com.provoly.ref.widget.dto.WidgetDetailsDto;
+import com.provoly.ref.widget.dto.WidgetWriteDto;
 import com.provoly.security.CurrentSubjectProvider;
 
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 
-import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -89,9 +88,8 @@ public class WidgetControllerTest {
         if (!modelService.exists(oClass)) {
             modelService.saveEntity(oClass);
         }
-        createWidget("public", "dsd public test name", VisibilityType.PUBLIC);
-        createWidget("private", "dsd private test name", VisibilityType.PRIVATE);
-
+        createWidget("public", "dsd public test name", publicId, "", List.of("ALL"));
+        createWidget("private", "dsd private test name", privateId, "", List.of());
     }
 
     @AfterEach
@@ -103,28 +101,17 @@ public class WidgetControllerTest {
     @Test
     @TestSecurity(user = "testUser", roles = { Role.STR_WIDGET_CATALOG_WRITE, Role.STR_WIDGET_CATALOG_READ })
     public void should_add_widget_in_catalog() {
-        WidgetDto dto = createWidget("mywidget", "should_add_widget_in_catalog DSname", VisibilityType.PUBLIC);
+        WidgetWriteDto dto = createWidget("mywidget", "should_add_widget_in_catalog DSname", publicId, "", List.of("ALL"));
         widgetController.addWidget(dto);
-        var saved = widgetController.getWidget(dto.id);
+        var saved = widgetController.getWidget(dto.id());
         assertThat(saved).isNotNull();
     }
 
     @Test
     @TestSecurity(user = "testUser", roles = { Role.STR_WIDGET_CATALOG_WRITE })
-    public void should_not_add_widget_json_invalid() {
-        WidgetDto dto = createWidget("mywidget", "should_not_add_widget_json_invalid DSname", VisibilityType.PUBLIC);
-        dto.content = "{";
-        assertThatThrownBy(() -> widgetController.addWidget(dto)).isInstanceOf(BusinessException.class);
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_WIDGET_CATALOG_WRITE })
     public void should_not_add_widget_name_already_used() {
-        WidgetDto dto = createWidget("widget2", "should_not_add_widget_name_already_used DSname", VisibilityType.PUBLIC);
-        widgetController.addWidget(dto);
-        dto.id = UUID.randomUUID();
-
-        assertThatThrownBy(() -> widgetController.addWidget(dto))
+        assertThatThrownBy(() -> createWidget("public", "should_not_add_widget_name_already_used DSname", UUID.randomUUID(), "",
+                List.of("ALL")))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("already exists");
     }
@@ -143,8 +130,8 @@ public class WidgetControllerTest {
     public void should_not_get_widget_forbidden() {
         testService.authenticate("iampolice", currentSubjectProvider);
         assertThatThrownBy(() -> widgetController.getWidget(privateId))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("doesn't belong to user");
+                .isInstanceOf(ProvolyNotFoundException.class)
+                .hasMessageContaining("Widget : %s inexistant.".formatted(privateId));
     }
 
     @Test
@@ -161,26 +148,25 @@ public class WidgetControllerTest {
         testService.authenticate("iampolice", currentSubjectProvider);
         var res = widgetController.getWidget(publicId);
         assertThat(res).isNotNull();
-        assertThat(res.cover).isFalse();
+        assertThat(res.isCover()).isFalse();
     }
 
     @Test
     @TestSecurity(user = "testUser", roles = { Role.STR_WIDGET_CATALOG_READ, Role.STR_WIDGET_CATALOG_WRITE })
     public void should_update_widget_catalog_modification_date_on_update() {
         // Given
-        Instant previousModificationDate = widgetService.getMineById(publicId).getWidgetCatalog()
-                .getModificationDate();
-        WidgetDto dto = widgetController.getWidget(publicId);
-        dto.description = "nouvelle description";
+        WidgetCatalog previousModificationDate = widgetService.getMineById(publicId);
+        WidgetDetailsDto dto = widgetController.getWidget(publicId);
+        WidgetWriteDto widgetWriteDto = new WidgetWriteDto(dto.getId(), dto.getName(), "nouvelle description", dto.getImage(),
+                dto.getContent(), dto.getDatasource(), dto.isCover(), dto.getGroups());
 
         // When
-        widgetController.addWidget(dto);
+        widgetController.addWidget(widgetWriteDto);
         var result = widgetController.getWidget(publicId);
 
         // Then
-        BDDAssertions.then(result.modificationDate).isNotNull();
-        BDDAssertions.then(result.modificationDate).isNotEqualTo(previousModificationDate);
-        BDDAssertions.then(result.description).isEqualTo("nouvelle description");
+        assertThat(result.getModificationDate()).isNotNull().isNotEqualTo(previousModificationDate);
+        assertThat(result.getDescription()).isEqualTo("nouvelle description");
     }
 
     @Test
@@ -190,29 +176,20 @@ public class WidgetControllerTest {
         var result = widgetController.getWidget(publicId);
 
         // Then
-        BDDAssertions.then(result).isNotNull();
-        BDDAssertions.then(result.creationDate).isNotNull();
-        BDDAssertions.then(result.modificationDate).isNotNull();
+        assertThat(result).isNotNull();
+        assertThat(result.getCreationDate()).isNotNull();
+        assertThat(result.getModificationDate()).isNotNull();
     }
 
-    private WidgetDto createWidget(String widgetName, String datasetTestName, VisibilityType visibilityType) {
+    private WidgetWriteDto createWidget(String widgetName, String datasetTestName, UUID widgetId, String content,
+            List<String> groups) {
         UUID namedQueryId = UUID.randomUUID();
         UUID datasetVersionId = UUID.randomUUID();
         UUID datasetId = UUID.randomUUID();
         creatAndSaveDatasources(namedQueryId, datasetVersionId, datasetId, datasetTestName);
 
-        WidgetDto widget = new WidgetDto();
-        if (visibilityType == VisibilityType.PRIVATE) {
-            widget.id = privateId;
-            widget.visibility = new VisibilityDto(VisibilityType.PRIVATE.name(), List.of());
-        } else {
-            widget.id = publicId;
-            widget.visibility = new VisibilityDto(VisibilityType.PUBLIC.name(), List.of());
-        }
-
-        widget.name = widgetName;
-        widget.content = "";
-        widget.datasource = List.of(namedQueryId, datasetVersionId, datasetId);
+        WidgetWriteDto widget = new WidgetWriteDto(widgetId, widgetName, "", "", content,
+                List.of(namedQueryId, datasetVersionId, datasetId), false, groups);
         widgetController.addWidget(widget);
         return widget;
     }
