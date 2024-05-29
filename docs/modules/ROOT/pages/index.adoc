@@ -156,6 +156,20 @@ image::resolve_application_artifact.png[]
 
 Repeat the operation for each application present on the project.
 
+[WARNING]
+====
+Option is not available in all IntelliJ's versions.
+If the option is not present, you must update configuration manually by editing `.idea/workspace.xml`.
+
+Simply add `<option name="resolveToWorkspace" value="true" />` to Quarkus configurations.
+====
+
+==== Multi-module configuration
+
+Quarkus plugin launches application with wrong maven `maven.multiModuleProjectDirectory` option. To fix this, you must change the configuration manually by editing `.idea/workspace.xml`.
+
+Simply add or update `<option name="cmdOptions" value="-Dmaven.multiModuleProjectDirectory=$PROJECT_DIR$" />` to Quarkus configurations.
+
 ==== Docker login
 
 Because we use a private repository, we need to be logged in to our registry to be able to pull the docker image:
