@@ -1,1 +1,0 @@
-DROP TABLE provoly_user_widget_catalog;

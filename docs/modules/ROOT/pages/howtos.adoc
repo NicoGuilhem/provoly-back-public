@@ -17,6 +17,7 @@
 If your modification is breaking, the issue must be labeled as BREAKING CHANGE and the client must be informed of the changement. The linter will then be run again.
 * If you're feature beaks API backward compatibility, ensure the ticket has the `breaking change` label
 * If your feature impacts the database model, you changes must be placed under the `{project_name}/src/main/resources/db/migration` folder.
+* If your feature impacts database content, you need to test locally
 * If you need to initialize a value in database depending on the environment, you need to put a migration script placed under the `{project-name}/src/main/resources/db.onetime` folder.
 * If your feature adds or removes user roles, you have to mirror those changes in the realm **json** file `provoly-common/src/main/resources/dev-realm.json` and in the impacted `{project_name}/src/main/resources/META-INF/openapi.yaml` file.
 * If you modify one of the openapi, check the redocly github build for warnings
