@@ -35,6 +35,7 @@ jobs:
         with:
           paths_ignore: '[".gitignore","LICENSE","*.adoc","*.txt","docs/**", "ide-config", ".github/**"]'
           do_not_skip: '["workflow_dispatch"]'
+          skip_after_successful_duplicate: false
   build:
     name: Build
     needs: pre_job
