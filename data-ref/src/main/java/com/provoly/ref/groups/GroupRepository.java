@@ -9,6 +9,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotNull;
 
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
@@ -40,15 +41,8 @@ public class GroupRepository {
         }
     }
 
-    public void saveGroupRelation(WithGroupEntityType entityType, Group group, UUID entityId, boolean canWrite) {
-        switch (entityType) {
-            case WithGroupEntityType.DASHBOARD -> entityIdService
-                    .saveEntity(new DashboardGroupRelations(UUID.randomUUID(), group, entityId, canWrite));
-            case WithGroupEntityType.DATASET -> entityIdService
-                    .saveEntity(new DatasetGroupRelations(UUID.randomUUID(), group, entityId, canWrite));
-            case WithGroupEntityType.WIDGET -> entityIdService
-                    .saveEntity(new WidgetGroupRelations(UUID.randomUUID(), group, entityId, canWrite));
-        }
+    public void saveGroupRelation(@NotNull WithGroupEntityType entityType, Group group, UUID entityId, boolean canWrite) {
+        entityIdService.saveEntity(entityType.buildGroupRelations(UUID.randomUUID(), group, entityId, canWrite));
     }
 
     public void save(Group group) {
