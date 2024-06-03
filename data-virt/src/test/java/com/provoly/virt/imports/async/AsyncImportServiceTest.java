@@ -1,6 +1,7 @@
 package com.provoly.virt.imports.async;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
@@ -73,14 +74,20 @@ public class AsyncImportServiceTest {
 
     private final UUID classId = UUID.randomUUID();
     private final UUID datasetVersionId = UUID.randomUUID();
+    private final FieldDto field = new FieldDto(classId, "field", "string", "slug", null);
     private final OClassDetailsDto classDetails = new OClassDetailsDto(classId,
             "slug",
             "oclass",
             null,
             List.of(new AttributeDefDetailsDto(
                     classId,
-                    new AttributeDefDto(classId, "name", "name", UUID.randomUUID(), null, false, "slug"),
-                    new FieldDto(classId, "field", "string", "slug", null))),
+                    new AttributeDefDto(classId,
+                            "name", "name", UUID.randomUUID(), null, false, "slug"),
+                    field),
+                    new AttributeDefDetailsDto(
+                            classId,
+                            new AttributeDefDto(classId, "family_name", "name", UUID.randomUUID(), null, false, "slug"),
+                            field)),
             Storage.ELASTIC,
             List.of());
 
@@ -103,8 +110,8 @@ public class AsyncImportServiceTest {
     @Test
     public void items_created_when_records_are_received_in_class_topic() {
         // given
-        var record1 = generateRecord("name", "toto");
-        var record2 = generateRecord("name", "titi");
+        var record1 = generateRecord("name", "toto", "family_name", "toto");
+        var record2 = generateRecord("name", "titi", "family_name", "titi");
         refChangeListener.refEvent(new RefChangeEventClassCreated(classDetails)); // will create es index with a good mapping
 
         //when
@@ -133,7 +140,7 @@ public class AsyncImportServiceTest {
         // given
         DatasetDto invalidDataset = new DatasetDto(UUID.randomUUID(), "invalid-dataset", classId, DatasetType.CLOSED);
         when(datasetService.searchByDatasetVersionId(datasetVersionId)).thenReturn(invalidDataset);
-        var record = generateRecord("name", "toto");
+        var record = generateRecord("name", "toto", "family_name", "toto");
 
         //when
         assertThatThrownBy(() -> asyncImportService.consume(record))
@@ -143,20 +150,33 @@ public class AsyncImportServiceTest {
     @Test
     public void throw_error_when_invalid_attributes() {
         // given
-        var record = generateRecord("toto", "titi");
+        var record = generateRecord("invalid", "titi", "invalid2", "tata");
 
         //when
         assertThatThrownBy(() -> asyncImportService.consume(record))
                 .hasMessageContaining("Error during attributes validation");
     }
 
-    private ConsumerRecord<String, JsonObject> generateRecord(String attributeName, String attributeValue) {
+    @Test
+    public void import_does_not_fail_with_attribute_value_null() {
+        // given
+        JsonObject value = new JsonObject();
+        var record = generateRecord("name", "toto", "family_name", null);
+
+        //when
+        assertThatNoException().isThrownBy(() -> asyncImportService.consume(record));
+    }
+
+    private ConsumerRecord<String, JsonObject> generateRecord(String attributeName, String attributeValue,
+            String attributeName2, String attributeValue2) {
         JsonObject value = new JsonObject();
         value.put(attributeName, attributeValue);
+        value.put(attributeName2, attributeValue2);
         var record = new ConsumerRecord(TOPIC_DATASET, 0, 0, null, value);
         record.headers().add(
                 new RecordHeader("provoly-dataset-version-id", datasetVersionId.toString().getBytes(StandardCharsets.UTF_8)));
         record.headers().add(new RecordHeader("provoly-item-id", attributeValue.getBytes(StandardCharsets.UTF_8)));
         return record;
     }
+
 }

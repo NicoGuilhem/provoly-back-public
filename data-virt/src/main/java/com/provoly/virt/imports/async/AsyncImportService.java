@@ -97,7 +97,9 @@ public class AsyncImportService {
     private ItemDto buildItemDto(Map<String, Object> attributes, UUID oClass, String id) {
         var item = new ItemDto(oClass, id);
         for (var attribute : attributes.entrySet()) {
-            item.put(attribute.getKey(), attribute.getValue());
+            if (attribute.getValue() != null) {
+                item.put(attribute.getKey(), attribute.getValue());
+            }
         }
         return item;
     }
