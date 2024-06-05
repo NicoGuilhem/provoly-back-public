@@ -10,7 +10,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  JAVA_VERSION: 21
   MAVEN_OPTS: "-Dorg.slf4j.simpleLogger.showDateTime=true -Djansi.force=true"
   MAVEN_CLI_OPTS: "-Dstyle.color=always --batch-mode --errors --show-version -DinstallAtEnd=true -Dno-format -DdeployAtEnd=true"
 
@@ -29,18 +28,6 @@ jobs:
           username: ${{ secrets.REGISTRY_USER }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: ${{ env.JAVA_VERSION }}
-          cache: 'maven'
-
-      - name: Set up Maven
-        uses: stCarolas/setup-maven@v5
-        with:
-          maven-version: 3.9.1
-
       - name: Cache local Maven repository
         uses: actions/cache@v4
         id: cache-maven
@@ -49,7 +36,6 @@ jobs:
           key: provoly-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             provoly-maven-
-
 
       - name: Check cve and generate report
         id: cve
@@ -67,11 +53,10 @@ jobs:
           mvn -Dmaven.test.failure.ignore=true \
             verify org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.1.2184:sonar \
             -Dsonar.host.url=${{ env.SONAR_URL }}\
-            -Dsonar.login=${{ env.SONAR_ADMIN_TOKEN }}\
+            -Dsonar.token=${{ env.SONAR_ADMIN_TOKEN }}\
             -Dsonar.dependencyCheck.jsonReportPath=${{ github.workspace }}/target/dependency-check-report.json\
             -Dsonar.dependencyCheck.htmlReportPath=${{ github.workspace }}/target/dependency-check-report.html\
             -Dsonar.coverage.jacoco.xmlReportPaths=${{ github.workspace }}/target/**/coverage/jacoco.xml
-
 
       - name: Summary
         if: always()
