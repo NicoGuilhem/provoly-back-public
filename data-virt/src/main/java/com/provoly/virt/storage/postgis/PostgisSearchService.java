@@ -196,7 +196,7 @@ class PostgisSearchService implements StorageSearchService {
                 Object value = rs.getObject(postgisSupport.getColumnName(attribute));
 
                 if (value != null) {
-                    value = switch (item.getAttributeSimple(attribute.technicalName).getFieldType().getTypeCategory()) {
+                    value = switch (item.getAttributeSimple(attribute.getTechnicalName()).getFieldType().getTypeCategory()) {
                         case GEO -> {
                             if (value instanceof JtsGeometry jtsGeometry) {
                                 yield new GeoHolder(jtsGeometry.getGeometry());
@@ -208,7 +208,7 @@ class PostgisSearchService implements StorageSearchService {
                         default -> value;
                     };
 
-                    item.getAttributeSimple(attribute.technicalName).setValue(value);
+                    item.getAttributeSimple(attribute.getTechnicalName()).setValue(value);
                 }
             }
             result.add(item);

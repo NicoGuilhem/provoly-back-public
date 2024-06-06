@@ -20,6 +20,9 @@ import com.provoly.common.model.Type;
 import com.provoly.ref.KeycloakClientBuilder;
 import com.provoly.ref.abac.AbacService;
 import com.provoly.ref.abac.predicate.PredicateService;
+import com.provoly.ref.category.CategoryRepository;
+import com.provoly.ref.category.CategoryService;
+import com.provoly.ref.category.WithCategoryEntityType;
 import com.provoly.ref.dashboard.DashboardRepository;
 import com.provoly.ref.dashboard.DashboardService;
 import com.provoly.ref.dataset.DatasetService;
@@ -40,7 +43,6 @@ import com.provoly.ref.model.ModelService;
 import com.provoly.ref.relation.RelationTypeService;
 import com.provoly.ref.user.NamedQueryService;
 import com.provoly.ref.widget.WidgetRepository;
-import com.provoly.ref.widget.WidgetService;
 import com.provoly.security.CurrentSubjectProvider;
 
 @ApplicationScoped
@@ -77,8 +79,6 @@ public class TestService {
     @Inject
     DashboardRepository dashboardRepository;
     @Inject
-    WidgetService widgetService;
-    @Inject
     GroupService groupService;
     @Inject
     GroupRepository groupRepository;
@@ -96,6 +96,10 @@ public class TestService {
     DatasetVersionRepository datasetVersionRepository;
     @Inject
     WidgetRepository widgetRepository;
+    @Inject
+    CategoryService categoryService;
+    @Inject
+    CategoryRepository categoryRepository;
 
     public OClassWriteDto createClassWriteDto(UUID id, String name, AttributeDefDto... attributeDefDtos) {
         return createClassWriteDto(id, name, Storage.ELASTIC, attributeDefDtos);
@@ -114,17 +118,8 @@ public class TestService {
 
     }
 
-    public AttributeDefDto createAttributeDto(UUID id, String name, UUID fieldId) {
-        return createAttributeDto(id, name, name, fieldId);
-    }
-
     public AttributeDefDto createAttributeDto(UUID id, String name, String technicalName, UUID fieldId) {
-        AttributeDefDto attributeDefDto = new AttributeDefDto();
-        attributeDefDto.id = id;
-        attributeDefDto.name = name;
-        attributeDefDto.technicalName = technicalName;
-        attributeDefDto.field = fieldId;
-        return attributeDefDto;
+        return new AttributeDefDto(id, name, technicalName, fieldId);
     }
 
     public void createAndSaveField(UUID fieldId) {
@@ -203,6 +198,7 @@ public class TestService {
                 metadataService.deleteMetadataValueByEntityId(dataset.getId(),
                         metadataValue.getMetadataDefId(), EntityType.DATASET);
             });
+            categoryRepository.deleteAllByEntityId(dataset.getId());
             entityManager.remove(entityManager.merge(dataset));
         });
         relationTypeService.getAll().forEach(relationType -> relationTypeService.delete(relationType.getId()));
@@ -219,5 +215,7 @@ public class TestService {
         });
         widgetRepository.getAll().forEach(widgetCatalog -> entityManager.remove(widgetCatalog));
         namedQueryService.getNamedQueriesForCurrentUser().forEach(nq -> entityManager.remove(nq));
+        categoryService.getAll(WithCategoryEntityType.ATTRIBUTES).forEach(category -> entityManager.remove(category));
+        categoryService.getAll(WithCategoryEntityType.DATASET).forEach(category -> entityManager.remove(category));
     }
 }

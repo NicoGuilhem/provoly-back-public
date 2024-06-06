@@ -80,7 +80,7 @@ class ElasticAggregateService implements StorageAggregateService {
 
             List<ItemAggregationDto> items = elasticAggregateBuilder.buildValuesByAttributeType(result,
                     aggregationParam,
-                    Type.from(attributeDetail.field.type),
+                    Type.from(attributeDetail.getField().type),
                     attributeGroupByDetail);
 
             return new AggregationResultDto(aggregationParam.operation(), items);

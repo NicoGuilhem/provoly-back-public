@@ -63,12 +63,12 @@ public class AggregateQueryBuilder {
         var attributeDetail = storageSupport.getAttributeById(classDto, aggregation.aggregatedBy());
 
         log.infof("Build aggregation of aggregateBy %s that could be histogram, date histogram or simple graphic",
-                attributeDetail.name);
+                attributeDetail.getName());
         var rootQuery = buildRootAggregation(aggregation, attributeDetail, orderName, limit);
 
         if (aggregation.groupBy() != null) {
             var attributeGroupBy = storageSupport.getAttributeById(classDto, aggregation.groupBy());
-            log.infof("build aggregation query for groupBy attribute %s", attributeGroupBy.name);
+            log.infof("build aggregation query for groupBy attribute %s", attributeGroupBy.getName());
 
             String elasticFieldPaThGroupBy = storageLayout.buildAggregateAttributePath(attributeGroupBy);
             rootQuery.aggregations(StorageLayout.GROUP_BY,
@@ -89,7 +89,7 @@ public class AggregateQueryBuilder {
             return null;
         }
         var valueAttribute = storageSupport.getAttributeById(classDto, aggregation.valueField());
-        log.infof("Build aggregation query for valueField %s with operation %s", valueAttribute.name,
+        log.infof("Build aggregation query for valueField %s with operation %s", valueAttribute.getName(),
                 aggregation.operation());
         String ordinateElasticFieldPath = storageLayout.buildAggregateAttributePath(valueAttribute);
 
@@ -111,10 +111,10 @@ public class AggregateQueryBuilder {
         }
 
         if (aggregation.dateInterval() != null) {
-            if (Type.from(aggregatedByAttribute.field.type) != Type.INSTANT) {
+            if (Type.from(aggregatedByAttribute.getField().type) != Type.INSTANT) {
                 throw new BusinessException(ErrorCode.BAD_REQUEST,
                         "Aggregating on date is unavailable for attribute %s that is not a date."
-                                .formatted(aggregatedByAttribute.name));
+                                .formatted(aggregatedByAttribute.getName()));
             }
             log.debug("Aggregation is a date histogram");
             var calendarIntervalValue = Stream.of(CalendarInterval.values())
@@ -310,7 +310,7 @@ public class AggregateQueryBuilder {
                     .values()
                     .stream()
                     .toList()
-                    .get(0);
+                    .getFirst();
         };
 
     }
@@ -324,7 +324,7 @@ public class AggregateQueryBuilder {
             AttributeDefDetailsDto attrGroupBy) {
         if (attrGroupBy != null) {
             return new ItemAggregationDto.GroupedItemDto(key,
-                    getGroupByByAttributeType(term, attrGroupBy.field.type, operation));
+                    getGroupByByAttributeType(term, attrGroupBy.getField().type, operation));
         }
         if (!term.aggregations().containsKey(StorageLayout.OPERATION_AGGS)) {
             return new ItemAggregationDto.SimpleItemDto(key, term.docCount());

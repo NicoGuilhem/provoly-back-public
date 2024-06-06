@@ -82,12 +82,12 @@ public class SearchServiceTest {
     private void insertItems(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put(dataStorage.attributeIdVehicle.name, "123 AA6 789");
+        attributes.put(dataStorage.attributeIdVehicle.getName(), "123 AA6 789");
         itemsTestTools.addItem(dataStorages.get(storage).datasetVersionDto, attributes);
         attributes = new HashMap<>();
-        attributes.put(dataStorage.attributeIdVehicle.name, "AAA");
+        attributes.put(dataStorage.attributeIdVehicle.getName(), "AAA");
         itemsTestTools.addItem(dataStorages.get(storage).datasetVersionDto, attributes);
-        attributes.put(dataStorage.attributeIdVehicle.name, "BBBB");
+        attributes.put(dataStorage.attributeIdVehicle.getName(), "BBBB");
         itemsTestTools.addItem(dataStorages.get(storage).datasetVersionDto, attributes);
     }
 
@@ -122,7 +122,7 @@ public class SearchServiceTest {
     @Order(3)
     public void searchAll_monoClass_SortOnAttribute_ReturnAllItems(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        var sort = new SortDto(dataStorage.attributeIdVehicle.id, Direction.asc);
+        var sort = new SortDto(dataStorage.attributeIdVehicle.getId(), Direction.asc);
         var request = new MonoClassRequestDto(dataStorage.datasetVersionDto.getoClass(),
                 Collections.singleton(dataStorage.datasetVersionDto.getId()));
         var result = new ArrayList<>();

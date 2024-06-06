@@ -18,19 +18,19 @@ public abstract class AttributeValue {
     }
 
     public Type getFieldType() {
-        return attributeDef.field.getType();
+        return attributeDef.getField().getType();
     }
 
     public String getName() {
-        return attributeDef.name;
+        return attributeDef.getName();
     }
 
     public String getTechnicalName() {
-        return attributeDef.technicalName;
+        return attributeDef.getTechnicalName();
     }
 
     public String getSlug() {
-        return attributeDef.slug;
+        return attributeDef.getSlug();
     }
 
     public AttributeDefDetailsDto getAttributeDef() {

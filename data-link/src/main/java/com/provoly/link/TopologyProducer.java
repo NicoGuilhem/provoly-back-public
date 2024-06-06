@@ -34,8 +34,8 @@ public class TopologyProducer {
     // Needed workaround https://issues.apache.org/jira/browse/KAFKA-10659
     public Topology buildTopology(LinkDetailsDto link) {
         log.infof("Building a new Topology for %s", link);
-        AttributeDefDetailsDto attributeSource = link.attributeSource;
-        AttributeDefDetailsDto attributeDestination = link.attributeDestination;
+        AttributeDefDetailsDto attributeSource = link.getAttributeSource();
+        AttributeDefDetailsDto attributeDestination = link.getAttributeDestination();
 
         // Check input topics exists, unless stream is unhealthy
         String topicClassSource = buildTopicNameForClass(attributeSource);
@@ -70,8 +70,8 @@ public class TopologyProducer {
                 .cogroup(groupedDest, destAggregator)
                 .aggregate(RelationAggregate::new, Materialized.with(stringSerde, relationAggregateSerde))
                 .toStream()
-                .map((key, value) -> KeyValue.pair(link.id + "-" + key,
-                        new RelationsAggregateDto(link.id, key, value.source, value.dest)))
+                .map((key, value) -> KeyValue.pair(link.getId() + "-" + key,
+                        new RelationsAggregateDto(link.getId(), key, value.source, value.dest)))
                 .to(RELATION_AGGREGATE_TOPIC_NAME, Produced.with(stringSerde, relationsUpdateDtoSerde));
 
         return builder.build();
@@ -79,11 +79,11 @@ public class TopologyProducer {
     }
 
     private String buildTopicNameForClass(AttributeDefDetailsDto attributeSource) {
-        return "class-" + attributeSource.oclass;
+        return "class-" + attributeSource.getOclass();
     }
 
     private String extractKey(AttributeDefDetailsDto attribute, ItemDto value) {
-        return value.getSimple(attribute.technicalName).toString();
+        return value.getSimple(attribute.getTechnicalName()).toString();
     }
 
     private static Aggregator<String, ItemDto, RelationAggregate> sourceAggregator = (key, value, aggregate) -> {
@@ -98,7 +98,7 @@ public class TopologyProducer {
 
     private String buildTopicNameForRepartition(char prefix, AttributeDefDetailsDto attribute) {
         String topicNameWhiteList = "[^a-zA-Z0-9\\-._]";
-        return prefix + "." + attribute.name.replaceAll(topicNameWhiteList, "-");
+        return prefix + "." + attribute.getName().replaceAll(topicNameWhiteList, "-");
     }
 
 }

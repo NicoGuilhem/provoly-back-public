@@ -103,7 +103,7 @@ public class MonoClassSearchService {
     private void checkAttributeIsNotStringType(UUID attributeId, OClassDetailsDto oClassDetailsDto) {
         if (attributeId != null) {
             var attribute = storageSupport.getAttributeDetail(oClassDetailsDto, attributeId);
-            if (attribute.field.getType() == Type.STRING) {
+            if (attribute.getField().getType() == Type.STRING) {
                 throw new BusinessException(ErrorCode.BAD_REQUEST, "It's not possible to aggregate on string/text attribute.");
             }
         }
@@ -170,14 +170,14 @@ public class MonoClassSearchService {
 
         List<AttributeDefDetailsDto> requestedAttributes = new ArrayList<>(classDto.getAttributes()
                 .stream()
-                .filter(attr -> request.getRequestedAttributes().contains(attr.id)
+                .filter(attr -> request.getRequestedAttributes().contains(attr.getId())
                         || request.getRequestedAttributes().isEmpty())
                 .toList());
 
         if (request.isExcludeGeo()) {
             requestedAttributes = requestedAttributes
                     .stream()
-                    .filter(attr -> !attr.field.getType().isGeo())
+                    .filter(attr -> !attr.getField().getType().isGeo())
                     .toList();
         }
 
@@ -344,7 +344,7 @@ public class MonoClassSearchService {
             }
             case ATTRIBUTE -> {
                 AttributeConditionDto attribute = (AttributeConditionDto) condition;
-                classDto.getAttributes().stream().filter(att -> att.id.equals(attribute.getAttribute())).findAny()
+                classDto.getAttributes().stream().filter(att -> att.getId().equals(attribute.getAttribute())).findAny()
                         .orElseThrow(() -> new BusinessException(
                                 ErrorCode.BAD_REQUEST, "Attribute not present in class"));
             }

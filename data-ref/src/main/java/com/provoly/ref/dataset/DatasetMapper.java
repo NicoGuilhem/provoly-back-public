@@ -11,7 +11,8 @@ import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "jakarta", collectionMappingStrategy = CollectionMappingStrategy.ADDER_PREFERRED, uses = {
-        EntityLoader.class, EntitySlugMapper.class, DatasetMetadataValueMapper.class, DatasetGroupMapper.class })
+        EntityLoader.class, EntitySlugMapper.class, DatasetMetadataValueMapper.class, DatasetGroupMapper.class,
+        DatasetCategoryMapper.class })
 public interface DatasetMapper {
 
     DatasetDto toDto(Dataset dataset);

@@ -6,6 +6,7 @@ import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.model.*;
 import com.provoly.common.search.FieldConditionDto;
+import com.provoly.ref.category.Category;
 import com.provoly.ref.searchrequest.FieldCondition;
 
 import org.mapstruct.CollectionMappingStrategy;
@@ -14,7 +15,8 @@ import org.mapstruct.InjectionStrategy;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "jakarta", injectionStrategy = InjectionStrategy.CONSTRUCTOR, collectionMappingStrategy = CollectionMappingStrategy.ADDER_PREFERRED, uses = {
-        EntityLoader.class, EntitySlugMapper.class, OClassMapper.class, OclassMetadataValueMapper.class })
+        EntityLoader.class, EntitySlugMapper.class, OClassMapper.class, OclassMetadataValueMapper.class,
+        AttributeCategoryMapper.class })
 public interface ModelMapper {
 
     // OClass
@@ -51,6 +53,8 @@ public interface ModelMapper {
 
     // AttributeDef
     AttributeDefDto toDefDto(AttributeDefDetailsDto dto);
+
+    AttributeDefDetailsDto toDefDetails(AttributeDef attributeDef);
 
     AttributeDef toModel(AttributeDefDto dto);
 

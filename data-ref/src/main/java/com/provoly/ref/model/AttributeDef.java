@@ -20,9 +20,6 @@ public class AttributeDef extends EntitySlug {
     @ManyToOne
     private Field field;
 
-    @ManyToOne
-    private Category category;
-
     private boolean multiValued;
 
     private String technicalName;
@@ -64,14 +61,6 @@ public class AttributeDef extends EntitySlug {
 
     public String getSlugField() {
         return field.getSlug();
-    }
-
-    public Category getCategory() {
-        return category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
     }
 
     public boolean isMultiValued() {

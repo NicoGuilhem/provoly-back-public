@@ -1186,6 +1186,18 @@ paths:
                   groups:
                     - "ALL"
                     - "test"
+              datasetWithCategory:
+                summary: Adding a closed dataset with category
+                value:
+                  id: "423b5c01-1816-41d4-b358-200000000010"
+                  name: "closed dataset"
+                  oClass: "991eb4b2-253c-4875-b708-8209fa5bfd51"
+                  type: "CLOSED"
+                  groups:
+                    - "ALL"
+                    - "test"
+                  categories:
+                    - "45ed864f-7c0f-488d-9411-013aa9360319"
       responses:
         "201":
           description: Created
@@ -1240,6 +1252,19 @@ paths:
                   type: "CLOSED"
                   groups:
                     - "AUTHENTICATED"
+              category_update:
+                summary: Update dataset categories
+                description: |
+                  Updating category.
+                  If you add an empty category list, the current categories in the dataset will be deleted.
+                  If the category list is null, the dataset's current categories will not be modified.
+                value:
+                  id: "423b5c01-1816-41d4-b358-200000000010"
+                  name: "we change dataset name"
+                  oClass: "991eb4b2-253c-4875-b708-8209fa5bfd51"
+                  type: "CLOSED"
+                  categories:
+                    - "45ed864f-7c0f-488d-9411-013aa9360319"
       responses:
         "200":
           description: No Content
@@ -1619,6 +1644,58 @@ paths:
                     application: "data-ref"
                     code: "NOT_FOUND"
                     message: "No dataset version available for dataset {{datasetName}}"
+      security:
+        - oidc:
+            - dataset_read
+  /datasets/categories:
+    put:
+      tags:
+        - Category
+      summary: Save a new category
+      operationId: com.provoly.ref.dataset.DatasetController_addCategory
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryDto'
+      responses:
+        "201":
+          description: Created
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                sameCategoryName:
+                  summary: Save category with wrong name
+                  description: Occurs when you try to save a category that has the same name as another category
+                  value:
+                    application: "data-ref"
+                    code: "CONFLICT"
+                    message: "Name {{categoryName}} already exists"
+      security:
+        - oidc:
+            - dataset_write
+    get:
+      tags:
+        - Category
+      summary: Get all categories
+      operationId: com.provoly.ref.dataset.DatasetController_getAllCategories
+      responses:
+        "201":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoriesDto'
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
         - oidc:
             - dataset_read
@@ -4640,6 +4717,14 @@ components:
           example: false
         slug:
           type: string
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryDto'
+    CategoriesDto:
+      type: array
+      items:
+        $ref: "#/components/schemas/CategoryDto"
     DatasetDto:
       type: object
       required:
@@ -4669,6 +4754,10 @@ components:
           items:
             type: string
           example: ["first_group", "second_group"]
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/UUID'
     DatasetState:
       enum:
         - LOADING

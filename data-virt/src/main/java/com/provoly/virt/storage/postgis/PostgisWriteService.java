@@ -55,7 +55,7 @@ class PostgisWriteService implements StorageWriteService {
     }
 
     private List<InsertionError> insertItems(Connection conn, List<Item> items) throws SQLException {
-        var oClass = items.get(0).getoClass();
+        var oClass = items.getFirst().getoClass();
 
         String sql = buildInsertSql(oClass);
         log.debugf("SQL : \n%s", sql);
@@ -87,7 +87,7 @@ class PostgisWriteService implements StorageWriteService {
 
     private List<InsertionError> setStatementValues(PreparedStatement statement, Item item, int parameterIndex,
             AttributeDefDetailsDto attributeDef) {
-        var attribute = item.getAttributeSimple(attributeDef.technicalName);
+        var attribute = item.getAttributeSimple(attributeDef.getTechnicalName());
         Object value = attribute.readValueEvenIfNotVisible();
 
         try {
@@ -102,7 +102,7 @@ class PostgisWriteService implements StorageWriteService {
     private Object preparePGValue(Object value, AttributeDefDetailsDto attributeDef) {
         return switch (value) {
             case null -> null;
-            case GeoHolder geo -> geo.getAsPgObject(attributeDef.field.crs);
+            case GeoHolder geo -> geo.getAsPgObject(attributeDef.getField().crs);
             case Instant instant -> Timestamp.from(instant);
             default -> value;
         };
@@ -110,7 +110,7 @@ class PostgisWriteService implements StorageWriteService {
 
     private List<AttributeDefDetailsDto> getSortedAttributes(OClassDetailsDto oClass) {
         var sortedAttributes = oClass.getAttributes();
-        sortedAttributes.sort(Comparator.comparing(oc -> oc.name));
+        sortedAttributes.sort(Comparator.comparing(AttributeDefDetailsDto::getName));
         return sortedAttributes;
     }
 

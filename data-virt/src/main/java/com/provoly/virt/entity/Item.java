@@ -20,7 +20,7 @@ public class Item {
     public Item(ItemId id, OClassDetailsDto oClass, Collection<FieldDto> fields) {
         this.id = id;
 
-        oClass.getAttributes().forEach(attr -> attributesDef.put(attr.technicalName, attr));
+        oClass.getAttributes().forEach(attr -> attributesDef.put(attr.getTechnicalName(), attr));
         this.oClass = new OClassDetailsDto(oClass.getId(), oClass.getSlug(), oClass.getName(), null,
                 attributesDef.values().stream().toList(), oClass.getStorage(), List.of());
     }
@@ -28,7 +28,7 @@ public class Item {
     public Item(ItemId id, OClassDetailsDto oClass) {
         this.id = id;
         this.oClass = oClass;
-        oClass.getAttributes().forEach(attr -> attributesDef.put(attr.technicalName, attr));
+        oClass.getAttributes().forEach(attr -> attributesDef.put(attr.getTechnicalName(), attr));
     }
 
     public String getIdAsString() {
@@ -107,7 +107,7 @@ public class Item {
     }
 
     public boolean isAttributeMultivalued(String attributeName) {
-        return getAttributeDefByTechnicalName(attributeName).multiValued;
+        return getAttributeDefByTechnicalName(attributeName).isMultiValued();
     }
 
     @Override

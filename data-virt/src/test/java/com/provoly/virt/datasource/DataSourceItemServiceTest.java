@@ -96,10 +96,10 @@ public class DataSourceItemServiceTest {
 
     private void insertItems() {
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put(attributeIdVehicle.name, "123 AA6 789");
+        attributes.put(attributeIdVehicle.getName(), "123 AA6 789");
         vehicleOne = addItem(attributes);
         attributes = new HashMap<>();
-        attributes.put(attributeIdVehicle.name, "AAA");
+        attributes.put(attributeIdVehicle.getName(), "AAA");
         vehicleTwo = addItem(attributes);
     }
 
@@ -137,7 +137,7 @@ public class DataSourceItemServiceTest {
     public void getItems_withDatasourceDefinitionSortByAscShouldReturnItems() {
         dsMock.addDataSource(datasetVersionDto.getDataset(), DataSourceType.DATASET, vehicleClass.getId());
 
-        var sort = new SortDto(attributeIdVehicle.id, Direction.asc);
+        var sort = new SortDto(attributeIdVehicle.getId(), Direction.asc);
         var result = datasourceItemsService.getItems(datasetVersionDto.getDataset(), sort, null, 0, false, null);
 
         assertThat(result.size()).isEqualTo(2);
@@ -150,7 +150,7 @@ public class DataSourceItemServiceTest {
     public void getItems_withDatasourceDefinitionSortByDescShouldReturnItems() {
         dsMock.addDataSource(datasetVersionDto.getDataset(), DataSourceType.DATASET, vehicleClass.getId());
 
-        var sort = new SortDto(attributeIdVehicle.id, Direction.desc);
+        var sort = new SortDto(attributeIdVehicle.getId(), Direction.desc);
         var result = datasourceItemsService.getItems(datasetVersionDto.getDataset(), sort, null, 0, false, null);
 
         assertThat(result.size()).isEqualTo(2);
@@ -164,7 +164,7 @@ public class DataSourceItemServiceTest {
         dsMock.addDataSource(datasetVersionDto.getDataset(), DataSourceType.DATASET, vehicleClass.getId());
 
         var result = datasourceItemsService.getItems(datasetVersionDto.getDataset(), null,
-                List.of(new FilterDto(attributeIdVehicle.id, Operator.EQUALS, "AAA")), 0, false, null);
+                List.of(new FilterDto(attributeIdVehicle.getId(), Operator.EQUALS, "AAA")), 0, false, null);
 
         assertThat(result.size()).isEqualTo(1);
         assertThat(result.getItems().getFirst().getId().getAsString()).isEqualTo(vehicleTwo.getId());
@@ -175,7 +175,7 @@ public class DataSourceItemServiceTest {
     public void getItems_withNamedQuery_EmptyFilter_ShouldReturnItems() {
         String namedQueryName = "namedQuery" + UUID.randomUUID();
         var request = new MonoClassRequestDto(vehicleClass.getId(), Collections.singleton(datasetVersionDto.getId()),
-                new AttributeConditionDto(attributeIdVehicle.id, "AAA", Operator.EQUALS));
+                new AttributeConditionDto(attributeIdVehicle.getId(), "AAA", Operator.EQUALS));
         var namedQuery = testData.createNamedQuery(namedQueryName, request);
         dsMock.addDataSource(namedQuery.getId(), DataSourceType.SEARCH, vehicleClass.getId());
         assertThat(datasourceItemsService.getItems(namedQuery.getId(), null, List.of(), 0, false, null).size()).isEqualTo(1);
@@ -186,7 +186,7 @@ public class DataSourceItemServiceTest {
     public void getItems_withDatasourceDefinition_AndFilters_ShouldReturnEmpty() {
         dsMock.addDataSource(datasetVersionDto.getDataset(), DataSourceType.DATASET, vehicleClass.getId());
         var result = datasourceItemsService.getItems(datasetVersionDto.getDataset(), null,
-                List.of(new FilterDto(attributeIdVehicle.id, Operator.EQUALS, "BBB")), 0, false, null);
+                List.of(new FilterDto(attributeIdVehicle.getId(), Operator.EQUALS, "BBB")), 0, false, null);
         assertThat(result.size()).isZero();
     }
 
@@ -195,7 +195,7 @@ public class DataSourceItemServiceTest {
     public void getItems_withDatasourceDefinition_AndSortWithTypeNull_ShouldNotThrowError() {
         dsMock.addDataSource(datasetVersionDto.getDataset(), DataSourceType.DATASET, vehicleClass.getId());
         var result = datasourceItemsService.getItems(datasetVersionDto.getDataset(),
-                new SortDto(attributeIdVehicle.id, Direction.asc, null), List.of(), 0, false, null);
+                new SortDto(attributeIdVehicle.getId(), Direction.asc, null), List.of(), 0, false, null);
         assertThat(result.size()).isEqualTo(count.get());
     }
 
@@ -218,7 +218,7 @@ public class DataSourceItemServiceTest {
         var request = new MultiClassRequestDto(List.of(vehicleClass.getId()), List.of());
         var namedQuery = testData.createNamedQuery(namedQueryName, request);
         dsMock.addDataSource(namedQuery.getId(), DataSourceType.SEARCH, vehicleClass.getId());
-        List<FilterDto> filterDtos = List.of(new FilterDto(attributeIdVehicle.id, Operator.EQUALS, "AAA"));
+        List<FilterDto> filterDtos = List.of(new FilterDto(attributeIdVehicle.getId(), Operator.EQUALS, "AAA"));
 
         assertThatThrownBy(() -> datasourceItemsService.getItems(namedQuery.getId(),
                 null, filterDtos, 0, false, null))
@@ -242,7 +242,7 @@ public class DataSourceItemServiceTest {
     @Order(13)
     public void getAggregateItems_operationCount_withoutValueField() {
         dsMock.addDataSource(datasetVersionDto.getDataset(), DataSourceType.DATASET, vehicleClass.getId());
-        AggregationParamDto params = new AggregationParamDto(attributeIdVehicle.id, AggregateOperation.COUNT, null);
+        AggregationParamDto params = new AggregationParamDto(attributeIdVehicle.getId(), AggregateOperation.COUNT, null);
         var result = datasourceItemsService.getAggregationResult(datasetVersionDto.getDataset(), params, null, false, 0);
         assertThat(result.values()).hasSize(count.get());
     }
@@ -251,7 +251,7 @@ public class DataSourceItemServiceTest {
     @Order(14)
     public void getAggregateItems_operationOtherThanCount_withoutValueField() {
         dsMock.addDataSource(datasetVersionDto.getDataset(), DataSourceType.DATASET, vehicleClass.getId());
-        AggregationParamDto params = new AggregationParamDto(attributeIdVehicle.id, AggregateOperation.MAX, null);
+        AggregationParamDto params = new AggregationParamDto(attributeIdVehicle.getId(), AggregateOperation.MAX, null);
 
         assertThatThrownBy(
                 () -> datasourceItemsService.getAggregationResult(datasetVersionDto.getDataset(), params, null, false, 0))
@@ -278,7 +278,7 @@ public class DataSourceItemServiceTest {
     @Order(16)
     public void getAggregateOnDatasetWithoutDatasetVersionShouldReturnAnEmptyList() {
         dsMock.addDataSource(datasetDto.getId(), DataSourceType.DATASET, vehicleClass.getId());
-        AggregationParamDto params = new AggregationParamDto(attributeIdVehicle.id, AggregateOperation.COUNT, null);
+        AggregationParamDto params = new AggregationParamDto(attributeIdVehicle.getId(), AggregateOperation.COUNT, null);
         var result = datasourceItemsService.getAggregationResult(datasetDto.getId(), params, null, false, 0);
         assertThat(result.values()).isEmpty();
     }
@@ -296,7 +296,7 @@ public class DataSourceItemServiceTest {
             throw new RuntimeException(e);
         }
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put(attributeIdVehicle.name, "paginate item 3");
+        attributes.put(attributeIdVehicle.getName(), "paginate item 3");
 
         dsMock.addDataSource(datasetVersionDto.getDataset(), DataSourceType.DATASET, vehicleClass.getId());
         var sort = new SortDto(MetadataSystem.ID.getId(), Direction.asc, SortType.METADATA);

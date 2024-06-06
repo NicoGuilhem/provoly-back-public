@@ -78,11 +78,7 @@ public class OClassDetailsDto {
 
     public Optional<AttributeDefDetailsDto> getAttributeById(UUID attributeId) {
         return this.getAttributes().stream()
-                .filter(a -> a.id.equals(attributeId))
+                .filter(att -> att.getId().equals(attributeId))
                 .findAny();
-    }
-
-    public List<Optional<AttributeDefDetailsDto>> getAttributesByIds(List<UUID> attributesIds) {
-        return attributesIds.stream().map(this::getAttributeById).toList();
     }
 }

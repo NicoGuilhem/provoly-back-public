@@ -107,22 +107,22 @@ public class AggregateServiceTest {
 
         GeoHolder point = new GeoHolder("{ \"type\": \"Point\", \"coordinates\": [30.0, 10.0] }");
         Map<String, Object> item1 = Map.of(
-                dataStorage.attributeIdVehicle.name, "123 AA6 789",
-                dataStorage.attributeChoc.name, 3,
-                dataStorage.attributePosition.name, point,
-                dataStorage.attributeDate.name, "2015-01-01T00:00:00Z");
+                dataStorage.attributeIdVehicle.getName(), "123 AA6 789",
+                dataStorage.attributeChoc.getName(), 3,
+                dataStorage.attributePosition.getName(), point,
+                dataStorage.attributeDate.getName(), "2015-01-01T00:00:00Z");
 
         Map<String, Object> item2 = Map.of(
-                dataStorage.attributeIdVehicle.name, "123 AA6 789",
-                dataStorage.attributeChoc.name, 10,
-                dataStorage.attributePosition.name, point,
-                dataStorage.attributeDate.name, "2015-01-01T00:00:00Z");
+                dataStorage.attributeIdVehicle.getName(), "123 AA6 789",
+                dataStorage.attributeChoc.getName(), 10,
+                dataStorage.attributePosition.getName(), point,
+                dataStorage.attributeDate.getName(), "2015-01-01T00:00:00Z");
 
         Map<String, Object> item3 = Map.of(
-                dataStorage.attributeIdVehicle.name, "AAA",
-                dataStorage.attributeChoc.name, 33,
-                dataStorage.attributePosition.name, point,
-                dataStorage.attributeDate.name, "2016-01-01T00:00:00Z");
+                dataStorage.attributeIdVehicle.getName(), "AAA",
+                dataStorage.attributeChoc.getName(), 33,
+                dataStorage.attributePosition.getName(), point,
+                dataStorage.attributeDate.getName(), "2016-01-01T00:00:00Z");
 
         if (storage != Storage.KUZZLE_ASSET && storage != Storage.KUZZLE_MEASURE) {
             itemsTestTools.addItem(dataStorage.datasetVersionDto, item1);
@@ -130,10 +130,10 @@ public class AggregateServiceTest {
             itemsTestTools.addItem(dataStorage.datasetVersionDto, item3);
         } else if (KUZZLE_ENABLED) {
             Map<String, Object> model = Map.of(
-                    dataStorage.attributeIdVehicle.name, Map.of("type", "keyword"),
-                    dataStorage.attributeChoc.name, Map.of("type", "integer"),
-                    dataStorage.attributePosition.name, Map.of("type", "geo_shape"),
-                    dataStorage.attributeDate.name, Map.of("type", "date"));
+                    dataStorage.attributeIdVehicle.getName(), Map.of("type", "keyword"),
+                    dataStorage.attributeChoc.getName(), Map.of("type", "integer"),
+                    dataStorage.attributePosition.getName(), Map.of("type", "geo_shape"),
+                    dataStorage.attributeDate.getName(), Map.of("type", "date"));
 
             if (!initialized) {
                 kuzzleTestService.initKuzzleModels(model);
@@ -141,13 +141,13 @@ public class AggregateServiceTest {
             }
 
             item1 = new HashMap<>(item1);
-            item1.put(dataStorage.attributePosition.name, point.getAsMap());
+            item1.put(dataStorage.attributePosition.getName(), point.getAsMap());
 
             item2 = new HashMap<>(item2);
-            item2.put(dataStorage.attributePosition.name, point.getAsMap());
+            item2.put(dataStorage.attributePosition.getName(), point.getAsMap());
 
             item3 = new HashMap<>(item3);
-            item3.put(dataStorage.attributePosition.name, point.getAsMap());
+            item3.put(dataStorage.attributePosition.getName(), point.getAsMap());
 
             kuzzleTestService.insertKuzzleItem("mycab", "myasset", item1, storage,
                     dataStorage.datasetVersionDto);
@@ -192,8 +192,8 @@ public class AggregateServiceTest {
         prepareData(storage);
         var dataStorage = dataStorages.get(storage);
         // GIVEN
-        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeIdVehicle.id, AggregateOperation.MAX,
-                dataStorage.attributeIdVehicle.id);
+        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeIdVehicle.getId(), AggregateOperation.MAX,
+                dataStorage.attributeIdVehicle.getId());
         MonoClassRequestDto request = new MonoClassRequestDto(dataStorage.datasetVersionDto.getoClass(),
                 List.of(dataStorage.datasetVersionDto.getId()), 5);
 
@@ -202,7 +202,7 @@ public class AggregateServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(
                         "It's not possible to aggregate on the non-numeric attribute %s which has type keyword"
-                                .formatted(dataStorage.attributeIdVehicle.name));
+                                .formatted(dataStorage.attributeIdVehicle.getName()));
     }
 
     @ParameterizedTest
@@ -211,7 +211,7 @@ public class AggregateServiceTest {
     public void aggregate_interval_nonNumericAggregateBy_should_throwError(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         // GIVEN
-        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeIdVehicle.id, 5);
+        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeIdVehicle.getId(), 5);
         MonoClassRequestDto request = new MonoClassRequestDto(dataStorage.datasetVersionDto.getoClass(),
                 List.of(dataStorage.datasetVersionDto.getId()), 5);
         //WHEN
@@ -219,7 +219,7 @@ public class AggregateServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(
                         "It's not possible to aggregate on the non-numeric attribute %s which has type keyword"
-                                .formatted(dataStorage.attributeIdVehicle.name));
+                                .formatted(dataStorage.attributeIdVehicle.getName()));
     }
 
     @ParameterizedTest
@@ -228,7 +228,7 @@ public class AggregateServiceTest {
     public void aggregate_dateInterval_nonDateAggregateBy_should_throwError(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         // GIVEN
-        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeIdVehicle.id, DateInterval.HOUR);
+        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeIdVehicle.getId(), DateInterval.HOUR);
         MonoClassRequestDto request = new MonoClassRequestDto(dataStorage.datasetVersionDto.getoClass(),
                 List.of(dataStorage.datasetVersionDto.getId()), 5);
 
@@ -236,7 +236,7 @@ public class AggregateServiceTest {
         Assertions.assertThatThrownBy(() -> searchService.aggregate(params, request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("Aggregating on date is unavailable for attribute %s that is not a date."
-                        .formatted(dataStorage.attributeIdVehicle.name));
+                        .formatted(dataStorage.attributeIdVehicle.getName()));
     }
 
     @ParameterizedTest
@@ -245,7 +245,7 @@ public class AggregateServiceTest {
     public void aggregate_only_aggregateByIdVehicle_should_countRecords(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         // GIVEN
-        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeIdVehicle.id);
+        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeIdVehicle.getId());
         MonoClassRequestDto request = new MonoClassRequestDto(dataStorage.datasetVersionDto.getoClass(),
                 List.of(dataStorage.datasetVersionDto.getId()), 5);
 
@@ -264,10 +264,10 @@ public class AggregateServiceTest {
     public void aggregate_only_aggregateByIdVehicle_should_sortAsc(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         // GIVEN
-        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeIdVehicle.id);
+        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeIdVehicle.getId());
         MonoClassRequestDto request = new MonoClassRequestDto(dataStorage.datasetVersionDto.getoClass(),
                 List.of(dataStorage.datasetVersionDto.getId()), 5);
-        request.setSort(new SortDto(dataStorage.attributeIdVehicle.id, Direction.asc));
+        request.setSort(new SortDto(dataStorage.attributeIdVehicle.getId(), Direction.asc));
 
         // WHEN
         var result = searchService.aggregate(params, request);
@@ -283,7 +283,8 @@ public class AggregateServiceTest {
     public void aggregate_only_aggregateByIdVehicle_should_sortDesc(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         // GIVEN
-        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeIdVehicle.id, AggregateOperation.COUNT, null,
+        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeIdVehicle.getId(), AggregateOperation.COUNT,
+                null,
                 new SortAggregate(Direction.desc, OrderBy.KEY));
         MonoClassRequestDto request = new MonoClassRequestDto(dataStorage.datasetVersionDto.getoClass(),
                 List.of(dataStorage.datasetVersionDto.getId()), 5);
@@ -302,7 +303,7 @@ public class AggregateServiceTest {
     public void aggregate_only_aggregateByIdVehicle_should_sortDesc_postgis(Storage storage) { // FIXME shoud have the same behaviour than ES, issue #527
         var dataStorage = dataStorages.get(storage);
         // GIVEN
-        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeIdVehicle.id, null, null,
+        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeIdVehicle.getId(), null, null,
                 new SortAggregate(Direction.desc, OrderBy.KEY));
         MonoClassRequestDto request = new MonoClassRequestDto(dataStorage.datasetVersionDto.getoClass(),
                 List.of(dataStorage.datasetVersionDto.getId()), 5);
@@ -321,8 +322,8 @@ public class AggregateServiceTest {
     public void aggregate_maxChocAttr_descOrder_should_return_maxOrdered_postgis(Storage storage) { // FIXME shoud have the same behaviour than ES, issue #527
         var dataStorage = dataStorages.get(storage);
         // GIVEN
-        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeIdVehicle.id, AggregateOperation.MAX,
-                dataStorage.attributeChoc.id);
+        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeIdVehicle.getId(), AggregateOperation.MAX,
+                dataStorage.attributeChoc.getId());
         MonoClassRequestDto request = new MonoClassRequestDto(dataStorage.datasetVersionDto.getoClass(),
                 List.of(dataStorage.datasetVersionDto.getId()), 5);
 
@@ -342,7 +343,7 @@ public class AggregateServiceTest {
     public void aggregate_interval_chocAttr_should_countRecords(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         // GIVEN
-        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeChoc.id, 10);
+        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeChoc.getId(), 10);
         MonoClassRequestDto request = new MonoClassRequestDto(dataStorage.datasetVersionDto.getoClass(),
                 List.of(dataStorage.datasetVersionDto.getId()), 5);
 
@@ -361,7 +362,7 @@ public class AggregateServiceTest {
     public void aggregate_interval_chocAttr_should_countRecords_postgis(Storage storage) { // FIXME shoud have the same behaviour than ES, issue #527
         var dataStorage = dataStorages.get(storage);
         // GIVEN
-        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeChoc.id, 10);
+        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeChoc.getId(), 10);
         MonoClassRequestDto request = new MonoClassRequestDto(dataStorage.datasetVersionDto.getoClass(),
                 List.of(dataStorage.datasetVersionDto.getId()), 5);
 
@@ -381,8 +382,8 @@ public class AggregateServiceTest {
     public void aggregate_aggregateByIdVehicle_groupByIdVehicle_postgis(Storage storage) { // FIXME shoud have the same behaviour than ES, issue #527
         var dataStorage = dataStorages.get(storage);
         // GIVEN
-        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeIdVehicle.id,
-                dataStorage.attributeIdVehicle.id);
+        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeIdVehicle.getId(),
+                dataStorage.attributeIdVehicle.getId());
         MonoClassRequestDto request = new MonoClassRequestDto(dataStorage.datasetVersionDto.getoClass(),
                 List.of(dataStorage.datasetVersionDto.getId()), 5);
 
@@ -404,8 +405,8 @@ public class AggregateServiceTest {
     public void aggregate_medianChocAttr_descOrder_should_ignoreOrder_return_median_notOrdered(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         // GIVEN
-        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeIdVehicle.id, AggregateOperation.MEDIAN,
-                dataStorage.attributeChoc.id);
+        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeIdVehicle.getId(), AggregateOperation.MEDIAN,
+                dataStorage.attributeChoc.getId());
         MonoClassRequestDto request = new MonoClassRequestDto(dataStorage.datasetVersionDto.getoClass(),
                 List.of(dataStorage.datasetVersionDto.getId()), 5);
 
@@ -424,8 +425,8 @@ public class AggregateServiceTest {
     public void aggregate_medianChocAttr_descOrder_should_ignoreOrder_return_median_notOrdered_postgis(Storage storage) { // FIXME shoud have the same behaviour than ES, issue #527
         var dataStorage = dataStorages.get(storage);
         // GIVEN
-        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeIdVehicle.id, AggregateOperation.MEDIAN,
-                dataStorage.attributeChoc.id);
+        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeIdVehicle.getId(), AggregateOperation.MEDIAN,
+                dataStorage.attributeChoc.getId());
         MonoClassRequestDto request = new MonoClassRequestDto(dataStorage.datasetVersionDto.getoClass(),
                 List.of(dataStorage.datasetVersionDto.getId()), 5);
 
@@ -444,9 +445,9 @@ public class AggregateServiceTest {
     public void aggregate_aggregateByIdVehicle_maxOperation_groupByIdVehicle_postgis(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         // GIVEN
-        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeIdVehicle.id, AggregateOperation.MAX,
-                dataStorage.attributeChoc.id,
-                dataStorage.attributeIdVehicle.id);
+        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeIdVehicle.getId(), AggregateOperation.MAX,
+                dataStorage.attributeChoc.getId(),
+                dataStorage.attributeIdVehicle.getId());
         MonoClassRequestDto request = new MonoClassRequestDto(dataStorage.datasetVersionDto.getoClass(),
                 List.of(dataStorage.datasetVersionDto.getId()), 5);
 
@@ -486,7 +487,7 @@ public class AggregateServiceTest {
     public void aggregate_metric_should_return_max_AttributeId(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         // GIVEN
-        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeChoc.id, AggregateOperation.MAX);
+        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeChoc.getId(), AggregateOperation.MAX);
         MonoClassRequestDto request = new MonoClassRequestDto(dataStorage.datasetVersionDto.getoClass(),
                 List.of(dataStorage.datasetVersionDto.getId()), 5);
 
@@ -505,7 +506,7 @@ public class AggregateServiceTest {
     public void aggregate_extent_non_geo_should_throw_error(Storage storage) {
         // GIVEN
         var dataStorage = dataStorages.get(storage);
-        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeChoc.id, AggregateOperation.EXTENT);
+        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeChoc.getId(), AggregateOperation.EXTENT);
         MonoClassRequestDto request = new MonoClassRequestDto(dataStorage.datasetVersionDto.getoClass(),
                 List.of(dataStorage.datasetVersionDto.getId()));
 
@@ -514,7 +515,7 @@ public class AggregateServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(
                         "Aggregation on the non-geo attribute aggregate_choc which has type integer is not possible."
-                                .formatted(dataStorage.attributeChoc.name));
+                                .formatted(dataStorage.attributeChoc.getName()));
 
     }
 
@@ -524,7 +525,7 @@ public class AggregateServiceTest {
     public void aggregate_metric_should_return_extent(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         // GIVEN
-        AggregationParamDto params = new AggregationParamDto(dataStorage.attributePosition.id, AggregateOperation.EXTENT);
+        AggregationParamDto params = new AggregationParamDto(dataStorage.attributePosition.getId(), AggregateOperation.EXTENT);
         MonoClassRequestDto request = new MonoClassRequestDto(dataStorage.datasetVersionDto.getoClass(),
                 List.of(dataStorage.datasetVersionDto.getId()));
 
@@ -545,7 +546,7 @@ public class AggregateServiceTest {
     public void aggregate_metric_should_return_extent_postgis(Storage storage) { // FIXME shoud have the same behaviour than ES, issue #527
         var dataStorage = dataStorages.get(storage);
         // GIVEN
-        AggregationParamDto params = new AggregationParamDto(dataStorage.attributePosition.id, AggregateOperation.EXTENT);
+        AggregationParamDto params = new AggregationParamDto(dataStorage.attributePosition.getId(), AggregateOperation.EXTENT);
         MonoClassRequestDto request = new MonoClassRequestDto(dataStorage.datasetVersionDto.getoClass(),
                 List.of(dataStorage.datasetVersionDto.getId()), 5);
 
@@ -566,7 +567,8 @@ public class AggregateServiceTest {
     public void aggregate_metric_should_return_extent_empty(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         // GIVEN
-        AggregationParamDto params = new AggregationParamDto(dataStorage.attributePositionEmpty.id, AggregateOperation.EXTENT);
+        AggregationParamDto params = new AggregationParamDto(dataStorage.attributePositionEmpty.getId(),
+                AggregateOperation.EXTENT);
         MonoClassRequestDto request = new MonoClassRequestDto(dataStorage.datasetVersionDto.getoClass(),
                 List.of(dataStorage.datasetVersionDto.getId()), 5);
 
@@ -583,7 +585,7 @@ public class AggregateServiceTest {
     public void aggregate_should_not_work_on_string_attributes(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         // GIVEN
-        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeString.id);
+        AggregationParamDto params = new AggregationParamDto(dataStorage.attributeString.getId());
         MonoClassRequestDto request = new MonoClassRequestDto(dataStorage.datasetVersionDto.getoClass(),
                 List.of(dataStorage.datasetVersionDto.getId()), 5);
 

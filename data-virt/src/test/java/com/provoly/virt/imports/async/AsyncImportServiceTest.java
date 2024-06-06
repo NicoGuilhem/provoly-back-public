@@ -83,11 +83,11 @@ public class AsyncImportServiceTest {
                     classId,
                     new AttributeDefDto(classId,
                             "name", "name", UUID.randomUUID(), null, false, "slug"),
-                    field),
+                    field, null),
                     new AttributeDefDetailsDto(
                             classId,
                             new AttributeDefDto(classId, "family_name", "name", UUID.randomUUID(), null, false, "slug"),
-                            field)),
+                            field, null)),
             Storage.ELASTIC,
             List.of());
 

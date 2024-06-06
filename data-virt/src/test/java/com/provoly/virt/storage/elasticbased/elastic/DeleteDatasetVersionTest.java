@@ -88,12 +88,12 @@ public class DeleteDatasetVersionTest {
     private void insertItems(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put(dataStorage.attributeIdVehicle.name, "123 AA6 789");
+        attributes.put(dataStorage.attributeIdVehicle.getName(), "123 AA6 789");
         itemsTestTools.addItem(dataStorages.get(storage).datasetVersionDto, attributes);
         attributes = new HashMap<>();
-        attributes.put(dataStorage.attributeIdVehicle.name, "AAA");
+        attributes.put(dataStorage.attributeIdVehicle.getName(), "AAA");
         itemsTestTools.addItem(dataStorages.get(storage).datasetVersionDto, attributes);
-        attributes.put(dataStorage.attributeIdVehicle.name, "BBBB");
+        attributes.put(dataStorage.attributeIdVehicle.getName(), "BBBB");
         itemsTestTools.addItem(dataStorages.get(storage).datasetVersionDto, attributes);
     }
 

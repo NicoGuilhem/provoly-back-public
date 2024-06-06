@@ -167,7 +167,7 @@ class PostgisModelService implements StorageModelService {
     }
 
     private String getPostgisType(AttributeDefDetailsDto attribute) {
-        FieldDto field = attribute.field;
+        FieldDto field = attribute.getField();
         Type type = field.getType();
 
         return type.isGeo() ? type.getPostgisType().getGeoType(field.checkAndExtractSRID())

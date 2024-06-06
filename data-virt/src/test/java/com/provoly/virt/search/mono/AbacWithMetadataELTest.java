@@ -75,7 +75,7 @@ public class AbacWithMetadataELTest {
 
         insertItems();
 
-        condition = new AttributeConditionDto(nbWordAttribute.id, "42", Operator.EQUALS);
+        condition = new AttributeConditionDto(nbWordAttribute.getId(), "42", Operator.EQUALS);
         itemsTestTools.addMetadataToItem(policeDoc, statutJuridique, "policier");
 
         testData.createMetadataRule(statutJuridique, Operator.NOT_EQUALS, "${user.metadata('statut')}",
@@ -88,14 +88,14 @@ public class AbacWithMetadataELTest {
 
     private void insertItems() {
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put(titleAttribute.name, "Compte rendu audition Jason Bourne");
-        attributes.put(nbWordAttribute.name, 42);
-        attributes.put(authorAttribute.name, "Paul Dredd");
+        attributes.put(titleAttribute.getName(), "Compte rendu audition Jason Bourne");
+        attributes.put(nbWordAttribute.getName(), 42);
+        attributes.put(authorAttribute.getName(), "Paul Dredd");
         policeDoc = itemsTestTools.addItem(datasetVersionDto, attributes);
         attributes = new HashMap<>();
-        attributes.put(titleAttribute.name, "Liste des schtroumpfs");
-        attributes.put(nbWordAttribute.name, 42);
-        attributes.put(authorAttribute.name, "La Schtroumpfette et le grand Schtroumpf");
+        attributes.put(titleAttribute.getName(), "Liste des schtroumpfs");
+        attributes.put(nbWordAttribute.getName(), 42);
+        attributes.put(authorAttribute.getName(), "La Schtroumpfette et le grand Schtroumpf");
         openDoc = itemsTestTools.addItem(datasetVersionDto, attributes);
     }
 

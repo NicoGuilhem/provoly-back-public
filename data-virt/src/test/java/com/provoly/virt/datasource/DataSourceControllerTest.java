@@ -79,17 +79,17 @@ public class DataSourceControllerTest {
         dataStorages.get(storage).datasetVersionDto = datasetVersionDto;
 
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put(attributeDate.technicalName, Instant.parse("2015-01-01T00:00:00+01:00"));
-        attributes.put(attributeKeyword.technicalName, "marie");
-        attributes.put(attributeChoc.technicalName, "12");
-        attributes.put(multiAttributeKeyword.technicalName, "12");
+        attributes.put(attributeDate.getTechnicalName(), Instant.parse("2015-01-01T00:00:00+01:00"));
+        attributes.put(attributeKeyword.getTechnicalName(), "marie");
+        attributes.put(attributeChoc.getTechnicalName(), "12");
+        attributes.put(multiAttributeKeyword.getTechnicalName(), "12");
         itemsTestTools.addItem(datasetVersionDto, attributes);
 
         Map<String, Object> attributes2 = new HashMap<>();
-        attributes2.put(attributeDate.technicalName, Instant.parse("2015-01-01T00:00:00+01:00"));
-        attributes2.put(attributeKeyword.technicalName, "MaRie");
-        attributes2.put(attributeChoc.technicalName, "15");
-        attributes2.put(multiAttributeKeyword.technicalName, "12");
+        attributes2.put(attributeDate.getTechnicalName(), Instant.parse("2015-01-01T00:00:00+01:00"));
+        attributes2.put(attributeKeyword.getTechnicalName(), "MaRie");
+        attributes2.put(attributeChoc.getTechnicalName(), "15");
+        attributes2.put(multiAttributeKeyword.getTechnicalName(), "12");
         itemsTestTools.addItem(datasetVersionDto, attributes2);
     }
 
@@ -105,7 +105,7 @@ public class DataSourceControllerTest {
         prepareData(storage);
         var dataStorage = dataStorages.get(storage);
         var result = dataSourceController.getItems(dataStorage.datasetVersionDto.getId(),
-                new SortDto(dataStorage.attributeChoc.id, Direction.asc),
+                new SortDto(dataStorage.attributeChoc.getId(), Direction.asc),
                 null,
                 1,
                 false);
@@ -118,7 +118,7 @@ public class DataSourceControllerTest {
     public void getItemWithLimitOf10000_throwError400(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         assertThatThrownBy(() -> dataSourceController.getItems(dataStorage.datasetVersionDto.getId(),
-                new SortDto(dataStorage.attributeChoc.id, Direction.asc),
+                new SortDto(dataStorage.attributeChoc.getId(), Direction.asc),
                 null,
                 10000,
                 false)).isInstanceOf(BusinessException.class)
@@ -134,7 +134,7 @@ public class DataSourceControllerTest {
         var params = new DataSourceController.AggregationParameters();
         params.dateInterval = intervalFormat;
         params.dataSourceId = dataStorage.datasetVersionDto.getId();
-        params.aggregatedBy = dataStorage.attributeDate.id;
+        params.aggregatedBy = dataStorage.attributeDate.getId();
 
         var result = dataSourceController.getItemsAggregate(params, null, false, 0);
 
@@ -150,7 +150,7 @@ public class DataSourceControllerTest {
         var params = new DataSourceController.AggregationParameters();
         params.dateInterval = intervalFormat;
         params.dataSourceId = dataStorage.datasetVersionDto.getId();
-        params.aggregatedBy = dataStorage.attributeDate.id;
+        params.aggregatedBy = dataStorage.attributeDate.getId();
 
         var result = dataSourceController.getItemsAggregate(params, null, false, 0);
 
@@ -165,7 +165,7 @@ public class DataSourceControllerTest {
         var dataStorage = dataStorages.get(storage);
         String intervalFormat = "Hour";
         var params = new DataSourceController.AggregationParameters();
-        params.aggregatedBy = dataStorage.attributeDate.id;
+        params.aggregatedBy = dataStorage.attributeDate.getId();
         params.dateInterval = intervalFormat;
         params.dataSourceId = dataStorage.datasetVersionDto.getId();
 
@@ -181,7 +181,8 @@ public class DataSourceControllerTest {
         var dataStorage = dataStorages.get(storage);
         List<Search.AttributeByDatasource> attributes = new ArrayList<>();
         attributes
-                .add(new Search.AttributeByDatasource(dataStorage.attributeKeyword.id, dataStorage.datasetVersionDto.getId()));
+                .add(new Search.AttributeByDatasource(dataStorage.attributeKeyword.getId(),
+                        dataStorage.datasetVersionDto.getId()));
         Search autoComplete = new Search(attributes, "mar", 5);
 
         var result = dataSourceController.searchForAttributeValues(autoComplete);
@@ -196,7 +197,8 @@ public class DataSourceControllerTest {
         var dataStorage = dataStorages.get(storage);
         List<Search.AttributeByDatasource> attributes = new ArrayList<>();
         attributes.add(
-                new Search.AttributeByDatasource(dataStorage.attributeKeyword.id, dataStorage.datasetVersionDto.getDataset()));
+                new Search.AttributeByDatasource(dataStorage.attributeKeyword.getId(),
+                        dataStorage.datasetVersionDto.getDataset()));
         Search autoComplete = new Search(attributes, "ar", 5);
 
         var result = dataSourceController.searchForAttributeValues(autoComplete);
@@ -227,7 +229,7 @@ public class DataSourceControllerTest {
         var dataStorage = dataStorages.get(storage);
         UUID datasetId = UUID.randomUUID();
         List<Search.AttributeByDatasource> attributes = new ArrayList<>();
-        attributes.add(new Search.AttributeByDatasource(dataStorage.attributeKeyword.id, datasetId));
+        attributes.add(new Search.AttributeByDatasource(dataStorage.attributeKeyword.getId(), datasetId));
         Search autoComplete = new Search(attributes, "Z", 5);
 
         assertThatThrownBy(() -> dataSourceController.searchForAttributeValues(autoComplete))
@@ -245,7 +247,7 @@ public class DataSourceControllerTest {
                 Collections.singleton(dataStorage.datasetVersionDto.getId()));
         var namedQuery = testData.createNamedQuery(namedQueryName, request);
         List<Search.AttributeByDatasource> attributes = new ArrayList<>();
-        attributes.add(new Search.AttributeByDatasource(dataStorage.attributeKeyword.id, namedQuery.getId()));
+        attributes.add(new Search.AttributeByDatasource(dataStorage.attributeKeyword.getId(), namedQuery.getId()));
         Search autoComplete = new Search(attributes, "Z", 5);
         dsMock.addDataSource(namedQuery.getId(), DataSourceType.SEARCH, dataStorage.datasetVersionDto.getoClass());
 
@@ -260,7 +262,8 @@ public class DataSourceControllerTest {
     public void autocompleteCalledWithAttributeInteger_shouldThrowError(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         List<Search.AttributeByDatasource> attributes = new ArrayList<>();
-        attributes.add(new Search.AttributeByDatasource(dataStorage.attributeDate.id, dataStorage.datasetVersionDto.getId()));
+        attributes.add(
+                new Search.AttributeByDatasource(dataStorage.attributeDate.getId(), dataStorage.datasetVersionDto.getId()));
         Search autoComplete = new Search(attributes, "a", 5);
 
         assertThatThrownBy(() -> dataSourceController.searchForAttributeValues(autoComplete))
@@ -275,7 +278,8 @@ public class DataSourceControllerTest {
         var dataStorage = dataStorages.get(storage);
         List<Search.AttributeByDatasource> attributes = new ArrayList<>();
         attributes.add(
-                new Search.AttributeByDatasource(dataStorage.multiAttributeKeyword.id, dataStorage.datasetVersionDto.getId()));
+                new Search.AttributeByDatasource(dataStorage.multiAttributeKeyword.getId(),
+                        dataStorage.datasetVersionDto.getId()));
         Search autoComplete = new Search(attributes, "a", 5);
 
         assertThatThrownBy(() -> dataSourceController.searchForAttributeValues(autoComplete))
@@ -288,7 +292,8 @@ public class DataSourceControllerTest {
         var dataStorage = dataStorages.get(storage);
         List<Search.AttributeByDatasource> attributes = new ArrayList<>();
         attributes
-                .add(new Search.AttributeByDatasource(dataStorage.attributeKeyword.id, dataStorage.datasetVersionDto.getId()));
+                .add(new Search.AttributeByDatasource(dataStorage.attributeKeyword.getId(),
+                        dataStorage.datasetVersionDto.getId()));
         Search autoComplete = new Search(attributes, "", 5);
 
         var result = dataSourceController.searchForAttributeValues(autoComplete);
@@ -303,7 +308,8 @@ public class DataSourceControllerTest {
         var dataStorage = dataStorages.get(storage);
         List<Search.AttributeByDatasource> attributes = new ArrayList<>();
         attributes.add(
-                new Search.AttributeByDatasource(dataStorage.multiAttributeKeyword.id, dataStorage.datasetVersionDto.getId()));
+                new Search.AttributeByDatasource(dataStorage.multiAttributeKeyword.getId(),
+                        dataStorage.datasetVersionDto.getId()));
 
         assertThatThrownBy(() -> dataSourceController.searchForAttributeValues(new Search(attributes, null, 5)))
                 .isInstanceOf(BusinessException.class)
@@ -328,7 +334,7 @@ public class DataSourceControllerTest {
         var params = new DataSourceController.AggregationParameters();
         params.dateInterval = wrongDateIntervalValue;
         params.dataSourceId = dataStorage.datasetVersionDto.getId();
-        params.aggregatedBy = dataStorage.attributeDate.id;
+        params.aggregatedBy = dataStorage.attributeDate.getId();
 
         assertThatThrownBy(() -> dataSourceController.getItemsAggregate(params, null, false, 0))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -345,12 +351,12 @@ public class DataSourceControllerTest {
         var params = new DataSourceController.AggregationParameters();
         params.dateInterval = "Second";
         params.dataSourceId = dataStorage.datasetVersionDto.getId();
-        params.aggregatedBy = dataStorage.attributeChoc.id;
+        params.aggregatedBy = dataStorage.attributeChoc.getId();
 
         assertThatThrownBy(() -> dataSourceController.getItemsAggregate(params, null, false, 0))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("Aggregating on date is unavailable for attribute %s that is not a date."
-                        .formatted(dataStorage.attributeChoc.name));
+                        .formatted(dataStorage.attributeChoc.getName()));
     }
 
     @ParameterizedTest
@@ -359,8 +365,9 @@ public class DataSourceControllerTest {
     public void getItemsSearch_withAndComposedCondition_ShouldReturnItems(Storage storage) {
         var dataStorage = dataStorages.get(storage);
 
-        var attributeCondition1 = new AttributeConditionDto(dataStorage.attributeChoc.id, "12", Operator.EQUALS, null);
-        var attributeCondition2 = new AttributeConditionDto(dataStorage.attributeKeyword.id, "mar", Operator.I_CONTAINS, null);
+        var attributeCondition1 = new AttributeConditionDto(dataStorage.attributeChoc.getId(), "12", Operator.EQUALS, null);
+        var attributeCondition2 = new AttributeConditionDto(dataStorage.attributeKeyword.getId(), "mar", Operator.I_CONTAINS,
+                null);
         var composedCondition = new AndConditionDto();
         composedCondition.composed.add(attributeCondition1);
         composedCondition.composed.add(attributeCondition2);
@@ -379,8 +386,8 @@ public class DataSourceControllerTest {
     public void getItemsSearch_withConditionAndFilter_ShouldReturnItems(Storage storage) {
         var dataStorage = dataStorages.get(storage);
 
-        var condition = new AttributeConditionDto(dataStorage.attributeChoc.id, "12", Operator.EQUALS, null);
-        FilterDto filterDto = new FilterDto(dataStorage.attributeKeyword.id, Operator.I_CONTAINS, "mar");
+        var condition = new AttributeConditionDto(dataStorage.attributeChoc.getId(), "12", Operator.EQUALS, null);
+        FilterDto filterDto = new FilterDto(dataStorage.attributeKeyword.getId(), Operator.I_CONTAINS, "mar");
         SearchRequestDto searchRequestDto = new MonoClassRequestDto(dataStorage.datasetVersionDto.getoClass(), List.of(),
                 condition);
 
@@ -416,9 +423,9 @@ public class DataSourceControllerTest {
         // GIVEN
         var params = new DataSourceController.AggregationParameters();
         params.dataSourceId = dataStorage.datasetVersionDto.getId();
-        params.aggregatedBy = dataStorage.attributeChoc.id;
-        params.valueField = dataStorage.attributeChoc.id;
-        params.groupBy = dataStorage.attributeChoc.id;
+        params.aggregatedBy = dataStorage.attributeChoc.getId();
+        params.valueField = dataStorage.attributeChoc.getId();
+        params.groupBy = dataStorage.attributeChoc.getId();
         params.sortAggregate = new SortAggregate(Direction.asc, null);
 
         //WHEN
@@ -436,7 +443,7 @@ public class DataSourceControllerTest {
         var params = new DataSourceController.AggregationParameters();
         params.dateInterval = intervalFormat;
         params.dataSourceId = dataStorage.datasetVersionDto.getId();
-        params.aggregatedBy = dataStorage.attributeDate.id;
+        params.aggregatedBy = dataStorage.attributeDate.getId();
 
         assertThatThrownBy(() -> dataSourceController.getItemsAggregate(params, null, false, -5))
                 .isInstanceOf(BusinessException.class)

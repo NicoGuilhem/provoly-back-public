@@ -54,11 +54,11 @@ public class AttributeSimpleValue extends AttributeValue {
     }
 
     public FieldDto getField() {
-        return getAttributeDef().field;
+        return getAttributeDef().getField();
     }
 
     public String getSlugField() {
-        return getAttributeDef().field.slug;
+        return getAttributeDef().getField().slug;
     }
 
     public boolean isVisible() {

@@ -72,15 +72,15 @@ public class KuzzleWriteService implements StorageWriteService {
     }
 
     private Object getValue(Map.Entry<String, AttributeValue> entry) {
-        if (entry.getValue().getAttributeDef().multiValued) {
+        if (entry.getValue().getAttributeDef().isMultiValued()) {
             throw new BusinessException(ErrorCode.TECHNICAL, "Multi value is not allowed in Kuzzle storage");
         }
         var value = (AttributeSimpleValue) entry.getValue();
-        if (value.getAttributeDef().field.getType().isGeo()) {
+        if (value.getAttributeDef().getField().getType().isGeo()) {
             var geo = (GeoHolder) value.readValueEvenIfNotVisible();
             return geo.getStringAs(GeoFormat.WKT);
         }
-        if (value.getAttributeDef().field.getType() == INSTANT) {
+        if (value.getAttributeDef().getField().getType() == INSTANT) {
             return (((AttributeSimpleValue) entry.getValue()).readValueEvenIfNotVisible().toString())
                     .replace(TIMEZONE_IDENTIFIER, "");
         }

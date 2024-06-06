@@ -36,7 +36,7 @@ public class EntityIdService {
             em.merge(entity);
         } else {
             if (checkNameDuplicate && entity instanceof EntityNamed named) {
-                isNameAlreadyExists(named.getName(), named.getClass());
+                checkNameAlreadyExists(named.getName(), named.getClass());
             }
             em.persist(entity);
         }
@@ -92,7 +92,7 @@ public class EntityIdService {
     }
 
     @Transactional
-    public <T extends EntityNamed> void isNameAlreadyExists(String name, Class<T> entityClass) {
+    public <T extends EntityNamed> void checkNameAlreadyExists(String name, Class<T> entityClass) {
         var cb = em.getCriteriaBuilder();
         var q = cb.createQuery(Long.class);
         var metadataRoot = q.from(entityClass);

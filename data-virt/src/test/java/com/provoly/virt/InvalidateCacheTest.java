@@ -59,12 +59,12 @@ public class InvalidateCacheTest {
         modelService.getDetails(vehicleClass.getId());
 
         // when
-        attributeIdVehicle.name = "id_vehicle_updated";
+        attributeIdVehicle.setName("id_vehicle_updated");
         testData.createClassWithId(companion, vehicleClass.getId(), "vehicle_cache", Storage.ELASTIC, null, attributeIdVehicle);
         var updatedClass = modelService.getDetails(vehicleClass.getId());
 
         //then
-        Assertions.assertThat(updatedClass.getAttributes().get(0).name).isEqualTo("id_vehicle_updated");
+        Assertions.assertThat(updatedClass.getAttributes().get(0).getName()).isEqualTo("id_vehicle_updated");
 
     }
 }

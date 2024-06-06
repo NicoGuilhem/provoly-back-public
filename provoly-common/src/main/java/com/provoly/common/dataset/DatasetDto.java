@@ -18,11 +18,12 @@ public class DatasetDto {
     private String description;
     private List<MetadataValueWriteDto> metadata;
     private Collection<String> groups;
+    private List<UUID> categories;
 
     @Default
     @JsonCreator
     public DatasetDto(UUID id, String name, UUID oClass, DatasetType type, String description,
-            List<MetadataValueWriteDto> metadata, Collection<String> groups) {
+            List<MetadataValueWriteDto> metadata, Collection<String> groups, List<UUID> categories) {
         this.id = id;
         this.name = name;
         this.oClass = oClass;
@@ -30,19 +31,20 @@ public class DatasetDto {
         this.description = description;
         this.metadata = metadata;
         this.groups = groups;
+        this.categories = categories;
     }
 
     public DatasetDto(UUID id, String name, UUID oClass, DatasetType type) {
-        this(id, name, oClass, type, null, List.of(), null);
+        this(id, name, oClass, type, null, List.of(), null, List.of());
     }
 
     public DatasetDto(UUID id, String name, UUID oClass, DatasetType type, String description) {
-        this(id, name, oClass, type, description, List.of(), null);
+        this(id, name, oClass, type, description, List.of(), null, List.of());
     }
 
     public DatasetDto(UUID id, String name, UUID oClass, DatasetType type,
-            Collection<String> groups) {
-        this(id, name, oClass, type, null, List.of(), groups);
+            Collection<String> groups, List<UUID> categories) {
+        this(id, name, oClass, type, null, List.of(), groups, categories);
     }
 
     public List<MetadataValueWriteDto> getMetadata() {
@@ -99,5 +101,9 @@ public class DatasetDto {
 
     public void setGroups(Collection<String> groups) {
         this.groups = groups;
+    }
+
+    public List<UUID> getCategories() {
+        return categories;
     }
 }

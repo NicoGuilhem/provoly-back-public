@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import com.provoly.common.dataset.DatasetType;
 import com.provoly.common.metadata.MetadataValueReadDto;
+import com.provoly.common.model.CategoryDto;
 
 public class DatasetDetailsDto {
 
@@ -18,9 +19,18 @@ public class DatasetDetailsDto {
     private List<String> groups;
     private boolean owner;
     private String slug;
+    private List<CategoryDto> categories;
 
-    public DatasetDetailsDto(UUID id, String name, UUID oClass, DatasetType type,
-            List<MetadataValueReadDto> metadata, String description, List<String> groups, boolean owner, String slug) {
+    public DatasetDetailsDto(UUID id,
+            String name,
+            UUID oClass,
+            DatasetType type,
+            List<MetadataValueReadDto> metadata,
+            String description,
+            List<String> groups,
+            boolean owner,
+            String slug,
+            List<CategoryDto> categories) {
         this.id = id;
         this.name = name;
         this.oClass = oClass;
@@ -30,6 +40,7 @@ public class DatasetDetailsDto {
         this.groups = groups;
         this.owner = owner;
         this.slug = slug;
+        this.categories = categories;
     }
 
     public List<String> getGroups() {
@@ -102,5 +113,13 @@ public class DatasetDetailsDto {
 
     public void setSlug(String slug) {
         this.slug = slug;
+    }
+
+    public List<CategoryDto> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(List<CategoryDto> categories) {
+        this.categories = categories;
     }
 }

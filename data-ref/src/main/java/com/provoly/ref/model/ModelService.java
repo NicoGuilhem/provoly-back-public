@@ -12,8 +12,12 @@ import jakarta.transaction.Transactional;
 import com.provoly.common.Storage;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
+import com.provoly.common.model.AttributeDefDto;
 import com.provoly.common.model.FieldDto;
 import com.provoly.common.model.OClassWriteDto;
+import com.provoly.ref.category.Category;
+import com.provoly.ref.category.CategoryService;
+import com.provoly.ref.category.WithCategoryEntityType;
 import com.provoly.ref.customclass.CustomClassService;
 import com.provoly.ref.dataset.Dataset;
 import com.provoly.ref.dataset.Dataset_;
@@ -35,6 +39,7 @@ public class ModelService {
     private EntityIdService entityIdService;
     private AssociationService associationService;
     private MetadataService metadataService;
+    private CategoryService categoryService;
     @ConfigProperty(name = "provoly.ref.storages")
     List<Storage> storagesProperties;
 
@@ -44,7 +49,7 @@ public class ModelService {
             CustomClassService customClassService,
             EntityIdService entityIdService,
             AssociationService associationService,
-            MetadataService metadataService) {
+            MetadataService metadataService, CategoryService categoryService) {
         this.em = em;
         this.modelMapper = modelMapper;
         this.refEventService = refEventService;
@@ -52,11 +57,12 @@ public class ModelService {
         this.entityIdService = entityIdService;
         this.associationService = associationService;
         this.metadataService = metadataService;
+        this.categoryService = categoryService;
     }
 
     public void saveCategory(Category category) {
-        verifyCategoryDuplicateName(category);
-        entityIdService.saveEntity(category);
+        category.setWithCategoryEntityType(WithCategoryEntityType.ATTRIBUTES);
+        categoryService.save(category);
     }
 
     public void addFields(Collection<FieldDto> fields) {
@@ -90,6 +96,16 @@ public class ModelService {
                         .forEach(metadata -> metadataService.addMetadataToEntity(newClass.getId(), metadata.getMetadataDefId(),
                                 metadata, EntityType.CLASS));
             }
+            newClass.getAttributes()
+                    .forEach(attributeDefDto -> {
+                        if (attributeDefDto.getCategory() != null) {
+                            categoryService.updateEntityCategories(List.of(attributeDefDto.getCategory()),
+                                    attributeDefDto.getId(), WithCategoryEntityType.ATTRIBUTES);
+                        } else {
+                            categoryService.updateEntityCategories(List.of(), attributeDefDto.getId(),
+                                    WithCategoryEntityType.ATTRIBUTES);
+                        }
+                    });
         } else {
             // Update an existing class
             if (oldClass.getStorage() != newClass.getStorage()) {
@@ -102,6 +118,15 @@ public class ModelService {
                 refEventService.classUpdated(oclass);
             }
             metadataService.updateMetadataByEntityType(newClass, EntityType.CLASS);
+            newClass.getAttributes()
+                    .forEach(attributeDefDto -> {
+                        List<UUID> categories = new ArrayList<>();
+                        if (attributeDefDto.getCategory() != null) {
+                            categories.add(attributeDefDto.getCategory());
+                        }
+                        categoryService.updateEntityCategories(categories,
+                                attributeDefDto.getId(), WithCategoryEntityType.ATTRIBUTES);
+                    });
         }
     }
 
@@ -152,15 +177,21 @@ public class ModelService {
     }
 
     @Transactional
-    public void addOrUpdateAttribute(UUID oClassId, AttributeDef attributeDef) {
+    public void addOrUpdateAttribute(UUID oClassId, AttributeDefDto attributeDefDto) {
         OClass oClass = entityIdService.getLinkedById(oClassId, OClass.class);
-        getAttributeInSet(attributeDef, oClass.getAttributes()).ifPresentOrElse(
+        getAttributeInSet(attributeDefDto, oClass.getAttributes()).ifPresentOrElse(
                 oldAttributeDef -> {
-                    oldAttributeDef.setName(attributeDef.getName());
-                    oldAttributeDef.setTechnicalName(attributeDef.getTechnicalName());
-                    oldAttributeDef.setCategory(attributeDef.getCategory());
+                    oldAttributeDef.setName(attributeDefDto.getName());
+                    oldAttributeDef.setTechnicalName(attributeDefDto.getTechnicalName());
+                    if (attributeDefDto.getCategory() != null) {
+                        categoryService.updateEntityCategories(List.of(attributeDefDto.getCategory()),
+                                attributeDefDto.getId(), WithCategoryEntityType.ATTRIBUTES);
+                    } else {
+                        categoryService.updateEntityCategories(List.of(), attributeDefDto.getId(),
+                                WithCategoryEntityType.ATTRIBUTES);
+                    }
                 },
-                () -> oClass.addAttribute(attributeDef));
+                () -> oClass.addAttribute(modelMapper.toModel(attributeDefDto)));
         refEventService.classUpdated(oClass);
     }
 
@@ -179,6 +210,9 @@ public class ModelService {
         oclassDto.getMetadata().forEach(metadata -> metadataService.deleteMetadataValueByEntityId(oClassId,
                 metadata.getMetadataDef().id, EntityType.CLASS));
 
+        oclassDto.getAttributes().forEach(attributeDefDetailsDto -> {
+            categoryService.deleteAllByEntityId(attributeDefDetailsDto.getCategory());
+        });
         em.remove(oClass);
 
         refEventService.classDeleted(oClass);
@@ -211,10 +245,6 @@ public class ModelService {
         return entityIdService.getById(id, Category.class);
     }
 
-    public List<Category> getAllCategories() {
-        return entityIdService.getAll(Category.class);
-    }
-
     public Field getFieldById(UUID id) {
         return entityIdService.getById(id, Field.class);
     }
@@ -232,6 +262,9 @@ public class ModelService {
     }
 
     public void removeCategoryEntity(UUID id) {
+        if (categoryService.isCategoryUsedByAnyEntity(id)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "You're not allowed to delete category %s".formatted(id));
+        }
         entityIdService.removeEntity(id, Category.class);
     }
 
@@ -256,6 +289,11 @@ public class ModelService {
         }
         var oclass = entityIdService.getById(oclassId, OClass.class);
         var attributeDef = entityIdService.getById(attributeId, AttributeDef.class);
+        oclass.getAttributes()
+                .stream()
+                .map(EntityId::getId)
+                .filter(entityIds -> entityIds == attributeId)
+                .forEach(entityId -> categoryService.deleteAllByEntityId(entityId));
         oclass.deleteAttribute(attributeDef);
         refEventService.classUpdated(oclass);
     }
@@ -269,9 +307,9 @@ public class ModelService {
         customClassService.deleteByoClassId(oClassId);
     }
 
-    private Optional<AttributeDef> getAttributeInSet(AttributeDef attribute, Set<AttributeDef> attributeDefSet) {
+    private Optional<AttributeDef> getAttributeInSet(AttributeDefDto attributeDefDto, Set<AttributeDef> attributeDefSet) {
         return attributeDefSet.stream()
-                .filter(attributeDef -> attributeDef.getId().equals(attribute.getId()))
+                .filter(attributeDef -> attributeDef.getId().equals(attributeDefDto.getId()))
                 .findFirst();
     }
 
@@ -283,7 +321,7 @@ public class ModelService {
                 .flatMap(Set::stream)
                 .collect(Collectors.toSet());
         for (AttributeDef attributeDef : oClass.getAttributes()) {
-            getAttributeInSet(attributeDef, allOtherAttributes).ifPresent(otherAttributeDef -> {
+            getAttributeInSet(modelMapper.toDto(attributeDef), allOtherAttributes).ifPresent(otherAttributeDef -> {
                 throw new BusinessException(ErrorCode.ID_ALREADY_USED,
                         "Attribute definition id %s is used by %s and cannot be assigned to %s"
                                 .formatted(attributeDef.getId(), otherAttributeDef.getSlug(), attributeDef.getSlug()));
@@ -303,17 +341,5 @@ public class ModelService {
                 throw new BusinessException(ErrorCode.BAD_REQUEST, msg);
             }
         }
-    }
-
-    private void verifyCategoryDuplicateName(Category category) {
-        entityIdService.getAll(Category.class)
-                .stream()
-                .filter(c -> !category.getId().equals(c.getId()))
-                .filter(c -> category.getName().equals(c.getName()))
-                .findFirst()
-                .ifPresent(param -> {
-                    throw new BusinessException(ErrorCode.NAME_ALREADY_USED,
-                            category.getName() + " category name already used");
-                });
     }
 }

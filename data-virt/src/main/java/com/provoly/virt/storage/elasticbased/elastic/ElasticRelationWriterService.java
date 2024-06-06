@@ -161,7 +161,7 @@ class ElasticRelationWriterService implements StorageRelationWriterService {
             var link = linkService.getById(relationsAggregate.link);
             for (String source : relationsAggregate.source) {
                 for (String dest : relationsAggregate.dest) {
-                    var relation = new Relation(link.relationType.slug, new ItemId(source), new ItemId(dest),
+                    var relation = new Relation(link.getRelationType().slug, new ItemId(source), new ItemId(dest),
                             relationsAggregate.aggregateId);
                     relations.add(relation);
                 }

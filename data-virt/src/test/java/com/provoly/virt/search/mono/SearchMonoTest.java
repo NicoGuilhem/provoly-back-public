@@ -98,22 +98,22 @@ public class SearchMonoTest {
         GeoHolder pointItem1 = new GeoHolder(
                 "{ \"type\": \"Point\", \"coordinates\": [44.764999072263535, -0.5997965274661601] }");
         Map<String, Object> item1 = Map.of(
-                dataStorage.attributeIdVehicule.name, "123 AA6 789",
-                dataStorage.attributeString.name, "123 AA6 789",
-                dataStorage.attributeKeyword.name, "Marie",
-                dataStorage.attributeChoc.name, 3,
-                dataStorage.attributePosition.name, pointItem1,
-                dataStorage.attributeDate.name, "2015-01-01T00:00:00Z");
+                dataStorage.attributeIdVehicule.getName(), "123 AA6 789",
+                dataStorage.attributeString.getName(), "123 AA6 789",
+                dataStorage.attributeKeyword.getName(), "Marie",
+                dataStorage.attributeChoc.getName(), 3,
+                dataStorage.attributePosition.getName(), pointItem1,
+                dataStorage.attributeDate.getName(), "2015-01-01T00:00:00Z");
 
         GeoHolder pointItem2 = new GeoHolder(
                 "{ \"type\": \"Point\", \"coordinates\": [48.854986760569076, 2.3479450485479996] }");
         Map<String, Object> item2 = Map.of(
-                dataStorage.attributeIdVehicule.name, "AAA",
-                dataStorage.attributeString.name, "AAA",
-                dataStorage.attributeKeyword.name, "marianne",
-                dataStorage.attributeChoc.name, 33,
-                dataStorage.attributePosition.name, pointItem2,
-                dataStorage.attributeDate.name, "2016-01-01T00:00:00Z");
+                dataStorage.attributeIdVehicule.getName(), "AAA",
+                dataStorage.attributeString.getName(), "AAA",
+                dataStorage.attributeKeyword.getName(), "marianne",
+                dataStorage.attributeChoc.getName(), 33,
+                dataStorage.attributePosition.getName(), pointItem2,
+                dataStorage.attributeDate.getName(), "2016-01-01T00:00:00Z");
 
         List<MetadataValueWriteDto> metadata = new ArrayList<>(List.of(
                 new MetadataValueWriteDto("AssetTest", MetadataSystem.ASSET_MODEL.getId()),
@@ -131,11 +131,11 @@ public class SearchMonoTest {
             dataStorage.vehicle2 = itemsTestTools.addItem(dataStorage.datasetVersionDto, item2);
         } else if (KUZZLE_ENABLED) {
             Map<String, Object> model = Map.of(
-                    dataStorage.attributeIdVehicule.name, Map.of("type", "keyword"),
-                    dataStorage.attributeString.name, Map.of("type", "text"),
-                    dataStorage.attributeChoc.name, Map.of("type", "integer"),
-                    dataStorage.attributePosition.name, Map.of("type", "geo_shape"),
-                    dataStorage.attributeDate.name, Map.of("type", "date"));
+                    dataStorage.attributeIdVehicule.getName(), Map.of("type", "keyword"),
+                    dataStorage.attributeString.getName(), Map.of("type", "text"),
+                    dataStorage.attributeChoc.getName(), Map.of("type", "integer"),
+                    dataStorage.attributePosition.getName(), Map.of("type", "geo_shape"),
+                    dataStorage.attributeDate.getName(), Map.of("type", "date"));
 
             if (!initialized) {
                 kuzzleTestService.initKuzzleModels(model);
@@ -143,10 +143,10 @@ public class SearchMonoTest {
             }
 
             item1 = new HashMap<>(item1);
-            item1.put(dataStorage.attributePosition.name, pointItem1.getAsMap());
+            item1.put(dataStorage.attributePosition.getName(), pointItem1.getAsMap());
 
             item2 = new HashMap<>(item2);
-            item2.put(dataStorage.attributePosition.name, pointItem2.getAsMap());
+            item2.put(dataStorage.attributePosition.getName(), pointItem2.getAsMap());
 
             dataStorage.vehicle1 = kuzzleTestService.insertKuzzleItem("mycab", "myasset", item1, storage,
                     dataStorage.datasetVersionDto);
@@ -181,7 +181,8 @@ public class SearchMonoTest {
     public void keyword_equals_returnOneResult(Storage storage) {
         prepareData(storage);
         var dataStorage = dataStorages.get(storage);
-        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeIdVehicule.id, "AAA", Operator.EQUALS);
+        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeIdVehicule.getId(), "AAA",
+                Operator.EQUALS);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
         assertFalse(items.items().isEmpty());
@@ -193,7 +194,8 @@ public class SearchMonoTest {
     @Order(2)
     public void keyword_equals_returnNoResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeIdVehicule.id, "BB", Operator.EQUALS);
+        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeIdVehicule.getId(), "BB",
+                Operator.EQUALS);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
         assertTrue(items.items().isEmpty());
@@ -204,7 +206,7 @@ public class SearchMonoTest {
     @Order(3)
     public void keyword_contains_returnTwoResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeIdVehicule.id, "AA",
+        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeIdVehicule.getId(), "AA",
                 Operator.CONTAINS);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
@@ -217,7 +219,7 @@ public class SearchMonoTest {
     @Order(4)
     public void keyword_startWith_returnOneResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeIdVehicule.id, "12",
+        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeIdVehicule.getId(), "12",
                 Operator.START_WITH);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
@@ -230,7 +232,7 @@ public class SearchMonoTest {
     @Order(5)
     public void keyword_startWith_returnNoResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeIdVehicule.id, "BB",
+        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeIdVehicule.getId(), "BB",
                 Operator.START_WITH);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
@@ -242,7 +244,7 @@ public class SearchMonoTest {
     @Order(6)
     public void keyword_endWith_returnOneResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeIdVehicule.id, "789",
+        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeIdVehicule.getId(), "789",
                 Operator.END_WITH);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
@@ -255,7 +257,7 @@ public class SearchMonoTest {
     @Order(7)
     public void keyword_endWith_returnNoResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeIdVehicule.id, "78",
+        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeIdVehicule.getId(), "78",
                 Operator.END_WITH);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
@@ -267,7 +269,8 @@ public class SearchMonoTest {
     @Order(8)
     public void integer_equals_returnNoResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeIdVehicule.id, "78", Operator.EQUALS);
+        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeIdVehicule.getId(), "78",
+                Operator.EQUALS);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
         assertTrue(items.items().isEmpty());
@@ -278,7 +281,7 @@ public class SearchMonoTest {
     @Order(9)
     public void int_equals_returnOneResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeChoc.id, "3", Operator.EQUALS);
+        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeChoc.getId(), "3", Operator.EQUALS);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
         assertFalse(items.items().isEmpty());
@@ -290,7 +293,8 @@ public class SearchMonoTest {
     @Order(10)
     public void integer_greaterThan_returnNoResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeChoc.id, "33", Operator.GREATER_THAN);
+        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeChoc.getId(), "33",
+                Operator.GREATER_THAN);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
         assertTrue(items.items().isEmpty());
@@ -301,7 +305,8 @@ public class SearchMonoTest {
     @Order(11)
     public void integer_greaterThan_returnTwoResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeChoc.id, "2", Operator.GREATER_THAN);
+        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeChoc.getId(), "2",
+                Operator.GREATER_THAN);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
         assertFalse(items.items().isEmpty());
@@ -313,7 +318,8 @@ public class SearchMonoTest {
     @Order(12)
     public void integer_lowerThan_returnTwoResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeChoc.id, "34", Operator.LOWER_THAN);
+        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeChoc.getId(), "34",
+                Operator.LOWER_THAN);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
         assertFalse(items.items().isEmpty());
@@ -325,7 +331,8 @@ public class SearchMonoTest {
     @Order(13)
     public void integer_lowerThan_returnNoResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeChoc.id, "2", Operator.LOWER_THAN);
+        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeChoc.getId(), "2",
+                Operator.LOWER_THAN);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
         assertTrue(items.items().isEmpty());
@@ -337,8 +344,9 @@ public class SearchMonoTest {
     public void or_returnNoResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         OrConditionDto conditionDtoOr = new OrConditionDto();
-        AttributeConditionDto condition1 = new AttributeConditionDto(dataStorage.attributeChoc.id, "2", Operator.LOWER_THAN);
-        AttributeConditionDto condition2 = new AttributeConditionDto(dataStorage.attributeIdVehicule.id, "Z",
+        AttributeConditionDto condition1 = new AttributeConditionDto(dataStorage.attributeChoc.getId(), "2",
+                Operator.LOWER_THAN);
+        AttributeConditionDto condition2 = new AttributeConditionDto(dataStorage.attributeIdVehicule.getId(), "Z",
                 Operator.CONTAINS);
         conditionDtoOr.composed.add(condition1);
         conditionDtoOr.composed.add(condition2);
@@ -353,8 +361,9 @@ public class SearchMonoTest {
     public void or_returnTwoResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         OrConditionDto conditionDtoOr = new OrConditionDto();
-        AttributeConditionDto condition1 = new AttributeConditionDto(dataStorage.attributeChoc.id, "20", Operator.LOWER_THAN);
-        AttributeConditionDto condition2 = new AttributeConditionDto(dataStorage.attributeIdVehicule.id, "A",
+        AttributeConditionDto condition1 = new AttributeConditionDto(dataStorage.attributeChoc.getId(), "20",
+                Operator.LOWER_THAN);
+        AttributeConditionDto condition2 = new AttributeConditionDto(dataStorage.attributeIdVehicule.getId(), "A",
                 Operator.CONTAINS);
         conditionDtoOr.composed.add(condition1);
         conditionDtoOr.composed.add(condition2);
@@ -371,7 +380,7 @@ public class SearchMonoTest {
         var dataStorage = dataStorages.get(storage);
         OrConditionDto conditionDtoOr = new OrConditionDto();
         AttributeConditionDto condition1 = new AttributeConditionDto(UUID.randomUUID(), "20", Operator.LOWER_THAN);
-        AttributeConditionDto condition2 = new AttributeConditionDto(dataStorage.attributeIdVehicule.id, "A",
+        AttributeConditionDto condition2 = new AttributeConditionDto(dataStorage.attributeIdVehicule.getId(), "A",
                 Operator.CONTAINS);
         conditionDtoOr.composed.add(condition1);
         conditionDtoOr.composed.add(condition2);
@@ -387,8 +396,9 @@ public class SearchMonoTest {
     public void and_returnOneResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         AndConditionDto conditionDtoAnd = new AndConditionDto();
-        AttributeConditionDto condition1 = new AttributeConditionDto(dataStorage.attributeChoc.id, "20", Operator.LOWER_THAN);
-        AttributeConditionDto condition2 = new AttributeConditionDto(dataStorage.attributeIdVehicule.id, "3",
+        AttributeConditionDto condition1 = new AttributeConditionDto(dataStorage.attributeChoc.getId(), "20",
+                Operator.LOWER_THAN);
+        AttributeConditionDto condition2 = new AttributeConditionDto(dataStorage.attributeIdVehicule.getId(), "3",
                 Operator.CONTAINS);
 
         conditionDtoAnd.composed.add(condition1);
@@ -405,8 +415,9 @@ public class SearchMonoTest {
     public void complexCondition_returnOneResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         OrConditionDto conditionDtoOr = new OrConditionDto();
-        AttributeConditionDto condition1 = new AttributeConditionDto(dataStorage.attributeChoc.id, "20", Operator.LOWER_THAN);
-        AttributeConditionDto condition2 = new AttributeConditionDto(dataStorage.attributeChoc.id, "3", Operator.EQUALS);
+        AttributeConditionDto condition1 = new AttributeConditionDto(dataStorage.attributeChoc.getId(), "20",
+                Operator.LOWER_THAN);
+        AttributeConditionDto condition2 = new AttributeConditionDto(dataStorage.attributeChoc.getId(), "3", Operator.EQUALS);
         conditionDtoOr.composed.add(condition1);
         conditionDtoOr.composed.add(condition2);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
@@ -421,11 +432,12 @@ public class SearchMonoTest {
     public void complexCondition_returnTwoResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         OrConditionDto conditionDtoOr = new OrConditionDto();
-        AttributeConditionDto condition1 = new AttributeConditionDto(dataStorage.attributeChoc.id, "2", Operator.GREATER_THAN);
+        AttributeConditionDto condition1 = new AttributeConditionDto(dataStorage.attributeChoc.getId(), "2",
+                Operator.GREATER_THAN);
         AndConditionDto conditionDtoAnd = new AndConditionDto();
-        AttributeConditionDto condition2 = new AttributeConditionDto(dataStorage.attributeIdVehicule.id, "3",
+        AttributeConditionDto condition2 = new AttributeConditionDto(dataStorage.attributeIdVehicule.getId(), "3",
                 Operator.CONTAINS);
-        AttributeConditionDto condition3 = new AttributeConditionDto(dataStorage.attributeIdVehicule.id, "AA",
+        AttributeConditionDto condition3 = new AttributeConditionDto(dataStorage.attributeIdVehicule.getId(), "AA",
                 Operator.START_WITH);
         conditionDtoAnd.composed.add(condition2);
         conditionDtoAnd.composed.add(new TrueConditionDto());
@@ -445,8 +457,9 @@ public class SearchMonoTest {
     public void inside_returnOneResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         AndConditionDto conditionDtoAnd = new AndConditionDto();
-        AttributeConditionDto condition1 = new AttributeConditionDto(dataStorage.attributeChoc.id, "2", Operator.INSIDE, "4");
-        AttributeConditionDto condition2 = new AttributeConditionDto(dataStorage.attributeIdVehicule.id, "3",
+        AttributeConditionDto condition1 = new AttributeConditionDto(dataStorage.attributeChoc.getId(), "2", Operator.INSIDE,
+                "4");
+        AttributeConditionDto condition2 = new AttributeConditionDto(dataStorage.attributeIdVehicule.getId(), "3",
                 Operator.CONTAINS);
         conditionDtoAnd.composed.add(condition1);
         conditionDtoAnd.composed.add(condition2);
@@ -462,8 +475,9 @@ public class SearchMonoTest {
     public void outside_returnOneResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         AndConditionDto conditionDtoAnd = new AndConditionDto();
-        AttributeConditionDto condition1 = new AttributeConditionDto(dataStorage.attributeChoc.id, "4", Operator.OUTSIDE, "54");
-        AttributeConditionDto condition2 = new AttributeConditionDto(dataStorage.attributeIdVehicule.id, "3",
+        AttributeConditionDto condition1 = new AttributeConditionDto(dataStorage.attributeChoc.getId(), "4", Operator.OUTSIDE,
+                "54");
+        AttributeConditionDto condition2 = new AttributeConditionDto(dataStorage.attributeIdVehicule.getId(), "3",
                 Operator.CONTAINS);
         conditionDtoAnd.composed.add(condition1);
         conditionDtoAnd.composed.add(condition2);
@@ -479,8 +493,9 @@ public class SearchMonoTest {
     public void outside_returnAnyResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         AndConditionDto conditionDtoAnd = new AndConditionDto();
-        AttributeConditionDto condition1 = new AttributeConditionDto(dataStorage.attributeChoc.id, "2", Operator.OUTSIDE, "34");
-        AttributeConditionDto condition2 = new AttributeConditionDto(dataStorage.attributeIdVehicule.id, "3",
+        AttributeConditionDto condition1 = new AttributeConditionDto(dataStorage.attributeChoc.getId(), "2", Operator.OUTSIDE,
+                "34");
+        AttributeConditionDto condition2 = new AttributeConditionDto(dataStorage.attributeIdVehicule.getId(), "3",
                 Operator.CONTAINS);
         conditionDtoAnd.composed.add(condition1);
         conditionDtoAnd.composed.add(condition2);
@@ -494,7 +509,7 @@ public class SearchMonoTest {
     @Order(23)
     public void distance_returnOneResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        var condition = new AttributeConditionDto(dataStorage.attributePosition.id, "10000", Operator.DISTANCE);
+        var condition = new AttributeConditionDto(dataStorage.attributePosition.getId(), "10000", Operator.DISTANCE);
         condition.setLocation("POINT (44.813623245283146 -0.554864455306414)"); // Cité numérique
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
@@ -508,7 +523,7 @@ public class SearchMonoTest {
     @Order(24)
     public void asc_returnAllResultSortedByInteger(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        SortDto sort = new SortDto(dataStorage.attributeChoc.id, Direction.asc);
+        SortDto sort = new SortDto(dataStorage.attributeChoc.getId(), Direction.asc);
 
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto, sort);
         var ids = items.items().get(dataStorage.datasetVersionDto.getoClass()).stream().map(ItemDto::getId).toList();
@@ -520,7 +535,7 @@ public class SearchMonoTest {
     @Order(25)
     public void asc_returnThrow400WhenSortedByGeoPointOnES(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        SortDto sort = new SortDto(dataStorage.attributePosition.id, Direction.asc);
+        SortDto sort = new SortDto(dataStorage.attributePosition.getId(), Direction.asc);
 
         assertThatThrownBy(
                 () -> itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto, sort))
@@ -533,7 +548,7 @@ public class SearchMonoTest {
     @Order(26)
     public void desc_returnAllResultSortedByDate(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        SortDto sort = new SortDto(dataStorage.attributeDate.id, Direction.desc);
+        SortDto sort = new SortDto(dataStorage.attributeDate.getId(), Direction.desc);
 
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto, sort);
         var ids = items.items().get(dataStorage.datasetVersionDto.getoClass()).stream().map(ItemDto::getId).toList();
@@ -545,7 +560,7 @@ public class SearchMonoTest {
     @Order(27)
     public void string_iContains_returnTwoResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeKeyword.id, "MAr",
+        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeKeyword.getId(), "MAr",
                 Operator.I_CONTAINS);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
@@ -558,7 +573,7 @@ public class SearchMonoTest {
     @Order(28)
     public void string_iEquals_returnOneResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeKeyword.id, "mariE",
+        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeKeyword.getId(), "mariE",
                 Operator.I_EQUALS);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
@@ -571,7 +586,7 @@ public class SearchMonoTest {
     @Order(29)
     public void string_iNotEquals_returnOneResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeKeyword.id, "mariAnne",
+        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeKeyword.getId(), "mariAnne",
                 Operator.I_NOT_EQUALS);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
@@ -584,7 +599,7 @@ public class SearchMonoTest {
     @Order(30)
     public void string_iStartWith_returnTwoResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeKeyword.id, "MaR",
+        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeKeyword.getId(), "MaR",
                 Operator.I_START_WITH);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
@@ -597,7 +612,7 @@ public class SearchMonoTest {
     @Order(31)
     public void string_iEndWith_returnOneResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeKeyword.id, "NnE",
+        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeKeyword.getId(), "NnE",
                 Operator.I_END_WITH);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
@@ -613,19 +628,19 @@ public class SearchMonoTest {
 
         GeoHolder geoHolder = new GeoHolder("{ \"type\": \"Point\", \"coordinates\": [0,0] }");
         Map<String, Object> item3 = Map.of(
-                dataStorage.attributeIdVehicule.name, "aäa",
-                dataStorage.attributePosition.name, geoHolder);
+                dataStorage.attributeIdVehicule.getName(), "aäa",
+                dataStorage.attributePosition.getName(), geoHolder);
         if (storage != Storage.KUZZLE_ASSET && storage != Storage.KUZZLE_MEASURE) {
             dataStorage.vehicle3 = itemsTestTools.addItem(dataStorage.datasetVersionDto, item3);
         } else if (KUZZLE_ENABLED) {
             item3 = new HashMap<>(item3);
-            item3.put(dataStorage.attributePosition.name, geoHolder.getAsMap());
+            item3.put(dataStorage.attributePosition.getName(), geoHolder.getAsMap());
             dataStorage.vehicle3 = kuzzleTestService.insertKuzzleItem("mycab3", "myasset3", item3, storage,
                     dataStorage.datasetVersionDto);
         }
 
         String geoValue = "{\"type\": \"Polygon\",\"coordinates\": [[[0.0, 0.0], [0.0, 1.0], [1.0,1.0], [1.0,0.0], [0.0, 0.0]]]}";
-        var condition = new AttributeConditionDto(dataStorage.attributePosition.id, geoValue, Operator.INTERSECTS);
+        var condition = new AttributeConditionDto(dataStorage.attributePosition.getId(), geoValue, Operator.INTERSECTS);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
         assertThat(items).haveItemsForClass(dataStorage.datasetVersionDto.getoClass(), dataStorage.vehicle3);
@@ -644,12 +659,12 @@ public class SearchMonoTest {
         dataStorage.datasetVersionLambert = testData.createDataset("vehicleLambert", vehicleClassLambert.getId());
 
         Map<String, Object> lambertAttributes = new HashMap<>();
-        lambertAttributes.put(dataStorage.attributeLambertGeo.name,
+        lambertAttributes.put(dataStorage.attributeLambertGeo.getName(),
                 new GeoHolder("{ \"type\": \"Point\", \"coordinates\": [0, 0] }", "EPSG:2154"));
         dataStorage.vehiculeLambert = itemsTestTools.addItem(dataStorage.datasetVersionLambert, lambertAttributes);
 
         String geoValue = "{\"type\": \"Polygon\", \"coordinates\": [[[0.0, 0.0], [0.0, 1.0], [1.0,1.0], [1.0,0.0], [0.0, 0.0]]]}";
-        var condition = new AttributeConditionDto(dataStorage.attributeLambertGeo.id, geoValue, Operator.INTERSECTS);
+        var condition = new AttributeConditionDto(dataStorage.attributeLambertGeo.getId(), geoValue, Operator.INTERSECTS);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionLambert.getoClass(), dataStorage.datasetVersionLambert,
                 condition);
         assertThat(items).haveItemsForClass(dataStorage.datasetVersionLambert.getoClass(), dataStorage.vehiculeLambert);
@@ -673,7 +688,7 @@ public class SearchMonoTest {
     @Order(35)
     public void should_filter_attribute_with_value_3(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        var condition = new AttributeConditionDto(dataStorage.attributeChoc.id, "3", Operator.NOT_EQUALS);
+        var condition = new AttributeConditionDto(dataStorage.attributeChoc.getId(), "3", Operator.NOT_EQUALS);
         var result = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
 
@@ -688,7 +703,7 @@ public class SearchMonoTest {
     @Order(36)
     public void asc_returnAllResultSortedByString(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        SortDto sort = new SortDto(dataStorage.attributeIdVehicule.id);
+        SortDto sort = new SortDto(dataStorage.attributeIdVehicule.getId());
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto, sort);
         var ids = items.items().get(dataStorage.datasetVersionDto.getoClass()).stream().map(ItemDto::getId).toList();
         assertThat(ids).containsExactly(dataStorage.vehicle1.getId(), dataStorage.vehicle2.getId(),
@@ -700,7 +715,7 @@ public class SearchMonoTest {
     @Order(37)
     public void desc_returnAllResultSortedByString_es_collation(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        SortDto sort = new SortDto(dataStorage.attributeIdVehicule.id, Direction.desc);
+        SortDto sort = new SortDto(dataStorage.attributeIdVehicule.getId(), Direction.desc);
 
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto, sort);
         var ids = items.items().get(dataStorage.datasetVersionDto.getoClass()).stream().map(ItemDto::getId).toList();
@@ -713,7 +728,7 @@ public class SearchMonoTest {
     @Order(37)
     public void desc_returnAllResultSortedByString_accent_postgis_collation(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        SortDto sort = new SortDto(dataStorage.attributeIdVehicule.id, Direction.desc);
+        SortDto sort = new SortDto(dataStorage.attributeIdVehicule.getId(), Direction.desc);
 
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto, sort);
         var ids = items.items().get(dataStorage.datasetVersionDto.getoClass()).stream().map(ItemDto::getId).toList();
@@ -768,7 +783,8 @@ public class SearchMonoTest {
     public void text_equals_returnOneResult(Storage storage) {
         prepareData(storage);
         var dataStorage = dataStorages.get(storage);
-        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeIdVehicule.id, "AAA", Operator.EQUALS);
+        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeIdVehicule.getId(), "AAA",
+                Operator.EQUALS);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
         assertFalse(items.items().isEmpty());
@@ -780,7 +796,7 @@ public class SearchMonoTest {
     @Order(42)
     public void text_equals_returnNoResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeString.id, "BB", Operator.EQUALS);
+        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeString.getId(), "BB", Operator.EQUALS);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
         assertTrue(items.items().isEmpty());
@@ -791,7 +807,7 @@ public class SearchMonoTest {
     @Order(43)
     public void text_contains_returnTwoResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeString.id, "AA",
+        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeString.getId(), "AA",
                 Operator.CONTAINS);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
@@ -804,7 +820,7 @@ public class SearchMonoTest {
     @Order(44)
     public void text_startWith_returnOneResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeString.id, "12",
+        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeString.getId(), "12",
                 Operator.START_WITH);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
@@ -817,7 +833,7 @@ public class SearchMonoTest {
     @Order(45)
     public void text_startWith_returnNoResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeString.id, "BB",
+        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeString.getId(), "BB",
                 Operator.START_WITH);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
@@ -829,7 +845,7 @@ public class SearchMonoTest {
     @Order(46)
     public void text_endWith_returnOneResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeString.id, "789",
+        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeString.getId(), "789",
                 Operator.END_WITH);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);
@@ -842,7 +858,7 @@ public class SearchMonoTest {
     @Order(47)
     public void text_endWith_returnNoResult(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeString.id, "78",
+        AttributeConditionDto condition = new AttributeConditionDto(dataStorage.attributeString.getId(), "78",
                 Operator.END_WITH);
         var items = itemsTestTools.searchAll(dataStorage.datasetVersionDto.getoClass(), dataStorage.datasetVersionDto,
                 condition);

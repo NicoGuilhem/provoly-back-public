@@ -218,12 +218,12 @@ class ElasticSearchService implements StorageSearchService {
     private List<String> recoveredExcludedColumns(OClassDetailsDto classDto, List<AttributeDefDetailsDto> attributesColumns) {
         var recoveredColumnsName = attributesColumns
                 .stream()
-                .map(attribute -> attribute.technicalName)
+                .map(AttributeDefDetailsDto::getTechnicalName)
                 .toList();
 
         return classDto.getAttributes()
                 .stream()
-                .filter(att -> !attributesColumns.isEmpty() && !recoveredColumnsName.contains(att.technicalName))
+                .filter(att -> !attributesColumns.isEmpty() && !recoveredColumnsName.contains(att.getTechnicalName()))
                 .map(att -> "%s".formatted(elasticLayout.buildAttributeRootPath(att)))
                 .toList();
     }

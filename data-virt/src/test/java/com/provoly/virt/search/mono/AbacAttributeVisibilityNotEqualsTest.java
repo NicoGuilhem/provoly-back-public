@@ -75,7 +75,7 @@ public class AbacAttributeVisibilityNotEqualsTest {
     }
 
     private void addRuleOnAttribute(Operator operator) {
-        var ruleCondition = new AttributeConditionDto(authorAttribute.id, "toto", operator);
+        var ruleCondition = new AttributeConditionDto(authorAttribute.getId(), "toto", operator);
 
         testData.createAttributeRule(ruleCondition, "user.metadata('statut') == 'policier'");
         insertItems();
@@ -87,8 +87,8 @@ public class AbacAttributeVisibilityNotEqualsTest {
 
     private void insertItems() {
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put(titleAttribute.name, "Compte rendu audition");
-        attributes.put(authorAttribute.name, "Jason Bourne");
+        attributes.put(titleAttribute.getName(), "Compte rendu audition");
+        attributes.put(authorAttribute.getName(), "Jason Bourne");
         document = itemsTestTools.addItem(datasetVersionDto, attributes);
     }
 

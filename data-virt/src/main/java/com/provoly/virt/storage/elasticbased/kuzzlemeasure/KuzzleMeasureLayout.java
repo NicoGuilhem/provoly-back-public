@@ -64,11 +64,11 @@ public class KuzzleMeasureLayout extends KuzzleBasedLayout {
 
     @Override
     public String buildAttributeRootPath(AttributeDefDetailsDto attribute) {
-        log.debugf("get root path for attribute %s", attribute.name);
+        log.debugf("get root path for attribute %s", attribute.getName());
         if (attributeIsMappedAsMetadata(attribute)) {
             return "%s.%s".formatted(ASSET, METADATA);
         }
-        return switch (attribute.technicalName) {
+        return switch (attribute.getName()) {
             case ASSET_ID -> ASSET;
             case MEASURED_AT -> "";
             default -> ATTRIBUTE_PATH;
@@ -78,16 +78,16 @@ public class KuzzleMeasureLayout extends KuzzleBasedLayout {
 
     @Override
     public String buildAttributePath(AttributeDefDetailsDto attribute) {
-        log.debugf("get path for attribute %s", attribute.name);
+        log.debugf("get path for attribute %s", attribute.getName());
 
         if (attributeIsMappedAsMetadata(attribute)) {
-            return "%s.%s.%s".formatted(ASSET, METADATA, attribute.technicalName);
+            return "%s.%s.%s".formatted(ASSET, METADATA, attribute.getTechnicalName());
         }
 
-        return switch (attribute.technicalName) {
+        return switch (attribute.getTechnicalName()) {
             case ASSET_ID -> "%s.%s".formatted(ASSET, ID);
             case MEASURED_AT -> MEASURED_AT;
-            default -> "%s.%s".formatted(ATTRIBUTE_PATH, attribute.technicalName);
+            default -> "%s.%s".formatted(ATTRIBUTE_PATH, attribute.getTechnicalName());
         };
     }
 
@@ -187,7 +187,7 @@ public class KuzzleMeasureLayout extends KuzzleBasedLayout {
         var assetPropMapping = getMappingOf(kuzzleClient.getMeasureMapping(), ASSET);
         Map<String, Object> assetMetadataMapping = getMappingOf(assetPropMapping, METADATA);
         for (var entry : assetMetadataMapping.entrySet()) {
-            if (attribute.technicalName.equals(entry.getKey())) {
+            if (attribute.getTechnicalName().equals(entry.getKey())) {
                 return true;
             }
         }

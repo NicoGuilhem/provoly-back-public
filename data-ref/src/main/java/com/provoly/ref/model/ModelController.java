@@ -16,6 +16,8 @@ import com.provoly.common.error.ProvolyNotFoundException;
 import com.provoly.common.metadata.MetadataValueWriteDto;
 import com.provoly.common.model.*;
 import com.provoly.common.user.Role;
+import com.provoly.ref.category.CategoryService;
+import com.provoly.ref.category.WithCategoryEntityType;
 import com.provoly.ref.entity.EntityType;
 import com.provoly.ref.metadata.MetadataService;
 
@@ -31,14 +33,16 @@ public class ModelController {
     private Logger logger;
     private AssociationService associationService;
     private MetadataService metadataService;
+    private CategoryService categoryService;
 
     public ModelController(ModelService modelService, ModelMapper mapper, Logger logger, AssociationService associationService,
-            MetadataService metadataService) {
+            MetadataService metadataService, CategoryService categoryService) {
         this.modelService = modelService;
         this.mapper = mapper;
         this.logger = logger;
         this.associationService = associationService;
         this.metadataService = metadataService;
+        this.categoryService = categoryService;
     }
 
     @PUT
@@ -71,7 +75,7 @@ public class ModelController {
     @Path("/categories")
     @RolesAllowed({ Role.STR_CLASS_READ, Role.STR_SEARCH, Role.STR_DATASOURCE_READ })
     public Collection<CategoryDto> getCategories() {
-        return mapper.toCategoryDto(modelService.getAllCategories());
+        return mapper.toCategoryDto(categoryService.getAll(WithCategoryEntityType.ATTRIBUTES));
     }
 
     @POST
@@ -167,7 +171,7 @@ public class ModelController {
     @Path("/class/id/{id}/attribute")
     @RolesAllowed({ Role.STR_CLASS_WRITE })
     public void addAttribute(UUID id, AttributeDefDto attributeDefDto) {
-        modelService.addOrUpdateAttribute(id, mapper.toModel(attributeDefDto));
+        modelService.addOrUpdateAttribute(id, attributeDefDto);
     }
 
     @GET

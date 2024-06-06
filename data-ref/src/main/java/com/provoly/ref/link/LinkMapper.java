@@ -6,13 +6,14 @@ import com.provoly.common.link.LinkDetailsDto;
 import com.provoly.common.link.LinkDto;
 import com.provoly.ref.model.EntityLoader;
 import com.provoly.ref.model.EntitySlugMapper;
+import com.provoly.ref.model.ModelMapper;
 
 import org.mapstruct.CollectionMappingStrategy;
 import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "jakarta", collectionMappingStrategy = CollectionMappingStrategy.ADDER_PREFERRED, uses = {
-        EntityLoader.class, EntitySlugMapper.class })
+        EntityLoader.class, EntitySlugMapper.class, ModelMapper.class })
 public interface LinkMapper {
 
     LinkDetailsDto toDto(Link link);

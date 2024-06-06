@@ -11,6 +11,7 @@ import com.provoly.common.dataset.DatasetState;
 import com.provoly.common.dataset.DatasetVersionDto;
 import com.provoly.common.imports.*;
 import com.provoly.common.item.ItemDto;
+import com.provoly.common.model.AttributeDefDetailsDto;
 import com.provoly.common.model.OClassDetailsDto;
 import com.provoly.virt.DataVirtProperties;
 import com.provoly.virt.dataset.ImportRequest;
@@ -77,14 +78,14 @@ public class ImportRunner {
         log.info("Get dataset %s and associated OClass".formatted(datasetVersionId));
         DatasetVersionDto datasetVersionDto = datasetVersionService.get(datasetVersionId);
         OClassDetailsDto oClassDto = modelService.getDetails(datasetVersionDto.getoClass());
-        Stream<String> oClassAttributes = oClassDto.getAttributes().stream().map(attribute -> attribute.technicalName);
+        Stream<String> oClassAttributes = oClassDto.getAttributes().stream().map(AttributeDefDetailsDto::getTechnicalName);
         log.infof("Get dataset associated file: %s", datasetVersionId);
 
         try (FileWalker fileWalker = fileDispatcher.dispatch(fileService.getFile(datasetVersionDto.getId().toString()),
                 oClassAttributes.toList())) {
             log.info("Validate file attributes");
             List<ExtractedMessage> headerMessages = recordConvertor.validateAttributeNames(fileWalker.getAttributes(),
-                    oClassDto.getAttributes().stream().map(attribute -> attribute.technicalName));
+                    oClassDto.getAttributes().stream().map(AttributeDefDetailsDto::getTechnicalName));
 
             if (!headerMessages.isEmpty()) {
                 log.warn("Problems detected while validating file headers.");

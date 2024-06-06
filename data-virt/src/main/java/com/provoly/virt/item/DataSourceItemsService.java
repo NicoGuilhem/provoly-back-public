@@ -191,7 +191,7 @@ public class DataSourceItemsService {
     }
 
     private boolean isIdAttributeBelongToOClass(FilterDto f, OClassDetailsDto oClass) {
-        return oClass.getAttributes().stream().anyMatch(attributeDefDto -> attributeDefDto.id.equals(f.attribute()));
+        return oClass.getAttributes().stream().anyMatch(attributeDefDto -> attributeDefDto.getId().equals(f.attribute()));
     }
 
     private List<String> searchForAttributeValue(UUID attributeId,
@@ -200,16 +200,16 @@ public class DataSourceItemsService {
 
         AttributeDefDetailsDto attributesFormatted = oClassDto.getAttributes()
                 .stream()
-                .filter(att -> att.id.equals(attributeId))
+                .filter(att -> att.getId().equals(attributeId))
                 .findFirst()
                 .orElseThrow(
                         () -> new BusinessException(ErrorCode.BAD_REQUEST,
                                 "AttributeId %s is unknown for class %s".formatted(attributeId, oClassDto.getId())));
         checkValidAttribute(attributesFormatted);
         SortAggregate sortAggregate = new SortAggregate(Direction.asc, OrderBy.KEY);
-        AggregationParamDto params = new AggregationParamDto(attributesFormatted.id, AggregateOperation.COUNT, null,
+        AggregationParamDto params = new AggregationParamDto(attributesFormatted.getId(), AggregateOperation.COUNT, null,
                 sortAggregate);
-        FilterDto filterDto = new FilterDto(attributesFormatted.id, Operator.I_CONTAINS, search);
+        FilterDto filterDto = new FilterDto(attributesFormatted.getId(), Operator.I_CONTAINS, search);
         if (limit == null) {
             limit = dataVirtProperties.maxSizeLimit();
         }
@@ -217,11 +217,11 @@ public class DataSourceItemsService {
     }
 
     private static void checkValidAttribute(AttributeDefDetailsDto attributesFormatted) {
-        if (attributesFormatted.field.getType() != Type.KEYWORD) {
+        if (attributesFormatted.getField().getType() != Type.KEYWORD) {
             throw new BusinessException(ErrorCode.BAD_REQUEST,
                     "Search only implemented on attribute with type keyword.");
         }
-        if (attributesFormatted.multiValued) {
+        if (attributesFormatted.isMultiValued()) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "Search only implemented on simple value attribute.");
         }
     }

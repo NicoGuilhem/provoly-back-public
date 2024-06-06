@@ -35,7 +35,7 @@ public class ModelServiceUnitTest {
         entityIdService = mock(EntityIdService.class);
         refEventService = mock(RefEventService.class);
         modelMapper = mock(ModelMapper.class);
-        modelService = new ModelService(null, modelMapper, refEventService, null, entityIdService, null, null);
+        modelService = new ModelService(null, modelMapper, refEventService, null, entityIdService, null, null, null);
     }
 
     @Test

@@ -10,6 +10,7 @@ import jakarta.persistence.PersistenceContext;
 
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
+import com.provoly.ref.category.Category;
 import com.provoly.ref.entity.EntityId;
 import com.provoly.ref.entity.EntityIdService;
 

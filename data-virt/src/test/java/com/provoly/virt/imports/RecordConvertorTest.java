@@ -55,9 +55,9 @@ public class RecordConvertorTest {
             }
 
             AttributeDefDetailsDto att = new AttributeDefDetailsDto();
-            att.name = type.getName().toLowerCase();
-            att.technicalName = type.getName().toLowerCase();
-            att.field = fieldDto;
+            att.setName(type.getName().toLowerCase());
+            att.setTechnicalName(type.getName().toLowerCase());
+            att.setField(fieldDto);
             //TODO ajouter category random -> pas d'appel à ref
             attributeDefDetailsDtoList.add(att);
         }
@@ -211,7 +211,7 @@ public class RecordConvertorTest {
         values.add("multipolygon");
 
         List<ExtractedMessage> result = recordConvertor.validateAttributeNames(values,
-                oClassDetailsDto.getAttributes().stream().map(attribute -> attribute.name));
+                oClassDetailsDto.getAttributes().stream().map(attribute -> attribute.getName()));
 
         assertThat(result).isEmpty();
     }
@@ -231,7 +231,7 @@ public class RecordConvertorTest {
         values.add("multipolygon");
 
         List<ExtractedMessage> result = recordConvertor.validateAttributeNames(values,
-                oClassDetailsDto.getAttributes().stream().map(attribute -> attribute.name));
+                oClassDetailsDto.getAttributes().stream().map(attribute -> attribute.getName()));
 
         assertThat(result).isEmpty();
     }
@@ -255,7 +255,7 @@ public class RecordConvertorTest {
         values.add("decimal");
 
         List<ExtractedMessage> result = recordConvertor.validateAttributeNames(values,
-                oClassDetailsDto.getAttributes().stream().map(attribute -> attribute.name));
+                oClassDetailsDto.getAttributes().stream().map(attribute -> attribute.getName()));
 
         assertEquals(1, result.size());
         assertEquals(MessageLevel.WARNING, result.get(0).messageLevel());

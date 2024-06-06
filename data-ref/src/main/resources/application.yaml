@@ -55,6 +55,7 @@ mp:
         realm-name: provoly
         realm-path: dev-realm.json
         port: 9080
+        timeout: 2m
     smallrye-openapi:
       path: /openapi.yaml
     flyway:

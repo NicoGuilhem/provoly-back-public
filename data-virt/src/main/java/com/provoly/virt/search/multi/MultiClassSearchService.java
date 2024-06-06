@@ -60,14 +60,14 @@ public class MultiClassSearchService {
             for (FieldConditionDto field : request.getFields()) {
                 List<AttributeDefDetailsDto> allMatchedAttr = oClass.getAttributes()
                         .stream()
-                        .filter(attributeDefDto -> attributeDefDto.field.id.equals(field.getField()))
+                        .filter(attributeDefDto -> attributeDefDto.getField().id.equals(field.getField()))
                         .toList();
 
                 log.debugf("fields %s - match attributes %s", field.getField(), allMatchedAttr);
 
                 ComposedConditionDto subCondition = null;
                 if (allMatchedAttr.size() == 1) {
-                    log.debugf("Exactly one attribute match in this class %s - %s", oClass, allMatchedAttr.get(0).name);
+                    log.debugf("Exactly one attribute match in this class %s - %s", oClass, allMatchedAttr.get(0).getName());
                     subCondition = searchMonoCondition;
                 } else if (allMatchedAttr.size() > 1) {
                     log.debugf("More than one field match in this class %s", oClass.getName());
@@ -75,7 +75,7 @@ public class MultiClassSearchService {
                     searchMonoCondition.composed.add(subCondition);
                 }
                 for (var matched : allMatchedAttr) {
-                    AttributeConditionDto attributeCondition = new AttributeConditionDto(matched.id, field.getValue(),
+                    AttributeConditionDto attributeCondition = new AttributeConditionDto(matched.getId(), field.getValue(),
                             field.getUpperValue(), field.getLocation(), field.getOperator());
                     subCondition.composed.add(attributeCondition);
                 }
@@ -127,7 +127,7 @@ public class MultiClassSearchService {
 
     private boolean isAllFieldsInClass(OClassDetailsDto oClass, Collection<FieldConditionDto> fields) {
         List<UUID> fieldsFromClass = oClass.getAttributes().stream()
-                .map(attributeDefDto -> attributeDefDto.field.id)
+                .map(attributeDefDto -> attributeDefDto.getField().id)
                 .toList();
 
         return fieldsFromClass.containsAll(fields.stream().map(FieldConditionDto::getField).toList());

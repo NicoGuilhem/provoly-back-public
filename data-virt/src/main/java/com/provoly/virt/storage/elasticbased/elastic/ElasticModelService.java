@@ -156,8 +156,8 @@ class ElasticModelService implements StorageModelService {
             mapping.add(buildDynamicTemplate(type.name(), VariableType.getElasticType(type)));
         }
         for (AttributeDefDetailsDto attribute : attributes) { // This is used for all attributes
-            var elasticType = Type.valueOf(attribute.field.type.toUpperCase()).getElasticType();
-            mapping.add(buildDynamicTemplate(attribute.field.slug, elasticType));
+            var elasticType = Type.valueOf(attribute.getField().type.toUpperCase()).getElasticType();
+            mapping.add(buildDynamicTemplate(attribute.getField().slug, elasticType));
         }
         return mapping;
     }

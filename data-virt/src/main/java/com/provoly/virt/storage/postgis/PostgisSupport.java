@@ -26,7 +26,7 @@ class PostgisSupport {
     }
 
     public String getColumnName(AttributeDefDetailsDto attr) {
-        return convertToPostgisName(attr.slug);
+        return convertToPostgisName(attr.getSlug());
     }
 
     private String convertToPostgisName(String slug) {

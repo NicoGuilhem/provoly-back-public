@@ -44,7 +44,7 @@ class ElasticLayout extends StorageLayout {
 
     @Override
     public String buildAttributeRootPath(AttributeDefDetailsDto attribute) {
-        return ATTRIBUTE_FIELD_NAME + "." + getAttributePrefix(attribute) + attribute.slug;
+        return ATTRIBUTE_FIELD_NAME + "." + getAttributePrefix(attribute) + attribute.getSlug();
     }
 
     @Override
@@ -69,14 +69,14 @@ class ElasticLayout extends StorageLayout {
     public String buildAggregateAttributePath(AttributeDefDetailsDto attribute) {
         String elasticPath = buildAttributeRootPath(attribute);
         String elasticField = buildElasticAttributeName(attribute);
-        if (attribute.field.type.equals(Type.KEYWORD.getName())) {
+        if (attribute.getField().type.equals(Type.KEYWORD.getName())) {
             return "%s.%s.%s".formatted(elasticPath, elasticField, AGGREGATION_SUFFIX);
         }
         return "%s.%s".formatted(elasticPath, elasticField);
     }
 
     public String buildElasticAttributeName(AttributeDefDetailsDto attributeDef) {
-        return attributeDef.field.slug + "_" + ATTRIBUTE_FIELD_SUFFIX;
+        return attributeDef.getField().slug + "_" + ATTRIBUTE_FIELD_SUFFIX;
     }
 
     public String buildElasticAttributeName(AttributeSimpleValue attribute) {
@@ -110,7 +110,7 @@ class ElasticLayout extends StorageLayout {
     }
 
     private String getAttributePrefix(AttributeDefDetailsDto attribute) {
-        return attribute.multiValued ? MULTI_ITEM_PREFIX : SIMPLE_ITEM_PREFIX;
+        return attribute.isMultiValued() ? MULTI_ITEM_PREFIX : SIMPLE_ITEM_PREFIX;
     }
 
     public String getElasticFieldPathForMetadata(UUID metadataId) {
@@ -118,7 +118,7 @@ class ElasticLayout extends StorageLayout {
     }
 
     public String getElasticFieldPathForAttribute(AttributeDefDetailsDto attribute) {
-        if (attribute.field.getType().isGeo()) {
+        if (attribute.getField().getType().isGeo()) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "Sort is not allowed on geopoint field.");
         }
         return buildAttributePath(attribute);

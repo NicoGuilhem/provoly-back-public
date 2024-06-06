@@ -14,11 +14,11 @@ public abstract class OClassMapper {
     void verifyAttributeTechnicalNames(OClassWriteDto oClassWriteDto, @MappingTarget OClass oClass) {
         oClassWriteDto.getAttributes()
                 .stream()
-                .filter(att -> att.technicalName == null)
+                .filter(att -> att.getTechnicalName() == null)
                 .findAny()
                 .ifPresent(attribute -> {
                     throw new BusinessException(ErrorCode.BAD_REQUEST,
-                            "Missing technical name in attribute %s".formatted(attribute.id));
+                            "Missing technical name in attribute %s".formatted(attribute.getId()));
                 });
     }
 

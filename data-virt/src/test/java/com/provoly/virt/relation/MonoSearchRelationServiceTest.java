@@ -100,7 +100,7 @@ public class MonoSearchRelationServiceTest {
         itemsTestTools.createRelation(relationType, voiture1, voiture2);
         itemsTestTools.createRelation(relationType, voiture1, voiture3); // A relation between an item of result set and an item out of result set
 
-        var condition = new AttributeConditionDto(attribute.id, "in", Operator.EQUALS);
+        var condition = new AttributeConditionDto(attribute.getId(), "in", Operator.EQUALS);
 
         var result = itemsTestTools.searchAll(voitureClass.getId(), voitureDs, condition);
 

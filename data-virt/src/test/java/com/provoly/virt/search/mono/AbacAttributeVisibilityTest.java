@@ -78,8 +78,8 @@ public class AbacAttributeVisibilityTest {
 
     private void insertItems() {
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put(titleAttribute.name, "Compte rendu audition");
-        attributes.put(authorAttribute.name, "Jason Bourne");
+        attributes.put(titleAttribute.getName(), "Compte rendu audition");
+        attributes.put(authorAttribute.getName(), "Jason Bourne");
         document = itemsTestTools.addItem(datasetVersionDto, attributes);
     }
 

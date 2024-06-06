@@ -93,15 +93,17 @@ public class AggregateServiceDatasetClosedTest {
 
     private void insertItems(StorageDataAggregate dataStorage, DatasetVersionDto datasetVersionDto) {
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put(dataStorage.stringAttribute.name, "123 AA6 789");
-        attributes.put(dataStorage.intAttribute.name, 3);
-        attributes.put(dataStorage.geoAttribute.name, new GeoHolder("{ \"type\": \"Point\", \"coordinates\": [30.0, 10.0] }")); // Gradignan
+        attributes.put(dataStorage.stringAttribute.getName(), "123 AA6 789");
+        attributes.put(dataStorage.intAttribute.getName(), 3);
+        attributes.put(dataStorage.geoAttribute.getName(),
+                new GeoHolder("{ \"type\": \"Point\", \"coordinates\": [30.0, 10.0] }")); // Gradignan
         itemsTestTools.addItem(datasetVersionDto, attributes);
 
         attributes = new HashMap<>();
-        attributes.put(dataStorage.stringAttribute.name, "AAA");
-        attributes.put(dataStorage.intAttribute.name, 33);
-        attributes.put(dataStorage.geoAttribute.name, new GeoHolder("{ \"type\": \"Point\", \"coordinates\": [30.0, 10.0] }")); // Ile de la Cité
+        attributes.put(dataStorage.stringAttribute.getName(), "AAA");
+        attributes.put(dataStorage.intAttribute.getName(), 33);
+        attributes.put(dataStorage.geoAttribute.getName(),
+                new GeoHolder("{ \"type\": \"Point\", \"coordinates\": [30.0, 10.0] }")); // Ile de la Cité
         itemsTestTools.addItem(datasetVersionDto, attributes);
     }
 

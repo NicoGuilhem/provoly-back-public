@@ -144,13 +144,7 @@ public class TestDataService {
     }
 
     public AttributeDefDto createAttributeMulti(String name, String technicalName, FieldDto field, boolean multi) {
-        AttributeDefDto attr = new AttributeDefDto();
-        attr.id = UUID.randomUUID();
-        attr.name = name;
-        attr.technicalName = technicalName;
-        attr.field = field.id;
-        attr.multiValued = multi;
-        return attr;
+        return new AttributeDefDto(UUID.randomUUID(), name, technicalName, field.id, null, multi, "");
     }
 
     public AttributeDefDto createAttributeMulti(String name, FieldDto field, boolean multi) {
@@ -158,12 +152,7 @@ public class TestDataService {
     }
 
     public AttributeDefDto createAttribute(String name, String technicalName, FieldDto field) {
-        AttributeDefDto attr = new AttributeDefDto();
-        attr.id = UUID.randomUUID();
-        attr.name = name;
-        attr.technicalName = technicalName;
-        attr.field = field.id;
-        return attr;
+        return new AttributeDefDto(UUID.randomUUID(), name, technicalName, field.id);
     }
 
     public AttributeDefDto createAttribute(String name, FieldDto field) {

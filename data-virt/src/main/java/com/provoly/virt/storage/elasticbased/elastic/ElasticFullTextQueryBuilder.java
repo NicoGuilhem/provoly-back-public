@@ -36,19 +36,19 @@ public class ElasticFullTextQueryBuilder {
 
         var condition = new OrConditionDto();
         for (AttributeDefDetailsDto attribute : oClass.getAttributes()) {
-            var field = attribute.field;
+            var field = attribute.getField();
             if (field == null) {
-                String msg = "Unable to found field " + attribute.field + " for attribute " + oClass.getName() + "@"
-                        + attribute.name;
+                String msg = "Unable to found field " + attribute.getField() + " for attribute " + oClass.getName() + "@"
+                        + attribute.getName();
                 throw new BusinessException(ErrorCode.TECHNICAL, msg);
             }
             if (isText(field)) {
                 condition.composed.add(
-                        new AttributeConditionDto(attribute.id, fullSearchCondition.getValue(), Operator.CONTAINS));
+                        new AttributeConditionDto(attribute.getId(), fullSearchCondition.getValue(), Operator.CONTAINS));
             }
 
             if (((field.type.equals("integer") && isValueInt) || (field.type.equals("long") && isValueLong))) {
-                var attributeCondition = new AttributeConditionDto(attribute.id, fullSearchCondition.getValue(),
+                var attributeCondition = new AttributeConditionDto(attribute.getId(), fullSearchCondition.getValue(),
                         Operator.EQUALS);
                 condition.composed.add(attributeCondition);
             }

@@ -239,7 +239,7 @@ class PostgisSelectQueryBuilder {
         switch (sort.type()) {
             case ATTRIBUTE -> {
                 AttributeDefDetailsDto attributeDefDetailsDto = oClassDetailsDto.getAttributes().stream()
-                        .filter(attribute -> attribute.id.equals(sort.attribute())).findAny()
+                        .filter(attribute -> attribute.getId().equals(sort.attribute())).findAny()
                         .orElseThrow(() -> new BusinessException(ErrorCode.FORBIDDEN,
                                 "No attribute with id %s in Oclass %s".formatted(sort.attribute(),
                                         oClassDetailsDto.getName())));
@@ -290,7 +290,7 @@ class PostgisSelectQueryBuilder {
             case AndConditionDto andCondition -> buildConditionSql(andCondition, securityMetadata);
             case AttributeConditionDto attributeConditionDto -> {
                 var attribute = storageSupport.getAttributeById(oClassDetailsDto, attributeConditionDto.getAttribute());
-                if (attribute.multiValued) {
+                if (attribute.isMultiValued()) {
                     throw new NotSupportedStorageException("Postgis storage not support multivalued attribute");
                 } else {
                     buildConditionSql(attribute, attributeConditionDto, securityMetadata);
@@ -356,7 +356,7 @@ class PostgisSelectQueryBuilder {
             //FIXME INSTANCE and INTERSECT are workaround
             //Other operator won't work at all.
             case DISTANCE -> appendOperators("st_distance(%s, 'SRID=%s;%s', true) <= ?"
-                    .formatted(columnName, attribute.field.checkAndExtractSRID(), condition.getLocation()),
+                    .formatted(columnName, attribute.getField().checkAndExtractSRID(), condition.getLocation()),
                     Double.valueOf(condition.getValue()));
             case INTERSECTS -> appendOperators("st_intersects(%s, st_geomfromgeojson(?))".formatted(columnName), value);
         }
@@ -369,7 +369,7 @@ class PostgisSelectQueryBuilder {
     }
 
     private Object typedValue(AttributeDefDetailsDto attribute, AttributeConditionDto conditionDto) {
-        return switch (attribute.field.getType()) {
+        return switch (attribute.getField().getType()) {
             case INTEGER, LONG, DECIMAL, STRING, KEYWORD, RAW, INSTANT -> typedValue(attribute, conditionDto.getValue());
             default -> getGeoValue(attribute, conditionDto);
         };
@@ -377,19 +377,19 @@ class PostgisSelectQueryBuilder {
 
     private Object getGeoValue(AttributeDefDetailsDto attribute, AttributeConditionDto conditionDto) {
         if (conditionDto.getLocation() != null) {
-            var geo = new GeoHolder(conditionDto.getLocation(), attribute.field.crs, GeoFormat.WKT).toString();
+            var geo = new GeoHolder(conditionDto.getLocation(), attribute.getField().crs, GeoFormat.WKT).toString();
             return typedValue(attribute, geo);
         }
 
         if (conditionDto.getValue() != null) {
-            var geo = new GeoHolder(conditionDto.getValue(), attribute.field.crs, GeoFormat.GEO_JSON).toString();
+            var geo = new GeoHolder(conditionDto.getValue(), attribute.getField().crs, GeoFormat.GEO_JSON).toString();
             return typedValue(attribute, geo);
         }
         throw new BusinessException(ErrorCode.TECHNICAL, "A geo value must be set on geoJson or location property");
     }
 
     private Object typedValue(AttributeDefDetailsDto attribute, String value) {
-        return switch (attribute.field.getType()) {
+        return switch (attribute.getField().getType()) {
             case INTEGER -> Integer.valueOf(value);
             case LONG -> Long.valueOf(value);
             case DECIMAL -> Double.valueOf(value);

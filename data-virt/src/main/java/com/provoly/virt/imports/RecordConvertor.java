@@ -82,7 +82,7 @@ public class RecordConvertor {
         Map<String, Object> values = new HashMap<>();
         List<ExtractedMessage> errors = new ArrayList<>();
         oClassDetailsDto.getAttributes().stream()
-                .filter(attribute -> itemRecord.values().get(attribute.technicalName) != null)
+                .filter(attribute -> itemRecord.values().get(attribute.getTechnicalName()) != null)
                 .forEach(attribute -> assignOrGetError(attribute, itemRecord, values, errors, normalizeGeo, geoFormat));
 
         return new ConversionResult(new ItemRecord(itemRecord.recordId(), values), errors); // retourne soit l'item soit la liste des erreurs
@@ -181,16 +181,17 @@ public class RecordConvertor {
             List<ExtractedMessage> errors,
             boolean normalizeGeo,
             GeoFormat geoFormat) {
-        Object value = itemRecord.values().get(attribute.technicalName);
-        Type type = attribute.field.getType();
+        Object value = itemRecord.values().get(attribute.getTechnicalName());
+        Type type = attribute.getField().getType();
 
         try {
-            values.put(attribute.technicalName, assignTo(value, type, normalizeGeo, attribute.field.crs, geoFormat));
+            values.put(attribute.getTechnicalName(), assignTo(value, type, normalizeGeo, attribute.getField().crs, geoFormat));
 
         } catch (BusinessException | IllegalArgumentException | DateTimeParseException exception) {
-            FileImportDto.ParamsTypeError paramsError = new FileImportDto.ParamsTypeError(attribute.name,
-                    attribute.field.getType(), value.toString());
-            log.warnf("Could not assign value '%s' to type %s: %s", paramsError.getReceivedValue(), attribute.field.getType(),
+            FileImportDto.ParamsTypeError paramsError = new FileImportDto.ParamsTypeError(attribute.getName(),
+                    attribute.getField().getType(), value.toString());
+            log.warnf("Could not assign value '%s' to type %s: %s", paramsError.getReceivedValue(),
+                    attribute.getField().getType(),
                     exception);
             errors.add(new ExtractedMessage(MessageLevel.ERROR, ExtractMessageCode.FORMAT, paramsError));
         }

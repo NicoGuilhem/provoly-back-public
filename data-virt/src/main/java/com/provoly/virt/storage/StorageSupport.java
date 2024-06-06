@@ -43,35 +43,36 @@ public class StorageSupport {
     public void checkFieldTypeIsNumeric(AttributeDefDetailsDto attribute) {
         checkPresence(attribute);
 
-        if (!attribute.field.getType().isNumeric()) {
+        if (!attribute.getField().getType().isNumeric()) {
             throw new BusinessException(ErrorCode.BAD_REQUEST,
-                    "It's not possible to aggregate on the non-numeric attribute %s which has type %s".formatted(attribute.name,
-                            attribute.field.type));
+                    "It's not possible to aggregate on the non-numeric attribute %s which has type %s".formatted(
+                            attribute.getName(),
+                            attribute.getField().type));
         }
     }
 
     public void checkFieldTypeIsDate(AttributeDefDetailsDto attribute) {
         checkPresence(attribute);
 
-        if (!attribute.field.getType().equals(Type.INSTANT)) {
+        if (!attribute.getField().getType().equals(Type.INSTANT)) {
             throw new BusinessException(ErrorCode.BAD_REQUEST,
-                    "Aggregating on date is unavailable for attribute %s that is not a date.".formatted(attribute.name));
+                    "Aggregating on date is unavailable for attribute %s that is not a date.".formatted(attribute.getName()));
         }
     }
 
     public void checkFieldTypeIsGeo(AttributeDefDetailsDto attribute) {
         checkPresence(attribute);
 
-        if (!attribute.field.getType().isGeo()) {
+        if (!attribute.getField().getType().isGeo()) {
             throw new BusinessException(ErrorCode.BAD_REQUEST,
-                    "Aggregation on the non-geo attribute %s which has type %s is not possible.".formatted(attribute.name,
-                            attribute.field.type));
+                    "Aggregation on the non-geo attribute %s which has type %s is not possible.".formatted(attribute.getName(),
+                            attribute.getField().type));
         }
     }
 
     private void checkPresence(AttributeDefDetailsDto value) {
         if (value == null) {
-            throw new BusinessException(ErrorCode.FORBIDDEN, "Attribute required for this aggregation".formatted(value));
+            throw new BusinessException(ErrorCode.FORBIDDEN, "Attribute required for this aggregation");
         }
     }
 

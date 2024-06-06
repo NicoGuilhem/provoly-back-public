@@ -105,19 +105,19 @@ public class SearchMultiTest {
 
         // Add item vehicule
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put(idVehiculeAttr.name, "ZZZ");
-        attributes.put(numAccAttr.name, "123");
-        attributes.put(catVAttr.name, "catv");
-        attributes.put(dateDebut.name, "2000-01-10T00:00:00+01:00");
+        attributes.put(idVehiculeAttr.getName(), "ZZZ");
+        attributes.put(numAccAttr.getName(), "123");
+        attributes.put(catVAttr.getName(), "catv");
+        attributes.put(dateDebut.getName(), "2000-01-10T00:00:00+01:00");
 
         itemsTestTools.addItem(multiVoiture, attributes);
 
         // Add item usager
         attributes = new HashMap<>();
-        attributes.put(idVehiculeAttrUsager.name, "BBB");
-        attributes.put(numAccAttrUsager.name, "123");
-        attributes.put(dateCreation.name, "2000-12-10T00:00:00+01:00");
-        attributes.put(currentPosition.name,
+        attributes.put(idVehiculeAttrUsager.getName(), "BBB");
+        attributes.put(numAccAttrUsager.getName(), "123");
+        attributes.put(dateCreation.getName(), "2000-12-10T00:00:00+01:00");
+        attributes.put(currentPosition.getName(),
                 new GeoHolder("{ \"type\": \"Point\", \"coordinates\": [48.854986760569076, 2.3479450485479996] }"));
 
         itemsTestTools.addItem(multiUsager, attributes);

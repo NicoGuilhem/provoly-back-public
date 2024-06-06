@@ -77,7 +77,7 @@ public class LinkToRelationService {
                 continue;
             }
             log.infof("Starting a new Topology for %s", link);
-            var kafkaStream = kafkaTools.buildStream(link.id.toString(), topology);
+            var kafkaStream = kafkaTools.buildStream(link.getId().toString(), topology);
             // kafkaStream.cleanUp(); // Uncomment in dev when localstorage should be reset for testing purpose
             kafkaStream.start();
             runningTopologies.put(link, kafkaStream);

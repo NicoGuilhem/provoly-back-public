@@ -48,7 +48,7 @@ public class ItemsTestTools {
     }
 
     public void addMetadataToAttribute(ItemDto item, AttributeDefDto attribute, MetadataDefDto metadata, String value) {
-        metadataController.setMetadataToAttribute(new ItemId(item.getId()), attribute.name, metadata.name, value);
+        metadataController.setMetadataToAttribute(new ItemId(item.getId()), attribute.getName(), metadata.name, value);
     }
 
     public ItemsSearchResultDto searchAll(UUID oClass, DatasetVersionDto dataset) {

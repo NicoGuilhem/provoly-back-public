@@ -186,7 +186,7 @@ public class OClassControllerTest {
                 .post("model/class")
                 .then()
                 .statusCode(400)
-                .body("message", is("Missing technical name in attribute %s".formatted(attributeDefDetailsDto.id)));
+                .body("message", is("Missing technical name in attribute %s".formatted(attributeDefDetailsDto.getId())));
     }
 
     @Test

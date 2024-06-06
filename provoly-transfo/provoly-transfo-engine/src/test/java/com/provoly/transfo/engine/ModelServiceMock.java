@@ -94,17 +94,17 @@ public class ModelServiceMock implements ModelService {
 
     private AttributeDefDto createAttribute(String name, FieldDto field) {
         AttributeDefDto attr = new AttributeDefDto();
-        attr.id = UUID.randomUUID();
-        attr.name = name;
-        attr.field = field.id;
+        attr.setId(UUID.randomUUID());
+        attr.setName(name);
+        attr.setField(field.id);
         return attr;
     }
 
     private AttributeDefDetailsDto createAttributeDetails(String name, FieldDto field) {
         AttributeDefDetailsDto attr = new AttributeDefDetailsDto();
-        attr.id = UUID.randomUUID();
-        attr.name = name;
-        attr.field = field;
+        attr.setId(UUID.randomUUID());
+        attr.setName(name);
+        attr.setField(field);
         return attr;
     }
 

@@ -16,7 +16,9 @@ import com.provoly.common.dataset.GroupRights;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.error.ProvolyNotFoundException;
+import com.provoly.common.model.CategoryDto;
 import com.provoly.common.user.SystemGroup;
+import com.provoly.ref.category.*;
 import com.provoly.ref.datasetversion.DatasetVersion;
 import com.provoly.ref.datasetversion.DatasetVersionRepository;
 import com.provoly.ref.datasetversion.DatasetVersionService;
@@ -29,8 +31,6 @@ import com.provoly.ref.user.ProvolyUser;
 import com.provoly.ref.user.UserService;
 import com.provoly.ref.user.VisibilityType;
 
-import org.jboss.logging.Logger;
-
 @ApplicationScoped
 public class DatasetService {
 
@@ -39,26 +39,27 @@ public class DatasetService {
     private DatasetVersionRepository datasetVersionRepository;
     private GroupService groupService;
     private GroupRepository groupRepository;
-    private Logger log;
     private DatasetMapper datasetMapper;
     private UserService userService;
     private GrantService grantService;
     private DatasetRepository datasetRepository;
+    private CategoryService categoryService;
 
     public DatasetService(DatasetVersionService datasetVersionService, AssociationService associationService,
             DatasetVersionRepository datasetVersionRepository, GroupService groupService, GroupRepository groupRepository,
-            DatasetMapper datasetMapper, Logger log, UserService userService,
-            GrantService grantService, DatasetRepository datasetRepository) {
+            DatasetMapper datasetMapper, UserService userService,
+            GrantService grantService, DatasetRepository datasetRepository,
+            CategoryService categoryService) {
         this.datasetVersionService = datasetVersionService;
         this.associationService = associationService;
         this.datasetVersionRepository = datasetVersionRepository;
         this.groupService = groupService;
         this.groupRepository = groupRepository;
-        this.log = log;
         this.userService = userService;
         this.datasetMapper = datasetMapper;
         this.grantService = grantService;
         this.datasetRepository = datasetRepository;
+        this.categoryService = categoryService;
     }
 
     @Transactional
@@ -82,14 +83,10 @@ public class DatasetService {
                             GroupRights.READ)));
             groupService.updateEntityGroups(rightsByGroup, dataset.getId(), DATASET);
         }
-        datasetHolder.ifPresent(datasetVersionService::createDatasetVersion);
-    }
-
-    private void checkCanCreate(Dataset dataset) {
-        if (datasetRepository.isNameAlreadyExistForClass(dataset)) {
-            throw new BusinessException(ErrorCode.CONFLICT,
-                    "Name %s already exists for class %s".formatted(dataset.getName(), dataset.getoClass().getName()));
+        if (datasetDto.getCategories() != null) {
+            categoryService.updateEntityCategories(datasetDto.getCategories(), dataset.getId(), WithCategoryEntityType.DATASET);
         }
+        datasetHolder.ifPresent(datasetVersionService::createDatasetVersion);
     }
 
     @Transactional
@@ -136,46 +133,10 @@ public class DatasetService {
                         .collect(Collectors.toMap(groupName -> groupName, _ignored -> List.of(
                                 GroupRights.READ)));
         groupService.updateEntityGroups(rightsByGroup, dataset.getId(), DATASET);
+        if (datasetDto.getCategories() != null) {
+            categoryService.updateEntityCategories(datasetDto.getCategories(), dataset.getId(), WithCategoryEntityType.DATASET);
+        }
         return getGroupsError(datasetDto);
-    }
-
-    private GroupErrors getGroupsError(DatasetDto dataset) {
-        List<Group> groups = groupRepository.getGroupByNames(dataset.getGroups());
-        Collection<UUID> dashboardIds = findDashboardsAssociationByDatasetId(dataset.getId()).stream()
-                .map(AssociationDto::getId).toList();
-        Map<UUID, Set<String>> groupsErrors = new HashMap<>();
-
-        dashboardIds.forEach(dashboardId -> {
-            List<Group> dashboardGroups = groupRepository.getGroupsByEntityId(dashboardId).stream()
-                    .map(GroupRelations::getGroup)
-                    .toList();
-            getDashboardInconsistentGroups(dashboardGroups, groups)
-                    .forEach(group -> groupsErrors.computeIfAbsent(dashboardId, ignored -> new HashSet<>()).add(group));
-        });
-        return new GroupErrors(groupsErrors);
-    }
-
-    private Set<String> getDashboardInconsistentGroups(List<Group> dashboardGroups, List<Group> datasetGroups) {
-        if (datasetGroups.isEmpty()) {
-            return dashboardGroups.stream().map(Group::getName).collect(Collectors.toSet());
-        }
-        List<UUID> datasetGroupIds = datasetGroups.stream().map(Group::getId).toList();
-
-        if (datasetGroupIds.contains(SystemGroup.ALL.getId())) {
-            return Set.of();
-        }
-        List<UUID> dashboardGroupIds = dashboardGroups.stream().map(Group::getId).toList();
-        if (datasetGroupIds.contains(SystemGroup.AUTHENTICATED.getId())
-                && dashboardGroupIds.contains(SystemGroup.ALL.getId())) {
-            return Set.of(SystemGroup.ALL.name());
-        }
-        if (!dashboardGroupIds.contains(SystemGroup.AUTHENTICATED.getId())
-                && !dashboardGroupIds.contains(SystemGroup.ALL.getId())) {
-            List<Group> dashboardGroupCopy = new ArrayList<>(dashboardGroups);
-            dashboardGroupCopy.removeAll(datasetGroups);
-            return dashboardGroupCopy.stream().map(Group::getName).collect(Collectors.toSet());
-        }
-        return Set.of();
     }
 
     public Dataset getById(UUID datasetId) {
@@ -206,16 +167,22 @@ public class DatasetService {
         return associationService.mapAssociationDtoInAssociationsDto(result);
     }
 
-    private boolean isDatasetAssociateToDatasetVersion(UUID datasetId) {
-        return !datasetVersionRepository.getAllByDatasetId(datasetId).isEmpty();
-    }
-
     public List<AssociationDto> findDashboardsAssociationByDatasetId(UUID datasetId) {
         return datasetRepository.findAssociatedDashboards(datasetId)
                 .stream()
                 .map(dataset -> new AssociationDto(dataset.getId(), dataset.getName(), VisibilityType.PUBLIC,
                         AssociationsType.DASHBOARD))
                 .toList();
+    }
+
+    public Collection<Dataset> getAllClassAllowedDatasets(UUID id) {
+        ProvolyUser provolyUser = userService.getCurrentUser();
+        return grantService.getUserAllowedDatasetsByClass(provolyUser, id);
+    }
+
+    public void addCategory(CategoryDto categoryDto) {
+        Category category = new Category(categoryDto.id(), categoryDto.name(), WithCategoryEntityType.DATASET);
+        categoryService.save(category);
     }
 
     private List<AssociationDto> findWidgetsByDatasetId(UUID datasetId) {
@@ -226,8 +193,53 @@ public class DatasetService {
                 .toList();
     }
 
-    public Collection<Dataset> getAllClassAllowedDatasets(UUID id) {
-        ProvolyUser provolyUser = userService.getCurrentUser();
-        return grantService.getUserAllowedDatasetsByClass(provolyUser, id);
+    private boolean isDatasetAssociateToDatasetVersion(UUID datasetId) {
+        return !datasetVersionRepository.getAllByDatasetId(datasetId).isEmpty();
+    }
+
+    private Set<String> getDashboardInconsistentGroups(List<Group> dashboardGroups, List<Group> datasetGroups) {
+        if (datasetGroups.isEmpty()) {
+            return dashboardGroups.stream().map(Group::getName).collect(Collectors.toSet());
+        }
+        List<UUID> datasetGroupIds = datasetGroups.stream().map(Group::getId).toList();
+
+        if (datasetGroupIds.contains(SystemGroup.ALL.getId())) {
+            return Set.of();
+        }
+        List<UUID> dashboardGroupIds = dashboardGroups.stream().map(Group::getId).toList();
+        if (datasetGroupIds.contains(SystemGroup.AUTHENTICATED.getId())
+                && dashboardGroupIds.contains(SystemGroup.ALL.getId())) {
+            return Set.of(SystemGroup.ALL.name());
+        }
+        if (!dashboardGroupIds.contains(SystemGroup.AUTHENTICATED.getId())
+                && !dashboardGroupIds.contains(SystemGroup.ALL.getId())) {
+            List<Group> dashboardGroupCopy = new ArrayList<>(dashboardGroups);
+            dashboardGroupCopy.removeAll(datasetGroups);
+            return dashboardGroupCopy.stream().map(Group::getName).collect(Collectors.toSet());
+        }
+        return Set.of();
+    }
+
+    private GroupErrors getGroupsError(DatasetDto dataset) {
+        List<Group> groups = groupRepository.getGroupByNames(dataset.getGroups());
+        Collection<UUID> dashboardIds = findDashboardsAssociationByDatasetId(dataset.getId()).stream()
+                .map(AssociationDto::getId).toList();
+        Map<UUID, Set<String>> groupsErrors = new HashMap<>();
+
+        dashboardIds.forEach(dashboardId -> {
+            List<Group> dashboardGroups = groupRepository.getGroupsByEntityId(dashboardId).stream()
+                    .map(GroupRelations::getGroup)
+                    .toList();
+            getDashboardInconsistentGroups(dashboardGroups, groups)
+                    .forEach(group -> groupsErrors.computeIfAbsent(dashboardId, ignored -> new HashSet<>()).add(group));
+        });
+        return new GroupErrors(groupsErrors);
+    }
+
+    private void checkCanCreate(Dataset dataset) {
+        if (datasetRepository.isNameAlreadyExistForClass(dataset)) {
+            throw new BusinessException(ErrorCode.CONFLICT,
+                    "Name %s already exists for class %s".formatted(dataset.getName(), dataset.getoClass().getName()));
+        }
     }
 }

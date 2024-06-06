@@ -85,16 +85,16 @@ public class SearchMultiFullTest {
         var datasetVehicle = testData.createDataset("vehicle", storageData.vehicleClass.getId());
 
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put(attributeKeyword.name, "Billy");
-        attributes.put(attributeString.name, "Ceci est une chaîne de méchante caractères");
-        attributes.put(attributeInteger.name, 42);
-        attributes.put(attributeLong.name, BIG_LONG_VALUE);
+        attributes.put(attributeKeyword.getName(), "Billy");
+        attributes.put(attributeString.getName(), "Ceci est une chaîne de méchante caractères");
+        attributes.put(attributeInteger.getName(), 42);
+        attributes.put(attributeLong.getName(), BIG_LONG_VALUE);
         storageData.vehicleOne = itemsTestTools.addItem(datasetVehicle, attributes);
 
-        attributes.put(attributeKeyword.name, "733 BGH 78");
-        attributes.put(attributeString.name, "autre valeur");
-        attributes.put(attributeInteger.name, 54);
-        attributes.put(attributeLong.name, 4);
+        attributes.put(attributeKeyword.getName(), "733 BGH 78");
+        attributes.put(attributeString.getName(), "autre valeur");
+        attributes.put(attributeInteger.getName(), 54);
+        attributes.put(attributeLong.getName(), 4);
     }
 
     private void addUsagers(Storage storage, FieldDto fieldKeyword, FieldDto fieldString, FieldDto fieldInteger,
@@ -110,16 +110,16 @@ public class SearchMultiFullTest {
         var datasetUsager = testData.createDataset("usager", storageData.usagerClass.getId());
 
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put(attributeKeyword.name, "Billy");
-        attributes.put(attributeString.name, "Je suis une bad Méchante guy");
-        attributes.put(attributeInteger.name, 42);
-        attributes.put(attributeLong.name, BIG_LONG_VALUE);
+        attributes.put(attributeKeyword.getName(), "Billy");
+        attributes.put(attributeString.getName(), "Je suis une bad Méchante guy");
+        attributes.put(attributeInteger.getName(), 42);
+        attributes.put(attributeLong.getName(), BIG_LONG_VALUE);
         storageData.usagerOne = itemsTestTools.addItem(datasetUsager, attributes);
 
-        attributes.put(attributeKeyword.name, "Martin");
-        attributes.put(attributeString.name, "Gentil carrossier");
-        attributes.put(attributeInteger.name, 58);
-        attributes.put(attributeLong.name, 5);
+        attributes.put(attributeKeyword.getName(), "Martin");
+        attributes.put(attributeString.getName(), "Gentil carrossier");
+        attributes.put(attributeInteger.getName(), 58);
+        attributes.put(attributeLong.getName(), 5);
         itemsTestTools.addItem(datasetUsager, attributes);
     }
 

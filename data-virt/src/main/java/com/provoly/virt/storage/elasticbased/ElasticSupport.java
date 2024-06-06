@@ -41,14 +41,14 @@ public class ElasticSupport {
     public void setAttributeValue(OClassDetailsDto oClass, Item item, String key, Object value) {
         var attributeDef = findAttributeByName(oClass, key);
         attributeDef.ifPresent(att -> {
-            var attributeSimple = item.getAttributeSimple(att.name);
+            var attributeSimple = item.getAttributeSimple(att.getName());
             extractAttributeValue(attributeSimple, value);
         });
     }
 
     public Optional<AttributeDefDetailsDto> findAttributeByName(OClassDetailsDto oClass, String attributeName) {
         return oClass.getAttributes().stream()
-                .filter(a -> a.name.equals(attributeName))
+                .filter(a -> a.getName().equals(attributeName))
                 .findAny();
     }
 

@@ -108,7 +108,7 @@ public class TransfoValidator {
                     .collect(Collectors.toMap(f -> f.id, f -> f, (fieldDto, fieldDto2) -> fieldDto));
             IntermediateModel model = new IntermediateModel();
             // Add to model every attribute of the class
-            oclass.getAttributes().forEach(attr -> model.addAttribute(attr.name, fields.get(attr.field.id)));
+            oclass.getAttributes().forEach(attr -> model.addAttribute(attr.getName(), fields.get(attr.getField().id)));
             return new TransfoNodeStatus(nodeId, model);
         }
     }

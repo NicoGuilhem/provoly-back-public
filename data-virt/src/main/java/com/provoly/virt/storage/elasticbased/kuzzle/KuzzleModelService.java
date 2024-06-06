@@ -56,8 +56,8 @@ class KuzzleModelService implements StorageModelService {
         Map<String, Object> metadata = new HashMap<>();
 
         for (var attribute : attributes) {
-            mapping.put(attribute.technicalName,
-                    Map.of("type", Type.from(attribute.field.type).getElasticType().getName()));
+            mapping.put(attribute.getTechnicalName(),
+                    Map.of("type", Type.from(attribute.getField().type).getElasticType().getName()));
         }
         for (var system : MetadataSystem.values()) {
             metadata.put(system.getName(),

@@ -85,16 +85,16 @@ public class SearchMonoFullTest {
 
     private void insertItems(StorageDataAttributes dataStorage) {
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put(dataStorage.attributeKeyword.name, "123 AA6 789");
-        attributes.put(dataStorage.attributeString.name, "Ceci est une chaîne de caractères");
-        attributes.put(dataStorage.attributeInteger.name, 42);
-        attributes.put(dataStorage.attributeLong.name, BIG_LONG_VALUE);
+        attributes.put(dataStorage.attributeKeyword.getName(), "123 AA6 789");
+        attributes.put(dataStorage.attributeString.getName(), "Ceci est une chaîne de caractères");
+        attributes.put(dataStorage.attributeInteger.getName(), 42);
+        attributes.put(dataStorage.attributeLong.getName(), BIG_LONG_VALUE);
         dataStorage.vehiculeOne = itemsTestTools.addItem(dataStorage.datasetVersionDto, attributes);
 
-        attributes.put(dataStorage.attributeKeyword.name, "733 BGH 78");
-        attributes.put(dataStorage.attributeString.name, "Une autre valeur");
-        attributes.put(dataStorage.attributeInteger.name, 54);
-        attributes.put(dataStorage.attributeLong.name, 4);
+        attributes.put(dataStorage.attributeKeyword.getName(), "733 BGH 78");
+        attributes.put(dataStorage.attributeString.getName(), "Une autre valeur");
+        attributes.put(dataStorage.attributeInteger.getName(), 54);
+        attributes.put(dataStorage.attributeLong.getName(), 4);
         dataStorage.vehiculeTwo = itemsTestTools.addItem(dataStorage.datasetVersionDto, attributes);
     }
 

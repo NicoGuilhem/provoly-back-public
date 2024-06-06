@@ -155,8 +155,8 @@ public class RefEventTest {
         var attributeAssert = eventAssert
                 .extracting(e -> e.getoClassDetails().getAttributes()).asList()
                 .singleElement(type(AttributeDefDetailsDto.class));
-        attributeAssert.extracting(attr -> attr.name).isEqualTo(attribute.name);
-        attributeAssert.extracting(attr -> attr.field).isNotNull();
+        attributeAssert.extracting(AttributeDefDetailsDto::getName).isEqualTo(attribute.getName());
+        attributeAssert.extracting(AttributeDefDetailsDto::getField).isNotNull();
     }
 
     @Test

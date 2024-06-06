@@ -1,6 +1,7 @@
 package com.provoly.ref.dataset;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 import jakarta.annotation.security.RolesAllowed;
@@ -9,7 +10,11 @@ import jakarta.ws.rs.core.MediaType;
 
 import com.provoly.common.dataset.DatasetDto;
 import com.provoly.common.metadata.MetadataValueWriteDto;
+import com.provoly.common.model.CategoryDto;
 import com.provoly.common.user.Role;
+import com.provoly.ref.category.CategoryMapper;
+import com.provoly.ref.category.CategoryService;
+import com.provoly.ref.category.WithCategoryEntityType;
 import com.provoly.ref.datasetversion.DatasetVersionDetailsDto;
 import com.provoly.ref.datasetversion.DatasetVersionMapper;
 import com.provoly.ref.datasetversion.DatasetVersionRepository;
@@ -30,16 +35,20 @@ public class DatasetController {
     private DatasetVersionMapper datasetVersionMapper;
     private MetadataService metadataService;
     private DatasetVersionRepository datasetVersionRepository;
+    private CategoryMapper categoryMapper;
+    private CategoryService categoryService;
 
     public DatasetController(DatasetService datasetService,
             DatasetMapper datasetMapper,
             DatasetVersionMapper datasetVersionMapper, MetadataService metadataService,
-            DatasetVersionRepository datasetVersionRepository) {
+            DatasetVersionRepository datasetVersionRepository, CategoryMapper categoryMapper, CategoryService categoryService) {
         this.datasetService = datasetService;
         this.datasetMapper = datasetMapper;
         this.datasetVersionMapper = datasetVersionMapper;
         this.metadataService = metadataService;
         this.datasetVersionRepository = datasetVersionRepository;
+        this.categoryMapper = categoryMapper;
+        this.categoryService = categoryService;
     }
 
     @GET
@@ -142,5 +151,19 @@ public class DatasetController {
     @Path("/{id}/dataset-versions/latest")
     public DatasetVersionDetailsDto getLastVersionCreated(UUID id) {
         return datasetVersionMapper.toDatasetVersionDetailsDto(datasetVersionRepository.getLastVersionCreated(id));
+    }
+
+    @GET
+    @RolesAllowed({ Role.STR_DATASET_READ })
+    @Path("/categories")
+    public List<CategoryDto> getAllCategories() {
+        return categoryMapper.toCategoriesDtoList(categoryService.getAll(WithCategoryEntityType.DATASET));
+    }
+
+    @PUT
+    @RolesAllowed({ Role.STR_DATASET_WRITE })
+    @Path("/categories")
+    public void addCategory(CategoryDto categoryDto) {
+        datasetService.addCategory(categoryDto);
     }
 }

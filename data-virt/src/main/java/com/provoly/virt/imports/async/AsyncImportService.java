@@ -15,6 +15,7 @@ import com.provoly.common.error.ErrorCode;
 import com.provoly.common.imports.MessageLevel;
 import com.provoly.common.item.GeoFormat;
 import com.provoly.common.item.ItemDto;
+import com.provoly.common.model.AttributeDefDetailsDto;
 import com.provoly.virt.imports.RecordConvertor;
 import com.provoly.virt.imports.model.ItemRecord;
 import com.provoly.virt.item.WriteItemsService;
@@ -70,7 +71,7 @@ public class AsyncImportService {
 
         var messages = recordConvertor.validateAttributeNames(
                 itemRecord.values().keySet(),
-                oClassDetails.getAttributes().stream().map(attr -> attr.name))
+                oClassDetails.getAttributes().stream().map(AttributeDefDetailsDto::getName))
                 .stream()
                 .filter(m -> m.messageLevel() == MessageLevel.ERROR)
                 .toList();

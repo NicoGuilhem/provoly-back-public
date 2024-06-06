@@ -36,7 +36,7 @@ public class SearchQueryBuilder {
 
     private StorageSupport storageSupport;
 
-    Predicate<AttributeDefDetailsDto> isKeywordType = attributeDefDetailsDto -> attributeDefDetailsDto.field
+    Predicate<AttributeDefDetailsDto> isKeywordType = attributeDefDetailsDto -> attributeDefDetailsDto.getField()
             .getType() == Type.KEYWORD;
 
     public SearchQueryBuilder() {
@@ -70,7 +70,7 @@ public class SearchQueryBuilder {
             case AndConditionDto andCondition -> buildQuery(classDto, andCondition, securityMetadata, elasticPath);
             case AttributeConditionDto attributeConditionDto -> {
                 var attribute = storageSupport.getAttributeById(classDto, attributeConditionDto.getAttribute());
-                if (attribute.multiValued) {
+                if (attribute.isMultiValued()) {
                     yield buildQueryMulti(classDto, attribute, attributeConditionDto, securityMetadata); // TODO : Should take a path
                 } else {
                     yield buildQuerySimple(classDto, attribute, attributeConditionDto, securityMetadata);
@@ -102,7 +102,7 @@ public class SearchQueryBuilder {
             AttributeConditionDto conditionDto,
             ComposedConditionDto securityMetadata) {
         var path = StorageLayout.ATTRIBUTE_FIELD_NAME
-                + "." + StorageLayout.MULTI_ITEM_PREFIX + attributeDef.slug;
+                + "." + StorageLayout.MULTI_ITEM_PREFIX + attributeDef.getSlug();
 
         // TODO : Choose best score mode
         return Query.of(q -> q
@@ -117,10 +117,10 @@ public class SearchQueryBuilder {
             AttributeConditionDto conditionDto,
             ComposedConditionDto securityMetadata) {
         String elasticPath = storageLayout.buildAttributeRootPath(attribute);
-        validateTypeFieldValue(attribute.field.type, conditionDto.getValue());
+        validateTypeFieldValue(attribute.getField().type, conditionDto.getValue());
 
         if (conditionDto.getUpperValue() != null) {
-            validateTypeFieldValue(attribute.field.type, conditionDto.getUpperValue());
+            validateTypeFieldValue(attribute.getField().type, conditionDto.getUpperValue());
         }
 
         var attributeQuery = leafBuildQuery(conditionDto, attribute);

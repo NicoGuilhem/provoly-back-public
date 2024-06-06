@@ -278,7 +278,8 @@ class DashboardServiceTest {
         OClassWriteDto classDto = testService.createClassWriteDto(UUID.randomUUID(), "classDto", attributeDefDto);
         modelService.saveEntity(modelMapper.toModel(classDto));
 
-        DatasetDto dto = new DatasetDto(UUID.randomUUID(), "test", classDto.getId(), DatasetType.CLOSED, List.of(groups));
+        DatasetDto dto = new DatasetDto(UUID.randomUUID(), "test", classDto.getId(), DatasetType.CLOSED, List.of(groups),
+                List.of());
         datasetService.save(dto);
         return dto;
     }

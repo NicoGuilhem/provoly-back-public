@@ -250,12 +250,12 @@ class ElasticWriteService implements StorageWriteService {
 
         // Load attributes : Based on attributes defined in Class. Everything else is ignored
         for (AttributeDefDetailsDto attributeDef : oClass.getAttributes()) {
-            if (attributeDef.multiValued) {
+            if (attributeDef.isMultiValued()) {
                 var attributes = (Iterable<Map<String, Object>>) itemAttributeMap
-                        .get(StorageLayout.MULTI_ITEM_PREFIX + attributeDef.slug);
+                        .get(StorageLayout.MULTI_ITEM_PREFIX + attributeDef.getSlug());
                 if (attributes == null)
                     continue;
-                var attributeMultiValue = item.getAttributeMulti(attributeDef.technicalName);
+                var attributeMultiValue = item.getAttributeMulti(attributeDef.getTechnicalName());
                 for (Map<String, Object> attribute : attributes) {
                     var attributeValue = attributeMultiValue.addValue();
                     extractAttributeValue(attributeValue, attribute);
@@ -263,10 +263,10 @@ class ElasticWriteService implements StorageWriteService {
 
             } else {
                 var attribute = (Map<String, Object>) itemAttributeMap
-                        .get(StorageLayout.SIMPLE_ITEM_PREFIX + attributeDef.slug);
+                        .get(StorageLayout.SIMPLE_ITEM_PREFIX + attributeDef.getSlug());
                 if (attribute == null)
                     continue;
-                var attributeValue = item.getAttributeSimple(attributeDef.technicalName);
+                var attributeValue = item.getAttributeSimple(attributeDef.getTechnicalName());
                 extractAttributeValue(attributeValue, attribute);
             }
         }

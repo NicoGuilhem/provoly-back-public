@@ -41,7 +41,7 @@ public class KuzzleAssetLayout extends KuzzleBasedLayout {
 
     @Override
     public String buildAttributePath(AttributeDefDetailsDto attribute) {
-        return "%s.%s".formatted(ATTRIBUTE_PATH, attribute.name);
+        return "%s.%s".formatted(ATTRIBUTE_PATH, attribute.getName());
     }
 
     @Override
@@ -83,10 +83,10 @@ public class KuzzleAssetLayout extends KuzzleBasedLayout {
 
         // Load attributes : Based on attributes defined in Class. Everything else is ignored
         for (AttributeDefDetailsDto attributeDef : oClass.getAttributes()) {
-            var attributeValue = ((Map<String, Object>) hit.get(ATTRIBUTE_PATH)).get(attributeDef.technicalName);
+            var attributeValue = ((Map<String, Object>) hit.get(ATTRIBUTE_PATH)).get(attributeDef.getTechnicalName());
             if (attributeValue == null)
                 continue;
-            var attributeSimple = item.getAttributeSimple(attributeDef.technicalName);
+            var attributeSimple = item.getAttributeSimple(attributeDef.getTechnicalName());
             elasticSupport.extractAttributeValue(attributeSimple, attributeValue);
         }
         return item;

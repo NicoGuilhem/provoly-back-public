@@ -75,12 +75,12 @@ public class NamedSearchTest {
 
     private void insertItems(StorageDataNQ storageData) {
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put(storageData.attributeIdVehicle.name, "123 AA6 789");
-        attributes.put(storageData.attributeChoc.name, 3);
+        attributes.put(storageData.attributeIdVehicle.getName(), "123 AA6 789");
+        attributes.put(storageData.attributeChoc.getName(), 3);
         storageData.vehicleOne = itemsTestTools.addItem(storageData.datasetVersionDto, attributes);
         attributes = new HashMap<>();
-        attributes.put(storageData.attributeIdVehicle.name, "AAA");
-        attributes.put(storageData.attributeChoc.name, 33);
+        attributes.put(storageData.attributeIdVehicle.getName(), "AAA");
+        attributes.put(storageData.attributeChoc.getName(), 33);
     }
 
     @AfterAll
@@ -96,9 +96,9 @@ public class NamedSearchTest {
         String namedQueryName = "namedQuery" + UUID.randomUUID();
 
         AndConditionDto conditionDtoAnd = new AndConditionDto();
-        AttributeConditionDto condition1 = new AttributeConditionDto(storageData.attributeIdVehicle.id, "AA",
+        AttributeConditionDto condition1 = new AttributeConditionDto(storageData.attributeIdVehicle.getId(), "AA",
                 Operator.CONTAINS);
-        AttributeConditionDto condition2 = new AttributeConditionDto(storageData.attributeChoc.id, "3", Operator.EQUALS);
+        AttributeConditionDto condition2 = new AttributeConditionDto(storageData.attributeChoc.getId(), "3", Operator.EQUALS);
         conditionDtoAnd.composed.add(condition1);
         conditionDtoAnd.composed.add(condition2);
 

@@ -70,10 +70,10 @@ public class AbacAttributeTest {
         datasetVersionDto = testData.createDataset("ds-document", documentClass.getId());
 
         // Add a rule on POLICE can see author with Dredd
-        var ruleCondition = new AttributeConditionDto(authorAttribute.id, "dredd", Operator.CONTAINS);
+        var ruleCondition = new AttributeConditionDto(authorAttribute.getId(), "dredd", Operator.CONTAINS);
         testData.createAttributeRule(ruleCondition, "user.metadata('statut') == 'policier'");
 
-        condition = new AttributeConditionDto(nbWordAttribute.id, "42", Operator.EQUALS);
+        condition = new AttributeConditionDto(nbWordAttribute.getId(), "42", Operator.EQUALS);
 
         insertItems();
     }
@@ -84,19 +84,19 @@ public class AbacAttributeTest {
 
     private void insertItems() {
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put(titleAttribute.name, "Compte rendu audition Jason Bourne");
-        attributes.put(nbWordAttribute.name, 42);
-        attributes.put(authorAttribute.name, "Paul Dredd");
+        attributes.put(titleAttribute.getName(), "Compte rendu audition Jason Bourne");
+        attributes.put(nbWordAttribute.getName(), 42);
+        attributes.put(authorAttribute.getName(), "Paul Dredd");
         sensibleDoc = itemsTestTools.addItem(datasetVersionDto, attributes);
         attributes = new HashMap<>();
-        attributes.put(titleAttribute.name, "Liste des schtroumpfs");
-        attributes.put(nbWordAttribute.name, 42);
-        attributes.put(authorAttribute.name, "La Schtroumpfette et paul le grand Schtroumpf");
+        attributes.put(titleAttribute.getName(), "Liste des schtroumpfs");
+        attributes.put(nbWordAttribute.getName(), 42);
+        attributes.put(authorAttribute.getName(), "La Schtroumpfette et paul le grand Schtroumpf");
         openDoc = itemsTestTools.addItem(datasetVersionDto, attributes);
         attributes = new HashMap<>();
-        attributes.put(titleAttribute.name, "Etat de la guerre politique en Balkanie");
-        attributes.put(nbWordAttribute.name, 56);
-        attributes.put(authorAttribute.name, "Le grand Jean"); // Attribute secured by meta
+        attributes.put(titleAttribute.getName(), "Etat de la guerre politique en Balkanie");
+        attributes.put(nbWordAttribute.getName(), 56);
+        attributes.put(authorAttribute.getName(), "Le grand Jean"); // Attribute secured by meta
         itemsTestTools.addItem(datasetVersionDto, attributes);
     }
 
@@ -123,7 +123,7 @@ public class AbacAttributeTest {
     @Order(3)
     public void onAuthorSearch_user_cannotSee_authorSensibleDoc() {
         authService.authenticate(AuthService.User.USER);
-        var condition = new AttributeConditionDto(authorAttribute.id, "paul", Operator.CONTAINS);
+        var condition = new AttributeConditionDto(authorAttribute.getId(), "paul", Operator.CONTAINS);
 
         var result = itemsTestTools.searchAll(documentClass.getId(), datasetVersionDto, condition);
         assertThat(result.items().get(documentClass.getId())).extracting("id").containsExactlyInAnyOrder(openDoc.getId());

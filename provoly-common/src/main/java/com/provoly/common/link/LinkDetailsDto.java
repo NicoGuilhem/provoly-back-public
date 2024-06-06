@@ -8,10 +8,10 @@ import com.provoly.common.relation.RelationTypeDto;
 
 public class LinkDetailsDto {
 
-    public UUID id;
-    public RelationTypeDto relationType;
-    public AttributeDefDetailsDto attributeSource;
-    public AttributeDefDetailsDto attributeDestination;
+    private UUID id;
+    private RelationTypeDto relationType;
+    private AttributeDefDetailsDto attributeSource;
+    private AttributeDefDetailsDto attributeDestination;
 
     @Override
     public boolean equals(Object o) {
@@ -31,5 +31,29 @@ public class LinkDetailsDto {
     @Override
     public String toString() {
         return "LinkDetailsDto{id=" + id + ", " + attributeSource + "->" + attributeDestination + '}';
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public RelationTypeDto getRelationType() {
+        return relationType;
+    }
+
+    public AttributeDefDetailsDto getAttributeSource() {
+        return attributeSource;
+    }
+
+    public AttributeDefDetailsDto getAttributeDestination() {
+        return attributeDestination;
+    }
+
+    public void setAttributeDestination(AttributeDefDetailsDto attributeDestination) {
+        this.attributeDestination = attributeDestination;
+    }
+
+    public void setAttributeSource(AttributeDefDetailsDto attributeSource) {
+        this.attributeSource = attributeSource;
     }
 }

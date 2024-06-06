@@ -83,7 +83,7 @@ public class KuzzleQueryResultService {
                 var propertyName = switch (sort.type()) {
                     case ATTRIBUTE -> {
                         var attribute = storageSupport.getAttributeById(classDto, sort.attribute());
-                        if (attribute.field.getType().isGeo()) {
+                        if (attribute.getField().getType().isGeo()) {
                             throw new BusinessException(ErrorCode.BAD_REQUEST, "Sort is not allowed on geopoint field.");
                         }
                         yield kuzzleBasedLayout.buildAttributePath(attribute);
@@ -126,7 +126,7 @@ public class KuzzleQueryResultService {
                         AttributeSimpleValue attr = (AttributeSimpleValue) item.getAttributes()
                                 .values()
                                 .stream()
-                                .filter(attributeValue -> attributeValue.getAttributeDef().id.equals(sortDto.attribute()))
+                                .filter(attributeValue -> attributeValue.getAttributeDef().getId().equals(sortDto.attribute()))
                                 .findFirst()
                                 .orElseThrow(() -> new BusinessException(ErrorCode.TECHNICAL, "attribute not found"));
                         yield attr.readValueEvenIfNotVisible();
@@ -275,12 +275,12 @@ public class KuzzleQueryResultService {
         var attributeDetails = oClassDetailsDto
                 .getAttributes()
                 .stream()
-                .filter(a -> a.id.equals(attribute))
+                .filter(a -> a.getId().equals(attribute))
                 .findFirst()
                 .orElseThrow(() -> new BusinessException(ErrorCode.TECHNICAL,
                         "Attribute %s not found in oclass %s".formatted(attribute, oClassDetailsDto.getId())));
 
-        return switch (attributeDetails.field.getType()) {
+        return switch (attributeDetails.getField().getType()) {
             case INSTANT -> bucket.get("key_as_string");
             default -> bucket.get("key");
         };

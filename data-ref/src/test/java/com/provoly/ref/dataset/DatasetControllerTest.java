@@ -21,6 +21,7 @@ import com.provoly.common.error.ProvolyNotFoundException;
 import com.provoly.common.metadata.MetadataDefDto;
 import com.provoly.common.metadata.MetadataValueWriteDto;
 import com.provoly.common.model.AttributeDefDto;
+import com.provoly.common.model.CategoryDto;
 import com.provoly.common.model.FieldDto;
 import com.provoly.common.model.OClassWriteDto;
 import com.provoly.common.user.Role;
@@ -93,6 +94,8 @@ public class DatasetControllerTest {
     private final UUID attributeId = UUID.randomUUID();
     private OClassWriteDto oClass = null;
     private FieldDto fieldDto = null;
+    private UUID categoryId = UUID.randomUUID();
+    private CategoryDto categoryDto = new CategoryDto(categoryId, "TEST");
 
     @BeforeEach
     public void init() throws IOException {
@@ -122,6 +125,7 @@ public class DatasetControllerTest {
         dataset.setUser(currentUser);
         datasetRepository.save(dataset);
         datasetVersionService.createDatasetVersion(datasetVersionMapper.toModel(datasetVersionDto));
+        datasetService.addCategory(categoryDto);
         try {
             groupService.addGroup(new GroupWrite(UUID.randomUUID(), "new_group"));
             groupService.addGroup(new GroupWrite(UUID.randomUUID(), "test_group"));
@@ -278,19 +282,19 @@ public class DatasetControllerTest {
         assertThat(result).isNotNull().isEqualTo(List.of(new CountDto(oClass.getId(), 1)));
     }
 
-    private void generateMetadataDefWithType(VariableType type, String description) {
+    private void generateMetadataDefWithType() {
         metadataDefDto = new MetadataDefDto();
         metadataDefDto.id = UUID.fromString("32c52b41-b197-4e57-8f6b-a8bf53c9c167");
         metadataDefDto.name = UUID.randomUUID().toString();
-        metadataDefDto.type = type;
-        metadataDefDto.description = description;
+        metadataDefDto.type = VariableType.INTEGER;
+        metadataDefDto.description = "description";
     }
 
     @Test
     @TestSecurity(user = "testUser", roles = { Role.STR_DATASET_WRITE, Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_DATASET_READ,
             Role.STR_SEARCH })
     public void should_add_metadata_to_dataset() {
-        generateMetadataDefWithType(VariableType.INTEGER, "description");
+        generateMetadataDefWithType();
         metadataDefController.addMetadata(metadataDefDto);
         var metadataValueWrite = new MetadataValueWriteDto();
         metadataValueWrite.setValue("12");
@@ -328,7 +332,7 @@ public class DatasetControllerTest {
     @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_CLASS_READ, Role.STR_SEARCH,
             Role.STR_DATASET_WRITE })
     public void should_delete_metadata_of_dataset() {
-        generateMetadataDefWithType(VariableType.INTEGER, "description");
+        generateMetadataDefWithType();
         metadataDefController.addMetadata(metadataDefDto);
         var metadataValueWrite = new MetadataValueWriteDto();
         metadataValueWrite.setValue("12");
@@ -347,7 +351,7 @@ public class DatasetControllerTest {
     @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_DATASET_WRITE, Role.STR_CLASS_READ,
             Role.STR_SEARCH })
     public void delete_inexistant_metadata_shouldThrowError() {
-        generateMetadataDefWithType(VariableType.INTEGER, "description");
+        generateMetadataDefWithType();
         metadataDefController.addMetadata(metadataDefDto);
 
         assertThatThrownBy(() -> datasetController.deleteMetadata(datasetVersionDto.getId(), metadataDefDto.id))
@@ -502,7 +506,7 @@ public class DatasetControllerTest {
     public void addGroupToDataset_shouldSucceed() {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
         UUID datasetId = UUID.randomUUID();
-        createDataset(datasetId, "name", Set.of("new_group"));
+        createDataset(datasetId, Set.of("new_group"));
 
         var result = datasetController.get(datasetId);
         assertThat(result).extracting(DatasetDetailsDto::getGroups).isEqualTo(List.of("new_group"));
@@ -514,8 +518,8 @@ public class DatasetControllerTest {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
         UUID datasetId = UUID.randomUUID();
 
-        createDataset(datasetId, "name", Set.of("new_group"));
-        updateGroup(datasetId, "name", null);
+        createDataset(datasetId, Set.of("new_group"));
+        updateGroup(datasetId, null);
 
         var result = datasetController.get(datasetId);
         assertThat(result).extracting(DatasetDetailsDto::getGroups).isEqualTo(List.of("new_group"));
@@ -527,8 +531,8 @@ public class DatasetControllerTest {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
         UUID datasetId = UUID.randomUUID();
 
-        createDataset(datasetId, "name", Set.of("new_group"));
-        updateGroup(datasetId, "name", Set.of());
+        createDataset(datasetId, Set.of("new_group"));
+        updateGroup(datasetId, Set.of());
 
         var result = datasetController.get(datasetId);
         assertThat(result).extracting(DatasetDetailsDto::getGroups).isEqualTo(List.of());
@@ -542,10 +546,10 @@ public class DatasetControllerTest {
         UUID dashboardId = UUID.randomUUID();
         var expected = new GroupErrors(Map.of(dashboardId, Set.of("test_group")));
 
-        createDataset(datasetDto.getId(), "name", groups);
+        createDataset(datasetDto.getId(), groups);
         createDashboardDto(dashboardId, Set.of("test_group"));
 
-        var result = updateGroup(datasetDto.getId(), "name", Set.of());
+        var result = updateGroup(datasetDto.getId(), Set.of());
         assertThat(result).isEqualTo(expected);
     }
 
@@ -557,10 +561,10 @@ public class DatasetControllerTest {
         UUID dashboardId = UUID.randomUUID();
         var expected = new GroupErrors(Map.of(dashboardId, groups));
 
-        createDataset(datasetDto.getId(), "name", Set.of("AUTHENTICATED"));
+        createDataset(datasetDto.getId(), Set.of("AUTHENTICATED"));
         createDashboardDto(dashboardId, groups);
 
-        var result = updateGroup(datasetDto.getId(), "name", Set.of());
+        var result = updateGroup(datasetDto.getId(), Set.of());
         assertThat(result).isEqualTo(expected);
     }
 
@@ -570,8 +574,8 @@ public class DatasetControllerTest {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
         UUID datasetId = UUID.randomUUID();
 
-        createDataset(datasetId, "name", Set.of("ALL"));
-        updateGroup(datasetId, "name", Set.of("new_group"));
+        createDataset(datasetId, Set.of("ALL"));
+        updateGroup(datasetId, Set.of("new_group"));
 
         var result = datasetController.get(datasetId);
 
@@ -587,10 +591,10 @@ public class DatasetControllerTest {
         UUID dashboardId = UUID.randomUUID();
         var expected = new GroupErrors(Map.of(dashboardId, groups));
 
-        createDataset(datasetDto.getId(), "name", Set.of());
+        createDataset(datasetDto.getId(), Set.of());
         createDashboardDto(dashboardId, groups);
 
-        var result = updateGroup(datasetDto.getId(), "name", Set.of());
+        var result = updateGroup(datasetDto.getId(), Set.of());
         assertThat(result).isEqualTo(expected);
     }
 
@@ -600,9 +604,9 @@ public class DatasetControllerTest {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
         UUID datasetId = UUID.randomUUID();
 
-        createDataset(UUID.randomUUID(), "name", Set.of("new_group"));
+        createDataset(UUID.randomUUID(), Set.of("new_group"));
 
-        assertThatThrownBy(() -> createDataset(datasetId, "name", Set.of("new_group")))
+        assertThatThrownBy(() -> createDataset(datasetId, Set.of("new_group")))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("Name %s already exists for class %s".formatted("name", oClass.getName()));
     }
@@ -619,24 +623,82 @@ public class DatasetControllerTest {
         OClassWriteDto oClassWriteDto = testService.createClassWriteDto(classId, "classDto", attributeDefDto);
 
         modelService.saveEntity(modelMapper.toModel(oClassWriteDto));
-        createDataset(datasetId, "name", Set.of());
+        createDataset(datasetId, Set.of());
 
         assertThatThrownBy(
-                () -> datasetController.update(new DatasetDto(datasetId, "name", classId, DatasetType.CLOSED, List.of())))
+                () -> datasetController
+                        .update(new DatasetDto(datasetId, "name", classId, DatasetType.CLOSED, List.of(), List.of())))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("The dataset's type is immutable.");
     }
 
-    private GroupErrors updateGroup(UUID datasetId, String name, Set<String> groups) {
-        DatasetDto dataset = new DatasetDto(datasetId, name, oClass.getId(), DatasetType.CLOSED,
-                groups == null ? null : groups);
+    @Test
+    @TestSecurity(user = "testUser", roles = { Role.STR_DATASET_READ })
+    public void saveCategory_shouldSucceed() {
+        assertThat(datasetController.getAllCategories())
+                .extracting(CategoryDto::name)
+                .contains("TEST");
+    }
+
+    @Test
+    @TestSecurity(user = "testUser", roles = { Role.STR_ITEM_WRITE, Role.STR_SEARCH })
+    public void addCategoryToDataset_shouldSucceed() {
+        testService.authenticate("iamsuperadmin", currentSubjectProvider);
+        UUID datasetId = UUID.randomUUID();
+        createDataset(datasetId, Set.of("new_group"), List.of(categoryId));
+
+        var result = datasetController.get(datasetId);
+        assertThat(result).extracting(DatasetDetailsDto::getCategories).isEqualTo(List.of(categoryDto));
+    }
+
+    @Test
+    @TestSecurity(user = "testUser", roles = { Role.STR_ITEM_WRITE, Role.STR_SEARCH })
+    public void updateDatasetWithCategoryNull_shouldNotModifyCategory() {
+        testService.authenticate("iamsuperadmin", currentSubjectProvider);
+        UUID datasetId = UUID.randomUUID();
+
+        createDataset(datasetId, Set.of("new_group"), List.of(categoryId));
+        updateGroup(datasetId, null, null);
+
+        var result = datasetController.get(datasetId);
+        assertThat(result).extracting(DatasetDetailsDto::getCategories).isEqualTo(List.of(categoryDto));
+    }
+
+    @Test
+    @TestSecurity(user = "testUser", roles = { Role.STR_ITEM_WRITE, Role.STR_SEARCH })
+    public void updateDatasetWithCategoryEmpty_shouldCleanCategory() {
+        testService.authenticate("iamsuperadmin", currentSubjectProvider);
+        UUID datasetId = UUID.randomUUID();
+
+        createDataset(datasetId, Set.of("new_group"), List.of(categoryId));
+        updateGroup(datasetId, Set.of(), List.of());
+
+        var result = datasetController.get(datasetId);
+        assertThat(result).extracting(DatasetDetailsDto::getGroups).isEqualTo(List.of());
+    }
+
+    private GroupErrors updateGroup(UUID datasetId, Set<String> groups) {
+        DatasetDto dataset = new DatasetDto(datasetId, "name", oClass.getId(), DatasetType.CLOSED,
+                groups, List.of());
         return datasetService.updateDataset(dataset);
     }
 
-    private Dataset createDataset(UUID datasetId, String name, Set<String> groups) {
-        DatasetDto dataset = new DatasetDto(datasetId, name, oClass.getId(), DatasetType.CLOSED, groups);
+    private void updateGroup(UUID datasetId, Set<String> groups, List<UUID> categoryIds) {
+        DatasetDto dataset = new DatasetDto(datasetId, "name", oClass.getId(), DatasetType.CLOSED,
+                groups, categoryIds);
+        datasetService.updateDataset(dataset);
+    }
+
+    private void createDataset(UUID datasetId, Set<String> groups, List<UUID> categoryIds) {
+        DatasetDto dataset = new DatasetDto(datasetId, "name", oClass.getId(), DatasetType.CLOSED, groups, categoryIds);
         datasetService.save(dataset);
-        return datasetService.findById(datasetId);
+        datasetService.findById(datasetId);
+    }
+
+    private void createDataset(UUID datasetId, Set<String> groups) {
+        DatasetDto dataset = new DatasetDto(datasetId, "name", oClass.getId(), DatasetType.CLOSED, groups, List.of());
+        datasetService.save(dataset);
+        datasetService.findById(datasetId);
     }
 
     private Dataset createDataset(UUID datasetId, String description, String name) {
