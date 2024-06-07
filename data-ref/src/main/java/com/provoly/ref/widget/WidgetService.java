@@ -108,7 +108,7 @@ public class WidgetService {
     }
 
     public Collection<WidgetCatalog> getAllowedWidgets(ProvolyUser provolyUser) {
-        return widgetRepository.getAllowedWidgets(provolyUser);
+        return grantService.getAllUserAllowed(WIDGET, provolyUser);
     }
 
     private void updateGroups(WidgetWriteDto dto) {

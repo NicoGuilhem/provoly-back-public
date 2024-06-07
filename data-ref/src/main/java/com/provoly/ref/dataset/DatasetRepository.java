@@ -14,9 +14,7 @@ import com.provoly.ref.dashboard.Dashboard;
 import com.provoly.ref.dashboard.Dashboard_;
 import com.provoly.ref.entity.EntityIdService;
 import com.provoly.ref.entity.EntityNamed_;
-import com.provoly.ref.groups.Group;
 import com.provoly.ref.model.OClass_;
-import com.provoly.ref.user.ProvolyUser;
 import com.provoly.ref.widget.WidgetCatalog;
 import com.provoly.ref.widget.WidgetCatalog_;
 
@@ -58,19 +56,6 @@ public class DatasetRepository {
         return entityIdService.exists(dataset);
     }
 
-    public List<Dataset> getClassDatasetsForUser(ProvolyUser user, UUID oclassID) {
-        return em.createNativeQuery(
-                "WITH ids AS (SELECT DISTINCT dataset.id FROM dataset " +
-                        "LEFT JOIN group_relations as gr ON dataset.id = gr.entity_id " +
-                        "WHERE gr.group_id in :groups_id OR dataset.user_id = :user_id ) " +
-                        "SELECT * FROM dataset where o_class_id = :oclass_id AND id in (SELECT id FROM ids)",
-                Dataset.class)
-                .setParameter("user_id", user.getId())
-                .setParameter("groups_id", user.getGroups().stream().map(Group::getId).toList())
-                .setParameter("oclass_id", oclassID)
-                .getResultList();
-    }
-
     public List<Dataset> getAllForClass(UUID classId) {
         var cb = em.getCriteriaBuilder();
         var q = cb.createQuery(Dataset.class);
@@ -99,19 +84,6 @@ public class DatasetRepository {
                 .setMaxResults(1)
                 .getResultStream()
                 .findAny();
-    }
-
-    public List<Dataset> getAllowedDatasetForUser(ProvolyUser userDto) {
-        return em.createNativeQuery(
-                "WITH ids AS (SELECT DISTINCT dataset.id FROM dataset " +
-                        "LEFT JOIN group_relations as gr ON dataset.id = gr.entity_id " +
-                        "LEFT JOIN group_def as gd ON gr.group_id = gd.id " +
-                        "WHERE gd.name in :groups_names OR dataset.user_id = :user_id ) " +
-                        "SELECT * FROM dataset WHERE id in (SELECT id FROM ids)",
-                Dataset.class)
-                .setParameter("user_id", userDto.getId())
-                .setParameter("groups_names", userDto.getGroups().stream().map(Group::getName).toList())
-                .getResultList();
     }
 
     public Collection<UUID> getAllFilterByDatasource(Collection<UUID> datasource) {

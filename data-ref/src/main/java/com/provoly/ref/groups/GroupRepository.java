@@ -8,13 +8,14 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.criteria.*;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
-import com.provoly.ref.entity.EntityIdService;
-import com.provoly.ref.entity.EntityNamed;
+import com.provoly.ref.entity.*;
+import com.provoly.ref.user.ProvolyUser;
 
 @ApplicationScoped
 @Transactional
@@ -117,5 +118,62 @@ public class GroupRepository {
                 cb.equal(root.get(GroupRelations_.entityType), type),
                 cb.equal(root.get(GroupRelations_.entityId), entityNamed.getId())));
         return em.createQuery(q).getResultList();
+    }
+
+    /**
+     * Builds a subquery selecting entity ids of GroupRelations from a list of Group's names
+     * 
+     * @param query the query we want the subquery
+     * @param groupsList the list of Group
+     * @return Subquery<UUID>
+     */
+    private Subquery<UUID> selectEntityIdsFromGroupListNames(CriteriaQuery<?> query, List<Group> groupsList) {
+
+        Subquery<UUID> subqueryGroupRelations = query.subquery(UUID.class);
+        Root<GroupRelations> fromSubQuery = subqueryGroupRelations.from(GroupRelations.class);
+        Join<GroupRelations, Group> groupDef = fromSubQuery.join(GroupRelations_.group);
+        Predicate groupRelationsOfGroups = groupDef.get(EntityNamed_.name)
+                .in(groupsList.stream().map(EntityNamed::getName).toList());
+
+        subqueryGroupRelations
+                .select(fromSubQuery.get(GroupRelations_.entityId))
+                .where(groupRelationsOfGroups);
+
+        return subqueryGroupRelations;
+    }
+
+    public <T extends EntityId> List<T> getAllowedEntityId(final @NotNull ProvolyUser user, final Class<T> entityId) {
+        return getAllowedEntityId(user, entityId, null);
+    }
+
+    public <T extends EntityId> List<T> getAllowedEntityId(final @NotNull ProvolyUser user,
+            final Class<T> entityId,
+            final AdditionalFiltersBuilder<T> additionalFiltersBuilder) {
+        final var cb = em.getCriteriaBuilder();
+        final var q = cb.createQuery(entityId);
+
+        final var root = q.from(entityId);
+
+        final Predicate userIsOwnerOfEntity = cb.equal(root.get("user"), user);
+        final Predicate userHasGroupOfEntity = root.get(EntityId_.id)
+                .in(this.selectEntityIdsFromGroupListNames(q, user.getGroups()));
+
+        final Predicate allowedEntity = cb.or(userHasGroupOfEntity, userIsOwnerOfEntity);
+
+        Predicate filters = allowedEntity;
+        if (additionalFiltersBuilder != null) {
+            Predicate additionalFilters = additionalFiltersBuilder.build(cb, q, root);
+            if (additionalFilters != null) {
+                filters = cb.and(additionalFilters, allowedEntity);
+            }
+        }
+        q.select(root).where(filters);
+
+        return em.createQuery(q).getResultList();
+    }
+
+    @FunctionalInterface
+    public interface AdditionalFiltersBuilder<T extends EntityId> {
+        public Predicate build(CriteriaBuilder cb, CriteriaQuery<T> q, Root<T> root);
     }
 }

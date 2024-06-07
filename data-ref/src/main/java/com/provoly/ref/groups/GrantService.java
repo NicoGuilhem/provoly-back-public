@@ -6,17 +6,20 @@ import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotNull;
 
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.ref.dashboard.Dashboard;
-import com.provoly.ref.dashboard.DashboardRepository;
 import com.provoly.ref.dataset.Dataset;
 import com.provoly.ref.dataset.DatasetRepository;
+import com.provoly.ref.dataset.Dataset_;
+import com.provoly.ref.entity.EntityId;
+import com.provoly.ref.entity.EntityIdService;
 import com.provoly.ref.entity.EntityNamed;
+import com.provoly.ref.model.OClass_;
 import com.provoly.ref.user.ProvolyUser;
 import com.provoly.ref.widget.WidgetCatalog;
-import com.provoly.ref.widget.WidgetRepository;
 
 import org.jboss.logging.Logger;
 
@@ -24,19 +27,17 @@ import org.jboss.logging.Logger;
 public class GrantService {
 
     private Logger log;
-    private DashboardRepository dashboardRepository;
+    private EntityIdService entityIdService;
     private GroupRepository groupRepository;
     private DatasetRepository datasetRepository;
-    private WidgetRepository widgetRepository;
 
-    public GrantService(Logger log, DashboardRepository dashboardRepository,
+    public GrantService(Logger log, EntityIdService entityIdService,
             GroupRepository groupRepository,
-            DatasetRepository datasetRepository, WidgetRepository widgetRepository) {
+            DatasetRepository datasetRepository) {
         this.log = log;
-        this.dashboardRepository = dashboardRepository;
+        this.entityIdService = entityIdService;
         this.groupRepository = groupRepository;
         this.datasetRepository = datasetRepository;
-        this.widgetRepository = widgetRepository;
     }
 
     public void canWrite(EntityNamed entityNamed, WithGroupEntityType type, ProvolyUser user) {
@@ -94,47 +95,27 @@ public class GrantService {
     }
 
     @Transactional
-    public <T> List<T> getAllUserAllowed(WithGroupEntityType type, ProvolyUser user) {
-        return (List<T>) switch (type) {
-            case DASHBOARD -> getUserAllowedDashboards(user);
-            case DATASET -> getUserAllowedDatasets(user);
-            case WIDGET -> getUserAllowedWidgets(user);
-        };
+    public <T extends EntityId> List<T> getAllUserAllowed(WithGroupEntityType type, ProvolyUser user) {
+        if (!user.isAdmin()) {
+            log.infof("Get %s for user %s with groups %s", type.getEntity().getSimpleName(), user.getId(),
+                    user.getGroups().stream().map(Group::getName).toList());
+            return groupRepository.getAllowedEntityId(user, type.getEntity());
+        }
+
+        log.infof("Admin user, getting all %s", type.getEntity().getSimpleName());
+        return entityIdService.getAll(type.getEntity());
     }
 
-    public Collection<Dataset> getUserAllowedDatasetsByClass(ProvolyUser user, UUID oclassId) {
+    //TODO refacto this method to make it generic for all EntityId (not specific to Datasets)
+    public Collection<Dataset> getUserAllowedDatasetsByClass(final @NotNull ProvolyUser user, final UUID oclassId) {
         if (user.isAdmin()) {
             log.info("Admin user, getting all datasets");
             return datasetRepository.getAllForClass(oclassId);
         }
         log.infof("Get datasets for user %s with groups %s", user.getId(),
                 user.getGroups().stream().map(Group::getName).toList());
-        return datasetRepository.getClassDatasetsForUser(user, oclassId);
-    }
-
-    private Collection<Dashboard> getUserAllowedDashboards(ProvolyUser user) {
-        if (user.isAdmin()) {
-            log.info("Admin user, getting all dashboards");
-            return dashboardRepository.getAll();
-        }
-
-        log.infof("Get dashboards for user %s with groups %s", user.getId(), user.getGroups());
-        return dashboardRepository.getUserVisibleDashboards(user);
-    }
-
-    private Collection<Dataset> getUserAllowedDatasets(ProvolyUser user) {
-        if (user.isAdmin()) {
-            log.info("Admin user, getting all datasets");
-            return datasetRepository.getAll();
-        }
-        return datasetRepository.getAllowedDatasetForUser(user);
-    }
-
-    private Collection<WidgetCatalog> getUserAllowedWidgets(ProvolyUser user) {
-        if (user.isAdmin()) {
-            return widgetRepository.getAll();
-        }
-        return widgetRepository.getAllowedWidgets(user);
+        return groupRepository.getAllowedEntityId(user, Dataset.class,
+                (cb, query, root) -> cb.equal(root.get(Dataset_.oClass).get(OClass_.id), oclassId));
     }
 
     private boolean isEntityNotPrivate(List<GroupRelations> groupsByEntity) {

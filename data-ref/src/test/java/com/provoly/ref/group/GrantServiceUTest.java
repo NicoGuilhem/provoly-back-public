@@ -2,32 +2,26 @@ package com.provoly.ref.group;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import jakarta.persistence.EntityManager;
-
 import com.provoly.common.dataset.DatasetType;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.user.Role;
 import com.provoly.ref.dashboard.Dashboard;
-import com.provoly.ref.dashboard.DashboardRepository;
 import com.provoly.ref.dashboard.DashboardService;
 import com.provoly.ref.dataset.Dataset;
 import com.provoly.ref.dataset.DatasetRepository;
 import com.provoly.ref.datasetversion.DatasetVersionService;
+import com.provoly.ref.entity.EntityIdService;
 import com.provoly.ref.groups.*;
 import com.provoly.ref.model.OClass;
 import com.provoly.ref.user.ProvolyUser;
 import com.provoly.ref.user.UserService;
 import com.provoly.ref.widget.WidgetCatalog;
-import com.provoly.ref.widget.WidgetRepository;
 
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Assertions;
@@ -38,12 +32,10 @@ public class GrantServiceUTest {
 
     GrantService grantService;
     UserService userService;
-    EntityManager em;
     DashboardService dashboardService;
-    DashboardRepository dashboardRepository;
+    EntityIdService entityIdService;
     GroupRepository groupRepository;
     DatasetRepository datasetRepository;
-    WidgetRepository widgetRepository;
     WidgetCatalog widgetCatalog;
     Logger logger = Logger.getLogger(DatasetVersionService.class);
 
@@ -51,13 +43,12 @@ public class GrantServiceUTest {
     public void init() {
         userService = mock(UserService.class);
         dashboardService = mock(DashboardService.class);
-        dashboardRepository = mock(DashboardRepository.class);
+        entityIdService = mock(EntityIdService.class);
         groupRepository = mock(GroupRepository.class);
         datasetRepository = mock(DatasetRepository.class);
-        widgetRepository = mock(WidgetRepository.class);
         widgetCatalog = mock(WidgetCatalog.class);
-        grantService = new GrantService(logger, dashboardRepository, groupRepository,
-                datasetRepository, widgetRepository);
+        grantService = new GrantService(logger, entityIdService, groupRepository,
+                datasetRepository);
     }
 
     @Test
@@ -130,12 +121,12 @@ public class GrantServiceUTest {
         Dashboard firstDashboard = new Dashboard(UUID.randomUUID(), "", "");
         Dashboard secondDashboard = new Dashboard(UUID.randomUUID(), "", "");
 
-        when(dashboardRepository.getAll()).thenReturn(List.of(firstDashboard, secondDashboard));
-        when(dashboardRepository.getUserVisibleDashboards(user)).thenReturn(List.of(firstDashboard));
+        when(entityIdService.getAll(Dashboard.class)).thenReturn(List.of(firstDashboard, secondDashboard));
+        when(groupRepository.getAllowedEntityId(user, Dashboard.class)).thenReturn(List.of(firstDashboard));
 
         var result = grantService.getAllUserAllowed(WithGroupEntityType.DASHBOARD, user);
 
-        verify(dashboardRepository, times(1)).getAll();
+        verify(entityIdService, times(1)).getAll(Dashboard.class);
         assertEquals(List.of(firstDashboard, secondDashboard), result);
     }
 
@@ -147,11 +138,11 @@ public class GrantServiceUTest {
         Dashboard firstDashboard = new Dashboard(UUID.randomUUID(), "", "");
         Dashboard secondDashboard = new Dashboard(UUID.randomUUID(), "", "");
 
-        when(dashboardRepository.getAll()).thenReturn(List.of(firstDashboard, secondDashboard));
-        when(dashboardRepository.getUserVisibleDashboards(any())).thenReturn(List.of(firstDashboard));
+        when(entityIdService.getAll(Dashboard.class)).thenReturn(List.of(firstDashboard, secondDashboard));
+        when(groupRepository.getAllowedEntityId(any(), any())).thenReturn(List.of(firstDashboard));
 
         var result = grantService.getAllUserAllowed(WithGroupEntityType.DASHBOARD, new ProvolyUser());
-        verify(dashboardRepository, times(1)).getUserVisibleDashboards(any());
+        verify(groupRepository, times(1)).getAllowedEntityId(any(), any());
 
         assertEquals(List.of(firstDashboard), result);
     }
@@ -163,12 +154,12 @@ public class GrantServiceUTest {
         Dataset firstDataset = new Dataset(UUID.randomUUID());
         Dataset secondDataset = new Dataset(UUID.randomUUID());
 
-        when(datasetRepository.getAll()).thenReturn(List.of(firstDataset, secondDataset));
-        when(datasetRepository.getAllowedDatasetForUser(any())).thenReturn(List.of(firstDataset));
-        when(userService.getCurrentUser()).thenReturn(user);
+        when(entityIdService.getAll(Dataset.class)).thenReturn(List.of(firstDataset, secondDataset));
 
         var result = grantService.getAllUserAllowed(WithGroupEntityType.DATASET, user);
-        verify(datasetRepository, times(1)).getAll();
+
+        verify(entityIdService, times(1)).getAll(Dataset.class);
+        verify(groupRepository, never()).getAllowedEntityId(any(), any());
 
         assertEquals(List.of(firstDataset, secondDataset), result);
     }
@@ -190,7 +181,7 @@ public class GrantServiceUTest {
         Dataset dataset = new Dataset(UUID.randomUUID());
         dataset.setUser(new ProvolyUser());
 
-        var error = Assertions.assertThrows(BusinessException.class,
+        Assertions.assertThrows(BusinessException.class,
                 () -> grantService.canWrite(dataset, WithGroupEntityType.DATASET, user));
     }
 
@@ -267,13 +258,12 @@ public class GrantServiceUTest {
         WidgetCatalog firstWidgetCatalog = new WidgetCatalog(UUID.randomUUID());
         WidgetCatalog secondWidgetCatalog = new WidgetCatalog(UUID.randomUUID());
 
-        when(widgetRepository.getAll()).thenReturn(List.of(firstWidgetCatalog, secondWidgetCatalog));
-        when(widgetRepository.getAllowedWidgets(user)).thenReturn(List.of(firstWidgetCatalog));
+        when(entityIdService.getAll(WidgetCatalog.class)).thenReturn(List.of(firstWidgetCatalog, secondWidgetCatalog));
 
         var result = grantService.getAllUserAllowed(WithGroupEntityType.WIDGET, user);
 
-        verify(widgetRepository, times(1)).getAll();
         assertEquals(List.of(firstWidgetCatalog, secondWidgetCatalog), result);
+        verify(groupRepository, never()).getAllowedEntityId(any(), any());
     }
 
     @Test
@@ -282,21 +272,18 @@ public class GrantServiceUTest {
         user.setRoles(Set.of());
 
         WidgetCatalog firstWidgetCatalog = new WidgetCatalog(UUID.randomUUID());
-        WidgetCatalog secondWidgetCatalog = new WidgetCatalog(UUID.randomUUID());
 
-        when(widgetRepository.getAll()).thenReturn(List.of(firstWidgetCatalog, secondWidgetCatalog));
-        when(widgetRepository.getAllowedWidgets(any())).thenReturn(List.of(firstWidgetCatalog));
+        when(groupRepository.getAllowedEntityId(user, WidgetCatalog.class)).thenReturn(List.of(firstWidgetCatalog));
 
-        var result = grantService.getAllUserAllowed(WithGroupEntityType.WIDGET, new ProvolyUser());
+        var result = grantService.getAllUserAllowed(WithGroupEntityType.WIDGET, user);
 
-        verify(widgetRepository, times(1)).getAllowedWidgets(any());
+        verify(groupRepository, times(1)).getAllowedEntityId(any(), any());
         assertEquals(List.of(firstWidgetCatalog), result);
     }
 
     @Test
     void getAllUserAllowed_DatasetByClass_withoutAdmin_return_allowed() {
         OClass oclass = new OClass(UUID.randomUUID());
-        ProvolyUser user = new ProvolyUser();
         var firstDataset = createDataset(oclass);
         var secondDataset = createDataset(oclass);
         ProvolyUser owner = new ProvolyUser(UUID.randomUUID(), "subject", "name", "last", "mail",
