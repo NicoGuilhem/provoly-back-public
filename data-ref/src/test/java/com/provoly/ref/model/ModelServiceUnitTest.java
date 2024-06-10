@@ -14,7 +14,7 @@ import com.provoly.common.error.BusinessException;
 import com.provoly.common.model.FieldDto;
 import com.provoly.common.model.OClassWriteDto;
 import com.provoly.common.model.Type;
-import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityIdRepository;
 import com.provoly.ref.event.RefEventService;
 
 import org.junit.jupiter.api.Assertions;
@@ -25,17 +25,17 @@ public class ModelServiceUnitTest {
 
     ModelService modelService;
 
-    EntityIdService entityIdService;
+    EntityIdRepository entityIdRepository;
 
     RefEventService refEventService;
     ModelMapper modelMapper;
 
     @BeforeEach
     public void init() {
-        entityIdService = mock(EntityIdService.class);
+        entityIdRepository = mock(EntityIdRepository.class);
         refEventService = mock(RefEventService.class);
         modelMapper = mock(ModelMapper.class);
-        modelService = new ModelService(null, modelMapper, refEventService, null, entityIdService, null, null, null);
+        modelService = new ModelService(null, modelMapper, refEventService, null, entityIdRepository, null, null, null);
     }
 
     @Test
@@ -81,7 +81,7 @@ public class ModelServiceUnitTest {
         when(modelMapper.toModel(eq(fieldDto))).thenReturn(field);
         Collection<FieldDto> fields = List.of(fieldDto);
         modelService.addFields(fields);
-        verify(entityIdService).saveEntity(field);
+        verify(entityIdRepository).saveEntity(field);
     }
 
     @Test

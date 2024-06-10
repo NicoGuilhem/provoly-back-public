@@ -6,29 +6,29 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
-import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityIdRepository;
 
 @ApplicationScoped
 public class PredicateService {
 
-    private EntityIdService entityIdService;
+    private EntityIdRepository entityIdRepository;
 
-    PredicateService(EntityIdService entityIdService) {
-        this.entityIdService = entityIdService;
+    PredicateService(EntityIdRepository entityIdRepository) {
+        this.entityIdRepository = entityIdRepository;
     }
 
     @Transactional
     public List<Predicate> getAllPredicates() {
-        return entityIdService.getAll(Predicate.class);
+        return entityIdRepository.getAll(Predicate.class);
     }
 
     @Transactional
     public void save(Predicate predicate) {
-        entityIdService.saveEntity(predicate);
+        entityIdRepository.saveEntity(predicate);
     }
 
     @Transactional
     public Predicate getPredicate(UUID id) {
-        return entityIdService.findById(id, Predicate.class);
+        return entityIdRepository.findById(id, Predicate.class);
     }
 }

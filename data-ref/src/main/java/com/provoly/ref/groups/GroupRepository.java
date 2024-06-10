@@ -23,10 +23,10 @@ public class GroupRepository {
 
     @PersistenceContext
     private EntityManager em;
-    private EntityIdService entityIdService;
+    private EntityIdRepository entityIdRepository;
 
-    public GroupRepository(EntityIdService entityIdService, EntityManager em) {
-        this.entityIdService = entityIdService;
+    public GroupRepository(EntityIdRepository entityIdRepository, EntityManager em) {
+        this.entityIdRepository = entityIdRepository;
         this.em = em;
     }
 
@@ -43,15 +43,15 @@ public class GroupRepository {
     }
 
     public void saveGroupRelation(@NotNull WithGroupEntityType entityType, Group group, UUID entityId, boolean canWrite) {
-        entityIdService.saveEntity(entityType.buildGroupRelations(UUID.randomUUID(), group, entityId, canWrite));
+        entityIdRepository.saveEntity(entityType.buildGroupRelations(UUID.randomUUID(), group, entityId, canWrite));
     }
 
     public void save(Group group) {
-        entityIdService.saveEntity(group);
+        entityIdRepository.saveEntity(group);
     }
 
     public Group getById(UUID groupId) {
-        return entityIdService.getById(groupId, Group.class);
+        return entityIdRepository.getById(groupId, Group.class);
     }
 
     public List<Group> getGroupByNames(Collection<String> groupNames) {
@@ -81,7 +81,7 @@ public class GroupRepository {
     }
 
     public List<Group> getAll() {
-        return entityIdService.getAll(Group.class);
+        return entityIdRepository.getAll(Group.class);
     }
 
     private GroupRelations getGroupRelationsByEntityIdAndGroupId(UUID entityId, Group group) {

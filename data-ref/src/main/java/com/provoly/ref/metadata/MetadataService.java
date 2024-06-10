@@ -15,7 +15,7 @@ import com.provoly.common.model.WithMetadata;
 import com.provoly.ref.dashboard.Dashboard;
 import com.provoly.ref.dataset.Dataset;
 import com.provoly.ref.datasetversion.DatasetVersionRepository;
-import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityIdRepository;
 import com.provoly.ref.entity.EntityType;
 import com.provoly.ref.model.OClass;
 
@@ -25,16 +25,16 @@ import org.jboss.logging.Logger;
 public class MetadataService {
 
     private EntityManager em;
-    private EntityIdService entityIdService;
+    private EntityIdRepository entityIdRepository;
     private MetadataDefService metadataDefService;
     private DatasetVersionRepository datasetVersionRepository;
     private Logger log;
 
-    public MetadataService(EntityManager em, EntityIdService entityIdService, MetadataDefService metadataDefService,
+    public MetadataService(EntityManager em, EntityIdRepository entityIdRepository, MetadataDefService metadataDefService,
             DatasetVersionRepository datasetVersionRepository,
             Logger log) {
         this.em = em;
-        this.entityIdService = entityIdService;
+        this.entityIdRepository = entityIdRepository;
         this.metadataDefService = metadataDefService;
         this.datasetVersionRepository = datasetVersionRepository;
         this.log = log;
@@ -51,9 +51,9 @@ public class MetadataService {
 
     private void checkEntityExist(EntityType entityType, UUID entityId) {
         switch (entityType) {
-            case DASHBOARD -> entityIdService.checkEntityExists(entityId, Dashboard.class);
-            case CLASS -> entityIdService.checkEntityExists(entityId, OClass.class);
-            case DATASET -> entityIdService.checkEntityExists(entityId, Dataset.class);
+            case DASHBOARD -> entityIdRepository.checkEntityExists(entityId, Dashboard.class);
+            case CLASS -> entityIdRepository.checkEntityExists(entityId, OClass.class);
+            case DATASET -> entityIdRepository.checkEntityExists(entityId, Dataset.class);
             case DATASET_VERSION -> datasetVersionRepository.checkExists(entityId);
         }
     }
@@ -61,7 +61,7 @@ public class MetadataService {
     @Transactional
     public void deleteMetadataValueByEntityId(UUID entityId, UUID metadataDefId, EntityType entityType) {
         checkEntityExist(entityType, entityId);
-        entityIdService.checkEntityExists(metadataDefId, MetadataDef.class);
+        entityIdRepository.checkEntityExists(metadataDefId, MetadataDef.class);
         var metadataValue = getMetadataValueAssignedToEntity(entityId, metadataDefId);
         metadataValue.ifPresentOrElse(
                 mv -> em.remove(mv),
@@ -114,13 +114,13 @@ public class MetadataService {
                     var newMetadataValue = new MetadataValue(entityType, entityId, metadatadef.getId());
                     newMetadataValue.validateAndSetValue(metadataValueWriteDto.getValue(), metadatadef.getType(),
                             metadatadef.getValues());
-                    entityIdService.saveEntity(newMetadataValue, false);
+                    entityIdRepository.saveEntity(newMetadataValue, false);
                 });
     }
 
     private void checkMetadataIsUpdatable(List<MetadataValueWriteDto> metadata) {
         metadata.forEach(metadataValueWriteDto -> {
-            MetadataDef metadataDef = entityIdService.getById(metadataValueWriteDto.getMetadataDefId(), MetadataDef.class);
+            MetadataDef metadataDef = entityIdRepository.getById(metadataValueWriteDto.getMetadataDefId(), MetadataDef.class);
             if (metadataDef.isSystem() && metadataDef.isReadOnly()) {
                 throw new BusinessException(ErrorCode.BAD_REQUEST,
                         "MetadataDef %s is not updatable.".formatted(metadataValueWriteDto.getMetadataDefId()));

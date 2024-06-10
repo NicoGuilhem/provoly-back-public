@@ -15,7 +15,7 @@ import com.provoly.common.abac.AbacRuleType;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.error.ProvolyNotFoundException;
-import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityIdRepository;
 import com.provoly.ref.model.OClass;
 import com.provoly.ref.searchrequest.AttributeCondition;
 import com.provoly.ref.searchrequest.ComposedCondition;
@@ -27,19 +27,19 @@ import org.jboss.logging.Logger;
 public class AbacService {
 
     private Logger log;
-    private EntityIdService entityIdService;
+    private EntityIdRepository entityIdRepository;
     private EntityManager em;
 
-    AbacService(Logger log, EntityManager em, EntityIdService entityIdService) {
+    AbacService(Logger log, EntityManager em, EntityIdRepository entityIdRepository) {
         this.log = log;
         this.em = em;
-        this.entityIdService = entityIdService;
+        this.entityIdRepository = entityIdRepository;
     }
 
     @Transactional
     public Collection<AbacRule> getAllForClass(UUID oClassId) {
         log.infof("get All rules for class %s", oClassId);
-        OClass oClass = entityIdService.getLinkedById(oClassId, OClass.class);
+        OClass oClass = entityIdRepository.getLinkedById(oClassId, OClass.class);
 
         var cb = em.getCriteriaBuilder();
         var q = cb.createQuery(AbacRule.class);
@@ -66,14 +66,14 @@ public class AbacService {
         if (!oClassIds.isEmpty()) {
             UUID id = oClassIds.iterator().next();
             log.infof("Rule type is ATTRIBUTE, set oClass with id %s", id);
-            rule.setoClass(entityIdService.findById(id, OClass.class));
+            rule.setoClass(entityIdRepository.findById(id, OClass.class));
         }
         var old = em.find(AbacRule.class, rule.getId());
         if (old != null) {
             em.remove(old.getCondition()); // FIXME : Condition mapping has been changed to onetoone. This seems no longer necessary
             log.debugf("Deleted old condition=[%s]", old.getCondition());
         }
-        entityIdService.saveEntity(rule);
+        entityIdRepository.saveEntity(rule);
     }
 
     private void checkSameTypeAndOClass(AbacRuleType ruleType, Condition condition, Set<UUID> oClassIds) {
@@ -113,7 +113,7 @@ public class AbacService {
     @Transactional
     public void deleteRule(UUID id) {
         log.infof("delete rule with id %s", id);
-        entityIdService.removeEntity(id, AbacRule.class);
+        entityIdRepository.removeEntity(id, AbacRule.class);
     }
 
     @Transactional
@@ -148,11 +148,11 @@ public class AbacService {
     }
 
     public Collection<AbacRule> getAllRules() {
-        return entityIdService.getAll(AbacRule.class);
+        return entityIdRepository.getAll(AbacRule.class);
     }
 
     public AbacRule getRule(UUID ruleId) {
-        return entityIdService.getById(ruleId, AbacRule.class);
+        return entityIdRepository.getById(ruleId, AbacRule.class);
     }
 
 }

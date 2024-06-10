@@ -13,7 +13,7 @@ import com.provoly.common.error.ErrorCode;
 import com.provoly.common.error.ProvolyNotFoundException;
 
 @ApplicationScoped
-public class EntityIdService {
+public class EntityIdRepository {
 
     @PersistenceContext
     protected EntityManager em;

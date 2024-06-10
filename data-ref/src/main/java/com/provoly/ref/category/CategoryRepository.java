@@ -10,18 +10,18 @@ import jakarta.transaction.Transactional;
 
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
-import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityIdRepository;
 import com.provoly.ref.entity.EntityNamed_;
 
 @ApplicationScoped
 @Transactional
 public class CategoryRepository {
-    private EntityIdService entityIdService;
+    private EntityIdRepository entityIdRepository;
     @PersistenceContext
     private EntityManager em;
 
-    public CategoryRepository(EntityIdService entityIdService, EntityManager em) {
-        this.entityIdService = entityIdService;
+    public CategoryRepository(EntityIdRepository entityIdRepository, EntityManager em) {
+        this.entityIdRepository = entityIdRepository;
         this.em = em;
     }
 
@@ -41,7 +41,7 @@ public class CategoryRepository {
     }
 
     public void save(Category category) {
-        entityIdService.saveEntity(category);
+        entityIdRepository.saveEntity(category);
     }
 
     public List<Category> getAll(WithCategoryEntityType withCategoryEntityType) {
@@ -69,15 +69,15 @@ public class CategoryRepository {
     }
 
     public void saveCategoryRelations(Category category, UUID entityId) {
-        entityIdService.saveEntity(new CategoryRelations(UUID.randomUUID(), category, entityId));
+        entityIdRepository.saveEntity(new CategoryRelations(UUID.randomUUID(), category, entityId));
     }
 
     public Category getById(UUID id) {
-        return entityIdService.getById(id, Category.class);
+        return entityIdRepository.getById(id, Category.class);
     }
 
     public Category findById(UUID id) {
-        return entityIdService.findById(id, Category.class);
+        return entityIdRepository.findById(id, Category.class);
     }
 
     public void deleteAllByEntityId(UUID entityId) {

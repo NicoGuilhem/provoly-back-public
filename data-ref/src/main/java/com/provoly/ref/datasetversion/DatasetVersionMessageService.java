@@ -11,7 +11,7 @@ import jakarta.transaction.Transactional;
 
 import com.provoly.common.imports.ExtractedMessage;
 import com.provoly.common.imports.ImportsMessage;
-import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityIdRepository;
 
 import org.jboss.logging.Logger;
 
@@ -20,13 +20,13 @@ public class DatasetVersionMessageService {
 
     private Logger log;
 
-    private EntityIdService entityIdService;
+    private EntityIdRepository entityIdRepository;
 
     private EntityManager em;
 
-    public DatasetVersionMessageService(Logger log, EntityIdService entityIdService, EntityManager em) {
+    public DatasetVersionMessageService(Logger log, EntityIdRepository entityIdRepository, EntityManager em) {
         this.log = log;
-        this.entityIdService = entityIdService;
+        this.entityIdRepository = entityIdRepository;
         this.em = em;
     }
 
@@ -37,7 +37,7 @@ public class DatasetVersionMessageService {
                 .forEach(message -> {
                     DatasetVersionMessage datasetVersionMessage = generateDatasetVersionMessage(importsMessage, message);
                     log.tracef("save %s", datasetVersionMessage);
-                    entityIdService.saveEntity(datasetVersionMessage);
+                    entityIdRepository.saveEntity(datasetVersionMessage);
                 });
     }
 

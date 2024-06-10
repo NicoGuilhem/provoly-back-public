@@ -12,19 +12,19 @@ import jakarta.transaction.Transactional;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.relation.RelationTypeDto;
-import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityIdRepository;
 
 @ApplicationScoped
 public class RelationTypeService {
 
     private RelationTypeMapper mapper;
-    private EntityIdService entityIdService;
+    private EntityIdRepository entityIdRepository;
     private EntityManager em;
 
-    RelationTypeService(RelationTypeMapper mapper, EntityManager em, EntityIdService entityIdService) {
+    RelationTypeService(RelationTypeMapper mapper, EntityManager em, EntityIdRepository entityIdRepository) {
         this.mapper = mapper;
         this.em = em;
-        this.entityIdService = entityIdService;
+        this.entityIdRepository = entityIdRepository;
     }
 
     @Transactional
@@ -33,9 +33,9 @@ public class RelationTypeService {
         if (relationTypeDto.name.length() > 30) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "Max length is 30");
         }
-        var relationType = entityIdService.findById(relationTypeDto.id, RelationType.class);
+        var relationType = entityIdRepository.findById(relationTypeDto.id, RelationType.class);
         if (relationType == null) {
-            entityIdService.saveEntity(mapper.toModel(relationTypeDto));
+            entityIdRepository.saveEntity(mapper.toModel(relationTypeDto));
         } else {
             mapper.update(relationTypeDto, relationType);
         }
@@ -43,17 +43,17 @@ public class RelationTypeService {
 
     @Transactional
     public RelationType getById(UUID id) {
-        return entityIdService.getById(id, RelationType.class);
+        return entityIdRepository.getById(id, RelationType.class);
     }
 
     @Transactional
     public Collection<RelationType> getAll() {
-        return entityIdService.getAll(RelationType.class);
+        return entityIdRepository.getAll(RelationType.class);
     }
 
     @Transactional
     public void delete(UUID id) {
-        entityIdService.removeEntity(id, RelationType.class);
+        entityIdRepository.removeEntity(id, RelationType.class);
     }
 
     private void checkNameAlreadyExists(RelationTypeDto relationTypeDto) {

@@ -16,7 +16,7 @@ import com.provoly.common.error.ErrorCode;
 import com.provoly.common.search.*;
 import com.provoly.ref.datasetversion.DatasetVersionRepository;
 import com.provoly.ref.entity.EntityId;
-import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityIdRepository;
 import com.provoly.ref.searchrequest.MonoClassSearchRequest;
 import com.provoly.ref.searchrequest.MonoClassSearchRequest_;
 import com.provoly.ref.searchrequest.MultiClassSearchRequest;
@@ -34,7 +34,7 @@ public class NamedQueryService {
 
     private NamedQueryMapper mapper;
 
-    private EntityIdService entityIdService;
+    private EntityIdRepository entityIdRepository;
 
     private SearchMapper searchMapper;
     private DatasetVersionRepository datasetVersionRepository;
@@ -42,12 +42,13 @@ public class NamedQueryService {
     @PersistenceContext
     EntityManager em;
 
-    public NamedQueryService(Logger log, UserService userService, NamedQueryMapper mapper, EntityIdService entityIdService,
+    public NamedQueryService(Logger log, UserService userService, NamedQueryMapper mapper,
+            EntityIdRepository entityIdRepository,
             SearchMapper searchMapper, DatasetVersionRepository datasetVersionRepository) {
         this.log = log;
         this.userService = userService;
         this.mapper = mapper;
-        this.entityIdService = entityIdService;
+        this.entityIdRepository = entityIdRepository;
         this.searchMapper = searchMapper;
         this.datasetVersionRepository = datasetVersionRepository;
     }
@@ -99,7 +100,7 @@ public class NamedQueryService {
 
     @Transactional
     public void saveNamedQueryForUser(NamedQueryDto dto) {
-        NamedQuery namedQuery = entityIdService.findById(dto.getId(), NamedQuery.class);
+        NamedQuery namedQuery = entityIdRepository.findById(dto.getId(), NamedQuery.class);
         checkAllDatasetVersionsExistInNamedquery(dto);
         var currentUser = userService.getCurrentUser();
         if (namedQuery == null) {
@@ -165,12 +166,12 @@ public class NamedQueryService {
     }
 
     public <T extends EntityId> void removeEntity(UUID id, Class<T> entityClass) {
-        entityIdService.removeEntity(id, entityClass);
+        entityIdRepository.removeEntity(id, entityClass);
         removeEntityAssociated(id);
     }
 
     public void removeNamedQueryIfExists(UUID id) {
-        entityIdService.removeIfExists(id, NamedQuery.class);
+        entityIdRepository.removeIfExists(id, NamedQuery.class);
     }
 
     private void removeEntityAssociated(UUID namedQueryId) {
@@ -202,7 +203,7 @@ public class NamedQueryService {
             throw new BusinessException(ErrorCode.FORBIDDEN,
                     "Namedquery %s is %s".formatted(namedQuery.getId(), VisibilityType.PUBLIC));
         }
-        for (var w : entityIdService.getAll(WidgetCatalog.class)) {
+        for (var w : entityIdRepository.getAll(WidgetCatalog.class)) {
             for (var datasource : w.getDatasource()) {
                 if (datasource.equals(namedQuery.getId())) {
                     throw new BusinessException(ErrorCode.FORBIDDEN,
@@ -241,11 +242,11 @@ public class NamedQueryService {
 
     @Transactional
     public NamedQuery getById(UUID id) {
-        return entityIdService.getById(id, NamedQuery.class);
+        return entityIdRepository.getById(id, NamedQuery.class);
     }
 
     @Transactional
     public NamedQuery findById(UUID id) {
-        return entityIdService.findById(id, NamedQuery.class);
+        return entityIdRepository.findById(id, NamedQuery.class);
     }
 }

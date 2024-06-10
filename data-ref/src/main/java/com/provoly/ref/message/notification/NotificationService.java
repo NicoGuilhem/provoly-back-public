@@ -19,7 +19,7 @@ import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.user.Role;
 import com.provoly.ref.dashboard.dto.DashboardDto;
-import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityIdRepository;
 import com.provoly.ref.message.Message;
 import com.provoly.ref.message.MessageListener;
 import com.provoly.ref.message.MessageService;
@@ -50,38 +50,38 @@ public class NotificationService implements MessageListener {
     private MessageSocketServer messageSocketServer;
     private Logger log;
 
-    private EntityIdService entityIdService;
+    private EntityIdRepository entityIdRepository;
     @PersistenceContext
     EntityManager em;
 
     public NotificationService(SecurityIdentity securityIdentity, UserService userService,
             NotificationMapper notificationMapper, MessageService messageService, MessageSocketServer messageSocketServer,
-            Logger log, EntityIdService entityIdService) {
+            Logger log, EntityIdRepository entityIdRepository) {
         this.identity = securityIdentity;
         this.userService = userService;
         this.notificationMapper = notificationMapper;
         this.messageService = messageService;
         this.messageSocketServer = messageSocketServer;
         this.log = log;
-        this.entityIdService = entityIdService;
+        this.entityIdRepository = entityIdRepository;
     }
 
     public Notification findById(UUID id) {
-        return entityIdService.findById(id, Notification.class);
+        return entityIdRepository.findById(id, Notification.class);
     }
 
     public Notification getById(UUID id) {
-        return entityIdService.getById(id, Notification.class);
+        return entityIdRepository.getById(id, Notification.class);
     }
 
     public List<Notification> getAllNotifications() {
-        return entityIdService.getAll(Notification.class);
+        return entityIdRepository.getAll(Notification.class);
     }
 
     @Transactional
     public void addNotification(NotificationRequestDto notificationRequestDto) {
         if (findById(notificationRequestDto.id()) == null) {
-            var users = entityIdService.getAll(ProvolyUser.class).stream()
+            var users = entityIdRepository.getAll(ProvolyUser.class).stream()
                     .collect(Collectors.toMap(ProvolyUser::getId, Function.identity(), (a, b) -> a));
             var notification = notificationMapper.toModel(notificationRequestDto);
             notificationRequestDto.users().stream()
@@ -107,7 +107,7 @@ public class NotificationService implements MessageListener {
         deleteFromKnownNotifications(id, currentUser.getId());
 
         if (notification.belongToNobody()) {
-            entityIdService.removeEntity(notification);
+            entityIdRepository.removeEntity(notification);
         }
     }
 

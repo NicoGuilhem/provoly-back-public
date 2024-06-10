@@ -13,7 +13,7 @@ import com.provoly.common.error.ErrorCode;
 import com.provoly.common.metadata.MetadataValueWriteDto;
 import com.provoly.common.metadata.UserProfileValueReadDto;
 import com.provoly.common.user.UserDto;
-import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityIdRepository;
 import com.provoly.ref.entity.EntityId_;
 import com.provoly.ref.groups.GroupRepository;
 import com.provoly.ref.user.metadata.*;
@@ -31,7 +31,7 @@ public class UserService {
     private CurrentSubjectProvider currentSubjectProvider;
     private UserProfileService userProfileService;
     private UserProfileMapper userProfileMapper;
-    private EntityIdService entityIdService;
+    private EntityIdRepository entityIdRepository;
     private EntityManager em;
     private AnonymousConfiguration anonymousConf;
 
@@ -41,14 +41,14 @@ public class UserService {
             CurrentSubjectProvider currentSubjectProvider,
             UserProfileService userProfileService,
             UserProfileMapper userProfileMapper,
-            EntityIdService entityIdService,
+            EntityIdRepository entityIdRepository,
             EntityManager em,
             AnonymousConfiguration anonymousConf, GroupRepository groupRepository) {
         this.log = log;
         this.currentSubjectProvider = currentSubjectProvider;
         this.userProfileService = userProfileService;
         this.userProfileMapper = userProfileMapper;
-        this.entityIdService = entityIdService;
+        this.entityIdRepository = entityIdRepository;
         this.em = em;
         this.anonymousConf = anonymousConf;
         this.groupRepository = groupRepository;
@@ -151,17 +151,17 @@ public class UserService {
 
     @Transactional
     public UserProfile getUserProfile(UUID userProfileId) {
-        return entityIdService.getById(userProfileId, UserProfile.class);
+        return entityIdRepository.getById(userProfileId, UserProfile.class);
     }
 
     @Transactional
     public void checkProvolyUserEntityExists(UUID id) {
-        entityIdService.checkEntityExists(id, ProvolyUser.class);
+        entityIdRepository.checkEntityExists(id, ProvolyUser.class);
     }
 
     @Transactional
     public void checkUserProfileEntityExists(UUID id) {
-        entityIdService.checkEntityExists(id, UserProfile.class);
+        entityIdRepository.checkEntityExists(id, UserProfile.class);
     }
 
     @Transactional
@@ -196,7 +196,7 @@ public class UserService {
                     var newUserProfileValue = new UserProfileValue(userProfile.getId(), provolyUserId);
                     newUserProfileValue.validateAndSetValue(metadataValueWriteDto.getValue(), userProfile.getType(),
                             userProfile.getValues());
-                    entityIdService.saveEntity(newUserProfileValue, false);
+                    entityIdRepository.saveEntity(newUserProfileValue, false);
                 });
     }
 

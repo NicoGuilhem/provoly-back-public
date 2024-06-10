@@ -12,7 +12,7 @@ import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.ref.category.Category;
 import com.provoly.ref.entity.EntityId;
-import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityIdRepository;
 
 import org.mapstruct.TargetType;
 
@@ -23,7 +23,7 @@ public class EntityLoader {
     EntityManager em;
 
     @Inject
-    Instance<EntityIdService> entityService;
+    Instance<EntityIdRepository> entityService;
 
     static final UUID DEFAULT_CATEGORY_ID = UUID.fromString("cf666d66-838f-4d92-a4d2-a315df21fac9");
 

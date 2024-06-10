@@ -15,7 +15,7 @@ import com.provoly.ref.dataset.Dataset;
 import com.provoly.ref.dataset.DatasetRepository;
 import com.provoly.ref.dataset.Dataset_;
 import com.provoly.ref.entity.EntityId;
-import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityIdRepository;
 import com.provoly.ref.entity.EntityNamed;
 import com.provoly.ref.model.OClass_;
 import com.provoly.ref.user.ProvolyUser;
@@ -27,15 +27,15 @@ import org.jboss.logging.Logger;
 public class GrantService {
 
     private Logger log;
-    private EntityIdService entityIdService;
+    private EntityIdRepository entityIdRepository;
     private GroupRepository groupRepository;
     private DatasetRepository datasetRepository;
 
-    public GrantService(Logger log, EntityIdService entityIdService,
+    public GrantService(Logger log, EntityIdRepository entityIdRepository,
             GroupRepository groupRepository,
             DatasetRepository datasetRepository) {
         this.log = log;
-        this.entityIdService = entityIdService;
+        this.entityIdRepository = entityIdRepository;
         this.groupRepository = groupRepository;
         this.datasetRepository = datasetRepository;
     }
@@ -103,7 +103,7 @@ public class GrantService {
         }
 
         log.infof("Admin user, getting all %s", type.getEntity().getSimpleName());
-        return entityIdService.getAll(type.getEntity());
+        return entityIdRepository.getAll(type.getEntity());
     }
 
     //TODO refacto this method to make it generic for all EntityId (not specific to Datasets)

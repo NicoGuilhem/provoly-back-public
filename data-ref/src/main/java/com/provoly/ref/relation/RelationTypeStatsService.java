@@ -6,29 +6,29 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
-import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityIdRepository;
 
 @ApplicationScoped
 public class RelationTypeStatsService {
 
-    private EntityIdService entityIdService;
+    private EntityIdRepository entityIdRepository;
 
-    RelationTypeStatsService(EntityIdService entityIdService) {
-        this.entityIdService = entityIdService;
+    RelationTypeStatsService(EntityIdRepository entityIdRepository) {
+        this.entityIdRepository = entityIdRepository;
     }
 
     @Transactional
     public RelationTypeStats getById(UUID id) {
-        return entityIdService.getById(id, RelationTypeStats.class);
+        return entityIdRepository.getById(id, RelationTypeStats.class);
     }
 
     @Transactional
     public RelationTypeStats findById(UUID id) {
-        return entityIdService.findById(id, RelationTypeStats.class);
+        return entityIdRepository.findById(id, RelationTypeStats.class);
     }
 
     @Transactional
     public List<RelationTypeStats> getAllRelationTypeStats() {
-        return entityIdService.getAll(RelationTypeStats.class);
+        return entityIdRepository.getAll(RelationTypeStats.class);
     }
 }

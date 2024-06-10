@@ -6,34 +6,34 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
-import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityIdRepository;
 
 @ApplicationScoped
 @Transactional
 public class DashboardRepository {
-    private EntityIdService entityIdService;
+    private EntityIdRepository entityIdRepository;
 
-    public DashboardRepository(EntityIdService entityIdService) {
-        this.entityIdService = entityIdService;
+    public DashboardRepository(EntityIdRepository entityIdRepository) {
+        this.entityIdRepository = entityIdRepository;
     }
 
     public Dashboard findById(UUID dashboardId) {
-        return entityIdService.findById(dashboardId, Dashboard.class);
+        return entityIdRepository.findById(dashboardId, Dashboard.class);
     }
 
     public Dashboard getDashboard(UUID id) {
-        return entityIdService.getById(id, Dashboard.class);
+        return entityIdRepository.getById(id, Dashboard.class);
     }
 
     public Collection<Dashboard> getAll() {
-        return entityIdService.getAll(Dashboard.class);
+        return entityIdRepository.getAll(Dashboard.class);
     }
 
     public void save(Dashboard dashboard) {
-        entityIdService.saveEntity(dashboard);
+        entityIdRepository.saveEntity(dashboard);
     }
 
     public void delete(UUID id) {
-        entityIdService.removeEntity(id, Dashboard.class);
+        entityIdRepository.removeEntity(id, Dashboard.class);
     }
 }

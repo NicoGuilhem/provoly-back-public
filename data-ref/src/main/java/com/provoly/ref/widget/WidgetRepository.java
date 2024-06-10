@@ -6,34 +6,34 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
-import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityIdRepository;
 
 @ApplicationScoped
 @Transactional
 public class WidgetRepository {
-    private EntityIdService entityIdService;
+    private EntityIdRepository entityIdRepository;
 
-    public WidgetRepository(EntityIdService entityIdService) {
-        this.entityIdService = entityIdService;
+    public WidgetRepository(EntityIdRepository entityIdRepository) {
+        this.entityIdRepository = entityIdRepository;
     }
 
     public WidgetCatalog getWidgetCatalogById(UUID id) {
-        return entityIdService.getById(id, WidgetCatalog.class);
+        return entityIdRepository.getById(id, WidgetCatalog.class);
     }
 
     public void removeEntity(UUID id) {
-        entityIdService.removeEntity(id, WidgetCatalog.class);
+        entityIdRepository.removeEntity(id, WidgetCatalog.class);
     }
 
     public Collection<WidgetCatalog> getAll() {
-        return entityIdService.getAll(WidgetCatalog.class);
+        return entityIdRepository.getAll(WidgetCatalog.class);
     }
 
     public WidgetCatalog findById(UUID id) {
-        return entityIdService.findById(id, WidgetCatalog.class);
+        return entityIdRepository.findById(id, WidgetCatalog.class);
     }
 
     public void saveWidget(WidgetCatalog widgetCatalog) {
-        entityIdService.saveEntity(widgetCatalog);
+        entityIdRepository.saveEntity(widgetCatalog);
     }
 }

@@ -11,18 +11,18 @@ import jakarta.transaction.Transactional;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.metadata.MetaProvisioningDto;
-import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityIdRepository;
 
 @ApplicationScoped
 public class MetaProvisioningService {
     private MetaProvisioningMapper mapper;
-    private EntityIdService entityIdService;
+    private EntityIdRepository entityIdRepository;
     private EntityManager em;
 
-    MetaProvisioningService(MetaProvisioningMapper mapper, EntityManager em, EntityIdService entityIdService) {
+    MetaProvisioningService(MetaProvisioningMapper mapper, EntityManager em, EntityIdRepository entityIdRepository) {
         this.mapper = mapper;
         this.em = em;
-        this.entityIdService = entityIdService;
+        this.entityIdRepository = entityIdRepository;
     }
 
     @Transactional
@@ -37,7 +37,7 @@ public class MetaProvisioningService {
 
         var metaPro = findById(metaProvisioningDto.id());
         if (metaPro == null) {
-            entityIdService.saveEntity(metaProvisioning);
+            entityIdRepository.saveEntity(metaProvisioning);
         } else {
             mapper.update(metaProvisioningDto, metaPro);
         }
@@ -68,22 +68,22 @@ public class MetaProvisioningService {
     }
 
     public List<MetaProvisioning> getAllMetaprovisionings() {
-        return entityIdService.getAll(MetaProvisioning.class);
+        return entityIdRepository.getAll(MetaProvisioning.class);
     }
 
     public MetaProvisioning findById(UUID id) {
-        return entityIdService.findById(id, MetaProvisioning.class);
+        return entityIdRepository.findById(id, MetaProvisioning.class);
     }
 
     public MetaProvisioning getById(UUID id) {
-        return entityIdService.getById(id, MetaProvisioning.class);
+        return entityIdRepository.getById(id, MetaProvisioning.class);
     }
 
     public void removeEntity(UUID id) {
-        entityIdService.removeEntity(id, MetaProvisioning.class);
+        entityIdRepository.removeEntity(id, MetaProvisioning.class);
     }
 
     public void removeIfExists(UUID id) {
-        entityIdService.removeIfExists(id, MetaProvisioning.class);
+        entityIdRepository.removeIfExists(id, MetaProvisioning.class);
     }
 }

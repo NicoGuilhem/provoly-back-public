@@ -19,7 +19,7 @@ import com.provoly.common.model.OClassWriteDto;
 import com.provoly.ref.dataset.Dataset;
 import com.provoly.ref.dataset.DatasetMapper;
 import com.provoly.ref.dataset.DatasetRepository;
-import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityIdRepository;
 import com.provoly.ref.metadata.MetadataService;
 import com.provoly.ref.model.ModelMapper;
 import com.provoly.ref.model.ModelService;
@@ -39,7 +39,7 @@ import org.junit.jupiter.api.Test;
 public class DatasetVersionErrorTest {
 
     @Inject
-    EntityIdService entityIdService;
+    EntityIdRepository entityIdRepository;
     @Inject
     DatasetVersionService datasetVersionService;
     @Inject
@@ -112,7 +112,7 @@ public class DatasetVersionErrorTest {
         datasetVersionMessageService.save(importError);
 
         // THEN
-        var datasetVersionErrorList = entityIdService.getAll(DatasetVersionMessage.class);
+        var datasetVersionErrorList = entityIdRepository.getAll(DatasetVersionMessage.class);
         assertThat(datasetVersionErrorList).hasSameSizeAs(List.of(extractedError, extractedMessage));
 
         var datasetVersionError = datasetVersionErrorList.get(0);

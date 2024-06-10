@@ -11,40 +11,40 @@ import jakarta.transaction.Transactional;
 
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
-import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityIdRepository;
 import com.provoly.ref.model.AttributeDef;
 import com.provoly.ref.relation.RelationType;
 
 @ApplicationScoped
 public class LinkService {
 
-    private EntityIdService entityIdService;
+    private EntityIdRepository entityIdRepository;
     private EntityManager em;
 
-    LinkService(EntityIdService entityIdService, EntityManager em) {
-        this.entityIdService = entityIdService;
+    LinkService(EntityIdRepository entityIdRepository, EntityManager em) {
+        this.entityIdRepository = entityIdRepository;
         this.em = em;
     }
 
     @Transactional
     public void save(Link link) {
         checkLinkAlreadyExists(link);
-        entityIdService.saveEntity(link);
+        entityIdRepository.saveEntity(link);
     }
 
     @Transactional
     public Link getById(UUID id) {
-        return entityIdService.getById(id, Link.class);
+        return entityIdRepository.getById(id, Link.class);
     }
 
     @Transactional
     public Collection<Link> getAll() {
-        return entityIdService.getAll(Link.class);
+        return entityIdRepository.getAll(Link.class);
     }
 
     @Transactional
     public void delete(UUID id) {
-        entityIdService.removeEntity(id, Link.class);
+        entityIdRepository.removeEntity(id, Link.class);
     }
 
     @Transactional

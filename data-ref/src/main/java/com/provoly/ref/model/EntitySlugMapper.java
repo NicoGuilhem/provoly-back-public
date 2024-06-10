@@ -3,7 +3,7 @@ package com.provoly.ref.model;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
-import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityIdRepository;
 import com.provoly.ref.entity.EntitySlug;
 import com.provoly.ref.entity.SlugifyService;
 
@@ -18,7 +18,7 @@ public abstract class EntitySlugMapper {
     SlugifyService slugifyService;
 
     @Inject
-    Instance<EntityIdService> entityService;
+    Instance<EntityIdRepository> entityService;
 
     @AfterMapping
     public void generateSlug(@MappingTarget EntitySlug entitySlug) {

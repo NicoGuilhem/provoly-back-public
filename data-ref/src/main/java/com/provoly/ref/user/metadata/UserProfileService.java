@@ -10,14 +10,14 @@ import jakarta.transaction.Transactional;
 import com.provoly.common.VariableType;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
-import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityIdRepository;
 
 @ApplicationScoped
 public class UserProfileService {
-    private EntityIdService entityIdService;
+    private EntityIdRepository entityIdRepository;
 
-    UserProfileService(EntityIdService entityIdService) {
-        this.entityIdService = entityIdService;
+    UserProfileService(EntityIdRepository entityIdRepository) {
+        this.entityIdRepository = entityIdRepository;
     }
 
     @Transactional
@@ -31,20 +31,20 @@ public class UserProfileService {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "Metadata type LIST must have allowedValues");
         }
 
-        entityIdService.saveEntity(metadata);
+        entityIdRepository.saveEntity(metadata);
     }
 
     @Transactional
     public UserProfile getById(UUID id) {
-        return entityIdService.getById(id, UserProfile.class);
+        return entityIdRepository.getById(id, UserProfile.class);
     }
 
     public List<UserProfile> getAll() {
-        return entityIdService.getAll(UserProfile.class);
+        return entityIdRepository.getAll(UserProfile.class);
     }
 
     public void removeIfExists(UUID id) {
-        entityIdService.removeIfExists(id, UserProfile.class);
+        entityIdRepository.removeIfExists(id, UserProfile.class);
 
     }
 }

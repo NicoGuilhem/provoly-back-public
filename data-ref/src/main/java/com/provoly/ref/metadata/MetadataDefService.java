@@ -11,16 +11,16 @@ import jakarta.transaction.Transactional;
 import com.provoly.common.VariableType;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
-import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityIdRepository;
 
 @ApplicationScoped
 public class MetadataDefService {
     private EntityManager em;
-    private EntityIdService entityIdService;
+    private EntityIdRepository entityIdRepository;
 
-    public MetadataDefService(EntityManager em, EntityIdService entityIdService) {
+    public MetadataDefService(EntityManager em, EntityIdRepository entityIdRepository) {
         this.em = em;
-        this.entityIdService = entityIdService;
+        this.entityIdRepository = entityIdRepository;
     }
 
     @Transactional
@@ -34,23 +34,23 @@ public class MetadataDefService {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "Metadata type LIST must have allowedValues");
         }
 
-        entityIdService.saveEntity(metadata);
+        entityIdRepository.saveEntity(metadata);
     }
 
     @Transactional
     public MetadataDef getById(UUID metadataId) {
-        return entityIdService.getById(metadataId, MetadataDef.class);
+        return entityIdRepository.getById(metadataId, MetadataDef.class);
     }
 
     @Transactional
     public List<MetadataDef> getAllMetadataDef() {
-        return entityIdService.getAll(MetadataDef.class);
+        return entityIdRepository.getAll(MetadataDef.class);
     }
 
     //only used in test
     @Transactional
     public void delete(UUID id) {
-        entityIdService.removeIfExists(id, MetadataDef.class);
+        entityIdRepository.removeIfExists(id, MetadataDef.class);
     }
 
     @Transactional

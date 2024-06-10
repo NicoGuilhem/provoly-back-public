@@ -12,7 +12,7 @@ import jakarta.transaction.Transactional;
 
 import com.provoly.ref.dashboard.Dashboard;
 import com.provoly.ref.dashboard.Dashboard_;
-import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityIdRepository;
 import com.provoly.ref.entity.EntityNamed_;
 import com.provoly.ref.model.OClass_;
 import com.provoly.ref.widget.WidgetCatalog;
@@ -21,24 +21,24 @@ import com.provoly.ref.widget.WidgetCatalog_;
 @ApplicationScoped
 @Transactional
 public class DatasetRepository {
-    private EntityIdService entityIdService;
+    private EntityIdRepository entityIdRepository;
     private EntityManager em;
 
-    public DatasetRepository(EntityIdService entityIdService, EntityManager em) {
-        this.entityIdService = entityIdService;
+    public DatasetRepository(EntityIdRepository entityIdRepository, EntityManager em) {
+        this.entityIdRepository = entityIdRepository;
         this.em = em;
     }
 
     public void save(Dataset dataset) {
-        entityIdService.saveEntity(dataset);
+        entityIdRepository.saveEntity(dataset);
     }
 
     public void save(Dataset dataset, boolean checkNameDuplicate) {
-        entityIdService.saveEntity(dataset, checkNameDuplicate);
+        entityIdRepository.saveEntity(dataset, checkNameDuplicate);
     }
 
     public void delete(UUID datasetId) {
-        entityIdService.removeEntity(datasetId, Dataset.class);
+        entityIdRepository.removeEntity(datasetId, Dataset.class);
     }
 
     public boolean isNameAlreadyExistForClass(Dataset dataset) {
@@ -53,7 +53,7 @@ public class DatasetRepository {
     }
 
     public boolean exists(Dataset dataset) {
-        return entityIdService.exists(dataset);
+        return entityIdRepository.exists(dataset);
     }
 
     public List<Dataset> getAllForClass(UUID classId) {
@@ -120,6 +120,6 @@ public class DatasetRepository {
     }
 
     public List<Dataset> getAll() {
-        return entityIdService.getAll(Dataset.class);
+        return entityIdRepository.getAll(Dataset.class);
     }
 }

@@ -20,7 +20,7 @@ import com.provoly.common.error.ProvolyNotFoundException;
 import com.provoly.common.imports.MessageLevel;
 import com.provoly.ref.dataset.Dataset;
 import com.provoly.ref.dataset.Dataset_;
-import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityIdRepository;
 import com.provoly.ref.model.OClass_;
 
 import org.jboss.logging.Logger;
@@ -28,24 +28,24 @@ import org.jboss.logging.Logger;
 @ApplicationScoped
 public class DatasetVersionRepository {
 
-    private EntityIdService entityIdService;
+    private EntityIdRepository entityIdRepository;
     private Logger logger;
     public static final int PREVIEW_MAX_RESULT = 5;
 
-    public DatasetVersionRepository(EntityIdService entityIdService, Logger logger) {
-        this.entityIdService = entityIdService;
+    public DatasetVersionRepository(EntityIdRepository entityIdRepository, Logger logger) {
+        this.entityIdRepository = entityIdRepository;
         this.logger = logger;
     }
 
     public Integer getNextVersion(UUID datasetId) {
-        var cb = entityIdService.getEm().getCriteriaBuilder();
+        var cb = entityIdRepository.getEm().getCriteriaBuilder();
         var q = cb.createQuery(DatasetVersion.class);
         var rootQuery = q.from(DatasetVersion.class);
 
         q.where(cb.and(cb.equal(rootQuery.get(DatasetVersion_.dataset).get(Dataset_.id), datasetId)));
         q.orderBy(cb.desc(rootQuery.get(DatasetVersion_.VERSION)));
 
-        var query = entityIdService.getEm().createQuery(q).setMaxResults(1);
+        var query = entityIdRepository.getEm().createQuery(q).setMaxResults(1);
         try {
             return query.getSingleResult().getVersion() + 1;
         } catch (NoResultException e) {
@@ -55,27 +55,27 @@ public class DatasetVersionRepository {
     }
 
     public void save(DatasetVersion datasetVersion) {
-        entityIdService.saveEntity(datasetVersion);
+        entityIdRepository.saveEntity(datasetVersion);
     }
 
     public DatasetVersion getById(UUID id) {
-        return entityIdService.getById(id, DatasetVersion.class);
+        return entityIdRepository.getById(id, DatasetVersion.class);
     }
 
     public DatasetVersion findById(UUID id) {
-        return entityIdService.findById(id, DatasetVersion.class);
+        return entityIdRepository.findById(id, DatasetVersion.class);
     }
 
     public List<DatasetVersion> getAll() {
-        return entityIdService.getAll(DatasetVersion.class);
+        return entityIdRepository.getAll(DatasetVersion.class);
     }
 
     public boolean exists(DatasetVersion entity) {
-        return entityIdService.exists(entity);
+        return entityIdRepository.exists(entity);
     }
 
     public DatasetVersion getByName(String datasetName) {
-        var cb = entityIdService.getEm().getCriteriaBuilder();
+        var cb = entityIdRepository.getEm().getCriteriaBuilder();
         var q = cb.createQuery(DatasetVersion.class);
         var rootQuery = q.from(DatasetVersion.class);
         var dataset = rootQuery.join(DatasetVersion_.dataset);
@@ -83,14 +83,14 @@ public class DatasetVersionRepository {
                 cb.equal(rootQuery.get(DatasetVersion_.state), DatasetState.ACTIVE),
                 cb.equal(dataset.get(Dataset_.name), datasetName)));
         q.orderBy(cb.desc(rootQuery.get(DatasetVersion_.VERSION)));
-        return entityIdService.getEm().createQuery(q).setMaxResults(1).getResultList().stream()
+        return entityIdRepository.getEm().createQuery(q).setMaxResults(1).getResultList().stream()
                 .findFirst()
                 .orElseThrow(() -> new ProvolyNotFoundException(
                         "No dataset version available for dataset '%s'".formatted(datasetName)));
     }
 
     public Collection<DatasetVersion> getAllActiveForClass(UUID classId) {
-        var cb = entityIdService.getEm().getCriteriaBuilder();
+        var cb = entityIdRepository.getEm().getCriteriaBuilder();
         var q = cb.createQuery(DatasetVersion.class);
         var rootQuery = q.from(DatasetVersion.class);
         var dataset = rootQuery.join(DatasetVersion_.dataset);
@@ -98,7 +98,7 @@ public class DatasetVersionRepository {
                 cb.equal(rootQuery.get(DatasetVersion_.state), DatasetState.ACTIVE),
                 cb.equal(dataset.get(Dataset_.oClass).get(OClass_.id), classId)));
         q.orderBy(cb.desc(rootQuery.get(DatasetVersion_.VERSION)));
-        return entityIdService.getEm().createQuery(q).getResultList()
+        return entityIdRepository.getEm().createQuery(q).getResultList()
                 .stream()
                 .collect(Collectors.groupingBy(dv -> dv.getDataset().getId()))
                 .values()
@@ -109,35 +109,35 @@ public class DatasetVersionRepository {
     }
 
     public Collection<DatasetVersion> getAllByDatasetId(UUID datasetId) {
-        var cb = entityIdService.getEm().getCriteriaBuilder();
+        var cb = entityIdRepository.getEm().getCriteriaBuilder();
         var q = cb.createQuery(DatasetVersion.class);
         var rootQuery = q.from(DatasetVersion.class);
         var dataset = rootQuery.join(DatasetVersion_.dataset);
         q.where(cb.and(
                 cb.equal(dataset.get(Dataset_.id), datasetId)));
         q.orderBy(cb.desc(rootQuery.get(DatasetVersion_.VERSION)));
-        return entityIdService.getEm().createQuery(q).getResultList();
+        return entityIdRepository.getEm().createQuery(q).getResultList();
     }
 
     public DatasetVersion getByDatasetId(UUID datasetId) {
-        var cb = entityIdService.getEm().getCriteriaBuilder();
+        var cb = entityIdRepository.getEm().getCriteriaBuilder();
         var q = cb.createQuery(DatasetVersion.class);
         var rootQuery = q.from(DatasetVersion.class);
         var dataset = rootQuery.join(DatasetVersion_.dataset);
         q.where(cb.equal(dataset.get(Dataset_.id), datasetId),
                 cb.equal(rootQuery.get(DatasetVersion_.state), DatasetState.ACTIVE));
         q.orderBy(cb.desc(rootQuery.get(DatasetVersion_.version)));
-        return entityIdService.getEm().createQuery(q).setMaxResults(1).getResultList().stream().findFirst()
+        return entityIdRepository.getEm().createQuery(q).setMaxResults(1).getResultList().stream().findFirst()
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND,
                         "No dataset version found for dataset %s.".formatted(datasetId)));
     }
 
     public void deleteDatasetVersion(UUID datasetVersionId) {
-        entityIdService.removeEntity(datasetVersionId, DatasetVersion.class);
+        entityIdRepository.removeEntity(datasetVersionId, DatasetVersion.class);
     }
 
     public Long countLoadOrIndexingDatasetVersionByDataset(UUID datasetId) {
-        CriteriaBuilder criteriaBuilder = entityIdService.getEm().getCriteriaBuilder();
+        CriteriaBuilder criteriaBuilder = entityIdRepository.getEm().getCriteriaBuilder();
         CriteriaQuery<Long> query = criteriaBuilder.createQuery(Long.class);
         Root<DatasetVersion> datasetVersionRoot = query.from(DatasetVersion.class);
 
@@ -150,26 +150,26 @@ public class DatasetVersionRepository {
                                         .value(DatasetState.LOADING)
                                         .value(DatasetState.INDEXING)));
         //GetSingleResult can throw error but isExist is already called
-        return entityIdService.getEm().createQuery(query).getSingleResult();
+        return entityIdRepository.getEm().createQuery(query).getSingleResult();
     }
 
     public void checkExists(UUID datasetVersionId) {
-        entityIdService.checkEntityExists(datasetVersionId, DatasetVersion.class);
+        entityIdRepository.checkEntityExists(datasetVersionId, DatasetVersion.class);
     }
 
     public List<DatasetVersionMessage> getDatasetVersionMessagesWithLevel(UUID datasetVersionId, MessageLevel messageLevel) {
-        var cb = entityIdService.getEm().getCriteriaBuilder();
+        var cb = entityIdRepository.getEm().getCriteriaBuilder();
         var q = cb.createQuery(DatasetVersionMessage.class);
         var rootQuery = q.from(DatasetVersionMessage.class);
         q.where(
                 cb.and(
                         cb.equal(rootQuery.get(DatasetVersionMessage_.datasetVersionId), datasetVersionId),
                         cb.equal(rootQuery.get(DatasetVersionMessage_.level), messageLevel)));
-        return entityIdService.getEm().createQuery(q).setMaxResults(PREVIEW_MAX_RESULT).getResultList();
+        return entityIdRepository.getEm().createQuery(q).setMaxResults(PREVIEW_MAX_RESULT).getResultList();
     }
 
     public Long countDatasetVersionMessagesByLevel(UUID datasetVersionUuid, MessageLevel level) {
-        var cb = entityIdService.getEm().getCriteriaBuilder();
+        var cb = entityIdRepository.getEm().getCriteriaBuilder();
         var q = cb.createQuery(Long.class);
         var rootQuery = q.from(DatasetVersionMessage.class);
         q.select(cb.count(rootQuery));
@@ -177,18 +177,18 @@ public class DatasetVersionRepository {
                 cb.and(
                         cb.equal(rootQuery.get(DatasetVersionMessage_.datasetVersionId), datasetVersionUuid),
                         cb.equal(rootQuery.get(DatasetVersionMessage_.level), level)));
-        return entityIdService.getEm().createQuery(q).getSingleResult();
+        return entityIdRepository.getEm().createQuery(q).getSingleResult();
     }
 
     public DatasetVersion getLastVersionCreated(UUID datasetId) {
-        entityIdService.checkEntityExists(datasetId, Dataset.class);
+        entityIdRepository.checkEntityExists(datasetId, Dataset.class);
         try {
-            var cb = entityIdService.getEm().getCriteriaBuilder();
+            var cb = entityIdRepository.getEm().getCriteriaBuilder();
             var q = cb.createQuery(DatasetVersion.class);
             var rootQuery = q.from(DatasetVersion.class);
             q.where(cb.equal(rootQuery.get(DatasetVersion_.dataset).get(Dataset_.id), datasetId));
             q.orderBy(cb.desc(rootQuery.get(DatasetVersion_.version)));
-            return entityIdService.getEm().createQuery(q).setMaxResults(1).getSingleResult();
+            return entityIdRepository.getEm().createQuery(q).setMaxResults(1).getSingleResult();
         } catch (NoResultException e) {
             throw new ProvolyNotFoundException("No dataset version found in dataset %s".formatted(datasetId));
         }

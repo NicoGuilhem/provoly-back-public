@@ -22,7 +22,7 @@ import com.provoly.ref.customclass.CustomClassService;
 import com.provoly.ref.dataset.Dataset;
 import com.provoly.ref.dataset.Dataset_;
 import com.provoly.ref.entity.EntityId;
-import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityIdRepository;
 import com.provoly.ref.entity.EntityType;
 import com.provoly.ref.event.RefEventService;
 import com.provoly.ref.metadata.MetadataService;
@@ -36,7 +36,7 @@ public class ModelService {
     private ModelMapper modelMapper;
     private RefEventService refEventService;
     private CustomClassService customClassService;
-    private EntityIdService entityIdService;
+    private EntityIdRepository entityIdRepository;
     private AssociationService associationService;
     private MetadataService metadataService;
     private CategoryService categoryService;
@@ -47,14 +47,14 @@ public class ModelService {
             ModelMapper modelMapper,
             RefEventService refEventService,
             CustomClassService customClassService,
-            EntityIdService entityIdService,
+            EntityIdRepository entityIdRepository,
             AssociationService associationService,
             MetadataService metadataService, CategoryService categoryService) {
         this.em = em;
         this.modelMapper = modelMapper;
         this.refEventService = refEventService;
         this.customClassService = customClassService;
-        this.entityIdService = entityIdService;
+        this.entityIdRepository = entityIdRepository;
         this.associationService = associationService;
         this.metadataService = metadataService;
         this.categoryService = categoryService;
@@ -69,7 +69,7 @@ public class ModelService {
         fields.forEach(fieldDto -> {
             fieldDto.checkAndExtractSRID();
             Field entity = modelMapper.toModel(fieldDto);
-            entityIdService.saveEntity(entity);
+            entityIdRepository.saveEntity(entity);
             FieldDto fieldUpdated = modelMapper.toDto(entity); // Ugly hack : at least to set the slug
             refEventService.fieldAdded(fieldUpdated);
         });
@@ -83,11 +83,11 @@ public class ModelService {
         verifyIdsAlreadyUsedInOtherOClass(oclass);
         verifyStorages(newClass);
 
-        var oldClass = entityIdService.findById(newClass.getId(), OClass.class);
+        var oldClass = entityIdRepository.findById(newClass.getId(), OClass.class);
 
         if (oldClass == null) {
             // Create a new class
-            entityIdService.saveEntity(oclass);
+            entityIdRepository.saveEntity(oclass);
             if (!List.of(Storage.KUZZLE_ASSET, Storage.KUZZLE_MEASURE).contains(newClass.getStorage())) {
                 refEventService.classCreated(oclass);
             }
@@ -113,7 +113,7 @@ public class ModelService {
                         "Can't change model storage from %s to %s".formatted(oldClass.getStorage(), newClass.getStorage()));
             }
             verifyNotRemovingAttribute(oldClass, oclass); // For now, we are not supporting removing attributes
-            entityIdService.saveEntity(oclass);
+            entityIdRepository.saveEntity(oclass);
             if (!List.of(Storage.KUZZLE_ASSET, Storage.KUZZLE_MEASURE).contains(newClass.getStorage())) {
                 refEventService.classUpdated(oclass);
             }
@@ -157,7 +157,7 @@ public class ModelService {
 
     @Transactional
     public List<OClass> getClassByField(UUID id) {
-        entityIdService.checkEntityExists(id, Field.class);
+        entityIdRepository.checkEntityExists(id, Field.class);
         var cb = em.getCriteriaBuilder();
         var q = cb.createQuery(OClass.class);
         var field = q.from(OClass.class).join(OClass_.attributes).join(AttributeDef_.field);
@@ -167,7 +167,7 @@ public class ModelService {
 
     @Transactional
     public Collection<Field> getFieldForClass(UUID id) {
-        entityIdService.checkEntityExists(id, OClass.class);
+        entityIdRepository.checkEntityExists(id, OClass.class);
         var cb = em.getCriteriaBuilder();
         var q = cb.createQuery(Field.class);
         var classRoot = q.from(OClass.class);
@@ -178,7 +178,7 @@ public class ModelService {
 
     @Transactional
     public void addOrUpdateAttribute(UUID oClassId, AttributeDefDto attributeDefDto) {
-        OClass oClass = entityIdService.getLinkedById(oClassId, OClass.class);
+        OClass oClass = entityIdRepository.getLinkedById(oClassId, OClass.class);
         getAttributeInSet(attributeDefDto, oClass.getAttributes()).ifPresentOrElse(
                 oldAttributeDef -> {
                     oldAttributeDef.setName(attributeDefDto.getName());
@@ -197,7 +197,7 @@ public class ModelService {
 
     @Transactional
     public void deleteOClass(UUID oClassId) {
-        var oClass = entityIdService.getLinkedById(oClassId, OClass.class);
+        var oClass = entityIdRepository.getLinkedById(oClassId, OClass.class);
         var oclassDto = modelMapper.toDetailsDto(oClass);
         deleteAssociatedEntities(oClassId);
         var associations = associationService.getClassAssociations(oClassId);
@@ -230,42 +230,42 @@ public class ModelService {
     }
 
     public void removeEntity(EntityId id) {
-        entityIdService.removeEntity(id);
+        entityIdRepository.removeEntity(id);
     }
 
     public void saveEntity(EntityId id) {
-        entityIdService.saveEntity(id);
+        entityIdRepository.saveEntity(id);
     }
 
     public <T extends EntityId> boolean exists(T entity) {
-        return entityIdService.exists(entity);
+        return entityIdRepository.exists(entity);
     }
 
     public Category getCategoryById(UUID id) {
-        return entityIdService.getById(id, Category.class);
+        return entityIdRepository.getById(id, Category.class);
     }
 
     public Field getFieldById(UUID id) {
-        return entityIdService.getById(id, Field.class);
+        return entityIdRepository.getById(id, Field.class);
     }
 
     public List<Field> getAllFields() {
-        return entityIdService.getAll(Field.class);
+        return entityIdRepository.getAll(Field.class);
     }
 
     public OClass getOClassById(UUID id) {
-        return entityIdService.getById(id, OClass.class);
+        return entityIdRepository.getById(id, OClass.class);
     }
 
     public List<OClass> getAllOClasses() {
-        return entityIdService.getAll(OClass.class);
+        return entityIdRepository.getAll(OClass.class);
     }
 
     public void removeCategoryEntity(UUID id) {
         if (categoryService.isCategoryUsedByAnyEntity(id)) {
             throw new BusinessException(ErrorCode.FORBIDDEN, "You're not allowed to delete category %s".formatted(id));
         }
-        entityIdService.removeEntity(id, Category.class);
+        entityIdRepository.removeEntity(id, Category.class);
     }
 
     public void deleteFieldById(UUID id) {
@@ -276,7 +276,7 @@ public class ModelService {
                     "The field %s is used by one or more attributes, remove them to delete the field".formatted(id));
         }
 
-        entityIdService.removeEntity(id, Field.class);
+        entityIdRepository.removeEntity(id, Field.class);
     }
 
     @Transactional
@@ -287,8 +287,8 @@ public class ModelService {
                     "The attribute %s is used by one or more search(es) and abac rule(s), remove them to delete the attribute"
                             .formatted(attributeId));
         }
-        var oclass = entityIdService.getById(oclassId, OClass.class);
-        var attributeDef = entityIdService.getById(attributeId, AttributeDef.class);
+        var oclass = entityIdRepository.getById(oclassId, OClass.class);
+        var attributeDef = entityIdRepository.getById(attributeId, AttributeDef.class);
         oclass.getAttributes()
                 .stream()
                 .map(EntityId::getId)
@@ -314,7 +314,7 @@ public class ModelService {
     }
 
     private void verifyIdsAlreadyUsedInOtherOClass(OClass oClass) {
-        Set<AttributeDef> allOtherAttributes = entityIdService.getAll(OClass.class)
+        Set<AttributeDef> allOtherAttributes = entityIdRepository.getAll(OClass.class)
                 .stream()
                 .filter(oc -> !oc.getId().equals(oClass.getId()))
                 .map(OClass::getAttributes)

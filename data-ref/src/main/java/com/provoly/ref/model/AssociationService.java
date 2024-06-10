@@ -17,7 +17,7 @@ import com.provoly.ref.abac.AbacService;
 import com.provoly.ref.dashboard.DashboardService;
 import com.provoly.ref.dataset.Dataset;
 import com.provoly.ref.dataset.Dataset_;
-import com.provoly.ref.entity.EntityIdService;
+import com.provoly.ref.entity.EntityIdRepository;
 import com.provoly.ref.link.Link;
 import com.provoly.ref.link.Link_;
 import com.provoly.ref.searchrequest.*;
@@ -34,19 +34,19 @@ public class AssociationService {
 
     private EntityManager em;
     private AbacService abacService;
-    private EntityIdService entityIdService;
+    private EntityIdRepository entityIdRepository;
     private NamedQueryService namedQueryService;
     private DashboardService dashboardService;
     private WidgetService widgetService;
     private Logger logger;
 
     public AssociationService(EntityManager em, AbacService abacService,
-            EntityIdService entityIdService, NamedQueryService namedQueryService,
+            EntityIdRepository entityIdRepository, NamedQueryService namedQueryService,
             DashboardService dashboardService, WidgetService widgetService,
             Logger logger) {
         this.em = em;
         this.abacService = abacService;
-        this.entityIdService = entityIdService;
+        this.entityIdRepository = entityIdRepository;
         this.namedQueryService = namedQueryService;
         this.dashboardService = dashboardService;
         this.widgetService = widgetService;
@@ -74,7 +74,7 @@ public class AssociationService {
         List<AssociationDto> result = new ArrayList<>();
         result.addAll(getDatasetAssociationsForClass(oClassId));
         result.addAll(getAbacRulesAssociationsForClass(oClassId));
-        var oclass = entityIdService.getById(oClassId, OClass.class);
+        var oclass = entityIdRepository.getById(oClassId, OClass.class);
         result.addAll(getLinkAssociations(oclass.getId()));
         result.addAll(getNamedQueryAssociationsForClass(oclass.getId()));
         return mapAssociationDtoInAssociationsDto(result);
@@ -90,7 +90,7 @@ public class AssociationService {
 
     @Transactional
     public AssociationsDto getAttributeAssociations(UUID attributeId) {
-        var oclass = entityIdService.getById(attributeId, AttributeDef.class).getOclass();
+        var oclass = entityIdRepository.getById(attributeId, AttributeDef.class).getOclass();
         List<AssociationDto> result = new ArrayList<>();
         result.addAll(getNamedQueryAssociations(attributeId));
         result.addAll(getLinkAssociations(oclass.getId()));
