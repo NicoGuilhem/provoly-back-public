@@ -1,6 +1,7 @@
 package com.provoly.ref.widget;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -16,6 +17,7 @@ import com.provoly.ref.user.ProvolyUser;
 import com.provoly.ref.user.UserService;
 import com.provoly.ref.widget.dto.WidgetWriteDto;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -44,6 +46,17 @@ public class WidgetServiceUTest {
         groupService = mock(GroupService.class);
         widgetService = new WidgetService(objectMapper, userService, widgetMapper, dataSourceService, groupService,
                 grantService, widgetRepository);
+    }
+
+    @Test
+    void add_widget_with_null_group_isOK() throws JsonProcessingException {
+        ProvolyUser provolyUser = new ProvolyUser();
+        WidgetWriteDto widget = new WidgetWriteDto(UUID.randomUUID(), "widgetName", "", "", "", List.of(), false, null);
+
+        when(userService.getCurrentUser()).thenReturn(provolyUser);
+        when(widgetMapper.toEntity(any())).thenReturn(new WidgetCatalog(widget.id()));
+
+        Assertions.assertDoesNotThrow(() -> widgetService.addWidget(widget));
     }
 
     @Test

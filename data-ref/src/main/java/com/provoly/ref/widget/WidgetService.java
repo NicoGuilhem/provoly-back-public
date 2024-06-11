@@ -112,9 +112,11 @@ public class WidgetService {
     }
 
     private void updateGroups(WidgetWriteDto dto) {
-        var rightsByGroup = dto.groups().stream()
-                .collect(Collectors.toMap(groupName -> groupName, _ignored -> List.of(
-                        GroupRights.READ)));
-        groupService.updateEntityGroups(rightsByGroup, dto.id(), WIDGET);
+        if (dto.groups() != null) {
+            var rightsByGroup = dto.groups().stream()
+                    .collect(Collectors.toMap(groupName -> groupName, _ignored -> List.of(
+                            GroupRights.READ)));
+            groupService.updateEntityGroups(rightsByGroup, dto.id(), WIDGET);
+        }
     }
 }
