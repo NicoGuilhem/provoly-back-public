@@ -7,8 +7,10 @@ import static org.awaitility.Awaitility.await;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -25,7 +27,7 @@ import org.jboss.resteasy.reactive.ClientWebApplicationException;
 @ApplicationScoped
 public class KuzzleTestService {
 
-    private DataVirtProperties dataVirtProperties;
+    private Optional<DataVirtProperties.KuzzleConfiguration> kuzzleConfiguration;
     public static final Boolean KUZZLE_ENABLED = Boolean.parseBoolean(System.getProperty("service.kuzzle.enabled", "false"));
     public static final String ASSET_MODEL = "AssetTest";
     public static final String MEASURE_MODEL = "measureTest";
@@ -39,11 +41,15 @@ public class KuzzleTestService {
     public KuzzleTestService(DataVirtProperties dataVirtProperties, Logger log)
             throws URISyntaxException, MalformedURLException {
         this.log = log;
-        this.dataVirtProperties = dataVirtProperties;
+        this.kuzzleConfiguration = dataVirtProperties.kuzzle();
+        URL kuzzleUrl = new URI("http", null,
+                this.kuzzleConfiguration.map(DataVirtProperties.KuzzleConfiguration::host).orElse("localhost"),
+                7512, null, null, null)
+                .toURL();
         this.kuzzleDeviceManagerClient = RestClientBuilder.newBuilder()
-                .baseUrl(new URI(this.dataVirtProperties.kuzzle().kuzzleUrl().orElse("http://localhost:7512")).toURL())
+                .baseUrl(kuzzleUrl)
                 .build(KuzzleDeviceManagerClient.class);
-        this.engine = dataVirtProperties.kuzzle().tenant().orElse("test");
+        this.engine = this.kuzzleConfiguration.map(DataVirtProperties.KuzzleConfiguration::tenant).orElse("test");
 
     }
 

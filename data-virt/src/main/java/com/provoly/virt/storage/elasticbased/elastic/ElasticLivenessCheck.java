@@ -1,7 +1,6 @@
 package com.provoly.virt.storage.elasticbased.elastic;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Instance;
 
 import org.eclipse.microprofile.health.HealthCheck;
 import org.eclipse.microprofile.health.HealthCheckResponse;
@@ -13,23 +12,22 @@ import org.elasticsearch.client.RestClient;
 @ApplicationScoped
 public class ElasticLivenessCheck implements HealthCheck {
 
-    private Instance<RestClient> restClient;
+    private RestClient restClient;
 
-    public ElasticLivenessCheck(Instance<RestClient> restClient) {
+    public ElasticLivenessCheck(RestClient restClient) {
         this.restClient = restClient;
     }
 
     @Override
     public HealthCheckResponse call() {
         HealthCheckResponseBuilder builder = HealthCheckResponse.builder().up();
-        if (!restClient.isResolvable() || restClient.get() == null) {
-            builder.name("Smoke Liveness - liveness check");
-            builder.withData("reason", "No smoke going out");
+        builder.name("Elasticsearch client - liveness check");
+        if (restClient == null) {
+            builder.withData("reason", "elasticsearch is not configured and not required");
             return builder.build();
         }
-        builder.name("Elasticsearch client - liveness check");
         try {
-            if (!restClient.get().isRunning()) {
+            if (!restClient.isRunning()) {
                 builder.down();
             }
 

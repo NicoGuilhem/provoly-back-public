@@ -7,7 +7,6 @@ import java.util.HashMap;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 
-import com.provoly.virt.DataVirtProperties;
 import com.provoly.virt.entity.AttributeMultiValue;
 import com.provoly.virt.entity.AttributeSimpleValue;
 import com.provoly.virt.entity.Item;
@@ -31,7 +30,6 @@ import kotlin.Unit;
 public class KuzzleNotifierService implements NotificationHandler {
 
     private final Logger log;
-    private final DataVirtProperties dataVirtProperties;
     private final KuzzleClient kuzzleClient;
     private final KuzzleMeasureLayout measureLayout;
     private final ItemsNotifier notifier;
@@ -39,19 +37,17 @@ public class KuzzleNotifierService implements NotificationHandler {
     private boolean isSubscribed = false;
 
     public KuzzleNotifierService(Logger log,
-            DataVirtProperties dataVirtProperties,
             KuzzleClient kuzzleClient,
             KuzzleMeasureLayout measureLayout,
             ItemsNotifier notifier) {
         this.log = log;
-        this.dataVirtProperties = dataVirtProperties;
         this.kuzzleClient = kuzzleClient;
         this.measureLayout = measureLayout;
         this.notifier = notifier;
     }
 
     void onStart(@Observes StartupEvent ev) {
-        if (dataVirtProperties.kuzzle().host().isEmpty()) {
+        if (!kuzzleClient.isConfigured()) {
             log.info("Kuzzle is not configured, Kuzzle notifier service is disabled");
             return;
         }

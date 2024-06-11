@@ -3,10 +3,9 @@ package com.provoly.virt.storage.elasticbased.kuzzle;
 import java.util.Map;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
-import io.kuzzle.sdk.Kuzzle;
+import com.provoly.virt.storage.elasticbased.KuzzleClient;
 
 import org.eclipse.microprofile.health.HealthCheck;
 import org.eclipse.microprofile.health.HealthCheckResponse;
@@ -18,21 +17,20 @@ import org.eclipse.microprofile.health.Readiness;
 public class KuzzleReadinessCheck implements HealthCheck {
 
     @Inject
-    Instance<Kuzzle> restClient;
+    private KuzzleClient kuzzleClient;
 
     private static final String STATUS = "status";
 
     @Override
     public HealthCheckResponse call() {
         HealthCheckResponseBuilder builder = HealthCheckResponse.builder().up();
-        if (!restClient.isResolvable() || restClient.get() == null) {
-            builder.name("Smoke readiness - readiness check");
-            builder.withData("reason", "No smoke going out");
+        builder.name("Kuzzle cluster - readiness check");
+        if (!kuzzleClient.isConfigured()) {
+            builder.withData("reason", "Kuzzle is not configured and not required");
             return builder.build();
         }
-        builder.name("Kuzzle cluster - readiness check");
         try {
-            Map<String, Object> response = (Map<String, Object>) restClient.get().query(Map.of(
+            Map<String, Object> response = (Map<String, Object>) kuzzleClient.client().query(Map.of(
                     "controller", "server",
                     "action", "healthCheck")).get().getResult();
 

@@ -48,7 +48,7 @@ public interface DataVirtProperties {
     @WithDefault("false")
     Boolean notification();
 
-    Kuzzle kuzzle();
+    Optional<KuzzleConfiguration> kuzzle();
 
     Optional<ElasticClientConfig> elasticsearch();
 
@@ -70,14 +70,10 @@ public interface DataVirtProperties {
         Optional<Path> rootCertificate();
     }
 
-    interface Kuzzle {
-        Optional<String> host();
+    interface KuzzleConfiguration {
+        String host();
 
-        Optional<String> tenant();
-
-        @WithName("url")
-        Optional<String> kuzzleUrl(); // used for testing because the kuzzle client does not have allt he functions needed to initialise the environment.
-
+        String tenant();
     }
 
 }

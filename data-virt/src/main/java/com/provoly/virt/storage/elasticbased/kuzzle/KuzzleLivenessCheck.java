@@ -1,9 +1,8 @@
 package com.provoly.virt.storage.elasticbased.kuzzle;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Instance;
 
-import io.kuzzle.sdk.Kuzzle;
+import com.provoly.virt.storage.elasticbased.KuzzleClient;
 
 import org.eclipse.microprofile.health.HealthCheck;
 import org.eclipse.microprofile.health.HealthCheckResponse;
@@ -14,23 +13,22 @@ import org.eclipse.microprofile.health.Liveness;
 @ApplicationScoped
 public class KuzzleLivenessCheck implements HealthCheck {
 
-    private Instance<Kuzzle> restClient;
+    private KuzzleClient kuzzleClient;
 
-    public KuzzleLivenessCheck(Instance<Kuzzle> restClient) {
-        this.restClient = restClient;
+    public KuzzleLivenessCheck(KuzzleClient kuzzleClient) {
+        this.kuzzleClient = kuzzleClient;
     }
 
     @Override
     public HealthCheckResponse call() {
         HealthCheckResponseBuilder builder = HealthCheckResponse.builder().up();
-        if (!restClient.isResolvable() || restClient.get() == null) {
-            builder.name("Smoke Liveness - liveness check");
-            builder.withData("reason", "No smoke going out");
+        builder.name("Kuzzle client - liveness check");
+        if (!kuzzleClient.isConfigured()) {
+            builder.withData("reason", "Kuzzle is not configured and not required");
             return builder.build();
         }
-        builder.name("Kuzzle client - liveness check");
         try {
-            if (restClient.get().getServerController().info().get() != null) {
+            if (kuzzleClient.client().getServerController().info().get() == null) {
                 builder.down();
             }
 

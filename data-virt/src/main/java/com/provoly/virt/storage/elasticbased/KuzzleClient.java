@@ -5,6 +5,7 @@ import static com.provoly.virt.storage.elasticbased.kuzzlemeasure.KuzzleMeasureL
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -31,16 +32,20 @@ import kotlin.Unit;
 public class KuzzleClient {
 
     private final Logger log;
-    private final Kuzzle kuzzle;
-    private final DataVirtProperties dataVirtProperties;
+    private Kuzzle kuzzle;
+    private final Optional<DataVirtProperties.KuzzleConfiguration> kuzzleConfiguration;
     private Thread reconnectThread = null;
 
-    public KuzzleClient(DataVirtProperties dataVirtProperties, Logger log) {
+    public KuzzleClient(DataVirtProperties config, Logger log) {
         log.info("Initializing Kuzzle client");
         this.log = log;
-        this.dataVirtProperties = dataVirtProperties;
-        var kuzzleHost = dataVirtProperties.kuzzle().host().orElseThrow(() -> new BusinessException(ErrorCode.TECHNICAL,
-                "Kuzzle host is mandatory to connect to Kuzzle"));
+        this.kuzzleConfiguration = config.kuzzle();
+
+        this.kuzzleConfiguration.map(DataVirtProperties.KuzzleConfiguration::host)
+                .ifPresent(this::initKuzzleClient);
+    }
+
+    private void initKuzzleClient(String kuzzleHost) {
         WebSocket ws = new WebSocket(kuzzleHost, 7512, false, false);
         this.kuzzle = new Kuzzle(ws);
         ws.addListener(NetworkStateChangeEvent.class, event -> {
@@ -56,18 +61,26 @@ public class KuzzleClient {
     }
 
     public Kuzzle client() {
+        if (kuzzle == null) {
+            throw new BusinessException(ErrorCode.TECHNICAL,
+                    "Can't use Kuzzle client as it is not configured.");
+        }
         return kuzzle;
     }
 
+    public Optional<String> getHost() {
+        return kuzzleConfiguration.map(DataVirtProperties.KuzzleConfiguration::host);
+    }
+
     public String getTenantName() {
-        return dataVirtProperties.kuzzle().tenant()
+        return kuzzleConfiguration.map(DataVirtProperties.KuzzleConfiguration::tenant)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TECHNICAL,
                         "Tenant property is mandatory to use Kuzzle device manager"));
     }
 
     public SearchResult kuzzleSearch(String index, String collection, Map<String, Object> query, int limit) {
         try {
-            return kuzzle.getDocumentController().search(
+            return client().getDocumentController().search(
                     index,
                     collection,
                     query,
@@ -80,8 +93,8 @@ public class KuzzleClient {
 
     public void createIndexAndCollection(String indexName, String collection, Map<String, Map<String, Object>> mapping) {
         try {
-            kuzzle.getIndexController().create(indexName).get();
-            kuzzle.getCollectionController().create(indexName, collection, mapping).get();
+            client().getIndexController().create(indexName).get();
+            client().getCollectionController().create(indexName, collection, mapping).get();
         } catch (InterruptedException | ExecutionException e) {
             throw new BusinessException(ErrorCode.TECHNICAL, "Unable to create index %s".formatted(indexName), e);
         }
@@ -89,7 +102,7 @@ public class KuzzleClient {
 
     public boolean indexExists(String indexName) {
         try {
-            return kuzzle.getIndexController().exists(indexName).get();
+            return client().getIndexController().exists(indexName).get();
         } catch (InterruptedException | ExecutionException e) {
             throw new BusinessException(ErrorCode.TECHNICAL, "Unable to check if index %s exists".formatted(indexName), e);
         }
@@ -183,4 +196,7 @@ public class KuzzleClient {
 
     }
 
+    public boolean isConfigured() {
+        return getHost().isPresent();
+    }
 }

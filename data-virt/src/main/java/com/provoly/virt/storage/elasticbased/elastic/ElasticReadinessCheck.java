@@ -1,13 +1,14 @@
 package com.provoly.virt.storage.elasticbased.elastic;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
 
 import io.vertx.core.json.JsonObject;
 
 import org.apache.http.util.EntityUtils;
-import org.eclipse.microprofile.health.*;
+import org.eclipse.microprofile.health.HealthCheck;
+import org.eclipse.microprofile.health.HealthCheckResponse;
+import org.eclipse.microprofile.health.HealthCheckResponseBuilder;
+import org.eclipse.microprofile.health.Readiness;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
@@ -16,23 +17,25 @@ import org.elasticsearch.client.RestClient;
 @ApplicationScoped
 public class ElasticReadinessCheck implements HealthCheck {
 
-    @Inject
-    Instance<RestClient> restClient;
+    private RestClient restClient;
+
+    public ElasticReadinessCheck(RestClient restClient) {
+        this.restClient = restClient;
+    }
 
     private static final String STATUS = "status";
 
     @Override
     public HealthCheckResponse call() {
         HealthCheckResponseBuilder builder = HealthCheckResponse.builder().up();
-        if (!restClient.isResolvable() || restClient.get() == null) {
-            builder.name("Smoke readiness - readiness check");
-            builder.withData("reason", "No smoke going out");
+        builder.name("Elasticsearch cluster - readiness check");
+        if (restClient == null) {
+            builder.withData("reason", "elasticsearch is not configured and not required");
             return builder.build();
         }
-        builder.name("Elasticsearch cluster - readiness check");
         try {
             Request request = new Request("GET", "/_cluster/health");
-            Response response = restClient.get().performRequest(request);
+            Response response = restClient.performRequest(request);
             String responseBody = EntityUtils.toString(response.getEntity());
             JsonObject json = new JsonObject(responseBody);
             String status = json.getString(STATUS);
