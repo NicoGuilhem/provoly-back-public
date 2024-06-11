@@ -62,8 +62,8 @@ public class DetectChangeService {
             entries = git
                     .diff()
                     .setShowNameAndStatusOnly(true)
-                    .setNewTree(prepareTreeParser(repo, config.mrDiffBaseSHA))
-                    .setOldTree(prepareTreeParser(repo, config.commitSha))
+                    .setNewTree(prepareTreeParser(repo, config.commitSha))
+                    .setOldTree(prepareTreeParser(repo, config.mrDiffBaseSHA))
                     .call()
                     .stream()
                     .map(DiffEntry::getNewPath)
