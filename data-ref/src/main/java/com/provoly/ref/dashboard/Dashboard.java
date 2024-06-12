@@ -10,6 +10,7 @@ import jakarta.persistence.ManyToOne;
 
 import com.provoly.common.Default;
 import com.provoly.ref.entity.EntityNamed;
+import com.provoly.ref.groups.WithGrantRestrictions;
 import com.provoly.ref.user.ProvolyUser;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -17,7 +18,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 @Entity
-public class Dashboard extends EntityNamed {
+public class Dashboard extends EntityNamed implements WithGrantRestrictions {
     private String description;
 
     private String image;
@@ -121,5 +122,10 @@ public class Dashboard extends EntityNamed {
 
     public void setAdditionalInformation(String additionalInformation) {
         this.additionalInformation = additionalInformation;
+    }
+
+    @Override
+    public ProvolyUser getOwner() {
+        return getUser();
     }
 }

@@ -11,13 +11,14 @@ import jakarta.persistence.ManyToOne;
 
 import com.provoly.common.dataset.DatasetType;
 import com.provoly.ref.entity.EntitySlug;
+import com.provoly.ref.groups.WithGrantRestrictions;
 import com.provoly.ref.model.OClass;
 import com.provoly.ref.user.ProvolyUser;
 
 import org.hibernate.annotations.Immutable;
 
 @Entity
-public class Dataset extends EntitySlug {
+public class Dataset extends EntitySlug implements WithGrantRestrictions {
 
     @ManyToOne
     @Immutable
@@ -81,5 +82,10 @@ public class Dataset extends EntitySlug {
 
     public void setUser(ProvolyUser user) {
         this.user = user;
+    }
+
+    @Override
+    public ProvolyUser getOwner() {
+        return getUser();
     }
 }

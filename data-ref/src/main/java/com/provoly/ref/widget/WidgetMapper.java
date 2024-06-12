@@ -17,6 +17,7 @@ public interface WidgetMapper {
 
     WidgetCatalog toEntity(WidgetWriteDto dto);
 
+    @Mapping(source = "owner", target = "owner", ignore = true)
     WidgetDetailsDto toDetailsDto(WidgetCatalog widgetCatalog);
 
     Collection<WidgetDetailsDto> toCollectionWidgetDetailsDto(Collection<WidgetCatalog> widgetCatalogs);

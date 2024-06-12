@@ -23,6 +23,7 @@ public interface DashboardMapper {
         dashboard.setUser(user);
     }
 
+    @Mapping(source = "owner", target = "owner", ignore = true)
     DashboardReadDto toReadDto(Dashboard dashboard);
 
     List<DashboardReadDto> toReadDto(List<Dashboard> dashboard);

@@ -60,7 +60,7 @@ public class GrantServiceUTest {
         Dashboard dashboard = new Dashboard(UUID.randomUUID(), "", "");
         dashboard.setUser(provolyUser);
 
-        Assertions.assertDoesNotThrow(() -> grantService.canWrite(dashboard, WithGroupEntityType.DASHBOARD, provolyUser));
+        Assertions.assertDoesNotThrow(() -> grantService.canWrite(dashboard, provolyUser));
     }
 
     @Test
@@ -69,7 +69,7 @@ public class GrantServiceUTest {
         Dashboard dashboard = new Dashboard(UUID.randomUUID(), "", "");
         dashboard.setUser(owner);
 
-        Assertions.assertTrue(grantService.canSee(dashboard, WithGroupEntityType.DASHBOARD, owner));
+        Assertions.assertTrue(grantService.canSee(dashboard, owner));
     }
 
     @Test
@@ -80,7 +80,7 @@ public class GrantServiceUTest {
         Dashboard dashboard = new Dashboard(UUID.randomUUID(), "", "");
         dashboard.setUser(owner);
 
-        Assertions.assertTrue(grantService.canSee(dashboard, WithGroupEntityType.DASHBOARD, user));
+        Assertions.assertTrue(grantService.canSee(dashboard, user));
     }
 
     @Test
@@ -90,13 +90,14 @@ public class GrantServiceUTest {
         user.setGroups(List.of(group));
 
         ProvolyUser owner = new ProvolyUser(UUID.randomUUID(), "subject", "name", "last", "mail", List.of());
-        Dashboard dashboard = new Dashboard(UUID.randomUUID(), "", "");
+        UUID dashboardId = UUID.randomUUID();
+        Dashboard dashboard = new Dashboard(dashboardId, "", "");
         dashboard.setUser(owner);
 
-        when(groupRepository.getEntityGroups(WithGroupEntityType.DASHBOARD, dashboard))
+        when(groupRepository.getGroupsByEntityId(dashboardId))
                 .thenReturn(List.of(new DashboardGroupRelations(UUID.randomUUID(), group, dashboard.getId(), false)));
 
-        Assertions.assertTrue(grantService.canSee(dashboard, WithGroupEntityType.DASHBOARD, user));
+        Assertions.assertTrue(grantService.canSee(dashboard, user));
     }
 
     @Test
@@ -105,13 +106,14 @@ public class GrantServiceUTest {
         ProvolyUser user = new ProvolyUser(UUID.randomUUID(), "subject", "name", "lasr", "mail", List.of());
 
         ProvolyUser owner = new ProvolyUser(UUID.randomUUID(), "subject", "name", "last", "mail", List.of());
-        Dashboard dashboard = new Dashboard(UUID.randomUUID(), "", "");
+        UUID dashboardId = UUID.randomUUID();
+        Dashboard dashboard = new Dashboard(dashboardId, "", "");
         dashboard.setUser(owner);
 
-        when(groupRepository.getEntityGroups(WithGroupEntityType.DASHBOARD, dashboard))
+        when(groupRepository.getGroupsByEntityId(dashboardId))
                 .thenReturn(List.of(new DashboardGroupRelations(UUID.randomUUID(), group, dashboard.getId(), false)));
 
-        Assertions.assertFalse(grantService.canSee(dashboard, WithGroupEntityType.DASHBOARD, user));
+        Assertions.assertFalse(grantService.canSee(dashboard, user));
     }
 
     @Test
@@ -171,7 +173,7 @@ public class GrantServiceUTest {
         Dataset dataset = new Dataset(UUID.randomUUID());
         dataset.setUser(user);
 
-        Assertions.assertDoesNotThrow(() -> grantService.canWrite(dataset, WithGroupEntityType.DATASET, user));
+        Assertions.assertDoesNotThrow(() -> grantService.canWrite(dataset, user));
     }
 
     @Test
@@ -182,7 +184,7 @@ public class GrantServiceUTest {
         dataset.setUser(new ProvolyUser());
 
         Assertions.assertThrows(BusinessException.class,
-                () -> grantService.canWrite(dataset, WithGroupEntityType.DATASET, user));
+                () -> grantService.canWrite(dataset, user));
     }
 
     @Test
@@ -192,7 +194,7 @@ public class GrantServiceUTest {
         Dataset dataset = new Dataset(UUID.randomUUID());
         dataset.setUser(new ProvolyUser());
 
-        Assertions.assertDoesNotThrow(() -> grantService.canWrite(dataset, WithGroupEntityType.DATASET, user));
+        Assertions.assertDoesNotThrow(() -> grantService.canWrite(dataset, user));
     }
 
     @Test
@@ -204,7 +206,7 @@ public class GrantServiceUTest {
 
         when(userService.getCurrentUser()).thenReturn(user);
 
-        Assertions.assertDoesNotThrow(() -> grantService.canWrite(dashboard, WithGroupEntityType.DASHBOARD, user));
+        Assertions.assertDoesNotThrow(() -> grantService.canWrite(dashboard, user));
     }
 
     @Test
@@ -221,7 +223,7 @@ public class GrantServiceUTest {
         when(groupRepository.getGroupsByEntityId(dashboard.getId())).thenReturn(List.of(groupRelation));
 
         Assertions.assertThrows(BusinessException.class,
-                () -> grantService.canWrite(dashboard, WithGroupEntityType.DASHBOARD, user));
+                () -> grantService.canWrite(dashboard, user));
     }
 
     @Test
@@ -239,7 +241,7 @@ public class GrantServiceUTest {
         var groupRelation = new DashboardGroupRelations(UUID.randomUUID(), group, dashboard.getId(), true);
         when(groupRepository.getGroupsByEntityId(dashboard.getId())).thenReturn(List.of(groupRelation));
 
-        Assertions.assertDoesNotThrow(() -> grantService.canWrite(dashboard, WithGroupEntityType.DASHBOARD, user));
+        Assertions.assertDoesNotThrow(() -> grantService.canWrite(dashboard, user));
     }
 
     @Test
@@ -248,7 +250,7 @@ public class GrantServiceUTest {
         WidgetCatalog widget = new WidgetCatalog(UUID.randomUUID());
         widget.setUser(owner);
 
-        Assertions.assertTrue(grantService.canSee(widget, WithGroupEntityType.WIDGET, owner));
+        Assertions.assertTrue(grantService.canSee(widget, owner));
     }
 
     @Test

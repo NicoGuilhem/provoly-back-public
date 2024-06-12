@@ -18,7 +18,9 @@ import com.provoly.common.error.ErrorCode;
 import com.provoly.common.error.ProvolyNotFoundException;
 import com.provoly.common.model.CategoryDto;
 import com.provoly.common.user.SystemGroup;
-import com.provoly.ref.category.*;
+import com.provoly.ref.category.Category;
+import com.provoly.ref.category.CategoryService;
+import com.provoly.ref.category.WithCategoryEntityType;
 import com.provoly.ref.datasetversion.DatasetVersion;
 import com.provoly.ref.datasetversion.DatasetVersionRepository;
 import com.provoly.ref.datasetversion.DatasetVersionService;
@@ -101,7 +103,7 @@ public class DatasetService {
     @Transactional
     public void deleteDataset(UUID id) {
         var dataset = datasetRepository.getById(id).orElseThrow(() -> new ProvolyNotFoundException(Dataset.class, id));
-        grantService.canWrite(dataset, DATASET, userService.getCurrentUser());
+        grantService.canWrite(dataset, userService.getCurrentUser());
 
         if (isDatasetAssociateToDatasetVersion(id)) {
             throw new BusinessException(ErrorCode.BAD_REQUEST,
@@ -113,7 +115,7 @@ public class DatasetService {
     public Dataset getByName(String name) {
         ProvolyUser currentUserDto = userService.getCurrentUser();
         return datasetRepository.getByName(name)
-                .flatMap(dataset -> grantService.canSee(dataset, DATASET, currentUserDto) ? Optional.of(dataset)
+                .flatMap(dataset -> grantService.canSee(dataset, currentUserDto) ? Optional.of(dataset)
                         : Optional.empty())
                 .orElseThrow(() -> new ProvolyNotFoundException("Dataset %s doesn't exists".formatted(name)));
     }
@@ -142,7 +144,7 @@ public class DatasetService {
     public Dataset getById(UUID datasetId) {
         ProvolyUser currentUserDto = userService.getCurrentUser();
         return datasetRepository.getById(datasetId)
-                .flatMap(dataset -> grantService.canSee(dataset, DATASET, currentUserDto) ? Optional.of(dataset)
+                .flatMap(dataset -> grantService.canSee(dataset, currentUserDto) ? Optional.of(dataset)
                         : Optional.empty())
                 .orElseThrow(() -> new ProvolyNotFoundException("Dataset : %s inexistant.".formatted(datasetId)));
 
@@ -150,7 +152,7 @@ public class DatasetService {
 
     public Dataset findById(UUID datasetId) {
         ProvolyUser currentUser = userService.getCurrentUser();
-        return datasetRepository.getById(datasetId).filter(dataset -> grantService.canSee(dataset, DATASET, currentUser))
+        return datasetRepository.getById(datasetId).filter(dataset -> grantService.canSee(dataset, currentUser))
                 .orElse(null);
     }
 

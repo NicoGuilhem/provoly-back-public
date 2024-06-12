@@ -19,7 +19,6 @@ import com.provoly.common.error.ProvolyNotFoundException;
 import com.provoly.ref.datasource.DataSourceService;
 import com.provoly.ref.groups.GrantService;
 import com.provoly.ref.groups.GroupService;
-import com.provoly.ref.groups.WithGroupEntityType;
 import com.provoly.ref.user.ProvolyUser;
 import com.provoly.ref.user.UserService;
 import com.provoly.ref.widget.dto.WidgetWriteDto;
@@ -68,7 +67,7 @@ public class WidgetService {
             createWidget(dto, currentUser);
         } else {
             // only creator can update widget
-            grantService.canWrite(widgetCatalog, WIDGET, userService.getCurrentUser());
+            grantService.canWrite(widgetCatalog, userService.getCurrentUser());
             updateGroups(dto);
             mapper.update(dto, widgetCatalog);
         }
@@ -78,14 +77,14 @@ public class WidgetService {
     public WidgetCatalog getMineById(UUID id) {
         ProvolyUser currentUser = userService.getCurrentUser();
         return Optional.of(widgetRepository.getWidgetCatalogById(id))
-                .filter(widget -> grantService.canSee(widget, WithGroupEntityType.WIDGET, currentUser))
+                .filter(widget -> grantService.canSee(widget, currentUser))
                 .orElseThrow(() -> new ProvolyNotFoundException("Widget : %s inexistant.".formatted(id)));
     }
 
     @Transactional
     public void delete(UUID id) {
         var widget = widgetRepository.getWidgetCatalogById(id);
-        grantService.canWrite(widget, WIDGET, userService.getCurrentUser());
+        grantService.canWrite(widget, userService.getCurrentUser());
         widgetRepository.removeEntity(id);
     }
 

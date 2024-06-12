@@ -110,16 +110,6 @@ public class GroupRepository {
         return em.createQuery(q).getSingleResult() > 0;
     }
 
-    public List<GroupRelations> getEntityGroups(WithGroupEntityType type, EntityNamed entityNamed) {
-        var cb = em.getCriteriaBuilder();
-        var q = cb.createQuery(GroupRelations.class);
-        var root = q.from(GroupRelations.class);
-        q = q.where(cb.and(
-                cb.equal(root.get(GroupRelations_.entityType), type),
-                cb.equal(root.get(GroupRelations_.entityId), entityNamed.getId())));
-        return em.createQuery(q).getResultList();
-    }
-
     /**
      * Builds a subquery selecting entity ids of GroupRelations from a list of Group's names
      * 

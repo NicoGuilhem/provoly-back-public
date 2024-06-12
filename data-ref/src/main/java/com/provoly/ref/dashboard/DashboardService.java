@@ -74,7 +74,7 @@ public class DashboardService {
     private GroupErrors updateDashboard(DashboardWriteDto dashboardDto, Dashboard dashboard) {
         log.infof("Update dashboard %s", dashboardDto.getId());
         // only creator can update dashboard
-        grantService.canWrite(dashboard, WithGroupEntityType.DASHBOARD, userService.getCurrentUser());
+        grantService.canWrite(dashboard, userService.getCurrentUser());
         dashboardMapper.update(dashboardDto, dashboard);
         metadataService.updateMetadataByEntityType(dashboardDto, EntityType.DASHBOARD);
         notificationService.sendNotification(dashboardDto, true);
@@ -164,7 +164,7 @@ public class DashboardService {
     @Transactional
     public void delete(UUID id) {
         var dashboard = dashboardRepository.getDashboard(id);
-        grantService.canWrite(dashboard, WithGroupEntityType.DASHBOARD, userService.getCurrentUser());
+        grantService.canWrite(dashboard, userService.getCurrentUser());
         dashboardRepository.delete(id);
 
         notificationService.sendNotification(dashboardMapper.toReadDto(dashboard), false);
@@ -174,7 +174,7 @@ public class DashboardService {
     public Dashboard getDashboardById(UUID dashboardId) {
         ProvolyUser currentUser = userService.getCurrentUser();
         return Optional.of(dashboardRepository.getDashboard(dashboardId))
-                .filter(dashboard -> grantService.canSee(dashboard, WithGroupEntityType.DASHBOARD, currentUser))
+                .filter(dashboard -> grantService.canSee(dashboard, currentUser))
                 .orElseThrow(() -> new ProvolyNotFoundException("Dashboard : %s inexistant.".formatted(dashboardId)));
     }
 }

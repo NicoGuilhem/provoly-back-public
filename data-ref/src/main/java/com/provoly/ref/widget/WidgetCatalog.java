@@ -12,12 +12,13 @@ import jakarta.validation.constraints.Size;
 
 import com.provoly.common.Default;
 import com.provoly.ref.entity.EntityNamed;
+import com.provoly.ref.groups.WithGrantRestrictions;
 import com.provoly.ref.user.ProvolyUser;
 
 import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
-public class WidgetCatalog extends EntityNamed {
+public class WidgetCatalog extends EntityNamed implements WithGrantRestrictions {
     /**
      * The max size of content is 100Ko.
      */
@@ -113,5 +114,10 @@ public class WidgetCatalog extends EntityNamed {
 
     public void setUser(ProvolyUser user) {
         this.user = user;
+    }
+
+    @Override
+    public ProvolyUser getOwner() {
+        return getUser();
     }
 }

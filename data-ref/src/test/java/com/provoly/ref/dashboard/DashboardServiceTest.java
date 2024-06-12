@@ -162,7 +162,7 @@ class DashboardServiceTest {
                         List.of(), Map.of(), null, Map.of("ALL", List.of(GroupRights.READ)))))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining(
-                        "User is not granted to write %s %s.".formatted(WithGroupEntityType.DASHBOARD, dashboardId));
+                        "User is not granted to write Dashboard with id=%s.".formatted(dashboardId));
 
     }
 

@@ -9,6 +9,7 @@ import com.provoly.ref.model.EntitySlugMapper;
 import org.mapstruct.CollectionMappingStrategy;
 import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "jakarta", collectionMappingStrategy = CollectionMappingStrategy.ADDER_PREFERRED, uses = {
         EntityLoader.class, EntitySlugMapper.class, DatasetMetadataValueMapper.class, DatasetGroupMapper.class,
@@ -17,6 +18,7 @@ public interface DatasetMapper {
 
     DatasetDto toDto(Dataset dataset);
 
+    @Mapping(source = "owner", target = "owner", ignore = true)
     DatasetDetailsDto toDatasetDetailsDto(Dataset dataset);
 
     Collection<DatasetDetailsDto> toDatasetDetailsDtoList(Collection<Dataset> dataset);
