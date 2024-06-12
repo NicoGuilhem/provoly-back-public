@@ -2,26 +2,46 @@
 
 === Global coding conventions guideline
 
-- GET endpoints must specify the field on which the object is retrieved:  /objects/id/{id}.
-- Endpoint paths must be plural.
 - The project's code and its related documentation must be written in English.
-- No implicit use of curly brackets.
-- When adding new Dtos, favor using `record` if it's possible. Otherwise, set private attributes, and only add their getters. Convert those that do not respect this rule.
-- Repository classes are created with parsimony to avoid breaking SOLID principles when needed
+- Uses of `TODO` and `FIXME` is permitted and followed using https://sonar.prod.pe.pangee.ovh/dashboard?id=com.provoly%provoly[SonarQube].
+Don't create a new Github issue when adding a new `TODO` or `FIXME`.
+Create an issue to fix previous `TODO` or `FIXME`.
+
+=== OpenApi contract
+
+- Endpoint paths must be plural.
+- `GET` endpoints must specify the field on which the object is retrieved :  `/objects/id/{id}`.
+- `POST` endpoints should be used to create a new object
+- `PUT` endpoints should be used to update an object with same syntax as `GET` (`/objects/id/{id}`)
 
 === Java related coding conventions guideline:
 
+- No implicit use of curly brackets.
+- When adding new Dtos, favor using `record` if it's possible. Otherwise, set private attributes, and only add their getters. Convert those that do not respect this rule.
+- Repository classes are created with parsimony to avoid breaking SOLID principles when needed.
+When repository classes ares created, they **must not** have business rules.
+Business rules must be implemented in "Service" classes.
 - No implicit use of the *final* keyword. It can only be used explicitly and for a set purpose.
 - Use `String.formatted()` method for concatenation.
 - Favor constructor injection over `default package` field injection.
 - Use AssertJ assertions instead of Junit.
+
+==== `mapstruct` mappers
+
+Project uses https://mapstruct.org/[mapstruct] in order to map objects from entity classes to Dto classes and vice versa.
+
+- mappers interfaces **must be** suffixed by `Mapper`
+- all target fields must be mapped or set explicitly as `ignored` (check by global compilation option `unmappedTargetPolicy`)
+- used component model is `jakarta` to permit injection using `@Inject` annotation from `jakarta.inject` (configured globaly by compilation option `defaultComponentModel=jakarta`)
+
+=== Code quality check
+
+- Coding conventions will be enforced by https://sonar.prod.pe.pangee.ovh/dashboard?id=com.provoly%provoly[SonarQube].
 - Try to fix sonar issues on files impacted by your changes using the plugin `sonarLint`.
+- We strongly recommend using Sonar Lint with the project specific SonarQube profile.
 
-Java related coding conventions will be enforced by SonarQube.
-We strongly recommend using Sonar Lint with the project specific SonarQube profile.
-SonarQube project can be found https://sonar.prod.pe.pangee.ovh/dashboard?id=com.provoly%provoly[here].
+=== Git workflow
 
-
-=== Team and other conventions guideline
-
-- All merge requests will be squashed in a single commit. Preferably, the author of the merge request will do the squash and set the final commit him/her self.
+- Project is under "Trunk based development" workflow
+- All pull requests will be squashed in a single commit.
+Preferably, the author of the merge request will do the squash and set the final commit him/her self.
