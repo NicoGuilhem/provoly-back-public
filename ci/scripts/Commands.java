@@ -1,7 +1,8 @@
 import java.util.Arrays;
 
 public enum Commands {
-    SELECT_TARGET_MODULES("select-target-modules");
+    SELECT_TARGET_MODULES("select-target-modules"),
+    UPDATE_DEPLOYMENT("select-deploy-modules");
 
     private String value;
 

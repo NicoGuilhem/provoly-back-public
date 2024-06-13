@@ -9,11 +9,13 @@
 //SOURCES Commands.java
 //SOURCES command/DetectChangeService.java
 //SOURCES command/DetectChangeConfig.java
+//SOURCES command/DeploymentsService.java
 //Q:CONFIG quarkus.banner.enabled=false
 //Q:CONFIG quarkus.log.level=INFO
 
 import command.DetectChangeService;
 import command.DetectChangeConfig;
+import command.DeploymentsService;
 import picocli.CommandLine;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -36,9 +38,11 @@ public class CiScripts implements Runnable {
     DetectChangeConfig detectChangeConfig;
 
     private final DetectChangeService detectChangeService;
+    private final DeploymentsService deploymentsService;
 
-    public CiScripts(DetectChangeService detectChangeService) {
+    public CiScripts(DetectChangeService detectChangeService, DeploymentsService deploymentsService) {
         this.detectChangeService = detectChangeService;
+        this.deploymentsService = deploymentsService;
     }
 
     @Override
@@ -48,6 +52,10 @@ public class CiScripts implements Runnable {
                 case SELECT_TARGET_MODULES :
                 {
                     detectChangeService.detectChanges(detectChangeConfig);
+                    break;
+                }
+                case UPDATE_DEPLOYMENT  : {
+                    deploymentsService.getDeployments();
                     break;
                 }
             }
