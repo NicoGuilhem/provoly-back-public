@@ -6,5 +6,6 @@
   ],
   "addLabels": [
     "dependencies"
-  ]
+  ],
+  "rebaseWhen": "never"
 }
