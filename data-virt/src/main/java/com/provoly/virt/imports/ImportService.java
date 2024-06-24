@@ -14,11 +14,7 @@ import com.provoly.common.dataset.*;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.error.ProvolyNotFoundException;
-import com.provoly.common.imports.ExtractMessageCode;
-import com.provoly.common.imports.ExtractedMessage;
-import com.provoly.common.imports.ImportParameter;
-import com.provoly.common.imports.ImportsMessage;
-import com.provoly.common.imports.MessageLevel;
+import com.provoly.common.imports.*;
 import com.provoly.virt.ProvolySpanManager;
 import com.provoly.virt.dataset.DatasetController;
 import com.provoly.virt.dataset.ImportRequest;
@@ -75,7 +71,8 @@ public class ImportService {
         UUID datasetVersionId = UUID.randomUUID();
 
         DatasetVersionDto dto = new DatasetVersionDto(datasetVersionId, datasetId, datasetDto.getoClass(),
-                DatasetState.LOADING, true, datasetVersionInformationDto.productionDate(),
+                DatasetState.LOADING, importFileParameters.fileName(),
+                datasetVersionInformationDto.productionDate(),
                 datasetVersionInformationDto.producer(), datasetVersionInformationDto.additionalInformation());
 
         datasetVersionService.create(dto);

@@ -118,7 +118,7 @@ public class ImportRunnerTest {
 
         dataStorages.get(storageData).datasetVersionDto = new DatasetVersionDto(UUID.randomUUID(),
                 dataStorages.get(storageData).datasetDto.getId(), dataStorages.get(storageData).datasetDto.getoClass(),
-                DatasetState.INDEXING, false, "producer", Instant.now());
+                DatasetState.INDEXING, null, "producer", Instant.now());
         datasetVersionService.create(dataStorages.get(storageData).datasetVersionDto);
         fileService.receive(new FileInputStream(fileUpload.filePath().toFile()), mediaType,
                 dataStorages.get(storageData).datasetVersionDto.getId());

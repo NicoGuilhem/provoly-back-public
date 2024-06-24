@@ -134,7 +134,7 @@ public class AggregateServiceDatasetClosedTest {
     private void createDatasetVersions(StorageDataAggregate dataStorage) {
         var datasetVersionDto = new DatasetVersionDto(UUID.randomUUID(),
                 dataStorage.datasetDto.getId(), dataStorage.datasetDto.getoClass(),
-                DatasetState.INDEXING, false, "producer", Instant.now());
+                DatasetState.INDEXING, null, "producer", Instant.now());
         datasetVersionService.create(datasetVersionDto);
         insertItems(dataStorage, datasetVersionDto);
         datasetVersionService.activate(datasetVersionDto.getId());

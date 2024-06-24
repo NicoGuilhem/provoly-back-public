@@ -3,7 +3,10 @@ package com.provoly.ref.datasetversion;
 import java.time.Instant;
 import java.util.UUID;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.ManyToOne;
 
 import com.provoly.common.Default;
 import com.provoly.common.dataset.DatasetState;
@@ -18,8 +21,7 @@ public class DatasetVersion extends EntityId {
     @UpdateTimestamp
     private Instant lastModified;
 
-    @Column(columnDefinition = "boolean default false")
-    private boolean withFile = false;
+    private String fileName;
 
     @ManyToOne
     @Immutable
@@ -51,7 +53,7 @@ public class DatasetVersion extends EntityId {
                 ", lastModified=" + lastModified +
                 ", dataset=" + dataset.getId() +
                 ", state=" + state +
-                ", hasFile=" + withFile +
+                ", fileName=" + fileName +
                 "} ";
     }
 
@@ -87,12 +89,12 @@ public class DatasetVersion extends EntityId {
         this.state = state;
     }
 
-    public boolean isWithFile() {
-        return withFile;
+    public String getFileName() {
+        return fileName;
     }
 
-    public void setWithFile(boolean withFile) {
-        this.withFile = withFile;
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
     }
 
     public Instant getProductionDate() {
@@ -117,5 +119,9 @@ public class DatasetVersion extends EntityId {
 
     public void setProductionDate(Instant productionDate) {
         this.productionDate = productionDate;
+    }
+
+    public boolean isWithFile() {
+        return getFileName() != null && !getFileName().isBlank();
     }
 }

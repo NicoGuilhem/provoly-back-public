@@ -1720,7 +1720,7 @@ paths:
                   lastModified: "2023-04-27T13:56:13.861018Z"
                   version: 3
                   state: "INACTIVE"
-                  withFile: false
+                  fileName: "datas_flood.csv"
       responses:
         "201":
           description: Created
@@ -1760,75 +1760,6 @@ paths:
                     application: "data-ref"
                     code: "CONFLICT"
                     message: "Can't override existing dataset {{datasetVersionId}} or have parallel imports"
-      security:
-        - oidc:
-            - item_write
-    put:
-      tags:
-        - Dataset Version
-      operationId: com.provoly.ref.dataset.DatasetVersionController_updateState
-      summary: Update the state of a dataset version
-      description: |
-        A dataset version has multiple states to indicate the level of availability of the data imported.
-        Each state can be modified to a specific set of other states. For example, if a dataset's state is `LOADING`,
-        it can only obtain the `INDEXING` or `ERROR` states.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DatasetVersionDto'
-            examples:
-              updateDatasetVersion:
-                summary: Update dataset version
-                value:
-                  id: "b1a08d9d-4c38-4d43-90f3-25015537ebfd"
-                  dataset: "423b5c01-1816-41d4-b358-200000000010"
-                  oClass: "991eb4b2-253c-4875-b708-8209fa5bfd51"
-                  lastModified: "2023-04-27T13:56:13.861018Z"
-                  version: 1
-                  state: "INACTIVE"
-                  withFile: false
-      responses:
-        "204":
-          description: No Content
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              examples:
-                incompatibleStates:
-                  summary: Wrong transition of state
-                  description: Occurs when you try to update a dataset version's state to a state it can't transition to
-                  value:
-                    application: "data-ref"
-                    code: "BAD_REQUEST"
-                    message: "Dataset cannot transition from LOADING to ACTIVE"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-          content:
-            application/json:
-              examples:
-                differentDatasetId:
-                  summary: Different dataset id
-                  description: Occurs when you try to update a dataset version's state with a different dataset as the one in the database
-                  value:
-                    application: "data-ref"
-                    code: "FORBIDDEN"
-                    message: "Dataset versions are immutable"
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              examples:
-                sameState:
-                  summary: Update state with the actual state
-                  description: Occurs when you try to update a dataset version's state with the same state it already is in
-                  value:
-                    application: "data-ref"
-                    code: "CONFLICT"
-                    message: "Dataset {{datasetId}} is already in state: {{datasetState}}"
       security:
         - oidc:
             - item_write
@@ -1878,6 +1809,79 @@ paths:
         - oidc:
             - dataset_read
             - search
+    put:
+      tags:
+        - Dataset Version
+      operationId: com.provoly.ref.dataset.DatasetVersionController_updateState
+      summary: Update some informations of the dataset version
+      parameters:
+        - name: id
+          in: path
+          description: UUID of the dataset version to update
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      description: |
+        Updating producer, production date and additional informations of the dataset version.
+        The updated dataset version's is identified by its ID from path variable.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatasetVersionInformationDto'
+            examples:
+              updateDatasetVersion:
+                summary: Update dataset version
+                value:
+                  productionDate: "2023-04-27T13:56:13.861018Z"
+                  producer: "https://www.data.gouv.fr/fr/"
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                incompatibleStates:
+                  summary: Invalid informations in body.
+                  description: |
+                    Occurs when dataset type is 'CLOSED' and :
+                     - you try to update a dataset version's without sending productionDate or producer.
+                     - productionDate is after now.
+                  value:
+                    application: "data-ref"
+                    code: "BAD_REQUEST"
+                    message: "Dataset cannot transition from LOADING to ACTIVE"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+          content:
+            application/json:
+              examples:
+                differentDatasetId:
+                  summary: Different dataset id
+                  description: Occurs when you try to update a dataset version's state with a different dataset as the one in the database
+                  value:
+                    application: "data-ref"
+                    code: "FORBIDDEN"
+                    message: "Dataset versions are immutable"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                sameState:
+                  summary: Update state with the actual state
+                  description: Occurs when you try to update a dataset version's state with the same state it already is in
+                  value:
+                    application: "data-ref"
+                    code: "CONFLICT"
+                    message: "Dataset {{datasetId}} is already in state: {{datasetState}}"
+      security:
+        - oidc:
+            - item_write
     delete:
       tags:
         - Dataset Version
@@ -1907,7 +1911,7 @@ paths:
                     lastModified: "2022-03-10T16:15:50Z"
                     version: 1
                     state: "DELETING"
-                    withFile: false
+                    fileName: "datas_flood.csv"
         "400":
           description: Bad Request
           content:
@@ -4819,9 +4823,20 @@ components:
           type: integer
         state:
           $ref: '#/components/schemas/DatasetState'
-        withFile:
-          type: boolean
-          example: false
+        fileName:
+          type: string
+          example: "datas_flood.csv"
+    DatasetVersionInformationDto:
+      type: object
+      properties:
+        producer:
+          type: string
+          example: "data.gouv.fr"
+        productionDate:
+          $ref: '#/components/schemas/Instant'
+        additionalInformation:
+          type: string
+          example: "updated every months"
     FieldDto:
       type: object
       required:

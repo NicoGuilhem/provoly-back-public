@@ -123,7 +123,7 @@ public class DatasetVersionControllerTest {
 
     private void generateDatasetVersionDto(boolean withFile) {
         datasetVersionDto = new DatasetVersionDto(datasetVersionId, datasetId, oClass.getId(),
-                DatasetState.ACTIVE, withFile, fixedDate, "author", "SomeInformations");
+                DatasetState.ACTIVE, withFile ? "fakeFileName" : null, fixedDate, "author", "SomeInformations");
     }
 
     private DatasetVersion generateDatasetVersion(DatasetState state, boolean withFile) {
@@ -133,7 +133,7 @@ public class DatasetVersionControllerTest {
         dsv.setState(state);
         dsv.setProducer("producer");
         dsv.setProductionDate(Instant.now());
-        dsv.setWithFile(withFile);
+        dsv.setFileName(withFile ? "fakeFile.name" : null);
         return dsv;
     }
 
@@ -269,7 +269,7 @@ public class DatasetVersionControllerTest {
         saveDatasetVersion();
         datasetVersionService.activateDatasetVersion(datasetVersionId);
         var secondDatasetVersion = new DatasetVersionDto(UUID.randomUUID(), datasetId, oClass.getId(),
-                DatasetState.ACTIVE, false, "author", Instant.now());
+                DatasetState.ACTIVE, null, "author", Instant.now());
 
         // WHEN
         datasetVersionController.create(secondDatasetVersion);
@@ -291,7 +291,7 @@ public class DatasetVersionControllerTest {
         generateDatasetVersionDto(false);
         datasetVersionController.create(datasetVersionDto);
 
-        assertThat(datasetVersionController.get(datasetVersionDto.getId()).isWithFile()).isFalse();
+        assertThat(datasetVersionController.get(datasetVersionDto.getId()).getFileName()).isNull();
     }
 
     @Test
@@ -301,7 +301,7 @@ public class DatasetVersionControllerTest {
         generateDatasetVersionDto(true);
         datasetVersionController.create(datasetVersionDto);
 
-        assertThat(datasetVersionController.get(datasetVersionDto.getId()).isWithFile()).isTrue();
+        assertThat(datasetVersionController.get(datasetVersionDto.getId()).getFileName()).isEqualTo("fakeFileName");
     }
 
     @Test
