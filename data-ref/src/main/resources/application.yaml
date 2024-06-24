@@ -86,6 +86,7 @@ mp:
       port: 8180
       access-log:
         enabled: true
+        pattern: "%h %l %{X,user.sub} %t %r %s %b"
     datasource:
       devservices:
         port: 5431

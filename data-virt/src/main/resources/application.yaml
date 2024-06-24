@@ -156,6 +156,7 @@ mp:
     http:
       access-log:
         enabled: true
+        pattern: "%h %l %{X,user.sub} %t %r %s %b"
   provoly:
     anonymous:
       uuid: 1fb6c658-c02e-4531-996e-c37b9eefc6b3

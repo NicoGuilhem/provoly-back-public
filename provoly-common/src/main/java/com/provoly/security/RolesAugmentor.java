@@ -20,11 +20,13 @@ import io.quarkus.security.runtime.QuarkusSecurityIdentity;
 import io.smallrye.mutiny.Uni;
 
 import org.eclipse.microprofile.jwt.Claims;
+import org.jboss.logging.MDC;
 
 @ApplicationScoped
 public class RolesAugmentor implements SecurityIdentityAugmentor {
 
     private AnonymousConfiguration anonymousConf;
+    private static final String MdcSubKey = "user.sub";
 
     public RolesAugmentor(AnonymousConfiguration anonymousConf) {
         this.anonymousConf = anonymousConf;
@@ -45,6 +47,7 @@ public class RolesAugmentor implements SecurityIdentityAugmentor {
             anonymousConf.getRoles().forEach(builder::addRole);
             builder.setPrincipal(() -> "anonymous");
             builder.addAttribute(Claims.groups.name(), List.of(SystemGroup.ALL.name()));
+            MDC.put(MdcSubKey, anonymousConf.anonymousSub());
             return builder::build;
         } else {
             return buildPrincipal(identity);
@@ -64,6 +67,7 @@ public class RolesAugmentor implements SecurityIdentityAugmentor {
             if (identity.getRoles().contains(STR_ADMINISTRATE)) {
                 builder.addRoles(Arrays.stream(Role.values()).map(r -> r.toString().toLowerCase()).collect(Collectors.toSet()));
             }
+            MDC.put(MdcSubKey, principal.getSubject());
             return builder::build;
         } else {
             return QuarkusSecurityIdentity.builder(identity)::build;
