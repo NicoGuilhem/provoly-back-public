@@ -8,6 +8,7 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
+import com.provoly.common.dataset.DatasetDetailsDto;
 import com.provoly.common.dataset.DatasetDto;
 import com.provoly.common.metadata.MetadataValueWriteDto;
 import com.provoly.common.model.CategoryDto;
@@ -78,6 +79,7 @@ public class DatasetController {
         return datasetMapper.toDatasetDetailsDto(datasetService.getByName(name));
     }
 
+    //FIXME /datasets/search n'est pas documenté dans l'openapi
     @GET
     @Path("/search")
     @RolesAllowed({ Role.STR_DATASET_READ })

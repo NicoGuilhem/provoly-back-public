@@ -4,6 +4,7 @@ import java.util.List;
 
 import jakarta.inject.Inject;
 
+import com.provoly.common.dataset.DatasetDetailsDto;
 import com.provoly.ref.groups.GroupRepository;
 import com.provoly.ref.user.UserService;
 

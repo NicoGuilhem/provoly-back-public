@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import jakarta.ws.rs.*;
 
+import com.provoly.common.dataset.DatasetDetailsDto;
 import com.provoly.common.dataset.DatasetDto;
 import com.provoly.common.dataset.DatasetVersionDto;
 import com.provoly.common.error.ProvolyResponseExceptionMapper;
@@ -29,7 +30,7 @@ public interface DatasetService {
     @GET
     @Path("/id/{id}")
     @CacheResult(cacheName = "get-dataset-byID")
-    DatasetDto get(@PathParam("id") UUID id);
+    DatasetDetailsDto get(@PathParam("id") UUID id);
 
     @PUT
     DatasetDto update(DatasetDto datasetDto);

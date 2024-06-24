@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import com.provoly.common.dataset.DatasetDto;
+import com.provoly.common.dataset.DatasetDetailsDto;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 
@@ -29,13 +29,13 @@ public class ExecContext {
         return inTopicNameByDataSourceId.get(dataSourceId);
     }
 
-    public void addOutTopic(String topicName, UUID datasetId, DatasetDto datasetDto) {
-        var outputDatasetInfo = new ExecContextOutputDatasetInfo(topicName, datasetId, datasetDto);
-        var previous = outTopicNameByDatasetId.put(datasetDto.getId(), outputDatasetInfo);
+    public void addOutTopic(String topicName, UUID datasetId, DatasetDetailsDto datasetDetailDto) {
+        var outputDatasetInfo = new ExecContextOutputDatasetInfo(topicName, datasetId, datasetDetailDto);
+        var previous = outTopicNameByDatasetId.put(datasetDetailDto.getId(), outputDatasetInfo);
         if (previous != null) {
             throw new BusinessException(ErrorCode.TECHNICAL,
                     "A previous out topic with name " + previous + " already exists for dataSource "
-                            + datasetDto.getId());
+                            + datasetDetailDto.getId());
         }
     }
 

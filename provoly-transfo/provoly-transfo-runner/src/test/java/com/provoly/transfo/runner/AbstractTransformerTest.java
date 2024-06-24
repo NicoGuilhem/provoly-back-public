@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 import jakarta.inject.Inject;
 
-import com.provoly.common.dataset.DatasetDto;
+import com.provoly.common.dataset.DatasetDetailsDto;
 import com.provoly.common.dataset.DatasetType;
 import com.provoly.common.exec.ExecContext;
 import com.provoly.common.exec.ExecEvent;
@@ -159,8 +159,8 @@ public abstract class AbstractTransformerTest {
         transfo.forEach(OutputDataset.class, outputDataset -> {
             execContext.addOutTopic(getOutTopicName(outputDataset.getDataset()),
                     UUID.randomUUID(),
-                    new DatasetDto(outputDataset.getDataset(), "dataset", UUID.randomUUID(),
-                            DatasetType.CLOSED));
+                    new DatasetDetailsDto(outputDataset.getDataset(), "dataset", UUID.randomUUID(),
+                            DatasetType.CLOSED, List.of(), null, List.of(), false, null, List.of()));
         });
 
         var startEventRecord = new ProducerRecord<String, ExecEvent>(TOPIC_NAME,

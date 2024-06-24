@@ -67,7 +67,7 @@ public class ImportService {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "File is required.");
         }
 
-        DatasetDto datasetDto = datasetService.get(datasetId);
+        DatasetDetailsDto datasetDto = datasetService.get(datasetId);
         UUID datasetVersionId = UUID.randomUUID();
 
         DatasetVersionDto dto = new DatasetVersionDto(datasetVersionId, datasetId, datasetDto.getoClass(),
@@ -109,7 +109,7 @@ public class ImportService {
     public DatasetVersionDto runImportFromItems(UUID datasetId, UUID id, ImportParameter importParameter) {
         log.infof("Asking dataset#%s import", id);
 
-        DatasetDto dataset = datasetService.get(datasetId);
+        DatasetDetailsDto dataset = datasetService.get(datasetId);
         if (dataset == null) {
             throw new ProvolyNotFoundException(DatasetController.class, datasetId);
         }
@@ -120,7 +120,7 @@ public class ImportService {
                 importParameter.datasetVersionInformationDto());
         datasetVersionService.create(datasetVersionDto);
 
-        bus.publish("importFromItems", new ImportRequest(dataset, datasetVersionDto, importParameter.items()));
+        bus.publish("importFromItems", new ImportRequest(datasetVersionDto, importParameter.items()));
         return datasetVersionDto;
     }
 
@@ -150,7 +150,7 @@ public class ImportService {
         Infrastructure.getDefaultWorkerPool().submit(() -> {
             try {
                 importRunner.importItemsFromItemDto(importRequest);
-                log.infof("Dataset#%s imported", importRequest.dataset().getId());
+                log.infof("Dataset#%s imported", importRequest.datasetVersion().getDataset());
 
             } catch (RuntimeException e) {
                 handleError(e, importRequest.datasetVersion());

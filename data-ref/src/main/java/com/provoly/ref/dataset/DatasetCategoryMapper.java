@@ -2,6 +2,7 @@ package com.provoly.ref.dataset;
 
 import jakarta.inject.Inject;
 
+import com.provoly.common.dataset.DatasetDetailsDto;
 import com.provoly.ref.category.CategoryMapper;
 import com.provoly.ref.category.CategoryRepository;
 

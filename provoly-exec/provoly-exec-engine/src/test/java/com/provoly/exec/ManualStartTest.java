@@ -11,15 +11,12 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 import jakarta.inject.Inject;
 
 import com.provoly.clients.DatasetService;
-import com.provoly.common.dataset.DatasetDto;
+import com.provoly.common.dataset.DatasetDetailsDto;
 import com.provoly.common.dataset.DatasetType;
 import com.provoly.common.exec.*;
 import com.provoly.common.item.ItemDto;
@@ -158,8 +155,8 @@ public class ManualStartTest extends AbstractStartTest {
     public void whenInputTopic_topicCreatedAndFilled() {
         UUID datasetId = UUID.randomUUID();
 
-        DatasetDto dto = new DatasetDto(datasetId, "dataset", UUID.randomUUID(),
-                DatasetType.CLOSED);
+        DatasetDetailsDto dto = new DatasetDetailsDto(datasetId, "dataset", UUID.randomUUID(),
+                DatasetType.CLOSED, List.of(), null, List.of(), true, null, List.of());
         when(datasetService.get(datasetId)).thenReturn(dto);
 
         // Manually start a job
@@ -179,8 +176,8 @@ public class ManualStartTest extends AbstractStartTest {
 
         UUID datasetId = UUID.randomUUID();
 
-        DatasetDto dto = new DatasetDto(datasetId, "dataset", UUID.randomUUID(),
-                DatasetType.CLOSED);
+        DatasetDetailsDto dto = new DatasetDetailsDto(datasetId, "dataset", UUID.randomUUID(),
+                DatasetType.CLOSED, List.of(), null, List.of(), true, null, List.of());
         when(datasetService.get(datasetId)).thenReturn(dto);
 
         var builder = new JobInstanceBuilder()

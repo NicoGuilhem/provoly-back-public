@@ -2,6 +2,7 @@ package com.provoly.ref.dataset;
 
 import java.util.Collection;
 
+import com.provoly.common.dataset.DatasetDetailsDto;
 import com.provoly.common.dataset.DatasetDto;
 import com.provoly.ref.model.EntityLoader;
 import com.provoly.ref.model.EntitySlugMapper;

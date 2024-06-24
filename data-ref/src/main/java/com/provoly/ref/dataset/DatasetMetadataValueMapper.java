@@ -2,6 +2,7 @@ package com.provoly.ref.dataset;
 
 import jakarta.inject.Inject;
 
+import com.provoly.common.dataset.DatasetDetailsDto;
 import com.provoly.common.metadata.MetadataValueReadDto;
 import com.provoly.ref.metadata.MetadataDefService;
 import com.provoly.ref.metadata.MetadataMapper;

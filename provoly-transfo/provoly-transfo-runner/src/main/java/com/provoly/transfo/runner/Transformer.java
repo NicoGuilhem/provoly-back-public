@@ -90,7 +90,7 @@ public class Transformer implements QuarkusApplication {
                 }
                 case OutputDataset outDataset -> {
                     var outputDatasetInfo = context.getOutputDatasetInfo(outDataset.getDataset());
-                    log.infof("outputdataset stream %s", outputDatasetInfo.datasetDto().getName());
+                    log.infof("outputdataset stream %s", outputDatasetInfo.datasetDetailDto().getName());
                     var previousNode = graph.getPrevious(node);
                     var inputStream = streamsMap.get(previousNode);
                     var outStream = buildOutstream(inputStream, outDataset, context);
@@ -158,7 +158,7 @@ public class Transformer implements QuarkusApplication {
         return inputStream.map((key, value) -> {
             var outputInfo = context.getOutputDatasetInfo(dataset.getDataset());
             var item = new ItemDto(
-                    outputInfo.datasetDto().getoClass(),
+                    outputInfo.datasetDetailDto().getoClass(),
                     outputInfo.datasetId(),
                     value.getItemId(),
                     value.getAttributes());

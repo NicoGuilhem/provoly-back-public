@@ -1,10 +1,9 @@
-package com.provoly.ref.dataset;
+package com.provoly.common.dataset;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.provoly.common.dataset.DatasetType;
 import com.provoly.common.metadata.MetadataValueReadDto;
 import com.provoly.common.model.CategoryDto;
 
