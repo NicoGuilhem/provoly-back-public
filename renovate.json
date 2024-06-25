@@ -1,11 +1,31 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base",
+    "config:best-practices",
     ":semanticCommitTypeAll(chore)"
   ],
   "addLabels": [
     "dependencies"
   ],
-  "rebaseWhen": "never"
+  "rebaseWhen": "conflicted",
+  "packageRules": [
+    {
+      "groupName": "geotools",
+      "matchDepNames": [
+        "org.geotools"
+      ],
+      "matchPackagePrefixes": [
+        "org.geotools:"
+      ]
+    },
+    {
+      "groupName": "mapstruct",
+      "matchDepNames": [
+        "org.mapstruct"
+      ],
+      "matchPackagePrefixes": [
+        "org.mapstruct:"
+      ]
+    }
+  ]
 }
