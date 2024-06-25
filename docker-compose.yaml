@@ -1,13 +1,13 @@
 services:
   postgis:
-    image: postgis/postgis:15-3.3
+    image: postgis/postgis:15-3.3@sha256:a2fc46b52819d25add4ed93d3da83e106e17ea3ace6883cce3791631c9820bb2
     ports:
       - "5532:5432"
     environment:
       - POSTGRES_PASSWORD=mysecretpassword
 
   es01:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.1@sha256:03ee4816f20c429ba83d000a0e202d8beaee5041a6db19bf5c0f892dc96ac236
     environment:
       - discovery.type=single-node
     volumes:

@@ -1,7 +1,7 @@
 services:
 
   postgis:
-    image: postgis/postgis:15-3.3
+    image: postgis/postgis:15-3.3@sha256:a2fc46b52819d25add4ed93d3da83e106e17ea3ace6883cce3791631c9820bb2
     ports:
       - "5532:5432"
     environment:
@@ -9,7 +9,7 @@ services:
 
 
   kafka:
-    image: docker.io/bitnami/kafka:3.6.1
+    image: docker.io/bitnami/kafka:3.6.1@sha256:9f05290493ab7f6e7a9b37bd8f2ea22ce0a1a78ebfe14f136ec38eb9fcfcb7dd
     ports:
       - "9093:9093"
     environment:
@@ -25,7 +25,7 @@ services:
       - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=false
 
   akhq:
-    image: tchiotludo/akhq:0.25.0
+    image: tchiotludo/akhq:0.25.0@sha256:942807a2291f25b22047f8f56287e93cf9a43bf76f67a0eeca7e1eecc911c54c
     environment:
       AKHQ_CONFIGURATION: |
         akhq:
@@ -38,7 +38,7 @@ services:
 
 
   es01:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.1@sha256:03ee4816f20c429ba83d000a0e202d8beaee5041a6db19bf5c0f892dc96ac236
     environment:
       - discovery.type=single-node
     volumes:
@@ -47,20 +47,20 @@ services:
       - "9200:9200"
 
   kib01:
-    image: docker.elastic.co/kibana/kibana:8.14.1
+    image: docker.elastic.co/kibana/kibana:8.14.1@sha256:799e3b04c226b07677b3295dc6ba5a5b6e65eb5cd76edff4b21b90c1bd3820c5
     ports:
       - "5601:5601"
     environment:
       - ELASTICSEARCH_HOSTS=http://es01:9200
 
   jaeger:
-    image: jaegertracing/all-in-one:1.58
+    image: jaegertracing/all-in-one:1.58@sha256:f015fb34e6742bb46b87c42cf83abfacfdd5dc39864a859a4ba942eb21c4b29c
     ports:
       - "4317:4317"
       - "16686:16686"
 
   postgres:
-    image: postgres:16.3
+    image: postgres:16.3@sha256:46aa2ee5d664b275f05d1a963b30fff60fb422b4b594d509765c42db46d48881
     ports:
       - "5432:5432"
     environment:
