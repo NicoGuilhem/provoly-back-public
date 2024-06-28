@@ -10,9 +10,9 @@ Create an issue to fix previous `TODO` or `FIXME`.
 === OpenApi contract
 
 - Endpoint paths must be plural.
-- `GET` endpoints must specify the field on which the object is retrieved :  `/objects/id/{id}`.
+- `GET` endpoints must specify the field on which the object is retrieved :  `/objects/id/\{id}`.
 - `POST` endpoints should be used to create a new object
-- `PUT` endpoints should be used to update an object with same syntax as `GET` (`/objects/id/{id}`)
+- `PUT` endpoints should be used to update an object with same syntax as `GET` (`/objects/id/\{id}`)
 
 === Java related coding conventions guideline:
 

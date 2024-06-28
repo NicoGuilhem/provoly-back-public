@@ -10,7 +10,7 @@ Event driven:: Only <<_on_push_event, on push events>>, two different workflows 
 [#_static_analysis]
 === Static analysis
 
-This pipeline is only executed on `main` branch and does the following for all modules :
+This pipeline is only executed on `main` branch and does the following for all modules:
 
 [plantuml]
 ----
@@ -58,4 +58,4 @@ Flyway verify and prevent modification on already executed migration. To prevent
 validation is set to false.
 
 All migration must be applicable to all environments. If an environment requires a script (for example in case of a environment specific data-migration), a environment
-script will be set and versioned on a specific repository ({project}/src/main/resouces/db.onetime).
+script will be set and versioned on a specific repository (\{project}/src/main/resouces/db.onetime).
