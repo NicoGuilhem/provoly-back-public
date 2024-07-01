@@ -2,10 +2,7 @@ package com.provoly.virt.storage.elasticbased;
 
 import static com.provoly.virt.storage.elasticbased.kuzzlemeasure.KuzzleMeasureLayout.MEASURE_COLLECTION;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -31,23 +28,33 @@ import kotlin.Unit;
 @ApplicationScoped
 public class KuzzleClient {
 
+    public static final String REPLICAS_PROPERTY = "number_of_replicas";
+    public static final String SETTINGS = "settings";
+    public static final String AUTH_STRATEGY = "local";
+    public static final int DEFAULT_PORT = 7512;
+    public static final int DEFAULT_REPLICAS = 1;
     private final Logger log;
     private Kuzzle kuzzle;
     private final Optional<DataVirtProperties.KuzzleConfiguration> kuzzleConfiguration;
     private Thread reconnectThread = null;
+    private int replicas;
 
     public KuzzleClient(DataVirtProperties config, Logger log) {
         log.info("Initializing Kuzzle client");
         this.log = log;
         this.kuzzleConfiguration = config.kuzzle();
-
-        this.kuzzleConfiguration.map(DataVirtProperties.KuzzleConfiguration::host)
-                .ifPresent(this::initKuzzleClient);
+        this.kuzzleConfiguration.ifPresent(this::initKuzzleClient);
+        replicas = kuzzleConfiguration.flatMap(DataVirtProperties.KuzzleConfiguration::replicas)
+                .orElse(DEFAULT_REPLICAS);
     }
 
-    private void initKuzzleClient(String kuzzleHost) {
-        WebSocket ws = new WebSocket(kuzzleHost, 7512, false, false);
+    private void initKuzzleClient(DataVirtProperties.KuzzleConfiguration kuzzleConfiguration) {
+        WebSocket ws = new WebSocket(kuzzleConfiguration.host(), kuzzleConfiguration.port().orElse(DEFAULT_PORT), false, false);
         this.kuzzle = new Kuzzle(ws);
+
+        kuzzleConfiguration.credentials()
+                .ifPresent(credentials -> authenticate(credentials.username(), credentials.password()));
+
         ws.addListener(NetworkStateChangeEvent.class, event -> {
             log.info("Network state changed: " + event.getState());
             if (event.getState() == ProtocolState.CLOSE) {
@@ -93,6 +100,7 @@ public class KuzzleClient {
 
     public void createIndexAndCollection(String indexName, String collection, Map<String, Map<String, Object>> mapping) {
         try {
+            mapping.put(SETTINGS, Map.of(REPLICAS_PROPERTY, replicas));
             client().getIndexController().create(indexName).get();
             client().getCollectionController().create(indexName, collection, mapping).get();
         } catch (InterruptedException | ExecutionException e) {
@@ -128,6 +136,20 @@ public class KuzzleClient {
             return convertKuzzleResponseToError(result);
         } catch (InterruptedException | ExecutionException e) {
             throw new BusinessException(ErrorCode.TECHNICAL, "Error while communicating with kuzzle", e);
+        }
+    }
+
+    private void authenticate(String username, String password) {
+        log.infof("Trying to authenticate to Kuzzle");
+        Map<String, Object> credentials = new HashMap<>();
+        credentials.put("username", username);
+        credentials.put("password", password);
+
+        try {
+            kuzzle.getAuthController().login(AUTH_STRATEGY, credentials).get();
+            log.infof("Kuzzle authentication successful.");
+        } catch (InterruptedException | ExecutionException e) {
+            throw new BusinessException(ErrorCode.TECHNICAL, "Unable to authenticate to Kuzzle", e);
         }
     }
 

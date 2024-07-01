@@ -2,7 +2,6 @@ package com.provoly.virt.storage.elasticbased.kuzzle;
 
 import static com.provoly.common.model.Type.INSTANT;
 import static com.provoly.virt.storage.elasticbased.kuzzle.KuzzleLayout.COLLECTION_NAME;
-import static com.provoly.virt.storage.elasticbased.kuzzle.KuzzleLayout.TIMEZONE_IDENTIFIER;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -23,6 +22,7 @@ import com.provoly.virt.entity.Item;
 import com.provoly.virt.storage.InsertionError;
 import com.provoly.virt.storage.StorageQualifier;
 import com.provoly.virt.storage.StorageWriteService;
+import com.provoly.virt.storage.elasticbased.ElasticSupport;
 import com.provoly.virt.storage.elasticbased.KuzzleClient;
 
 import org.jboss.logging.Logger;
@@ -32,10 +32,12 @@ import org.jboss.logging.Logger;
 public class KuzzleWriteService implements StorageWriteService {
     private final KuzzleClient kuzzleClient;
     private final Logger logger;
+    private final ElasticSupport elasticSupport;
 
-    public KuzzleWriteService(KuzzleClient kuzzleClient, Logger logger) {
+    public KuzzleWriteService(KuzzleClient kuzzleClient, Logger logger, ElasticSupport elasticSupport) {
         this.kuzzleClient = kuzzleClient;
         this.logger = logger;
+        this.elasticSupport = elasticSupport;
     }
 
     @Override
@@ -81,8 +83,8 @@ public class KuzzleWriteService implements StorageWriteService {
             return geo.getStringAs(GeoFormat.WKT);
         }
         if (value.getAttributeDef().getField().getType() == INSTANT) {
-            return (((AttributeSimpleValue) entry.getValue()).readValueEvenIfNotVisible().toString())
-                    .replace(TIMEZONE_IDENTIFIER, "");
+            return elasticSupport.toIsoDate(((AttributeSimpleValue) entry.getValue()).readValueEvenIfNotVisible().toString())
+                    .toEpochMilli(); // to avoid date format error, convert to timestamp
         }
         return ((AttributeSimpleValue) entry.getValue()).readValueEvenIfNotVisible();
     }

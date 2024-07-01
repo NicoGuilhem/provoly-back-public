@@ -73,7 +73,19 @@ public interface DataVirtProperties {
     interface KuzzleConfiguration {
         String host();
 
+        Optional<Integer> port();
+
         String tenant();
+
+        Optional<Integer> replicas();
+
+        Optional<KuzzleCredentials> credentials();
+    }
+
+    interface KuzzleCredentials {
+        String password();
+
+        String username();
     }
 
 }

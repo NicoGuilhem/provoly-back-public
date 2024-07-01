@@ -97,7 +97,7 @@ public class KuzzleNotifierService implements NotificationHandler {
     @Override
     public void run(@NotNull Response response) {
         try {
-            log.debugf("New measure received {}", response);
+            log.debugf("New measure received %s", response);
             Item item = measureLayout.convertToItem((KuzzleMap) response.getResult());
             // Item are not read from a user and a security context but received from Kuzzle
             // We have to unlock visibility

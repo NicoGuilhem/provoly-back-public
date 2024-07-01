@@ -46,7 +46,8 @@ class KuzzleModelService implements StorageModelService {
             throw new BusinessException(ErrorCode.NAME_ALREADY_USED, "Index %s already exists".formatted(indexName));
         }
 
-        var mapping = Map.of("mappings", buildMapping(oClass.getAttributes()));
+        var mapping = new HashMap<String, Map<String, Object>>();
+        mapping.put("mappings", buildMapping(oClass.getAttributes()));
         log.infov("Creating index with name %s".formatted(indexName));
         kuzzleClient.createIndexAndCollection(indexName, COLLECTION_NAME, mapping);
     }

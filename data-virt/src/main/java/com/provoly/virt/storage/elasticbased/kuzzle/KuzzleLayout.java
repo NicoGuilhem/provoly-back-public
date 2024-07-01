@@ -19,7 +19,6 @@ import com.provoly.virt.storage.elasticbased.KuzzleBasedLayout;
 @ApplicationScoped
 public class KuzzleLayout extends KuzzleBasedLayout {
     public static final String COLLECTION_NAME = "provoly";
-    public static final String TIMEZONE_IDENTIFIER = "Z";
 
     private ElasticSupport elasticSupport;
 
