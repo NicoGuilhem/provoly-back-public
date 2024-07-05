@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: API Baseline
   x-logo:
-    url: .\docs\modules\ROOT\images\provoly.png
+    url: ../provoly-back/main/_images/provoly.png
     backgroundColor: "#FFFFFF"
     altText: "Provoly logo"
   description: CRUD Operation on repositories data
@@ -146,65 +146,22 @@ paths:
       security:
         - oidc:
             - class_write
-  /model/field:
+  /model/fields:
     post:
       tags:
         - Model
-      summary: Save a new field
-      description: |
-        A field is required for defining an attribute in an oClass. 
-        It can be used several times in the same oClass, or in different oClasses.
-      operationId: com.provoly.ref.model.ModelController_addField
+      summary: Create a new field
+      operationId: com.provoly.ref.model.FieldController_addField
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/FieldDto'
-            examples:
-              default:
-                summary: Adding a field
-                value:
-                  id: "1d186f4a-5d75-4d2f-af45-d78180e0f0e8"
-                  name: "correct_field"
-                  type: "keyword"
-              incorrect:
-                summary: Adding an incorrect field (name null)
-                value:
-                  id: "1d186f4a-5d75-4d2f-af45-d78180e0f0e8"
-                  name: null
-                  type: "string"
-      responses:
-        "201":
-          description: Created
-        "400":
-          description: Bad Request
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-        - oidc:
-            - field_write
-  /model/fields:
-    post:
-      tags:
-        - Model
-      summary: Save a new collection of fields
-      operationId: com.provoly.ref.model.ModelController_addFields
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/FieldDto'
             example:
-              - id: "1d186f4a-5d75-4d2f-af45-d78180e0f0e8"
-                name: "field_address"
-                type: "string"
-              - id: "fcc51f53-9295-4caf-968e-873b601763b1"
-                name: "field_code"
-                type: "integer"
+              id: "fcc51f53-9295-4caf-968e-873b601763b1"
+              name: "field_code"
+              type: integer
+              isLocaleFormat: false
       responses:
         "201":
           description: Created
@@ -219,7 +176,7 @@ paths:
       tags:
         - Model
       summary: Retrieve all existing fields
-      operationId: com.provoly.ref.model.ModelController_getFields
+      operationId: com.provoly.ref.model.FieldController_getFields
       responses:
         "200":
           description: OK
@@ -241,11 +198,43 @@ paths:
             - search
             - datasource_read
   /model/fields/{id}:
+    put:
+      parameters:
+        - name: id
+          in: path
+          description: Field UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      tags:
+        - Model
+      summary: Update an existing field
+      operationId: com.provoly.ref.model.FieldController_updateField
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FieldDto'
+            example:
+              id: "fcc51f53-9295-4caf-968e-873b601763b1"
+              name: "field_code"
+              type: integer
+              isLocaleFormat: false
+      responses:
+        "201":
+          description: Created
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - field_write
     get:
       tags:
         - Model
       summary: Retrieve a field based on its identifier
-      operationId: com.provoly.ref.model.ModelController_getFieldById
+      operationId: com.provoly.ref.model.FieldController_getFieldById
       parameters:
         - name: id
           in: path
@@ -3950,18 +3939,6 @@ paths:
                     - "ALL"
                   datasource: [ "a1041310-3c83-4512-97be-9e665d20d0a5" ]
                   cover: false
-              incorrect:
-                summary: Adding an incorrect widget configuration (null content)
-                value:
-                  id: "921e297f-4b21-4045-9896-5ec98910cae1"
-                  name: "wrong_widget_config"
-                  description: "this is an incorrect widget configuration"
-                  image: ""
-                  content: null
-                  groups:
-                    - "ALL"
-                  datasource: [ "a1041310-3c83-4512-97be-9e665d20d0a5" ]
-                  cover: false
       responses:
         "201":
           description: Created
@@ -4312,29 +4289,30 @@ components:
           $ref: "#/components/schemas/MessageLevel"
         messages:
           type: array
-          properties:
-            level:
-              $ref: "#/components/schemas/MessageLevel"
-            extractedMessageCode:
-              enum:
-                - UNRECOGNIZED
-                - MEDIA_TYPE
-                - FORMAT
-                - STORAGE
-                - NO_VALUES
-                - NO_ATTRIBUTES
-            type:
-              $ref: "#/components/schemas/Type"
-            name:
-              type: string
-              example: "my rule"
-            recordId:
-              type: string
-            datasetVersionId:
-              $ref: "#/components/schemas/UUID"
-            receivedValue:
-              type: string
-              example: "A value that cannot be formated to int"
+          items:
+            properties:
+              level:
+                $ref: "#/components/schemas/MessageLevel"
+              extractedMessageCode:
+                enum:
+                  - UNRECOGNIZED
+                  - MEDIA_TYPE
+                  - FORMAT
+                  - STORAGE
+                  - NO_VALUES
+                  - NO_ATTRIBUTES
+              type:
+                $ref: "#/components/schemas/Type"
+              name:
+                type: string
+                example: "my rule"
+              recordId:
+                type: string
+              datasetVersionId:
+                $ref: "#/components/schemas/UUID"
+              receivedValue:
+                type: string
+                example: "A value that cannot be formated to int"
         count: 
           type: integer
           minimum: 1
@@ -4450,12 +4428,14 @@ components:
       type: object
       properties:
         associations:
-          $ref: '#/components/schemas/AssociationDto'
+          type: array
+          items:
+            $ref: '#/components/schemas/AssociationDto'
         usedElsewhere:
           type: boolean
           default: false
     AssociationDto:
-      type: array
+      type: object
       properties:
         id:
           $ref: '#/components/schemas/UUID'
@@ -4525,9 +4505,10 @@ components:
           $ref: '#/components/schemas/ConditionType'
         composed:
           type: array
-          properties:
-            items:
-              $ref: '#/components/schemas/ConditionDto'
+          items:
+            properties:
+              items:
+                $ref: '#/components/schemas/ConditionDto'
     MetadataConditionDto:
       description: Condition based on metadata used when params type equals METADATA
       type: object
@@ -4665,8 +4646,7 @@ components:
           example: false
         manifest:
           type: object
-          additionalProperties:
-            type: array
+          additionalProperties: true
         datasource:
           type: array
           items:
@@ -4839,6 +4819,30 @@ components:
           example: "updated every months"
     FieldDto:
       type: object
+      oneOf:
+        - $ref: "#/components/schemas/FieldDateDto"
+        - $ref: "#/components/schemas/FieldDecimalDto"
+        - $ref: "#/components/schemas/FieldGeoDto"
+        - $ref: "#/components/schemas/FieldNumericDto"
+        - $ref: "#/components/schemas/FieldStringDto"
+      discriminator:
+        propertyName: type
+        mapping:
+          integer: "#/components/schemas/FieldNumericDto"
+          instant: "#/components/schemas/FieldDateDto"
+          long: "#/components/schemas/FieldNumericDto"
+          Point: "#/components/schemas/FieldGeoDto"
+          MultiPoint: "#/components/schemas/FieldGeoDto"
+          LineString: "#/components/schemas/FieldGeoDto"
+          MultiLineString: "#/components/schemas/FieldGeoDto"
+          Polygon: "#/components/schemas/FieldGeoDto"
+          MultiPolygon: "#/components/schemas/FieldGeoDto"
+          decimal: "#/components/schemas/FieldDecimalDto"
+          raw: "#/components/schemas/FieldStringDto"
+          string: "#/components/schemas/FieldStringDto"
+          keyword: "#/components/schemas/FieldStringDto"
+    FieldStringDto:
+      # represent the FieldDto but not able to reference himself in doc
       required:
         - id
         - name
@@ -4850,16 +4854,121 @@ components:
           type: string
           nullable: true
           example: "my field"
-        type:
-          $ref: '#/components/schemas/Type'
         slug:
           type: string
           example: "73981_my_field"
+        type:
+          $ref: '#/components/schemas/Type'
+          enum:
+            - string
+            - raw
+            - keyword
+    FieldGeoDto:
+      required:
+        - id
+        - name
+        - crs
+        - type
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          nullable: true
+          example: "my field"
+        slug:
+          type: string
+          example: "73981_my_field"
+        type:
+          $ref: '#/components/schemas/Type'
+          enum:
+            - instant
         crs:
           type: string
           example: "EPSG:1233"
           default: "EPSG:4326"
           description: "Required only for Geo field. Should be a valid CRS"
+    FieldDateDto:
+      type: object
+      required: 
+        - id
+        - name
+        - type
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          nullable: true
+          example: "my field"
+        slug:
+          type: string
+          example: "73981_my_field"
+        type:
+          $ref: '#/components/schemas/Type'
+          enum:
+            - instant
+        format:
+          type: string
+          format: date
+          example: "my_value"
+    FieldDecimalDto:
+      type: object
+      required: 
+        - id
+        - name
+        - type
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          nullable: true
+          example: "my field"
+        slug:
+          type: string
+          example: "73981_my_field"
+        type:
+          $ref: '#/components/schemas/Type'
+          enum:
+            - decimal
+        unit:
+          type: string
+          nullable: true
+        isLocaleFormat:
+          type: boolean
+          default: true
+        decimalPrecision:
+          format: int32
+          type: integer
+          example: 5
+    FieldNumericDto:
+      type: object
+      required: 
+        - id
+        - name
+        - type
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          nullable: true
+          example: "my field"
+        slug:
+          type: string
+          example: "73981_my_field"
+        type:
+          $ref: '#/components/schemas/Type'
+          enum:
+            - integer
+            - long
+        unit:
+          type: string
+          nullable: true
+        isLocaleFormat:
+          type: boolean
+          default: true
     FullSearchConditionDto:
       type: object
       properties:

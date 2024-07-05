@@ -26,6 +26,7 @@ import com.provoly.common.item.ItemDto;
 import com.provoly.common.metadata.MetaProvisioningReaderDto;
 import com.provoly.common.metadata.MetadataSystem;
 import com.provoly.common.metadata.UserProfileValueReadDto;
+import com.provoly.common.model.Type;
 import com.provoly.security.TokenUtils;
 import com.provoly.virt.entity.*;
 import com.provoly.virt.file.FileService;
@@ -138,7 +139,7 @@ public class ItemTransformer {
 
     private void loadRawData(Item item) {
         for (var attribute : item.getAttributes(AttributeSimpleValue.class)) {
-            if (attribute.getField().type.equals("raw")) {
+            if (attribute.getField().getType() == Type.RAW) {
                 attribute.getMetadata().forEach(metadataValue -> {
                     if (metadataValue.getDefinition().name.equals("_http_origin")) {
                         mapToRawDataDtoItem(attribute, metadataValue.getValue().toString());

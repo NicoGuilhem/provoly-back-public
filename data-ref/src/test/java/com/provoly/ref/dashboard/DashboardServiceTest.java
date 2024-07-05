@@ -19,6 +19,7 @@ import com.provoly.common.dataset.GroupRights;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.model.AttributeDefDto;
 import com.provoly.common.model.OClassWriteDto;
+import com.provoly.common.model.field.FieldDto;
 import com.provoly.ref.dashboard.dto.DashboardWriteDto;
 import com.provoly.ref.dataset.DatasetService;
 import com.provoly.ref.groups.*;
@@ -272,9 +273,9 @@ class DashboardServiceTest {
     private DatasetDto initDataset(String... groups) {
         UUID fieldId = UUID.randomUUID();
         UUID attributeId = UUID.randomUUID();
-        testService.createAndSaveField(fieldId);
+        FieldDto fieldDto = testService.createAndSaveField(fieldId);
         AttributeDefDto attributeDefDto = testService.createAttributeDto(attributeId, "attributeName",
-                "attributeId" + attributeId, fieldId);
+                "attributeId" + attributeId, fieldDto);
         OClassWriteDto classDto = testService.createClassWriteDto(UUID.randomUUID(), "classDto", attributeDefDto);
         modelService.saveEntity(modelMapper.toModel(classDto));
 

@@ -9,8 +9,9 @@ import jakarta.inject.Inject;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.model.AttributeDefDetailsDto;
-import com.provoly.common.model.FieldDto;
 import com.provoly.common.model.OClassDetailsDto;
+import com.provoly.common.model.Type;
+import com.provoly.common.model.field.FieldDto;
 import com.provoly.common.search.*;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
@@ -47,7 +48,7 @@ public class ElasticFullTextQueryBuilder {
                         new AttributeConditionDto(attribute.getId(), fullSearchCondition.getValue(), Operator.CONTAINS));
             }
 
-            if (((field.type.equals("integer") && isValueInt) || (field.type.equals("long") && isValueLong))) {
+            if (((field.getType() == Type.INTEGER && isValueInt) || (field.getType() == Type.LONG && isValueLong))) {
                 var attributeCondition = new AttributeConditionDto(attribute.getId(), fullSearchCondition.getValue(),
                         Operator.EQUALS);
                 condition.composed.add(attributeCondition);
@@ -62,10 +63,10 @@ public class ElasticFullTextQueryBuilder {
                 : queryBuilder.buildQuery(oClass, condition, securityMetadata);
     }
 
-    private Collection<String> textFields = Set.of("keyword", "string");
+    private final Collection<Type> textFields = Set.of(Type.STRING, Type.KEYWORD);
 
     private boolean isText(FieldDto field) {
-        return textFields.contains(field.type);
+        return textFields.contains(field.getType());
     }
 
     private boolean isInteger(FullSearchConditionDto condition) {

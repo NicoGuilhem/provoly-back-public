@@ -1,42 +1,21 @@
-package com.provoly.common.model;
+package com.provoly.common.model.field;
 
 import java.util.UUID;
 
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 
-public class FieldDto {
-
+public class FieldGeoDto extends FieldDto {
     private static final String CRS_PREFIX = "EPSG:";
-    public UUID id;
-    public String name;
-    public String type;
-    public String slug;
-    public String crs; // CRS in format as "EPSG:2154"
+    private String crs;
 
-    public FieldDto() {
-    }
-
-    public FieldDto(UUID id, String name, String type, String slug, String crs) {
-        this.id = id;
-        this.name = name;
-        this.type = type;
-        this.slug = slug;
+    public FieldGeoDto(UUID id, String name, String type, String slug, String crs) {
+        super(id, name, type, slug);
         this.crs = crs;
     }
 
-    public Type getType() {
-        return Type.from(type);
-    }
-
-    @Override
-    public String toString() {
-        return "FieldDto{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", type='" + type + '\'' +
-                ", slug='" + slug + '\'' +
-                '}';
+    public String getCrs() {
+        return crs;
     }
 
     public int checkAndExtractSRID() {
@@ -61,5 +40,10 @@ public class FieldDto {
         } catch (NumberFormatException e) {
             throw new BusinessException(ErrorCode.TECHNICAL, "Field: " + this + " have an incompatible CRS");
         }
+    }
+
+    @Override
+    public void checkField() throws BusinessException {
+        this.checkAndExtractSRID();
     }
 }

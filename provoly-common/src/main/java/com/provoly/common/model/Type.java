@@ -49,15 +49,23 @@ public enum Type {
     }
 
     public static Type from(String name) {
-        return Type.valueOf(name.toUpperCase());
+        return name == null ? null : Type.valueOf(name.toUpperCase());
     }
 
     public boolean isNumeric() {
         return List.of(Type.INTEGER, Type.DECIMAL, Type.LONG).contains(this);
     }
 
+    public boolean isTypeCategoryNumeric() {
+        return typeCategory == TypeCategory.NUMERIC;
+    }
+
     public boolean isGeo() {
         return typeCategory == TypeCategory.GEO;
+    }
+
+    public boolean isDate() {
+        return typeCategory == TypeCategory.DATE;
     }
 
     public boolean isMultiGeo() {

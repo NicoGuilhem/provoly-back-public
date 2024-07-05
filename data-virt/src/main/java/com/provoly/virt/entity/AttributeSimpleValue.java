@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.provoly.common.model.AttributeDefDetailsDto;
-import com.provoly.common.model.FieldDto;
+import com.provoly.common.model.field.FieldDto;
 
 public class AttributeSimpleValue extends AttributeValue {
 
@@ -58,7 +58,7 @@ public class AttributeSimpleValue extends AttributeValue {
     }
 
     public String getSlugField() {
-        return getAttributeDef().getField().slug;
+        return getAttributeDef().getField().getSlug();
     }
 
     public boolean isVisible() {

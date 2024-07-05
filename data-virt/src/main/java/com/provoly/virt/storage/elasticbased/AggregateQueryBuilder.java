@@ -111,7 +111,7 @@ public class AggregateQueryBuilder {
         }
 
         if (aggregation.dateInterval() != null) {
-            if (Type.from(aggregatedByAttribute.getField().type) != Type.INSTANT) {
+            if (aggregatedByAttribute.getField().getType() != Type.INSTANT) {
                 throw new BusinessException(ErrorCode.BAD_REQUEST,
                         "Aggregating on date is unavailable for attribute %s that is not a date."
                                 .formatted(aggregatedByAttribute.getName()));
@@ -238,9 +238,9 @@ public class AggregateQueryBuilder {
     }
 
     private List<ItemAggregationDto.SimpleItemDto> getGroupByByAttributeType(MultiBucketBase term,
-            String type,
+            Type type,
             AggregateOperation operation) {
-        return switch (Type.from(type)) {
+        return switch (type) {
             case KEYWORD -> getGroupByValueDtos(operation, getAggregation(term, StorageLayout.GROUP_BY).sterms(),
                     stringTermsBucket -> stringTermsBucket.key()._get());
             case LONG, INTEGER ->
@@ -324,7 +324,7 @@ public class AggregateQueryBuilder {
             AttributeDefDetailsDto attrGroupBy) {
         if (attrGroupBy != null) {
             return new ItemAggregationDto.GroupedItemDto(key,
-                    getGroupByByAttributeType(term, attrGroupBy.getField().type, operation));
+                    getGroupByByAttributeType(term, attrGroupBy.getField().getType(), operation));
         }
         if (!term.aggregations().containsKey(StorageLayout.OPERATION_AGGS)) {
             return new ItemAggregationDto.SimpleItemDto(key, term.docCount());

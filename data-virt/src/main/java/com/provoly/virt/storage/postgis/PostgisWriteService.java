@@ -15,6 +15,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import com.provoly.common.Storage;
 import com.provoly.common.model.AttributeDefDetailsDto;
 import com.provoly.common.model.OClassDetailsDto;
+import com.provoly.common.model.field.FieldGeoDto;
 import com.provoly.virt.GeoHolder;
 import com.provoly.virt.entity.Item;
 import com.provoly.virt.storage.InsertionError;
@@ -102,7 +103,7 @@ class PostgisWriteService implements StorageWriteService {
     private Object preparePGValue(Object value, AttributeDefDetailsDto attributeDef) {
         return switch (value) {
             case null -> null;
-            case GeoHolder geo -> geo.getAsPgObject(attributeDef.getField().crs);
+            case GeoHolder geo -> geo.getAsPgObject(((FieldGeoDto) attributeDef.getField()).getCrs());
             case Instant instant -> Timestamp.from(instant);
             default -> value;
         };

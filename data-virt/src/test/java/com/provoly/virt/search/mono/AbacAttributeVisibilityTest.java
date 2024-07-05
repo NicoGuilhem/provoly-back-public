@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import jakarta.inject.Inject;
 
@@ -53,8 +54,8 @@ public class AbacAttributeVisibilityTest {
         authService.init();
 
         // create class document (title is open data, author is sensible data)
-        var titleField = testData.createField("title", "string");
-        var authorField = testData.createField("author", "string");
+        var titleField = testData.createField("title_%s".formatted(UUID.randomUUID()), "string");
+        var authorField = testData.createField("author_%s".formatted(UUID.randomUUID()), "string");
         this.titleAttribute = testData.createAttribute("title", titleField);
         this.authorAttribute = testData.createAttribute("author", authorField);
         documentClass = testData.createClass(companion, "document", this.titleAttribute, this.authorAttribute);

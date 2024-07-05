@@ -4,7 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
-import com.provoly.common.model.FieldDto;
+import com.provoly.common.model.field.FieldDto;
 import com.provoly.common.ref.*;
 import com.provoly.ref.datasetversion.DatasetVersion;
 import com.provoly.ref.datasetversion.DatasetVersionMapper;

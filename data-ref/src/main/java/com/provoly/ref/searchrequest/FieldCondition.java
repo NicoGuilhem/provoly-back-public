@@ -5,7 +5,7 @@ import java.util.UUID;
 import jakarta.persistence.*;
 
 import com.provoly.common.search.Operator;
-import com.provoly.ref.model.Field;
+import com.provoly.ref.model.field.Field;
 
 @Entity
 // TODO : Is a Field condition should be a Condition ?

@@ -11,9 +11,10 @@ import com.provoly.common.Storage;
 import com.provoly.common.imports.ExtractedMessage;
 import com.provoly.common.imports.MessageLevel;
 import com.provoly.common.model.AttributeDefDetailsDto;
-import com.provoly.common.model.FieldDto;
 import com.provoly.common.model.OClassDetailsDto;
 import com.provoly.common.model.Type;
+import com.provoly.common.model.field.FieldDto;
+import com.provoly.common.model.field.FieldGeoDto;
 import com.provoly.virt.imports.model.ConversionResult;
 import com.provoly.virt.imports.model.ItemRecord;
 
@@ -48,12 +49,13 @@ public class RecordConvertorTest {
         List<AttributeDefDetailsDto> attributeDefDetailsDtoList = new ArrayList<>();
         for (Type type : Type.values()) {
             FieldDto fieldDto = new FieldDto();
-            fieldDto.type = type.getName().toLowerCase();
-            fieldDto.id = UUID.randomUUID();
             if (type.isGeo()) {
-                fieldDto.crs = "EPSG:4326";
+                fieldDto = new FieldGeoDto(UUID.randomUUID(), "name_%s".formatted(UUID.randomUUID()), type.getName(),
+                        type.getName(), "EPSG:4326");
+            } else {
+                fieldDto = new FieldDto(UUID.randomUUID(), "name_%s".formatted(UUID.randomUUID()), type.getName(),
+                        type.getName());
             }
-
             AttributeDefDetailsDto att = new AttributeDefDetailsDto();
             att.setName(type.getName().toLowerCase());
             att.setTechnicalName(type.getName().toLowerCase());

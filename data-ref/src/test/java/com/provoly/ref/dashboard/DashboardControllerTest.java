@@ -21,6 +21,7 @@ import com.provoly.common.metadata.MetadataValueReadDto;
 import com.provoly.common.metadata.MetadataValueWriteDto;
 import com.provoly.common.model.AttributeDefDto;
 import com.provoly.common.model.OClassWriteDto;
+import com.provoly.common.model.field.FieldDto;
 import com.provoly.common.user.Role;
 import com.provoly.ref.dashboard.dto.DashboardReadDto;
 import com.provoly.ref.dashboard.dto.DashboardWriteDto;
@@ -326,9 +327,9 @@ class DashboardControllerTest {
     private DatasetDto initDataset() {
         UUID fieldId = UUID.randomUUID();
         UUID attributeId = UUID.randomUUID();
-        testService.createAndSaveField(fieldId);
+        FieldDto fieldDto = testService.createAndSaveField(fieldId);
         AttributeDefDto attributeDefDto = testService.createAttributeDto(attributeId, "attributeName",
-                "attributeId" + attributeId, fieldId);
+                "attributeId" + attributeId, fieldDto);
         OClassWriteDto classDto = testService.createClassWriteDto(UUID.randomUUID(), "classDto", attributeDefDto);
         modelService.saveEntity(modelMapper.toModel(classDto));
 

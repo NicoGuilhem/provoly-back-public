@@ -21,7 +21,6 @@ import com.provoly.common.item.ItemDto;
 import com.provoly.common.metadata.MetadataSystem;
 import com.provoly.common.metadata.MetadataValueWriteDto;
 import com.provoly.common.model.AttributeDefDto;
-import com.provoly.common.model.Type;
 import com.provoly.common.search.*;
 import com.provoly.test.*;
 import com.provoly.virt.GeoHolder;
@@ -80,12 +79,12 @@ public class SearchMonoTest {
 
         var dataStorage = dataStorages.get(storage);
 
-        var idVehicleField = testData.createField("id_vehicle", Type.KEYWORD);
-        var chocField = testData.createField("choc", Type.INTEGER);
-        var positionField = testData.createField("position", Type.POINT, "EPSG:4326");
-        var dateField = testData.createField("date", Type.INSTANT);
-        var geoShapeLambertField = testData.createField("geo_lambert", Type.POINT, "EPSG:2154");
-        var stringField = testData.createField("string", Type.STRING);
+        var idVehicleField = testData.createField("id_vehicle_%s".formatted(UUID.randomUUID()), "keyword");
+        var chocField = testData.createField("choc_%s".formatted(UUID.randomUUID()), "integer");
+        var positionField = testData.createField("position_%s".formatted(UUID.randomUUID()), "Point", "EPSG:4326");
+        var dateField = testData.createField("date_%s".formatted(UUID.randomUUID()), "instant", "MONTH");
+        var geoShapeLambertField = testData.createField("geo_lambert_%s".formatted(UUID.randomUUID()), "Point", "EPSG:2154");
+        var stringField = testData.createField("string_%s".formatted(UUID.randomUUID()), "string");
 
         dataStorage.attributeIdVehicule = testData.createAttribute("id_vehicle", idVehicleField);
         dataStorage.attributeChoc = testData.createAttribute("choc", chocField);

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import jakarta.inject.Inject;
 
@@ -58,7 +59,7 @@ public class MonoSearchRelationServiceTest {
     @Order(1)
     public void monoQueryResultContainsRelationBetweenItems() {
         prepareData();
-        var field = testData.createField("name", "keyword");
+        var field = testData.createField("nom_du_field_%s".formatted(UUID.randomUUID()), "keyword");
         var attribute = testData.createAttribute("name", field);
 
         var voitureClass = testData.createClass(companion, "voiture", attribute);
@@ -83,7 +84,7 @@ public class MonoSearchRelationServiceTest {
     @Order(2)
     public void onlyRelationInItemsOfResultSet() {
 
-        var field1 = testData.createField("field1", "string");
+        var field1 = testData.createField("field1_%s".formatted(UUID.randomUUID()), "string");
         var attribute = testData.createAttribute("attr1", field1);
 
         var voitureClass = testData.createClass(companion, "voiture", attribute);

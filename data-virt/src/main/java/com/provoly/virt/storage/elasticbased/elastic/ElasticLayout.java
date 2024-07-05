@@ -69,14 +69,14 @@ class ElasticLayout extends StorageLayout {
     public String buildAggregateAttributePath(AttributeDefDetailsDto attribute) {
         String elasticPath = buildAttributeRootPath(attribute);
         String elasticField = buildElasticAttributeName(attribute);
-        if (attribute.getField().type.equals(Type.KEYWORD.getName())) {
+        if (attribute.getField().getType() == Type.KEYWORD) {
             return "%s.%s.%s".formatted(elasticPath, elasticField, AGGREGATION_SUFFIX);
         }
         return "%s.%s".formatted(elasticPath, elasticField);
     }
 
     public String buildElasticAttributeName(AttributeDefDetailsDto attributeDef) {
-        return attributeDef.getField().slug + "_" + ATTRIBUTE_FIELD_SUFFIX;
+        return attributeDef.getField().getSlug() + "_" + ATTRIBUTE_FIELD_SUFFIX;
     }
 
     public String buildElasticAttributeName(AttributeSimpleValue attribute) {

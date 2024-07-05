@@ -4,8 +4,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.provoly.common.model.FieldDto;
 import com.provoly.common.model.Type;
+import com.provoly.common.model.field.FieldDto;
 
 public class IntermediateModel {
 
@@ -16,7 +16,7 @@ public class IntermediateModel {
     }
 
     public void addAttribute(String name, FieldDto fieldDto) {
-        attributes.put(name, new IntermediateModelAttribute(name, Type.from(fieldDto.type)));
+        attributes.put(name, new IntermediateModelAttribute(name, fieldDto.getType()));
     }
 
     public Type getAttributeType(String name) {

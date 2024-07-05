@@ -14,9 +14,10 @@ import com.provoly.common.dataset.DatasetVersionDto;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.model.AttributeDefDetailsDto;
-import com.provoly.common.model.FieldDto;
 import com.provoly.common.model.OClassDetailsDto;
 import com.provoly.common.model.Type;
+import com.provoly.common.model.field.FieldDto;
+import com.provoly.common.model.field.FieldGeoDto;
 import com.provoly.virt.storage.StorageModelService;
 import com.provoly.virt.storage.StorageQualifier;
 
@@ -170,7 +171,7 @@ class PostgisModelService implements StorageModelService {
         FieldDto field = attribute.getField();
         Type type = field.getType();
 
-        return type.isGeo() ? type.getPostgisType().getGeoType(field.checkAndExtractSRID())
+        return type.isGeo() ? type.getPostgisType().getGeoType(((FieldGeoDto) field).checkAndExtractSRID())
                 : type.getPostgisType().getType();
     }
 

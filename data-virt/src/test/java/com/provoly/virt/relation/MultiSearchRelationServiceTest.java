@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import jakarta.inject.Inject;
 
@@ -65,7 +66,7 @@ public class MultiSearchRelationServiceTest {
     @Test
     public void multiQueryResultContainsRelationBetweenItems() {
 
-        var field1 = testData.createField("field1", "integer");
+        var field1 = testData.createField("nom_du_field1_%s".formatted(UUID.randomUUID()), "integer");
 
         var attributeVoiture = testData.createAttribute("attr1", field1);
         var voitureClass = testData.createClass(companion, "voiture", attributeVoiture);
@@ -86,7 +87,7 @@ public class MultiSearchRelationServiceTest {
         itemsTestTools.createRelation(relationType, voiture1, caracteristique1);
         itemsTestTools.createRelation(relationType, voiture2, caracteristique1);
 
-        FieldConditionDto fieldCondition = new FieldConditionDto(field1.id, "42");
+        FieldConditionDto fieldCondition = new FieldConditionDto(field1.getId(), "42");
         var request = new MultiClassRequestDto(MultiSearchType.AND, List.of(), List.of(fieldCondition));
         var result = searchController.search(request, null);
 

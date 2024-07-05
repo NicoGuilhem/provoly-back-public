@@ -3,6 +3,7 @@ package com.provoly.common.model;
 import java.util.UUID;
 
 import com.provoly.common.Default;
+import com.provoly.common.model.field.FieldDto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
@@ -10,7 +11,7 @@ public class AttributeDefDto {
     private UUID id;
     private String name;
     private String technicalName;
-    private UUID field;
+    private FieldDto field;
     private UUID category;
     private boolean multiValued;
     private String slug;
@@ -20,7 +21,7 @@ public class AttributeDefDto {
 
     @Default
     @JsonCreator
-    public AttributeDefDto(UUID id, String name, String technicalName, UUID field, UUID category, boolean multiValued,
+    public AttributeDefDto(UUID id, String name, String technicalName, FieldDto field, UUID category, boolean multiValued,
             String slug) {
         this.id = id;
         this.name = name;
@@ -31,7 +32,7 @@ public class AttributeDefDto {
         this.slug = slug;
     }
 
-    public AttributeDefDto(UUID id, String name, String technicalName, UUID field) {
+    public AttributeDefDto(UUID id, String name, String technicalName, FieldDto field) {
         this.id = id;
         this.name = name;
         this.technicalName = technicalName;
@@ -57,7 +58,7 @@ public class AttributeDefDto {
         return technicalName;
     }
 
-    public UUID getField() {
+    public FieldDto getField() {
         return field;
     }
 
@@ -93,7 +94,7 @@ public class AttributeDefDto {
         this.slug = slug;
     }
 
-    public void setField(UUID field) {
+    public void setField(FieldDto field) {
         this.field = field;
     }
 

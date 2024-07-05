@@ -1,6 +1,6 @@
 package com.provoly.common.ref;
 
-import com.provoly.common.model.FieldDto;
+import com.provoly.common.model.field.FieldDto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 

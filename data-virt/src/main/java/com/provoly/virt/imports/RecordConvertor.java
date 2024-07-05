@@ -20,6 +20,7 @@ import com.provoly.common.item.GeoFormat;
 import com.provoly.common.model.AttributeDefDetailsDto;
 import com.provoly.common.model.OClassDetailsDto;
 import com.provoly.common.model.Type;
+import com.provoly.common.model.field.FieldGeoDto;
 import com.provoly.virt.GeoHolder;
 import com.provoly.virt.imports.model.ConversionResult;
 import com.provoly.virt.imports.model.ItemRecord;
@@ -97,7 +98,7 @@ public class RecordConvertor {
             case Date d -> assignTo(d, type);
             case Instant instant -> assignTo(instant, type);
             case GeoHolder geo -> assignTo(geo, type, normalizeGeo);
-            default -> throw new BusinessException(com.provoly.common.error.ErrorCode.BAD_REQUEST,
+            default -> throw new BusinessException(ErrorCode.BAD_REQUEST,
                     "Cannot assign value %s, type not supported".formatted(value));
         };
     }
@@ -185,8 +186,13 @@ public class RecordConvertor {
         Type type = attribute.getField().getType();
 
         try {
-            values.put(attribute.getTechnicalName(), assignTo(value, type, normalizeGeo, attribute.getField().crs, geoFormat));
-
+            if (attribute.getField().getType().isGeo()) {
+                values.put(attribute.getTechnicalName(),
+                        assignTo(value, type, normalizeGeo, ((FieldGeoDto) attribute.getField()).getCrs(), geoFormat));
+            } else {
+                values.put(attribute.getTechnicalName(),
+                        assignTo(value, type, normalizeGeo, null, geoFormat));
+            }
         } catch (BusinessException | IllegalArgumentException | DateTimeParseException exception) {
             FileImportDto.ParamsTypeError paramsError = new FileImportDto.ParamsTypeError(attribute.getName(),
                     attribute.getField().getType(), value.toString());

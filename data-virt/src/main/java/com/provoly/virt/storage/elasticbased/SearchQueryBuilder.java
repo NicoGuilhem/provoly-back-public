@@ -117,10 +117,10 @@ public class SearchQueryBuilder {
             AttributeConditionDto conditionDto,
             ComposedConditionDto securityMetadata) {
         String elasticPath = storageLayout.buildAttributeRootPath(attribute);
-        validateTypeFieldValue(attribute.getField().type, conditionDto.getValue());
+        validateTypeFieldValue(attribute.getField().getType(), conditionDto.getValue());
 
         if (conditionDto.getUpperValue() != null) {
-            validateTypeFieldValue(attribute.getField().type, conditionDto.getUpperValue());
+            validateTypeFieldValue(attribute.getField().getType(), conditionDto.getUpperValue());
         }
 
         var attributeQuery = leafBuildQuery(conditionDto, attribute);
@@ -321,10 +321,10 @@ public class SearchQueryBuilder {
         // spotless:on
     }
 
-    public void validateTypeFieldValue(String type, String value) {
+    public void validateTypeFieldValue(Type type, String value) {
         log.tracef("Check if type of value %s match with type %s", value, type);
         try {
-            switch (Type.from(type)) {
+            switch (type) {
                 case INTEGER -> Integer.parseInt(value);
                 case LONG -> Long.parseLong(value);
                 case DECIMAL -> Double.parseDouble(value);

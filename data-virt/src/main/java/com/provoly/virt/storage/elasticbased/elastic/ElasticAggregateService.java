@@ -12,7 +12,6 @@ import com.provoly.common.Storage;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.model.OClassDetailsDto;
-import com.provoly.common.model.Type;
 import com.provoly.common.search.*;
 import com.provoly.virt.search.mono.MonoClassContextRequest;
 import com.provoly.virt.storage.StorageAggregateService;
@@ -80,7 +79,7 @@ class ElasticAggregateService implements StorageAggregateService {
 
             List<ItemAggregationDto> items = elasticAggregateBuilder.buildValuesByAttributeType(result,
                     aggregationParam,
-                    Type.from(attributeDetail.getField().type),
+                    attributeDetail.getField().getType(),
                     attributeGroupByDetail);
 
             return new AggregationResultDto(aggregationParam.operation(), items);

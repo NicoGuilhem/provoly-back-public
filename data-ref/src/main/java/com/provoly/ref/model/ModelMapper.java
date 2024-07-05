@@ -5,16 +5,17 @@ import java.util.Collection;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.model.*;
+import com.provoly.common.model.field.*;
 import com.provoly.common.search.FieldConditionDto;
 import com.provoly.ref.category.Category;
+import com.provoly.ref.model.field.*;
+import com.provoly.ref.model.field.FieldGeo;
+import com.provoly.ref.model.field.FieldNumeric;
 import com.provoly.ref.searchrequest.FieldCondition;
 
-import org.mapstruct.CollectionMappingStrategy;
-import org.mapstruct.InheritInverseConfiguration;
-import org.mapstruct.InjectionStrategy;
-import org.mapstruct.Mapper;
+import org.mapstruct.*;
 
-@Mapper(componentModel = "jakarta", injectionStrategy = InjectionStrategy.CONSTRUCTOR, collectionMappingStrategy = CollectionMappingStrategy.ADDER_PREFERRED, uses = {
+@Mapper(componentModel = "jakarta", injectionStrategy = InjectionStrategy.CONSTRUCTOR, subclassExhaustiveStrategy = SubclassExhaustiveStrategy.COMPILE_ERROR, collectionMappingStrategy = CollectionMappingStrategy.ADDER_PREFERRED, uses = {
         EntityLoader.class, EntitySlugMapper.class, OClassMapper.class, OclassMetadataValueMapper.class,
         AttributeCategoryMapper.class })
 public interface ModelMapper {
@@ -42,11 +43,18 @@ public interface ModelMapper {
     Category toModel(CategoryDto dto);
 
     // Field
+    @SubclassMapping(source = FieldNumericDto.class, target = FieldNumeric.class)
+    @SubclassMapping(source = FieldGeoDto.class, target = FieldGeo.class)
+    @SubclassMapping(source = FieldDecimalDto.class, target = FieldDecimal.class)
+    @SubclassMapping(source = FieldDateDto.class, target = FieldDate.class)
     Field toModel(FieldDto dto);
 
     Collection<Field> toModel(Collection<FieldDto> fields);
 
-    @InheritInverseConfiguration
+    @SubclassMapping(source = FieldNumeric.class, target = FieldNumericDto.class)
+    @SubclassMapping(source = FieldGeo.class, target = FieldGeoDto.class)
+    @SubclassMapping(source = FieldDecimal.class, target = FieldDecimalDto.class)
+    @SubclassMapping(source = FieldDate.class, target = FieldDateDto.class)
     FieldDto toDto(Field field);
 
     Collection<FieldDto> toFieldDto(Collection<Field> dto);

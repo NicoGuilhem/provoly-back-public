@@ -3,7 +3,7 @@ openapi: 3.0.3
 info:
   title: Virtualize API
   x-logo:
-    url: .\docs\modules\ROOT\images\provoly.png
+    url: ../provoly-back/main/_images/provoly.png
     backgroundColor: "#FFFFFF"
     altText: "Provoly logo"
   description: |

@@ -4,12 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import jakarta.inject.Inject;
 
 import com.provoly.common.item.ItemsSearchResultDto;
 import com.provoly.common.model.AttributeDefDto;
-import com.provoly.common.model.FieldDto;
+import com.provoly.common.model.field.FieldDto;
 import com.provoly.common.relation.RelationTypeDto;
 import com.provoly.test.AuthService;
 import com.provoly.test.ProvolyKafkaCompanionResource;
@@ -58,7 +59,7 @@ public class ItemsRelationsServiceTest {
         authService.authenticate();
         relationType = testDataService.createRelationTypeDto();
 
-        field = testDataService.createField("name", "keyword");
+        field = testDataService.createField("name_%s".formatted(UUID.randomUUID()), "keyword");
         attribute = testDataService.createAttribute("name", field);
 
     }

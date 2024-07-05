@@ -2,6 +2,8 @@ package com.provoly.common.model;
 
 import java.util.UUID;
 
+import com.provoly.common.model.field.FieldDto;
+
 public class AttributeDefDetailsDto {
 
     private UUID oclass;

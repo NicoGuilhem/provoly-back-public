@@ -3,7 +3,7 @@ openapi: 3.0.3
 info:
   title: API of transformation engine
   x-logo:
-    url: .\docs\modules\ROOT\images\provoly.png
+    url: ../provoly-back/main/_images/provoly.png
     backgroundColor: "#FFFFFF"
     altText: "Provoly logo"
   description: The transformation engine API can be used to configure transformations.

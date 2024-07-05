@@ -1,7 +1,6 @@
 package com.provoly.ref.model;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -76,48 +75,6 @@ public class ModelController {
     @RolesAllowed({ Role.STR_CLASS_READ, Role.STR_SEARCH, Role.STR_DATASOURCE_READ })
     public Collection<CategoryDto> getCategories() {
         return mapper.toCategoryDto(categoryService.getAll(WithCategoryEntityType.ATTRIBUTES));
-    }
-
-    @POST
-    @Path("/field")
-    @RolesAllowed({ Role.STR_FIELD_WRITE })
-    public void addField(FieldDto field) {
-        modelService.addFields(Collections.singletonList(field));
-    }
-
-    @POST
-    @Path("/fields")
-    @RolesAllowed({ Role.STR_FIELD_WRITE })
-    public void addFields(Collection<FieldDto> fields) throws ProvolyNotFoundException {
-        modelService.addFields(fields);
-    }
-
-    @GET
-    @Path("/fields")
-    @RolesAllowed({ Role.STR_FIELD_READ, Role.STR_SEARCH, Role.STR_DATASOURCE_READ })
-    public Collection<FieldDto> getFields() {
-        return mapper.toFieldDto(modelService.getAllFields());
-    }
-
-    @GET
-    @Path("/fields/{id}")
-    @RolesAllowed({ Role.STR_FIELD_READ, Role.STR_ITEM_WRITE, Role.STR_SEARCH })
-    public FieldDto getFieldById(UUID id) {
-        return mapper.toDto(modelService.getFieldById(id));
-    }
-
-    @DELETE
-    @Path("/fields/{id}")
-    @RolesAllowed({ Role.STR_FIELD_WRITE })
-    public void deleteFieldById(UUID id) {
-        modelService.deleteFieldById(id);
-    }
-
-    @GET
-    @Path("/fields/class/{id}")
-    @RolesAllowed({ Role.STR_FIELD_READ, Role.STR_SEARCH, Role.STR_ITEM_WRITE, Role.STR_DATASOURCE_READ })
-    public Collection<FieldDto> getFieldsForClass(UUID id) {
-        return mapper.toFieldDto(modelService.getFieldForClass(id));
     }
 
     @GET

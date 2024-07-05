@@ -15,7 +15,6 @@ import com.provoly.common.error.BusinessException;
 import com.provoly.common.metadata.MetadataSystem;
 import com.provoly.common.metadata.MetadataValueWriteDto;
 import com.provoly.common.model.AttributeDefDto;
-import com.provoly.common.model.Type;
 import com.provoly.common.search.*;
 import com.provoly.test.*;
 import com.provoly.virt.GeoHolder;
@@ -77,12 +76,13 @@ public class AggregateServiceTest {
         authService.authenticate();
         var dataStorage = dataStorages.get(storage);
 
-        var idVehicleField = testData.createField("aggregate_id", Type.KEYWORD);
-        var chocField = testData.createField("aggregate_number", Type.INTEGER);
-        var positionField = testData.createField("aggregate_position", Type.POINT, "EPSG:4326");
-        var positionFieldEmpty = testData.createField("aggregate_positionEmpty", Type.POINT, "EPSG:4326");
-        var dateField = testData.createField("aggregate_date", Type.INSTANT);
-        var stringField = testData.createField("aggregate_string", Type.STRING);
+        var idVehicleField = testData.createField("aggregate_id_%s".formatted(UUID.randomUUID()), "keyword");
+        var chocField = testData.createField("aggregate_number_%s".formatted(UUID.randomUUID()), "integer");
+        var positionField = testData.createField("aggregate_position_%s".formatted(UUID.randomUUID()), "Point", "EPSG:4326");
+        var positionFieldEmpty = testData.createField("aggregate_positionEmpty_%s".formatted(UUID.randomUUID()), "Point",
+                "EPSG:4326");
+        var dateField = testData.createField("aggregate_date_%s".formatted(UUID.randomUUID()), "instant", "MONTH");
+        var stringField = testData.createField("aggregate_string_%s".formatted(UUID.randomUUID()), "string");
 
         dataStorage.attributeIdVehicle = testData.createAttribute("aggregate_id_vehicle", idVehicleField);
         dataStorage.attributeString = testData.createAttribute("aggregate_string", stringField);
@@ -201,7 +201,7 @@ public class AggregateServiceTest {
         Assertions.assertThatThrownBy(() -> searchService.aggregate(params, request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(
-                        "It's not possible to aggregate on the non-numeric attribute %s which has type keyword"
+                        "It's not possible to aggregate on the non-numeric attribute %s which has type KEYWORD"
                                 .formatted(dataStorage.attributeIdVehicle.getName()));
     }
 
@@ -218,7 +218,7 @@ public class AggregateServiceTest {
         Assertions.assertThatThrownBy(() -> searchService.aggregate(params, request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(
-                        "It's not possible to aggregate on the non-numeric attribute %s which has type keyword"
+                        "It's not possible to aggregate on the non-numeric attribute %s which has type KEYWORD"
                                 .formatted(dataStorage.attributeIdVehicle.getName()));
     }
 
@@ -514,7 +514,7 @@ public class AggregateServiceTest {
         Assertions.assertThatThrownBy(() -> searchService.aggregate(params, request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(
-                        "Aggregation on the non-geo attribute aggregate_choc which has type integer is not possible."
+                        "Aggregation on the non-geo attribute aggregate_choc which has type INTEGER is not possible."
                                 .formatted(dataStorage.attributeChoc.getName()));
 
     }

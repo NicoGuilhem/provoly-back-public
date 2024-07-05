@@ -9,6 +9,7 @@ import com.provoly.common.Storage;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.model.*;
+import com.provoly.common.model.field.FieldDto;
 import com.provoly.test.DatasetFactory;
 
 import io.quarkus.test.Mock;
@@ -80,23 +81,35 @@ public class ModelServiceMock implements ModelService {
     }
 
     @Override
-    public void addFields(Collection<FieldDto> fieldDtoCollection) {
+    public void updateField(UUID id, FieldDto fieldDto) {
+
+    }
+
+    @Override
+    public Collection<FieldDto> getFields() {
+        return List.of();
+    }
+
+    @Override
+    public void deleteFieldById(UUID id) {
+
+    }
+
+    @Override
+    public void addField(FieldDto fieldDto) {
 
     }
 
     private FieldDto createField(String name, Type type) {
-        var fieldDto = new FieldDto();
-        fieldDto.id = UUID.randomUUID();
-        fieldDto.name = name + "-" + fieldDto.id;
-        fieldDto.type = type.name();
-        return fieldDto;
+        UUID fieldId = UUID.randomUUID();
+        return new FieldDto(fieldId, name + "-" + fieldId, type.name(), "");
     }
 
     private AttributeDefDto createAttribute(String name, FieldDto field) {
         AttributeDefDto attr = new AttributeDefDto();
         attr.setId(UUID.randomUUID());
         attr.setName(name);
-        attr.setField(field.id);
+        attr.setField(field);
         return attr;
     }
 

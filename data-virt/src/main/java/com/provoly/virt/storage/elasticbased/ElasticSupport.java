@@ -10,6 +10,7 @@ import com.provoly.common.error.ErrorCode;
 import com.provoly.common.item.GeoFormat;
 import com.provoly.common.model.AttributeDefDetailsDto;
 import com.provoly.common.model.OClassDetailsDto;
+import com.provoly.common.model.field.FieldGeoDto;
 import com.provoly.common.search.MonoClassRequestDto;
 import com.provoly.virt.GeoHolder;
 import com.provoly.virt.entity.AttributeSimpleValue;
@@ -24,7 +25,7 @@ public class ElasticSupport {
     // Only used by elastic based storage, should be moved in elastic package
     public void extractAttributeValue(AttributeSimpleValue attributeValue, Object attribute) {
         var value = switch (attributeValue.getFieldType().getTypeCategory()) {
-            case GEO -> new GeoHolder(attribute, elasticGeoFormat, attributeValue.getField().crs);
+            case GEO -> new GeoHolder(attribute, elasticGeoFormat, ((FieldGeoDto) attributeValue.getField()).getCrs());
             case DATE -> toIsoDate(attribute.toString());
             default -> attribute;
         };

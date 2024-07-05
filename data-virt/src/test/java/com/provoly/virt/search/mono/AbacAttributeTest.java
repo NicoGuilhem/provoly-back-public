@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import jakarta.inject.Inject;
 
@@ -60,9 +61,9 @@ public class AbacAttributeTest {
         authService.init();
 
         // create class vehicule
-        var titleField = testData.createField("title", "string");
-        var nbWordField = testData.createField("nbWord", "integer");
-        var authorField = testData.createField("author", "string");
+        var titleField = testData.createField("title_%s".formatted(UUID.randomUUID()), "string");
+        var nbWordField = testData.createField("nbWord_%s".formatted(UUID.randomUUID()), "integer");
+        var authorField = testData.createField("author_%s".formatted(UUID.randomUUID()), "string");
         titleAttribute = testData.createAttribute("title", titleField);
         nbWordAttribute = testData.createAttribute("nbWord", nbWordField);
         authorAttribute = testData.createAttribute("author", authorField);

@@ -1,4 +1,6 @@
 quarkus:
+  devservices:
+    timeout: 10m
   kubernetes-client:
     devservices:
       enabled: false

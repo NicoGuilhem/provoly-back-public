@@ -8,6 +8,7 @@ import jakarta.persistence.ManyToOne;
 import com.provoly.common.Default;
 import com.provoly.common.model.Type;
 import com.provoly.ref.entity.EntitySlug;
+import com.provoly.ref.model.field.Field;
 
 import org.hibernate.annotations.Immutable;
 

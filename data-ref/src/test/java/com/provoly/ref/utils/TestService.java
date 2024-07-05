@@ -7,42 +7,21 @@ import java.util.*;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaDelete;
-import jakarta.persistence.criteria.Root;
 import jakarta.transaction.Transactional;
 
 import com.provoly.common.Storage;
 import com.provoly.common.model.AttributeDefDto;
-import com.provoly.common.model.FieldDto;
 import com.provoly.common.model.OClassWriteDto;
 import com.provoly.common.model.Type;
+import com.provoly.common.model.field.FieldDto;
 import com.provoly.ref.KeycloakClientBuilder;
-import com.provoly.ref.abac.AbacService;
-import com.provoly.ref.abac.predicate.PredicateService;
-import com.provoly.ref.category.CategoryRepository;
-import com.provoly.ref.category.CategoryService;
-import com.provoly.ref.category.WithCategoryEntityType;
-import com.provoly.ref.dashboard.DashboardRepository;
-import com.provoly.ref.dashboard.DashboardService;
-import com.provoly.ref.dataset.DatasetService;
-import com.provoly.ref.datasetversion.DatasetVersionMessageService;
-import com.provoly.ref.datasetversion.DatasetVersionRepository;
 import com.provoly.ref.entity.EntityNamed;
-import com.provoly.ref.entity.EntityType;
-import com.provoly.ref.groups.GroupRelations;
 import com.provoly.ref.groups.GroupRepository;
 import com.provoly.ref.groups.GroupService;
 import com.provoly.ref.groups.GroupWrite;
-import com.provoly.ref.link.LinkService;
 import com.provoly.ref.message.websocket.MessageSocketServer;
 import com.provoly.ref.message.websocket.SessionMock;
-import com.provoly.ref.metadata.MetadataService;
-import com.provoly.ref.metadata.MetadataValue;
-import com.provoly.ref.model.ModelService;
-import com.provoly.ref.relation.RelationTypeService;
-import com.provoly.ref.user.NamedQueryService;
-import com.provoly.ref.widget.WidgetRepository;
+import com.provoly.ref.model.field.FieldService;
 import com.provoly.security.CurrentSubjectProvider;
 
 @ApplicationScoped
@@ -56,50 +35,19 @@ public class TestService {
     //    Il n'est pas possible non plus d'utiliser le AuthService a la place du @TestSecurity car le AuthService appelle le client DataRef.
 
     @Inject
-    ModelService modelService;
-
-    @Inject
     KeycloakClientBuilder keycloakClientBuilder;
-
     @Inject
     MessageSocketServer messageSocketServer;
-
     @Inject
     SessionMock sessionMock;
     @Inject
-    NamedQueryService namedQueryService;
-    @Inject
     EntityManager entityManager;
-    @Inject
-    DatasetService datasetService;
-    @Inject
-    MetadataService metadataService;
-    @Inject
-    DashboardService dashboardService;
-    @Inject
-    DashboardRepository dashboardRepository;
     @Inject
     GroupService groupService;
     @Inject
     GroupRepository groupRepository;
     @Inject
-    DatasetVersionMessageService datasetVersionMessageService;
-    @Inject
-    AbacService abacService;
-    @Inject
-    PredicateService predicateService;
-    @Inject
-    LinkService linkService;
-    @Inject
-    RelationTypeService relationTypeService;
-    @Inject
-    DatasetVersionRepository datasetVersionRepository;
-    @Inject
-    WidgetRepository widgetRepository;
-    @Inject
-    CategoryService categoryService;
-    @Inject
-    CategoryRepository categoryRepository;
+    FieldService fieldService;
 
     public OClassWriteDto createClassWriteDto(UUID id, String name, AttributeDefDto... attributeDefDtos) {
         return createClassWriteDto(id, name, Storage.ELASTIC, attributeDefDtos);
@@ -118,12 +66,12 @@ public class TestService {
 
     }
 
-    public AttributeDefDto createAttributeDto(UUID id, String name, String technicalName, UUID fieldId) {
-        return new AttributeDefDto(id, name, technicalName, fieldId);
+    public AttributeDefDto createAttributeDto(UUID id, String name, String technicalName, FieldDto fieldDto) {
+        return new AttributeDefDto(id, name, technicalName, fieldDto);
     }
 
-    public void createAndSaveField(UUID fieldId) {
-        createAndSaveField("field1", (Type.STRING).getName(), fieldId);
+    public FieldDto createAndSaveField(UUID fieldId) {
+        return createAndSaveField("field1", (Type.STRING).getName().toUpperCase(), fieldId);
     }
 
     public FieldDto createAndSaveField() {
@@ -135,11 +83,8 @@ public class TestService {
     }
 
     public FieldDto createAndSaveField(String name, String type, UUID fieldId) {
-        var fieldDto = new FieldDto();
-        fieldDto.id = fieldId;
-        fieldDto.name = name + "-" + fieldDto.id;
-        fieldDto.type = type;
-        modelService.addFields(Collections.singleton(fieldDto));
+        var fieldDto = new FieldDto(fieldId, name + "-" + fieldId, type, "");
+        fieldService.addField(fieldDto);
         return fieldDto;
     }
 
@@ -178,44 +123,11 @@ public class TestService {
 
     @Transactional
     public void clean() {
-        namedQueryService.getNamedQueriesForCurrentUser()
-                .forEach(nq -> namedQueryService.removeNamedQueryIfExists(nq.getNamedQuery().getId()));
-        abacService.getAllRules().forEach(abac -> entityManager.remove(entityManager.merge(abac)));
-        predicateService.getAllPredicates().forEach(predicate -> entityManager.remove(entityManager.merge(predicate)));
-        linkService.getAll().forEach(link -> linkService.delete(link.getId()));
-        datasetVersionRepository.getAll().forEach(dv -> {
-            List<MetadataValue> metadataValues = metadataService.getMetadataValueByEntityId(dv.getId());
-            metadataValues.forEach(metadataValue -> {
-                metadataService.deleteMetadataValueByEntityId(dv.getId(), metadataValue.getMetadataDefId(),
-                        EntityType.DATASET_VERSION);
-            });
-            datasetVersionMessageService.deleteAllDatasetVersionMessage(dv.getId());
-            datasetVersionRepository.deleteDatasetVersion(dv.getId());
-        });
-        datasetService.getAll().forEach(dataset -> {
-            List<MetadataValue> metadataValues = metadataService.getMetadataValueByEntityId(dataset.getId());
-            metadataValues.forEach(metadataValue -> {
-                metadataService.deleteMetadataValueByEntityId(dataset.getId(),
-                        metadataValue.getMetadataDefId(), EntityType.DATASET);
-            });
-            categoryRepository.deleteAllByEntityId(dataset.getId());
-            entityManager.remove(entityManager.merge(dataset));
-        });
-        relationTypeService.getAll().forEach(relationType -> relationTypeService.delete(relationType.getId()));
-        dashboardRepository.getAll().forEach(dashboard -> {
-            List<GroupRelations> groups = groupRepository.getGroupsByEntityId(dashboard.getId());
-            groups.stream().map(GroupRelations::getGroup).forEach(r -> {
-                CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-                CriteriaDelete<GroupRelations> delete = cb.createCriteriaDelete(GroupRelations.class);
-                Root<GroupRelations> e = delete.from(GroupRelations.class);
-                delete.where(cb.equal(e.get("entityId"), r.getId()));
-                entityManager.createQuery(delete).executeUpdate();
-            });
-            dashboardService.delete(dashboard.getId());
-        });
-        widgetRepository.getAll().forEach(widgetCatalog -> entityManager.remove(widgetCatalog));
-        namedQueryService.getNamedQueriesForCurrentUser().forEach(nq -> entityManager.remove(nq));
-        categoryService.getAll(WithCategoryEntityType.ATTRIBUTES).forEach(category -> entityManager.remove(category));
-        categoryService.getAll(WithCategoryEntityType.DATASET).forEach(category -> entityManager.remove(category));
+        entityManager.createNativeQuery(
+                "TRUNCATE provoly_user_named_query, named_query, abac_rule, predicate, link, metadata_value, " +
+                        "dataset_version_message, dataset_version, category_relations, category, dataset, relation_type, " +
+                        "group_relations, dashboard_datasource, dashboard, widget_catalog_datasource, " +
+                        "widget_catalog, mono_class_search_request,  condition_condition,  condition, attribute_def, custom_class, oclass, field_condition, field")
+                .executeUpdate();
     }
 }

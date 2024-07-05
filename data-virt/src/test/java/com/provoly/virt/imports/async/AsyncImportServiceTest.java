@@ -21,8 +21,8 @@ import com.provoly.common.dataset.DatasetType;
 import com.provoly.common.dataset.DatasetVersionDto;
 import com.provoly.common.model.AttributeDefDetailsDto;
 import com.provoly.common.model.AttributeDefDto;
-import com.provoly.common.model.FieldDto;
 import com.provoly.common.model.OClassDetailsDto;
+import com.provoly.common.model.field.FieldDto;
 import com.provoly.common.ref.RefChangeEventClassCreated;
 import com.provoly.common.search.MonoClassRequestDto;
 import com.provoly.test.AuthService;
@@ -74,7 +74,7 @@ public class AsyncImportServiceTest {
 
     private final UUID classId = UUID.randomUUID();
     private final UUID datasetVersionId = UUID.randomUUID();
-    private final FieldDto field = new FieldDto(classId, "field", "string", "slug", null);
+    private final FieldDto field = new FieldDto(classId, "field", "string", "slug");
     private final OClassDetailsDto classDetails = new OClassDetailsDto(classId,
             "slug",
             "oclass",
@@ -82,11 +82,11 @@ public class AsyncImportServiceTest {
             List.of(new AttributeDefDetailsDto(
                     classId,
                     new AttributeDefDto(classId,
-                            "name", "name", UUID.randomUUID(), null, false, "slug"),
+                            "name", "name", field, null, false, "slug"),
                     field, null),
                     new AttributeDefDetailsDto(
                             classId,
-                            new AttributeDefDto(classId, "family_name", "name", UUID.randomUUID(), null, false, "slug"),
+                            new AttributeDefDto(classId, "family_name", "name", field, null, false, "slug"),
                             field, null)),
             Storage.ELASTIC,
             List.of());

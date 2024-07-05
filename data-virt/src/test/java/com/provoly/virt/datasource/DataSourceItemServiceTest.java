@@ -16,8 +16,8 @@ import com.provoly.common.item.CountDto;
 import com.provoly.common.item.ItemDto;
 import com.provoly.common.metadata.MetadataSystem;
 import com.provoly.common.model.AttributeDefDto;
-import com.provoly.common.model.FieldDto;
 import com.provoly.common.model.OClassWriteDto;
+import com.provoly.common.model.field.FieldDto;
 import com.provoly.common.search.*;
 import com.provoly.test.*;
 import com.provoly.virt.entity.ItemsSearchResult;
@@ -87,7 +87,7 @@ public class DataSourceItemServiceTest {
     }
 
     private void prepareModel() {
-        idVehicleField = testData.createField("idVehicle", "keyword");
+        idVehicleField = testData.createField("idVehicle_%s".formatted(UUID.randomUUID()), "keyword");
         attributeIdVehicle = testData.createAttribute("idVehicle", idVehicleField);
         vehicleClass = testData.createClass(companion, "vehicle", attributeIdVehicle);
         datasetVersionDto = testData.createDataset("vehicle", vehicleClass.getId());
@@ -231,7 +231,7 @@ public class DataSourceItemServiceTest {
     public void getItems_withNamedQueryMultiClass_AndNullFilter_ShouldReturnItem() {
         String namedQueryName = "namedQuery" + UUID.randomUUID();
         var request = new MultiClassRequestDto(MultiSearchType.AND, List.of(vehicleClass.getId()),
-                List.of(new FieldConditionDto(idVehicleField.id, "AAA")));
+                List.of(new FieldConditionDto(idVehicleField.getId(), "AAA")));
         var namedQuery = testData.createNamedQuery(namedQueryName, request);
         dsMock.addDataSource(namedQuery.getId(), DataSourceType.SEARCH, vehicleClass.getId());
 

@@ -20,6 +20,7 @@ import com.provoly.ref.dataset.Dataset_;
 import com.provoly.ref.entity.EntityIdRepository;
 import com.provoly.ref.link.Link;
 import com.provoly.ref.link.Link_;
+import com.provoly.ref.model.field.Field_;
 import com.provoly.ref.searchrequest.*;
 import com.provoly.ref.user.NamedQuery;
 import com.provoly.ref.user.NamedQueryService;

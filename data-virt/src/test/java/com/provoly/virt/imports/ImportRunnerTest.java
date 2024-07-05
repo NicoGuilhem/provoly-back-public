@@ -125,9 +125,9 @@ public class ImportRunnerTest {
     }
 
     public void initGoodDatasetGeo(StorageData storageData) {
-        var geoshape = testDataService.createField("geo_shape", "multipolygon", "EPSG:4326");
-        var description = testDataService.createField("text", "string");
-        var name = testDataService.createField("text", "string");
+        var geoshape = testDataService.createField("geo_shape_%s".formatted(UUID.randomUUID()), "multipolygon", "EPSG:4326");
+        var description = testDataService.createField("description_field_%s".formatted(UUID.randomUUID()), "string");
+        var name = testDataService.createField("name_field_%s".formatted(UUID.randomUUID()), "string");
         var geoshapeAttribute = testDataService.createAttribute("the_geom", geoshape);
         var nameAttribute = testDataService.createAttribute("Name", name);
         // voluntary typo in "description"
@@ -150,9 +150,9 @@ public class ImportRunnerTest {
     }
 
     public void initGoodDatasetGeoWithTooMuchAttribute(StorageData storageData) {
-        var geoshape = testDataService.createField("geo_shape", "multipolygon", "EPSG:4326");
-        var description = testDataService.createField("text", "string");
-        var name = testDataService.createField("text", "string");
+        var geoshape = testDataService.createField("geo_shape_2_%s".formatted(UUID.randomUUID()), "multipolygon", "EPSG:4326");
+        var description = testDataService.createField("text_2_%s".formatted(UUID.randomUUID()), "string");
+        var name = testDataService.createField("text_2_%s".formatted(UUID.randomUUID()), "string");
         var geoshapeAttribute = testDataService.createAttribute("the_geom", geoshape);
         var nameAttribute = testDataService.createAttribute("Name", name);
         // voluntary typo in "description"
@@ -165,10 +165,10 @@ public class ImportRunnerTest {
     }
 
     public void initFailedDatasetGeo(StorageData storageData) {
-        var nom = testDataService.createField("nom_site", "string");
-        var ageMin = testDataService.createField("age_minAA", "decimal");
-        var ageMax = testDataService.createField("age_max", "decimal");
-        var surface = testDataService.createField("surfacess", "string");
+        var nom = testDataService.createField("nom_site_%s".formatted(UUID.randomUUID()), "string");
+        var ageMin = testDataService.createField("age_minAA_%s".formatted(UUID.randomUUID()), "decimal");
+        var ageMax = testDataService.createField("age_max_%s".formatted(UUID.randomUUID()), "decimal");
+        var surface = testDataService.createField("surfacess_%s".formatted(UUID.randomUUID()), "string");
         var nomAttribute = testDataService.createAttribute("nom_site", nom);
         var ageMinAttribute = testDataService.createAttribute("age_min", ageMin);
         var ageMaxAttribute = testDataService.createAttribute("age_max", ageMax);
@@ -179,10 +179,10 @@ public class ImportRunnerTest {
     }
 
     public void initDatasetCsv(Storage storageData) {
-        var stringField = testDataService.createField("StringField", "keyword");
-        var intField = testDataService.createField("IntegerField", "integer");
-        var dateField = testDataService.createField("InstantField", "instant");
-        var geoField = testDataService.createField("GeoField", "MultiLineString", "EPSG:4326");
+        var stringField = testDataService.createField("StringField_%s".formatted(UUID.randomUUID()), "keyword");
+        var intField = testDataService.createField("IntegerField_%s".formatted(UUID.randomUUID()), "integer");
+        var dateField = testDataService.createField("InstantField_%s".formatted(UUID.randomUUID()), "instant", "MONTH");
+        var geoField = testDataService.createField("GeoField_%s".formatted(UUID.randomUUID()), "MultiLineString", "EPSG:4326");
         var stringAttribute = testDataService.createAttribute("StringField", stringField);
         var intAttribute = testDataService.createAttribute("IntegerField", intField);
         var dateAttribute = testDataService.createAttribute("InstantField", dateField);

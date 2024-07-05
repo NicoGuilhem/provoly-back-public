@@ -47,7 +47,7 @@ public class StorageSupport {
             throw new BusinessException(ErrorCode.BAD_REQUEST,
                     "It's not possible to aggregate on the non-numeric attribute %s which has type %s".formatted(
                             attribute.getName(),
-                            attribute.getField().type));
+                            attribute.getField().getType()));
         }
     }
 
@@ -66,7 +66,7 @@ public class StorageSupport {
         if (!attribute.getField().getType().isGeo()) {
             throw new BusinessException(ErrorCode.BAD_REQUEST,
                     "Aggregation on the non-geo attribute %s which has type %s is not possible.".formatted(attribute.getName(),
-                            attribute.getField().type));
+                            attribute.getField().getType()));
         }
     }
 

@@ -72,7 +72,7 @@ public class SearchServiceTest {
 
     private void prepareModel(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        var idVehicleField = testData.createField("id_searchServiceTest", "keyword");
+        var idVehicleField = testData.createField("id_searchServiceTest_%s".formatted(storage), "keyword");
         dataStorage.attributeIdVehicle = testData.createAttribute("id_searchServiceTest", idVehicleField);
         var vehicleClass = testData.createClass(companion, "searchServiceTest".toLowerCase(), storage,
                 dataStorage.attributeIdVehicle);

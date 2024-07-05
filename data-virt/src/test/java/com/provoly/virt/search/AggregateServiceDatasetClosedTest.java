@@ -15,7 +15,6 @@ import com.provoly.common.dataset.DatasetState;
 import com.provoly.common.dataset.DatasetVersionDto;
 import com.provoly.common.datasource.DataSourceType;
 import com.provoly.common.model.AttributeDefDto;
-import com.provoly.common.model.Type;
 import com.provoly.common.search.AggregateOperation;
 import com.provoly.common.search.AggregationParamDto;
 import com.provoly.common.search.ItemAggregationDto;
@@ -75,9 +74,9 @@ public class AggregateServiceDatasetClosedTest {
         authService.authenticate();
         var dataStorage = dataStorages.get(storage);
 
-        var stringField = testDataService.createField("StringField", Type.KEYWORD);
-        var intField = testDataService.createField("IntegerField", Type.INTEGER);
-        var geoField = testDataService.createField("GeoField", Type.POINT, "EPSG:4326");
+        var stringField = testDataService.createField("StringField_%s".formatted(UUID.randomUUID()), "keyword");
+        var intField = testDataService.createField("IntegerField_%s".formatted(UUID.randomUUID()), "integer");
+        var geoField = testDataService.createField("GeoField_%s".formatted(UUID.randomUUID()), "Point", "EPSG:4326");
 
         dataStorage.stringAttribute = testDataService.createAttribute("StringField", stringField);
         dataStorage.intAttribute = testDataService.createAttribute("IntegerField", intField);

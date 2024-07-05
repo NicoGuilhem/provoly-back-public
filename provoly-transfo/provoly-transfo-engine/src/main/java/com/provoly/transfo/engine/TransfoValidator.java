@@ -8,6 +8,7 @@ import com.provoly.clients.ModelService;
 import com.provoly.common.datasource.DataSourceType;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
+import com.provoly.common.model.field.FieldDto;
 import com.provoly.common.transfo.*;
 
 // TODO : Multi slot
@@ -105,10 +106,10 @@ public class TransfoValidator {
             // TODO : Create a getClassDetails in modelService
             var oclass = modelService.getDetails(dataSourceDetails.oClass());
             var fields = modelService.getFieldsForClass(dataSourceDetails.oClass()).stream()
-                    .collect(Collectors.toMap(f -> f.id, f -> f, (fieldDto, fieldDto2) -> fieldDto));
+                    .collect(Collectors.toMap(FieldDto::getId, f -> f, (fieldDto, fieldDto2) -> fieldDto));
             IntermediateModel model = new IntermediateModel();
             // Add to model every attribute of the class
-            oclass.getAttributes().forEach(attr -> model.addAttribute(attr.getName(), fields.get(attr.getField().id)));
+            oclass.getAttributes().forEach(attr -> model.addAttribute(attr.getName(), fields.get(attr.getField().getId())));
             return new TransfoNodeStatus(nodeId, model);
         }
     }

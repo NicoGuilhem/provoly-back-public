@@ -13,7 +13,6 @@ import com.provoly.common.Storage;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.model.AttributeDefDto;
-import com.provoly.common.model.FieldDto;
 import com.provoly.common.model.OClassWriteDto;
 import com.provoly.ref.category.Category;
 import com.provoly.ref.category.CategoryService;
@@ -26,6 +25,8 @@ import com.provoly.ref.entity.EntityIdRepository;
 import com.provoly.ref.entity.EntityType;
 import com.provoly.ref.event.RefEventService;
 import com.provoly.ref.metadata.MetadataService;
+import com.provoly.ref.model.field.Field;
+import com.provoly.ref.model.field.Field_;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -65,16 +66,6 @@ public class ModelService {
         categoryService.save(category);
     }
 
-    public void addFields(Collection<FieldDto> fields) {
-        fields.forEach(fieldDto -> {
-            fieldDto.checkAndExtractSRID();
-            Field entity = modelMapper.toModel(fieldDto);
-            entityIdRepository.saveEntity(entity);
-            FieldDto fieldUpdated = modelMapper.toDto(entity); // Ugly hack : at least to set the slug
-            refEventService.fieldAdded(fieldUpdated);
-        });
-    }
-
     @Transactional
     public void saveClass(OClassWriteDto newClass) {
         OClass oclass = modelMapper.toModel(newClass);
@@ -86,48 +77,39 @@ public class ModelService {
         var oldClass = entityIdRepository.findById(newClass.getId(), OClass.class);
 
         if (oldClass == null) {
-            // Create a new class
-            entityIdRepository.saveEntity(oclass);
-            if (!List.of(Storage.KUZZLE_ASSET, Storage.KUZZLE_MEASURE).contains(newClass.getStorage())) {
-                refEventService.classCreated(oclass);
-            }
-            if (newClass.getMetadata() != null) {
-                newClass.getMetadata()
-                        .forEach(metadata -> metadataService.addMetadataToEntity(newClass.getId(), metadata.getMetadataDefId(),
-                                metadata, EntityType.CLASS));
-            }
-            newClass.getAttributes()
-                    .forEach(attributeDefDto -> {
-                        if (attributeDefDto.getCategory() != null) {
-                            categoryService.updateEntityCategories(List.of(attributeDefDto.getCategory()),
-                                    attributeDefDto.getId(), WithCategoryEntityType.ATTRIBUTES);
-                        } else {
-                            categoryService.updateEntityCategories(List.of(), attributeDefDto.getId(),
-                                    WithCategoryEntityType.ATTRIBUTES);
-                        }
-                    });
-        } else {
-            // Update an existing class
-            if (oldClass.getStorage() != newClass.getStorage()) {
-                throw new BusinessException(ErrorCode.FORBIDDEN,
-                        "Can't change model storage from %s to %s".formatted(oldClass.getStorage(), newClass.getStorage()));
-            }
-            verifyNotRemovingAttribute(oldClass, oclass); // For now, we are not supporting removing attributes
-            entityIdRepository.saveEntity(oclass);
-            if (!List.of(Storage.KUZZLE_ASSET, Storage.KUZZLE_MEASURE).contains(newClass.getStorage())) {
-                refEventService.classUpdated(oclass);
-            }
-            metadataService.updateMetadataByEntityType(newClass, EntityType.CLASS);
-            newClass.getAttributes()
-                    .forEach(attributeDefDto -> {
-                        List<UUID> categories = new ArrayList<>();
-                        if (attributeDefDto.getCategory() != null) {
-                            categories.add(attributeDefDto.getCategory());
-                        }
-                        categoryService.updateEntityCategories(categories,
-                                attributeDefDto.getId(), WithCategoryEntityType.ATTRIBUTES);
-                    });
+            saveNewClass(newClass, oclass);
+            return;
         }
+        updateOclass(newClass, oldClass, oclass);
+    }
+
+    private void updateOclass(OClassWriteDto newClass, OClass oldClass, OClass oclass) {
+        // Update an existing class
+        if (oldClass.getStorage() != newClass.getStorage()) {
+            throw new BusinessException(ErrorCode.FORBIDDEN,
+                    "Can't change model storage from %s to %s".formatted(oldClass.getStorage(), newClass.getStorage()));
+        }
+        verifyNotRemovingAttribute(oldClass, oclass); // For now, we are not supporting removing attributes
+        entityIdRepository.saveEntity(oclass);
+        if (!List.of(Storage.KUZZLE_ASSET, Storage.KUZZLE_MEASURE).contains(newClass.getStorage())) {
+            refEventService.classUpdated(oclass);
+        }
+        metadataService.updateMetadataByEntityType(newClass, EntityType.CLASS);
+        newClass.getAttributes().forEach(this::processAttribute);
+    }
+
+    private void saveNewClass(OClassWriteDto newClass, OClass oclass) {
+        // Create a new class
+        entityIdRepository.saveEntity(oclass);
+        if (!List.of(Storage.KUZZLE_ASSET, Storage.KUZZLE_MEASURE).contains(newClass.getStorage())) {
+            refEventService.classCreated(oclass);
+        }
+        if (newClass.getMetadata() != null) {
+            newClass.getMetadata()
+                    .forEach(metadata -> metadataService.addMetadataToEntity(newClass.getId(), metadata.getMetadataDefId(),
+                            metadata, EntityType.CLASS));
+        }
+        newClass.getAttributes().forEach(this::processAttribute);
     }
 
     private void verifyDuplicateAttributeTechnicalName(OClass oclass) {
@@ -139,6 +121,15 @@ public class ModelService {
             }
             technicalNames.add(att);
         });
+    }
+
+    private void processAttribute(AttributeDefDto attributeDefDto) {
+        if (attributeDefDto.getCategory() != null) {
+            categoryService.updateEntityCategories(List.of(attributeDefDto.getCategory()),
+                    attributeDefDto.getId(), WithCategoryEntityType.ATTRIBUTES);
+        }
+        categoryService.updateEntityCategories(List.of(), attributeDefDto.getId(),
+                WithCategoryEntityType.ATTRIBUTES);
     }
 
     private void verifyStorages(OClassWriteDto newClass) {
@@ -162,17 +153,6 @@ public class ModelService {
         var q = cb.createQuery(OClass.class);
         var field = q.from(OClass.class).join(OClass_.attributes).join(AttributeDef_.field);
         q.where(cb.equal(field.get(Field_.id), id));
-        return em.createQuery(q).getResultList();
-    }
-
-    @Transactional
-    public Collection<Field> getFieldForClass(UUID id) {
-        entityIdRepository.checkEntityExists(id, OClass.class);
-        var cb = em.getCriteriaBuilder();
-        var q = cb.createQuery(Field.class);
-        var classRoot = q.from(OClass.class);
-        var fieldRoot = classRoot.join(OClass_.attributes).join(AttributeDef_.field);
-        q.select(fieldRoot).distinct(true).where(cb.equal(classRoot.get(OClass_.id), id));
         return em.createQuery(q).getResultList();
     }
 
@@ -245,14 +225,6 @@ public class ModelService {
         return entityIdRepository.getById(id, Category.class);
     }
 
-    public Field getFieldById(UUID id) {
-        return entityIdRepository.getById(id, Field.class);
-    }
-
-    public List<Field> getAllFields() {
-        return entityIdRepository.getAll(Field.class);
-    }
-
     public OClass getOClassById(UUID id) {
         return entityIdRepository.getById(id, OClass.class);
     }
@@ -266,17 +238,6 @@ public class ModelService {
             throw new BusinessException(ErrorCode.FORBIDDEN, "You're not allowed to delete category %s".formatted(id));
         }
         entityIdRepository.removeEntity(id, Category.class);
-    }
-
-    public void deleteFieldById(UUID id) {
-        AssociationsDto associations = associationService.getFieldAssociations(id);
-
-        if (!associations.associations().isEmpty() || associations.usedElsewhere()) {
-            throw new BusinessException(ErrorCode.BAD_REQUEST,
-                    "The field %s is used by one or more attributes, remove them to delete the field".formatted(id));
-        }
-
-        entityIdRepository.removeEntity(id, Field.class);
     }
 
     @Transactional

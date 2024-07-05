@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import jakarta.inject.Inject;
 
@@ -48,7 +49,7 @@ public class SearchMonoFullTest {
             Storage.ELASTIC, new StorageDataAttributes(),
             Storage.POSTGIS, new StorageDataAttributes());
 
-    public class StorageDataAttributes extends StorageData {
+    public static class StorageDataAttributes extends StorageData {
         public AttributeDefDto attributeKeyword, attributeString, attributeInteger, attributeLong;
         public ItemDto vehiculeOne, vehiculeTwo;
         public OClassWriteDto vehiculeClass;
@@ -67,10 +68,10 @@ public class SearchMonoFullTest {
 
     private void prepareModel(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        var fieldKeyword = testData.createField("keyword", "keyword");
-        var fieldString = testData.createField("string", "string");
-        var fieldInteger = testData.createField("integer", "integer");
-        var fieldLong = testData.createField("long", "long");
+        var fieldKeyword = testData.createField("keyword_%s".formatted(UUID.randomUUID()), "keyword");
+        var fieldString = testData.createField("string_%s".formatted(UUID.randomUUID()), "string");
+        var fieldInteger = testData.createField("integer_%s".formatted(UUID.randomUUID()), "integer");
+        var fieldLong = testData.createField("long_%s".formatted(UUID.randomUUID()), "long");
 
         dataStorage.attributeKeyword = testData.createAttribute("attrKeyword", fieldKeyword);
         dataStorage.attributeString = testData.createAttribute("attrString", fieldString);

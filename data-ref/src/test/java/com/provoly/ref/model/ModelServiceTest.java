@@ -16,14 +16,13 @@ import com.provoly.common.abac.AbacRuleType;
 import com.provoly.common.dataset.DatasetDto;
 import com.provoly.common.dataset.DatasetType;
 import com.provoly.common.error.BusinessException;
-import com.provoly.common.error.ProvolyNotFoundException;
 import com.provoly.common.link.LinkDto;
 import com.provoly.common.metadata.MetadataDefDto;
 import com.provoly.common.metadata.MetadataValueWriteDto;
 import com.provoly.common.model.AttributeDefDto;
-import com.provoly.common.model.FieldDto;
 import com.provoly.common.model.OClassDetailsDto;
 import com.provoly.common.model.OClassWriteDto;
+import com.provoly.common.model.field.FieldDto;
 import com.provoly.common.relation.RelationTypeDto;
 import com.provoly.common.search.*;
 import com.provoly.common.user.Role;
@@ -92,7 +91,6 @@ public class ModelServiceTest {
     MetadataMapper metadataMapper;
     @Inject
     CustomClassService customClassService;
-
     @Inject
     DatasetService datasetService;
 
@@ -109,7 +107,7 @@ public class ModelServiceTest {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
         fieldDto = testService.createAndSaveField();
         attributeDefDto = testService.createAttributeDto(attributeId, "attributeName", "attributeId" + attributeId,
-                fieldDto.id);
+                fieldDto);
         classDto = testService.createClassWriteDto(UUID.randomUUID(), "classDto", attributeDefDto);
         modelService.saveEntity(modelMapper.toModel(classDto));
         metadataDefDto = createMetadataDef();
@@ -119,38 +117,6 @@ public class ModelServiceTest {
     @Transactional
     public void clear() {
         testService.clean();
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_FIELD_WRITE })
-    public void deleteInexistantFieldThrowError404() {
-        UUID id = UUID.randomUUID();
-
-        assertThatThrownBy(() -> modelController.deleteFieldById(id))
-                .isInstanceOf(ProvolyNotFoundException.class)
-                .hasMessageContaining("Field : %s inexistant.".formatted(id));
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_FIELD_WRITE })
-    public void deleteFieldUsedByAttributeThrowError400() {
-        assertThatThrownBy(() -> modelController.deleteFieldById(fieldDto.id))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining(
-                        "The field %s is used by one or more attributes, remove them to delete the field"
-                                .formatted(fieldDto.id));
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_CLASS_WRITE, Role.STR_FIELD_READ, Role.STR_SEARCH,
-            Role.STR_DATASOURCE_READ, Role.STR_FIELD_WRITE })
-    public void deleteField_return200() {
-        UUID id = UUID.randomUUID();
-        testService.createAndSaveField(id);
-
-        assertThat(modelController.getFields()).extracting(fieldDto -> fieldDto.id).contains(id);
-        modelController.deleteFieldById(id);
-        assertThat(modelController.getFields()).extracting(fieldDto -> fieldDto.id).doesNotContain(id);
     }
 
     @Test
@@ -192,36 +158,6 @@ public class ModelServiceTest {
         modelService.deleteAttributeById(classDto.getId(), attributeId);
         var result = modelService.getOClassById(classDto.getId());
         assertThat(result.getAttributes()).isEmpty();
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_CLASS_READ, Role.STR_ITEM_WRITE, Role.STR_FIELD_READ,
-            Role.STR_FIELD_WRITE, Role.STR_SEARCH })
-    public void delete_Field_when_associateNamedQueryExist_should_throw_badRequest() {
-        // init with field + attribute def + class
-
-        namedQueryService.saveNamedQueryForUser(
-                createMultiNamedQueryDto(nqPrivateId, "test NQ name", VisibilityType.PUBLIC, classDto, fieldDto.id));
-        logger.debugf("Get namedquery as result : %s", namedQueryService.getById(nqPrivateId).toString());
-
-        assertThatThrownBy(() -> modelController.deleteFieldById(fieldDto.id))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining(
-                        "The field %s is used by one or more attributes, remove them to delete the field"
-                                .formatted(fieldDto.id));
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_CLASS_READ, Role.STR_ITEM_WRITE, Role.STR_FIELD_READ,
-            Role.STR_FIELD_WRITE, Role.STR_SEARCH })
-    public void delete_Field_when_associateOClassExist_should_throw_badRequest() {
-        // init with field + attribute def + class
-
-        assertThatThrownBy(() -> modelController.deleteFieldById(fieldDto.id))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining(
-                        "The field %s is used by one or more attributes, remove them to delete the field"
-                                .formatted(fieldDto.id));
     }
 
     @Test
@@ -292,33 +228,6 @@ public class ModelServiceTest {
                 .extracting(AssociationDto::getId)
                 .isEqualTo(List.of(linkId))
                 .hasSize(1);
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_CLASS_READ, Role.STR_ITEM_WRITE, Role.STR_FIELD_READ,
-            Role.STR_FIELD_WRITE, Role.STR_SEARCH })
-    public void get_associationsOfField_returnOClassAssociated() {
-        // init with field + attribute def + class
-        AssociationsDto result = associationService.getFieldAssociations(fieldDto.id);
-        assertThat(result.associations())
-                .extracting(AssociationDto::getId)
-                .isEqualTo(List.of(classDto.getId()))
-                .hasSize(1);
-    }
-
-    @Test
-    @TestSecurity(user = "testUser", roles = { Role.STR_CLASS_READ, Role.STR_ITEM_WRITE, Role.STR_FIELD_READ,
-            Role.STR_FIELD_WRITE, Role.STR_SEARCH })
-    public void get_associationsOfField_returnNamedQueryAssociated() {
-        namedQueryService.saveNamedQueryForUser(
-                createMultiNamedQueryDto(nqPrivateId, "test NQ name", VisibilityType.PUBLIC, classDto, fieldDto.id));
-        logger.debugf("Get namedquery as result : %s", namedQueryService.getById(nqPrivateId).toString());
-
-        AssociationsDto result = associationService.getFieldAssociations(fieldDto.id);
-        assertThat(result.associations())
-                .extracting(AssociationDto::getId)
-                .containsExactlyInAnyOrder(nqPrivateId, classDto.getId())
-                .hasSize(2);
     }
 
     @Test
@@ -419,7 +328,7 @@ public class ModelServiceTest {
         assertThat(modelController.getDetails(classDto.getId()))
                 .isInstanceOf(OClassDetailsDto.class)
                 .extracting(OClassDetailsDto::getMetadata)
-                .extracting(x -> x.get(0).getValue())
+                .extracting(metadata -> metadata.getFirst().getValue())
                 .isEqualTo("12");
     }
 
@@ -449,7 +358,7 @@ public class ModelServiceTest {
         UUID attributeId = UUID.randomUUID();
         FieldDto fieldDto = testService.createAndSaveField();
         AttributeDefDto attributeDefDto = testService.createAttributeDto(attributeId, "attribute", "attributeId" + attributeId,
-                fieldDto.id);
+                fieldDto);
         MetadataValueWriteDto metadataValueWriteDto = new MetadataValueWriteDto();
         metadataValueWriteDto.setMetadataDefId(metadataDefDto.id);
         metadataValueWriteDto.setValue("12");
@@ -474,7 +383,7 @@ public class ModelServiceTest {
         UUID attributeId = UUID.randomUUID();
         FieldDto fieldDto = testService.createAndSaveField();
         AttributeDefDto attributeDefDto = testService.createAttributeDto(attributeId, "attribute", "attributeId" + attributeId,
-                fieldDto.id);
+                fieldDto);
 
         UUID oclassId = UUID.randomUUID();
         OClassWriteDto oclassWriteDto = new OClassWriteDto(oclassId, "oclass2", "icon", List.of(attributeDefDto), "slug",
@@ -497,7 +406,7 @@ public class ModelServiceTest {
         UUID attributeId = UUID.randomUUID();
         FieldDto fieldDto = testService.createAndSaveField();
         AttributeDefDto attributeDefDto = testService.createAttributeDto(attributeId, "attribute", "attributeId" + attributeId,
-                fieldDto.id);
+                fieldDto);
 
         UUID oclassId = UUID.randomUUID();
         OClassWriteDto oclassWriteDto = new OClassWriteDto(oclassId, "oclass3", "icon", List.of(attributeDefDto), "slug",
@@ -572,14 +481,6 @@ public class ModelServiceTest {
         composedCondition.composed.add(attributeCondition1);
         return new NamedQueryDto(id, name, "description",
                 new MonoClassRequestDto(classDto.getId(), List.of(), composedCondition), vis);
-    }
-
-    private NamedQueryDto createMultiNamedQueryDto(UUID id, String name, VisibilityType visibilityType, OClassWriteDto classDto,
-            UUID fieldId) {
-        VisibilityDto vis = new VisibilityDto(visibilityType.name(), List.of());
-        return new NamedQueryDto(id, name, "description",
-                new MultiClassRequestDto(List.of(classDto.getId()), List.of(new FieldConditionDto(fieldId, "test value"))),
-                vis);
     }
 
     private NamedQueryDto createNamedQueryDto(UUID id, String name, VisibilityType visibilityType, UUID attributeId,

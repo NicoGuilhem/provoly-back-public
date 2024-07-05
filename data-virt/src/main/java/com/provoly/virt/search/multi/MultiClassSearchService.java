@@ -60,7 +60,7 @@ public class MultiClassSearchService {
             for (FieldConditionDto field : request.getFields()) {
                 List<AttributeDefDetailsDto> allMatchedAttr = oClass.getAttributes()
                         .stream()
-                        .filter(attributeDefDto -> attributeDefDto.getField().id.equals(field.getField()))
+                        .filter(attributeDefDto -> attributeDefDto.getField().getId().equals(field.getField()))
                         .toList();
 
                 log.debugf("fields %s - match attributes %s", field.getField(), allMatchedAttr);
@@ -127,7 +127,7 @@ public class MultiClassSearchService {
 
     private boolean isAllFieldsInClass(OClassDetailsDto oClass, Collection<FieldConditionDto> fields) {
         List<UUID> fieldsFromClass = oClass.getAttributes().stream()
-                .map(attributeDefDto -> attributeDefDto.getField().id)
+                .map(attributeDefDto -> attributeDefDto.getField().getId())
                 .toList();
 
         return fieldsFromClass.containsAll(fields.stream().map(FieldConditionDto::getField).toList());

@@ -17,7 +17,6 @@ import com.provoly.common.error.ErrorCode;
 import com.provoly.common.metadata.MetadataSystem;
 import com.provoly.common.model.AttributeDefDetailsDto;
 import com.provoly.common.model.OClassDetailsDto;
-import com.provoly.common.model.Type;
 import com.provoly.virt.storage.StorageModelService;
 import com.provoly.virt.storage.StorageQualifier;
 import com.provoly.virt.storage.elasticbased.KuzzleClient;
@@ -58,7 +57,7 @@ class KuzzleModelService implements StorageModelService {
 
         for (var attribute : attributes) {
             mapping.put(attribute.getTechnicalName(),
-                    Map.of("type", Type.from(attribute.getField().type).getElasticType().getName()));
+                    Map.of("type", attribute.getField().getType().getElasticType().getName()));
         }
         for (var system : MetadataSystem.values()) {
             metadata.put(system.getName(),

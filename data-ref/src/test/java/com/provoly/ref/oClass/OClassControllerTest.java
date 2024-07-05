@@ -17,6 +17,7 @@ import com.provoly.common.dataset.DatasetType;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.model.AttributeDefDto;
 import com.provoly.common.model.OClassWriteDto;
+import com.provoly.common.model.field.FieldDto;
 import com.provoly.ref.dataset.DatasetMapper;
 import com.provoly.ref.dataset.DatasetRepository;
 import com.provoly.ref.model.ModelMapper;
@@ -66,9 +67,10 @@ public class OClassControllerTest {
     public void addClass_returnOk() {
         var field = testService.createAndSaveField();
         var id = UUID.randomUUID();
-        AttributeDefDto attributeDefDto = testService.createAttributeDto(UUID.randomUUID(), "attr", "technical_attr", field.id);
+        AttributeDefDto attributeDefDto = testService.createAttributeDto(UUID.randomUUID(), "attr", "technical_attr",
+                field);
         AttributeDefDto attributeDefDto2 = testService.createAttributeDto(UUID.randomUUID(), "attr2", "technical_attr2",
-                field.id);
+                field);
         OClassWriteDto oClassDto = testService.createClassWriteDto(UUID.randomUUID(), "oclass", attributeDefDto,
                 attributeDefDto2);
 
@@ -88,9 +90,10 @@ public class OClassControllerTest {
         var field = testService.createAndSaveField();
         var id = UUID.randomUUID();
         var className = "oclass";
-        AttributeDefDto attributeDefDto = testService.createAttributeDto(UUID.randomUUID(), "attr", "technical_attr", field.id);
+        AttributeDefDto attributeDefDto = testService.createAttributeDto(UUID.randomUUID(), "attr", "technical_attr",
+                field);
         AttributeDefDto attributeDefDto2 = testService.createAttributeDto(UUID.randomUUID(), "attr2", "technical_attr2",
-                field.id);
+                field);
         OClassWriteDto oClassDto = testService.createClassWriteDto(id, className, attributeDefDto, attributeDefDto2);
         modelService.saveClass(oClassDto);
 
@@ -114,9 +117,9 @@ public class OClassControllerTest {
         var id = UUID.randomUUID();
         var className = "oclass";
         AttributeDefDto attributeDefDto = testService.createAttributeDto(UUID.randomUUID(), null,
-                "a text with more than fifty characters to show the substring rule", field.id);
+                "a text with more than fifty characters to show the substring rule", field);
         AttributeDefDto attributeDefDto2 = testService.createAttributeDto(UUID.randomUUID(), "attr2", "technical_attr2",
-                field.id);
+                field);
         OClassWriteDto oClassDto = testService.createClassWriteDto(id, className, attributeDefDto, attributeDefDto2);
         modelService.saveClass(oClassDto);
 
@@ -137,7 +140,7 @@ public class OClassControllerTest {
     @Test
     @TestSecurity(user = "testUser", roles = { "class_write" })
     public void addClass_noField_return_400() {
-        AttributeDefDto attributeDefDto = testService.createAttributeDto(UUID.randomUUID(), "attr", "attr", UUID.randomUUID());
+        AttributeDefDto attributeDefDto = testService.createAttributeDto(UUID.randomUUID(), "attr", "attr", new FieldDto());
         OClassWriteDto oClassDto = testService.createClassWriteDto(UUID.randomUUID(), "oclass", attributeDefDto);
 
         given()
@@ -146,7 +149,7 @@ public class OClassControllerTest {
                 .when()
                 .post("model/class")
                 .then()
-                .statusCode(404);
+                .statusCode(400);
     }
 
     @Test
@@ -154,8 +157,8 @@ public class OClassControllerTest {
     public void addClass_attrSameId_return_400() {
         var field = testService.createAndSaveField();
         var id = UUID.randomUUID();
-        AttributeDefDto attributeDefDetailsDto = testService.createAttributeDto(id, "attr", "attr", field.id);
-        AttributeDefDto attributeDefDetailsDto2 = testService.createAttributeDto(id, "attr2", "attr2", field.id);
+        AttributeDefDto attributeDefDetailsDto = testService.createAttributeDto(id, "attr", "attr", field);
+        AttributeDefDto attributeDefDetailsDto2 = testService.createAttributeDto(id, "attr2", "attr2", field);
         OClassWriteDto oclassWriteDto = testService.createClassWriteDto(UUID.randomUUID(), "oclass", attributeDefDetailsDto,
                 attributeDefDetailsDto2);
 
@@ -174,8 +177,8 @@ public class OClassControllerTest {
     public void addClass_withoutTechnicalName_return_400() {
         var field = testService.createAndSaveField();
         var id = UUID.randomUUID();
-        AttributeDefDto attributeDefDetailsDto = testService.createAttributeDto(id, "attr", null, field.id);
-        AttributeDefDto attributeDefDetailsDto2 = testService.createAttributeDto(id, "attr2", "attr2", field.id);
+        AttributeDefDto attributeDefDetailsDto = testService.createAttributeDto(id, "attr", null, field);
+        AttributeDefDto attributeDefDetailsDto2 = testService.createAttributeDto(id, "attr2", "attr2", field);
         OClassWriteDto oclassWriteDto = testService.createClassWriteDto(UUID.randomUUID(), "oclass", attributeDefDetailsDto,
                 attributeDefDetailsDto2);
 
@@ -191,11 +194,11 @@ public class OClassControllerTest {
 
     @Test
     @TestSecurity(user = "testUser", roles = { "class_write" })
-    public void addClass_attrSameIdInOtherOclass_return_400() {
+    public void addClass_attrSameIdInOtherOclass_return_409() {
         var field = testService.createAndSaveField();
         var id = UUID.randomUUID();
-        var attributeDefDto1 = testService.createAttributeDto(id, "attribute1", "attribute1", field.id);
-        var attributeDefDto2 = testService.createAttributeDto(id, "attribute2", "attribute2", field.id);
+        var attributeDefDto1 = testService.createAttributeDto(id, "attribute1", "attribute1", field);
+        var attributeDefDto2 = testService.createAttributeDto(id, "attribute2", "attribute2", field);
         var oClassDto = testService.createClassWriteDto(UUID.randomUUID(), "oclass", attributeDefDto1);
         oClass = mapper.toModel(oClassDto);
         modelService.saveClass(oClassDto);
@@ -218,7 +221,7 @@ public class OClassControllerTest {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
         ProvolyUser provolyUser = userService.getCurrentUser();
         var field = testService.createAndSaveField();
-        AttributeDefDto attributeDefDto = testService.createAttributeDto(UUID.randomUUID(), "attr", "attr", field.id);
+        AttributeDefDto attributeDefDto = testService.createAttributeDto(UUID.randomUUID(), "attr", "attr", field);
 
         OClassWriteDto oClassDto = testService.createClassWriteDto(UUID.randomUUID(), "oclass", attributeDefDto);
         oClass = mapper.toModel(oClassDto);
@@ -247,7 +250,7 @@ public class OClassControllerTest {
     public void addClass_withUndefinedStorage_shouldThrow() {
         var field = testService.createAndSaveField();
         var id = UUID.randomUUID();
-        var attributeDefDto1 = testService.createAttributeDto(id, "attribute1", "attribute1", field.id);
+        var attributeDefDto1 = testService.createAttributeDto(id, "attribute1", "attribute1", field);
         var oClassDto = testService.createClassWriteDto(UUID.randomUUID(), "oclass", Storage.KUZZLE_ASSET, attributeDefDto1);
         oClass = mapper.toModel(oClassDto);
 

@@ -4,13 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import jakarta.inject.Inject;
 
 import com.provoly.common.Storage;
 import com.provoly.common.item.ItemDto;
-import com.provoly.common.model.FieldDto;
 import com.provoly.common.model.OClassWriteDto;
+import com.provoly.common.model.field.FieldDto;
 import com.provoly.common.search.FullSearchConditionDto;
 import com.provoly.test.*;
 import com.provoly.virt.test.ItemsTestTools;
@@ -56,10 +57,10 @@ public class SearchMultiFullTest {
     public void prepareData(Storage storage) {
         authService.authenticate();
 
-        var fieldKeyword = testData.createField("keyword", "keyword");
-        var fieldString = testData.createField("string", "string");
-        var fieldInteger = testData.createField("integer", "integer");
-        var fieldLong = testData.createField("long", "long");
+        var fieldKeyword = testData.createField("keyword_%s".formatted(UUID.randomUUID()), "keyword");
+        var fieldString = testData.createField("string_%s".formatted(UUID.randomUUID()), "string");
+        var fieldInteger = testData.createField("integer_%s".formatted(UUID.randomUUID()), "integer");
+        var fieldLong = testData.createField("long_%s".formatted(UUID.randomUUID()), "long");
 
         addVehicles(storage, fieldKeyword, fieldString, fieldInteger, fieldLong);
         addUsagers(storage, fieldKeyword, fieldString, fieldInteger, fieldLong);

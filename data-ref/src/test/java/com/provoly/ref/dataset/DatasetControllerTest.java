@@ -22,8 +22,8 @@ import com.provoly.common.metadata.MetadataDefDto;
 import com.provoly.common.metadata.MetadataValueWriteDto;
 import com.provoly.common.model.AttributeDefDto;
 import com.provoly.common.model.CategoryDto;
-import com.provoly.common.model.FieldDto;
 import com.provoly.common.model.OClassWriteDto;
+import com.provoly.common.model.field.FieldDto;
 import com.provoly.common.user.Role;
 import com.provoly.ref.dashboard.DashboardService;
 import com.provoly.ref.dashboard.dto.DashboardWriteDto;
@@ -104,7 +104,7 @@ public class DatasetControllerTest {
         fieldDto = testService.createAndSaveField();
         AttributeDefDto attributeDefDto = testService.createAttributeDto(attributeId, "attributeName",
                 "attributeId" + attributeId,
-                fieldDto.id);
+                fieldDto);
         oClass = testService.createClassWriteDto(UUID.randomUUID(), "classDto", attributeDefDto);
         modelService.saveEntity(modelMapper.toModel(oClass));
         if (!modelService.exists(modelMapper.toModel(oClass))) {
@@ -618,7 +618,7 @@ public class DatasetControllerTest {
         UUID datasetId = UUID.randomUUID();
         AttributeDefDto attributeDefDto = testService.createAttributeDto(UUID.randomUUID(), "attributeName",
                 "attributeId" + attributeId,
-                fieldDto.id);
+                fieldDto);
         UUID classId = UUID.randomUUID();
         OClassWriteDto oClassWriteDto = testService.createClassWriteDto(classId, "classDto", attributeDefDto);
 

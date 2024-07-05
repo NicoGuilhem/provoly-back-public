@@ -18,9 +18,12 @@ import com.provoly.common.dataset.DatasetVersionDto;
 import com.provoly.common.metadata.MetadataDefDto;
 import com.provoly.common.metadata.MetadataValueWriteDto;
 import com.provoly.common.model.AttributeDefDto;
-import com.provoly.common.model.FieldDto;
 import com.provoly.common.model.OClassWriteDto;
 import com.provoly.common.model.Type;
+import com.provoly.common.model.field.FieldDateDto;
+import com.provoly.common.model.field.FieldDto;
+import com.provoly.common.model.field.FieldGeoDto;
+import com.provoly.common.model.field.FieldNumericDto;
 import com.provoly.common.ref.RefChangeEvent;
 import com.provoly.common.relation.RelationTypeDto;
 import com.provoly.common.search.*;
@@ -103,7 +106,7 @@ public class TestDataService {
     }
 
     public DatasetVersionDto createDataset(String name, UUID oclassId) {
-        var dataset = new DatasetDto(oclassId, name, oclassId, DatasetType.MODIFIABLE);
+        var dataset = new DatasetDto(oclassId, name, oclassId, DatasetType.MODIFIABLE, List.of("ALL"), List.of());
         return saveDataset(dataset);
     }
 
@@ -121,13 +124,18 @@ public class TestDataService {
         return datasetService.getDatasetVersionByDatasetId(dataset.getId());
     }
 
-    public FieldDto createField(String name, String type, String crs) {
-        var fieldDto = new FieldDto();
-        fieldDto.id = UUID.randomUUID();
-        fieldDto.name = name + "-" + fieldDto.id;
-        fieldDto.type = type;
-        fieldDto.crs = crs;
-        modelService.addFields(Collections.singleton(fieldDto));
+    public FieldDto createField(String name, String type, String additionalProperty) {
+        FieldDto fieldDto;
+        if (Type.from(type).isGeo()) {
+            fieldDto = new FieldGeoDto(UUID.randomUUID(), name, type, type, additionalProperty);
+        } else if (Type.from(type).isDate()) {
+            fieldDto = new FieldDateDto(UUID.randomUUID(), name, type, type, additionalProperty);
+        } else if (Type.from(type).isNumeric()) {
+            fieldDto = new FieldNumericDto(UUID.randomUUID(), name, type, type, false, additionalProperty);
+        } else {
+            fieldDto = new FieldDto(UUID.randomUUID(), name, type, type);
+        }
+        modelService.addField(fieldDto);
         return fieldDto;
     }
 
@@ -139,12 +147,12 @@ public class TestDataService {
         return createField(name, type.getName(), null);
     }
 
-    public FieldDto createField(String name, Type type, String crs) {
-        return createField(name, type.getName(), crs);
+    public FieldDto createField(String name, Type type, String additionalProperties) {
+        return createField(name, type.getName(), additionalProperties);
     }
 
     public AttributeDefDto createAttributeMulti(String name, String technicalName, FieldDto field, boolean multi) {
-        return new AttributeDefDto(UUID.randomUUID(), name, technicalName, field.id, null, multi, "");
+        return new AttributeDefDto(UUID.randomUUID(), name, technicalName, field, null, multi, "");
     }
 
     public AttributeDefDto createAttributeMulti(String name, FieldDto field, boolean multi) {
@@ -152,7 +160,7 @@ public class TestDataService {
     }
 
     public AttributeDefDto createAttribute(String name, String technicalName, FieldDto field) {
-        return new AttributeDefDto(UUID.randomUUID(), name, technicalName, field.id);
+        return new AttributeDefDto(UUID.randomUUID(), name, technicalName, field);
     }
 
     public AttributeDefDto createAttribute(String name, FieldDto field) {

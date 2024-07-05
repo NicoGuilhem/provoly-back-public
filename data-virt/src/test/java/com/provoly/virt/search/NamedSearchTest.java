@@ -64,8 +64,8 @@ public class NamedSearchTest {
 
     private void prepareModel(Storage storage) {
         var storageData = dataStorages.get(storage);
-        var idVehicleField = testData.createField("id_vehicle", "keyword");
-        var chocField = testData.createField("choc", "integer");
+        var idVehicleField = testData.createField("id_vehicle_%s".formatted(storageData), "keyword");
+        var chocField = testData.createField("choc_%s".formatted(storageData), "integer");
         storageData.attributeIdVehicle = testData.createAttribute("id_vehicle", idVehicleField);
         storageData.attributeChoc = testData.createAttribute("choc", chocField);
         var vehicleClass = testData.createClass(companion, "vehicle", storageData.attributeIdVehicle,

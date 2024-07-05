@@ -20,7 +20,6 @@ import com.provoly.common.error.ErrorCode;
 import com.provoly.common.model.AttributeDefDetailsDto;
 import com.provoly.common.model.ElasticType;
 import com.provoly.common.model.OClassDetailsDto;
-import com.provoly.common.model.Type;
 import com.provoly.virt.storage.StorageModelService;
 import com.provoly.virt.storage.StorageQualifier;
 
@@ -156,8 +155,8 @@ class ElasticModelService implements StorageModelService {
             mapping.add(buildDynamicTemplate(type.name(), VariableType.getElasticType(type)));
         }
         for (AttributeDefDetailsDto attribute : attributes) { // This is used for all attributes
-            var elasticType = Type.valueOf(attribute.getField().type.toUpperCase()).getElasticType();
-            mapping.add(buildDynamicTemplate(attribute.getField().slug, elasticType));
+            var elasticType = attribute.getField().getType().getElasticType();
+            mapping.add(buildDynamicTemplate(attribute.getField().getSlug(), elasticType));
         }
         return mapping;
     }

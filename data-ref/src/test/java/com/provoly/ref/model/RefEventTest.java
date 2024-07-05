@@ -15,12 +15,14 @@ import com.provoly.common.dataset.DatasetState;
 import com.provoly.common.dataset.DatasetType;
 import com.provoly.common.dataset.DatasetVersionDto;
 import com.provoly.common.model.*;
+import com.provoly.common.model.field.FieldDto;
 import com.provoly.common.ref.*;
 import com.provoly.common.user.Role;
 import com.provoly.ref.dataset.DatasetMapper;
 import com.provoly.ref.dataset.DatasetRepository;
 import com.provoly.ref.datasetversion.DatasetVersionController;
 import com.provoly.ref.datasetversion.DatasetVersionService;
+import com.provoly.ref.model.field.FieldController;
 import com.provoly.ref.user.ProvolyUser;
 import com.provoly.ref.user.UserService;
 import com.provoly.ref.utils.TestService;
@@ -58,6 +60,8 @@ public class RefEventTest {
 
     @Inject
     ModelController modelController;
+    @Inject
+    FieldController fieldController;
 
     @Inject
     DatasetVersionController datasetVersionController;
@@ -109,8 +113,8 @@ public class RefEventTest {
         var event = result.getLastRecord().value();
         then(event.getType()).isEqualTo(RefChangeEvent.Type.FIELD_ADDED);
         var refEvent = then(event).asInstanceOf(type(RefChangeEventFieldAdded.class));
-        refEvent.extracting(e -> e.getField().name).isEqualTo(field.name);
-        refEvent.extracting(e -> e.getField().slug).asString().contains("whenfieldadded_eventsent");
+        refEvent.extracting(e -> e.getField().getName()).isEqualTo(field.getName());
+        refEvent.extracting(e -> e.getField().getName()).asString().contains("whenFieldAdded_eventSent");
     }
 
     @Test
@@ -118,15 +122,15 @@ public class RefEventTest {
     public void getAllFieldsByClass_duplicateFieldAreReturnedOnce() {
         FieldDto field = testService.createAndSaveField();
         AttributeDefDto attributeDef = testService.createAttributeDto(UUID.randomUUID(),
-                "attr1", "firstAttributeWithFieldOfNameField1", field.id);
+                "attr1", "firstAttributeWithFieldOfNameField1", field);
         AttributeDefDto attributeDto2 = testService.createAttributeDto(UUID.randomUUID(),
-                "attr2", "secondAttributeWithFieldOfNameField1", field.id);
+                "attr2", "secondAttributeWithFieldOfNameField1", field);
 
         OClassWriteDto oClass = testService.createClassWriteDto(UUID.randomUUID(), "addTwoAttributesToClass",
                 attributeDef, attributeDto2);
         modelController.saveClass(oClass);
 
-        var result = modelController.getFieldsForClass(oClass.getId());
+        var result = fieldController.getFieldsForClass(oClass.getId());
         assertThat(result).hasSize(1);
     }
 
@@ -138,7 +142,8 @@ public class RefEventTest {
     public void whenClassAdded_eventSent() {
 
         var field = testService.createAndSaveField();
-        var attribute = testService.createAttributeDto(UUID.randomUUID(), "attr1", "whenClassAdded_eventSent_attr1", field.id);
+        var attribute = testService.createAttributeDto(UUID.randomUUID(), "attr1", "whenClassAdded_eventSent_attr1",
+                field);
         OClassWriteDto oClass = testService.createClassWriteDto(UUID.randomUUID(), "whenClassAdded_eventSent_myClass",
                 attribute);
 
@@ -166,11 +171,11 @@ public class RefEventTest {
         // Given, when
         var field = testService.createAndSaveField();
         var attribute = testService.createAttributeDto(UUID.randomUUID(), "attr1", "whenClassModified_eventSent_attr1",
-                field.id);
+                field);
         var oClass = testService.createClassWriteDto(UUID.randomUUID(), "whenClassModified_eventSent_myClass", attribute);
         modelController.saveClass(oClass);
         var attribute2 = testService.createAttributeDto(UUID.randomUUID(), "attr2", "whenClassModified_eventSent_attr2",
-                field.id);
+                field);
         oClass.getAttributes().add(attribute2);
         modelController.saveClass(oClass);
 
@@ -192,12 +197,12 @@ public class RefEventTest {
         // Creating class
         var field = testService.createAndSaveField();
         var attribute = testService.createAttributeDto(UUID.randomUUID(), "attr1", "whenClassAddedAttribute_eventSent_attr1",
-                field.id);
+                field);
         var oClass = testService.createClassWriteDto(UUID.randomUUID(), "whenClassAddedAttribute_eventSent_myClass", attribute);
         modelController.saveClass(oClass);
         // Modifying class - Add an attribute
         var attribute2 = testService.createAttributeDto(UUID.randomUUID(), "attr2", "whenClassAddedAttribute_eventSent_attr2",
-                field.id);
+                field);
         modelController.addAttribute(oClass.getId(), attribute2);
         //then
         var result = task.awaitRecords(3);
@@ -216,7 +221,7 @@ public class RefEventTest {
         // Creating class
         var field = testService.createAndSaveField();
         var attribute = testService.createAttributeDto(UUID.randomUUID(), "attr1", "whenClassDeleted_eventSent_attr1",
-                field.id);
+                field);
         var oClass = testService.createClassWriteDto(UUID.randomUUID(), "whenClassDeleted_eventSent_myClass", attribute);
 
         modelController.saveClass(oClass);
@@ -245,7 +250,7 @@ public class RefEventTest {
         ProvolyUser provolyUser = userService.getCurrentUser();
         var field = testService.createAndSaveField();
         var attribute = testService.createAttributeDto(UUID.randomUUID(), "attr3", "whenDataSetActivated_eventSent_attr1",
-                field.id);
+                field);
         var oClass = testService.createClassWriteDto(UUID.randomUUID(), "whenDataSetActivated_eventSent_myClass", attribute);
         modelController.saveClass(oClass);
         var datasetDto = new DatasetDto(UUID.randomUUID(), "stations activated", oClass.getId(), DatasetType.CLOSED);
@@ -277,7 +282,7 @@ public class RefEventTest {
         // Creating class, dataset and dataset version
         var field = testService.createAndSaveField();
         var attribute = testService.createAttributeDto(UUID.randomUUID(), "attr3", "whenDataSetActivated_eventSent_attr1",
-                field.id);
+                field);
         var oClass = testService.createClassWriteDto(UUID.randomUUID(), "whenDataSetActivated_eventSent_myClass", attribute);
         modelController.saveClass(oClass);
         var dataset = datasetMapper.toModel(new DatasetDto(UUID.randomUUID(), "stations", oClass.getId(), DatasetType.CLOSED));

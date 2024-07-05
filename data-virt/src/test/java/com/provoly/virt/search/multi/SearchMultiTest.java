@@ -15,9 +15,8 @@ import com.provoly.common.Storage;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.item.ItemsSearchResultDto;
 import com.provoly.common.model.AttributeDefDto;
-import com.provoly.common.model.FieldDto;
 import com.provoly.common.model.OClassWriteDto;
-import com.provoly.common.model.Type;
+import com.provoly.common.model.field.FieldDto;
 import com.provoly.common.search.FieldConditionDto;
 import com.provoly.common.search.MultiClassRequestDto;
 import com.provoly.common.search.MultiSearchType;
@@ -74,11 +73,11 @@ public class SearchMultiTest {
         var storageData = dataStorages.get(storage);
 
         // create fields
-        storageData.numAcc = refService.createField("Num_Acc", "keyword");
-        storageData.idVehicule = refService.createField("id_vehicule", "keyword");
-        storageData.catV = refService.createField("cat_v", "string");
-        storageData.date = refService.createField("date", "instant");
-        storageData.position = refService.createField("position", Type.POINT, "EPSG:4326");
+        storageData.numAcc = refService.createField("Num_Acc_%s".formatted(UUID.randomUUID()), "keyword");
+        storageData.idVehicule = refService.createField("id_vehicule_%s".formatted(UUID.randomUUID()), "keyword");
+        storageData.catV = refService.createField("cat_v_%s".formatted(UUID.randomUUID()), "string");
+        storageData.date = refService.createField("date_%s".formatted(UUID.randomUUID()), "instant", "MONTH");
+        storageData.position = refService.createField("position_%s".formatted(UUID.randomUUID()), "Point", "EPSG:4326");
 
         // create class voiture
         AttributeDefDto numAccAttr = refService.createAttribute("Num_Acc", storageData.numAcc);
@@ -133,8 +132,8 @@ public class SearchMultiTest {
     public void or_id_vehicule_should_return_item_usager_voiture(Storage storage) {
         prepareData(storage);
         var storageData = dataStorages.get(storage);
-        FieldConditionDto fieldConditionDto = new FieldConditionDto(storageData.idVehicule.id, "ZZZ"); // in voiture
-        FieldConditionDto secondFieldConditionDto = new FieldConditionDto(storageData.idVehicule.id, "BBB"); // in usager
+        FieldConditionDto fieldConditionDto = new FieldConditionDto(storageData.idVehicule.getId(), "ZZZ"); // in voiture
+        FieldConditionDto secondFieldConditionDto = new FieldConditionDto(storageData.idVehicule.getId(), "BBB"); // in usager
         MultiClassRequestDto request = new MultiClassRequestDto(MultiSearchType.OR, List.of(),
                 List.of(fieldConditionDto, secondFieldConditionDto));
         ItemsSearchResultDto result = itemsTestTools.searchMulti(request);
@@ -149,7 +148,7 @@ public class SearchMultiTest {
     public void or_id_vehicule_not_exists_should_return_none(Storage storage) {
         var storageData = dataStorages.get(storage);
         MultiClassRequestDto request = new MultiClassRequestDto(MultiSearchType.OR, List.of(),
-                List.of(new FieldConditionDto(storageData.idVehicule.id, "toto")));
+                List.of(new FieldConditionDto(storageData.idVehicule.getId(), "toto")));
         ItemsSearchResultDto result = itemsTestTools.searchMulti(request);
         assertThat(result.items()).isEmpty();
     }
@@ -160,9 +159,9 @@ public class SearchMultiTest {
     public void or_id_vehicule_catv_should_return_item_usager_voiture(Storage storage) {
         var storageData = dataStorages.get(storage);
         MultiClassRequestDto request = new MultiClassRequestDto(MultiSearchType.OR, List.of(),
-                List.of(new FieldConditionDto(storageData.idVehicule.id, "CCC"),
-                        new FieldConditionDto(storageData.catV.id, "catv"),
-                        new FieldConditionDto(storageData.idVehicule.id, "BBB")));
+                List.of(new FieldConditionDto(storageData.idVehicule.getId(), "CCC"),
+                        new FieldConditionDto(storageData.catV.getId(), "catv"),
+                        new FieldConditionDto(storageData.idVehicule.getId(), "BBB")));
         ItemsSearchResultDto result = itemsTestTools.searchMulti(request);
         assertThat(result.items()).hasSize(2);
         assertThat(result.items().get(storageData.voiture.getId())).hasSize(1);
@@ -175,8 +174,8 @@ public class SearchMultiTest {
     public void or_id_vehicule_catv_not_exusts_should_return_item_usager(Storage storage) {
         var storageData = dataStorages.get(storage);
         MultiClassRequestDto request = new MultiClassRequestDto(MultiSearchType.OR, List.of(),
-                List.of(new FieldConditionDto(storageData.catV.id, "toto"),
-                        new FieldConditionDto(storageData.idVehicule.id, "BBB")));
+                List.of(new FieldConditionDto(storageData.catV.getId(), "toto"),
+                        new FieldConditionDto(storageData.idVehicule.getId(), "BBB")));
         ItemsSearchResultDto result = itemsTestTools.searchMulti(request);
         assertThat(result.items()).hasSize(1);
         assertThat(result.items().get(storageData.usager.getId())).hasSize(1);
@@ -188,8 +187,8 @@ public class SearchMultiTest {
     public void or_num_acc_both_catv_should_return_item_voiture_usager(Storage storage) {
         var storageData = dataStorages.get(storage);
         MultiClassRequestDto request = new MultiClassRequestDto(MultiSearchType.OR, List.of(),
-                List.of(new FieldConditionDto(storageData.numAcc.id, "123"),
-                        new FieldConditionDto(storageData.catV.id, "catv")));
+                List.of(new FieldConditionDto(storageData.numAcc.getId(), "123"),
+                        new FieldConditionDto(storageData.catV.getId(), "catv")));
         ItemsSearchResultDto result = itemsTestTools.searchMulti(request);
         assertThat(result.items()).hasSize(2);
         assertThat(result.items().get(storageData.voiture.getId())).hasSize(1);
@@ -202,8 +201,8 @@ public class SearchMultiTest {
     public void or_catv_twice_should_return_voiture(Storage storage) {
         var storageData = dataStorages.get(storage);
         MultiClassRequestDto request = new MultiClassRequestDto(MultiSearchType.OR, List.of(),
-                List.of(new FieldConditionDto(storageData.catV.id, "catv"),
-                        new FieldConditionDto(storageData.catV.id, "catv2")));
+                List.of(new FieldConditionDto(storageData.catV.getId(), "catv"),
+                        new FieldConditionDto(storageData.catV.getId(), "catv2")));
         ItemsSearchResultDto result = itemsTestTools.searchMulti(request);
         assertThat(result.items()).hasSize(1);
         assertThat(result.items().get(storageData.voiture.getId())).hasSize(1);
@@ -216,8 +215,8 @@ public class SearchMultiTest {
     public void and_catv_twice_should_return_voiture(Storage storage) {
         var storageData = dataStorages.get(storage);
         MultiClassRequestDto request = new MultiClassRequestDto(MultiSearchType.OR, List.of(),
-                List.of(new FieldConditionDto(storageData.catV.id, "catv"),
-                        new FieldConditionDto(storageData.catV.id, "catv2")));
+                List.of(new FieldConditionDto(storageData.catV.getId(), "catv"),
+                        new FieldConditionDto(storageData.catV.getId(), "catv2")));
         ItemsSearchResultDto result = itemsTestTools.searchMulti(request);
         assertThat(result.items()).hasSize(1);
         assertThat(result.items().get(storageData.voiture.getId())).hasSize(1);
@@ -230,8 +229,8 @@ public class SearchMultiTest {
     public void and_id_vehicule_num_acc_should_return_none(Storage storage) {
         var storageData = dataStorages.get(storage);
         MultiClassRequestDto request = new MultiClassRequestDto(MultiSearchType.AND, List.of(),
-                List.of(new FieldConditionDto(storageData.idVehicule.id, "BBB"),
-                        new FieldConditionDto(storageData.numAcc.id, "toto")));
+                List.of(new FieldConditionDto(storageData.idVehicule.getId(), "BBB"),
+                        new FieldConditionDto(storageData.numAcc.getId(), "toto")));
         ItemsSearchResultDto result = itemsTestTools.searchMulti(request);
         assertThat(result.items()).isEmpty();
     }
@@ -242,7 +241,7 @@ public class SearchMultiTest {
     public void and_id_vehicule_should_return_item_usager(Storage storage) {
         var storageData = dataStorages.get(storage);
         MultiClassRequestDto request = new MultiClassRequestDto(MultiSearchType.AND, List.of(),
-                List.of(new FieldConditionDto(storageData.idVehicule.id, "BBB")));
+                List.of(new FieldConditionDto(storageData.idVehicule.getId(), "BBB")));
         ItemsSearchResultDto result = itemsTestTools.searchMulti(request);
         assertThat(result.items()).hasSize(1);
         assertThat(result.items().get(storageData.usager.getId())).hasSize(1);
@@ -254,8 +253,8 @@ public class SearchMultiTest {
     public void and_id_vehicule_catv_should_return_item_voiture(Storage storage) {
         var storageData = dataStorages.get(storage);
         MultiClassRequestDto request = new MultiClassRequestDto(MultiSearchType.AND, List.of(),
-                List.of(new FieldConditionDto(storageData.idVehicule.id, "ZZZ"),
-                        new FieldConditionDto(storageData.catV.id, "catv")));
+                List.of(new FieldConditionDto(storageData.idVehicule.getId(), "ZZZ"),
+                        new FieldConditionDto(storageData.catV.getId(), "catv")));
         ItemsSearchResultDto result = itemsTestTools.searchMulti(request);
         assertThat(result.items()).hasSize(1);
         assertThat(result.items().get(storageData.voiture.getId())).hasSize(1);
@@ -267,8 +266,8 @@ public class SearchMultiTest {
     public void and_num_acc_both_catv_should_return_item_voiture(Storage storage) {
         var storageData = dataStorages.get(storage);
         MultiClassRequestDto request = new MultiClassRequestDto(MultiSearchType.AND, List.of(),
-                List.of(new FieldConditionDto(storageData.numAcc.id, "123"),
-                        new FieldConditionDto(storageData.catV.id, "catv")));
+                List.of(new FieldConditionDto(storageData.numAcc.getId(), "123"),
+                        new FieldConditionDto(storageData.catV.getId(), "catv")));
         ItemsSearchResultDto result = itemsTestTools.searchMulti(request);
         assertThat(result.items()).hasSize(1);
         assertThat(result.items().get(storageData.voiture.getId())).hasSize(1);
@@ -280,7 +279,7 @@ public class SearchMultiTest {
     public void and_only_class_voiture_should_return_item_voiture(Storage storage) {
         var storageData = dataStorages.get(storage);
         MultiClassRequestDto request = new MultiClassRequestDto(MultiSearchType.AND, List.of(storageData.voiture.getId()),
-                List.of(new FieldConditionDto(storageData.numAcc.id, "123")));
+                List.of(new FieldConditionDto(storageData.numAcc.getId(), "123")));
         ItemsSearchResultDto result = itemsTestTools.searchMulti(request);
         assertThat(result.items()).hasSize(1);
         assertThat(result.items().get(storageData.voiture.getId())).hasSize(1);
@@ -293,7 +292,7 @@ public class SearchMultiTest {
         var storageData = dataStorages.get(storage);
         UUID notExists = UUID.randomUUID();
         MultiClassRequestDto request = new MultiClassRequestDto(MultiSearchType.AND, List.of(notExists),
-                List.of(new FieldConditionDto(storageData.numAcc.id, "123")));
+                List.of(new FieldConditionDto(storageData.numAcc.getId(), "123")));
         assertThatThrownBy(() -> itemsTestTools.searchMulti(request))
                 .isInstanceOf(BusinessException.class)
                 .extracting(Throwable::getMessage)
@@ -307,7 +306,7 @@ public class SearchMultiTest {
     public void and_inside_operator(Storage storage) {
         var storageData = dataStorages.get(storage);
         MultiClassRequestDto request = new MultiClassRequestDto(MultiSearchType.AND, List.of(),
-                List.of(new FieldConditionDto(storageData.date.id, "2000-01-01", "2001-01-01", null, Operator.INSIDE)));
+                List.of(new FieldConditionDto(storageData.date.getId(), "2000-01-01", "2001-01-01", null, Operator.INSIDE)));
         ItemsSearchResultDto result = itemsTestTools.searchMulti(request);
         assertThat(result.items()).hasSize(2);
         assertThat(result.items().get(storageData.voiture.getId())).hasSize(1);
@@ -320,7 +319,7 @@ public class SearchMultiTest {
     public void and_inside_operator_should_not_return(Storage storage) {
         var storageData = dataStorages.get(storage);
         MultiClassRequestDto request = new MultiClassRequestDto(MultiSearchType.AND, List.of(),
-                List.of(new FieldConditionDto(storageData.date.id, "2000-01-01", "2000-01-31", null, Operator.INSIDE)));
+                List.of(new FieldConditionDto(storageData.date.getId(), "2000-01-01", "2000-01-31", null, Operator.INSIDE)));
         ItemsSearchResultDto result = itemsTestTools.searchMulti(request);
         assertThat(result.items()).hasSize(1);
         assertThat(result.items().get(storageData.voiture.getId())).hasSize(1);
@@ -332,7 +331,7 @@ public class SearchMultiTest {
     public void and_position_only_class_usager_should_return_item_usager(Storage storage) {
         var storageData = dataStorages.get(storage);
         MultiClassRequestDto request = new MultiClassRequestDto(MultiSearchType.AND, List.of(storageData.usager.getId()),
-                List.of(new FieldConditionDto(storageData.position.id, "1000", null,
+                List.of(new FieldConditionDto(storageData.position.getId(), "1000", null,
                         "POINT (48.854986760569076 2.3479450485479996)",
                         Operator.DISTANCE)));
         ItemsSearchResultDto result = itemsTestTools.searchMulti(request);
@@ -347,10 +346,10 @@ public class SearchMultiTest {
         var storageData = dataStorages.get(storage);
         MultiClassRequestDto request = new MultiClassRequestDto(MultiSearchType.AND, List.of(storageData.usager.getId()),
                 List.of(
-                        new FieldConditionDto(storageData.position.id, "1000", null,
+                        new FieldConditionDto(storageData.position.getId(), "1000", null,
                                 "POINT (48.854986760569076 2.3479450485479996)",
                                 Operator.DISTANCE),
-                        new FieldConditionDto(storageData.date.id, "2000-01-01", "2001-01-01", null, Operator.INSIDE)));
+                        new FieldConditionDto(storageData.date.getId(), "2000-01-01", "2001-01-01", null, Operator.INSIDE)));
         ItemsSearchResultDto result = itemsTestTools.searchMulti(request);
         assertThat(result.items()).hasSize(1);
         assertThat(result.items().get(storageData.usager.getId())).hasSize(1);
@@ -362,9 +361,9 @@ public class SearchMultiTest {
     public void or_position_only_usager_date_in_both_should_return_item_voiture_usager(Storage storage) {
         var storageData = dataStorages.get(storage);
         MultiClassRequestDto request = new MultiClassRequestDto(MultiSearchType.OR, List.of(), List.of(
-                new FieldConditionDto(storageData.position.id, "1000", null, "48.854986760569076, 2.3479450485479996",
+                new FieldConditionDto(storageData.position.getId(), "1000", null, "48.854986760569076, 2.3479450485479996",
                         Operator.DISTANCE),
-                new FieldConditionDto(storageData.date.id, "2000-01-01", "2001-01-01", null, Operator.INSIDE)));
+                new FieldConditionDto(storageData.date.getId(), "2000-01-01", "2001-01-01", null, Operator.INSIDE)));
         ItemsSearchResultDto result = itemsTestTools.searchMulti(request);
         assertThat(result.items()).hasSize(2);
         assertThat(result.items().get(storageData.voiture.getId())).hasSize(1);
@@ -377,8 +376,8 @@ public class SearchMultiTest {
     public void or_id_vehicule_should_return_1_item_limit_1(Storage storage) {
         var storageData = dataStorages.get(storage);
         MultiClassRequestDto request = new MultiClassRequestDto(MultiSearchType.OR, List.of(), List.of(
-                new FieldConditionDto(storageData.idVehicule.id, "ZZZ"),
-                new FieldConditionDto(storageData.idVehicule.id, "BBB")), 1);
+                new FieldConditionDto(storageData.idVehicule.getId(), "ZZZ"),
+                new FieldConditionDto(storageData.idVehicule.getId(), "BBB")), 1);
         ItemsSearchResult result = multiClassSearchService.search(request);
         assertEquals(1, result.size());
         assertThat(result.getCount().get(storageData.voiture.getId()).count()).isEqualTo(1);

@@ -54,8 +54,8 @@ public class ItemsServiceTest {
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
         authService.authenticate();
 
-        var numAcc = testDataService.createField("Num_Acc", "keyword");
-        var geo = testDataService.createField("geo", "LineString", "EPSG:4326");
+        var numAcc = testDataService.createField("Num_Acc_%s".formatted(storage), "keyword");
+        var geo = testDataService.createField("geo_%s".formatted(storage), "LineString", "EPSG:4326");
         var attribute = testDataService.createAttribute("Num_Acc", numAcc);
         var attributeGeo = testDataService.createAttribute("geo", geo);
         var vehiculeClass = testDataService.createClass(companion, "vehicule", storage, attribute, attributeGeo);

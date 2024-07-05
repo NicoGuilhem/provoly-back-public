@@ -6,10 +6,10 @@ import java.util.UUID;
 import jakarta.ws.rs.*;
 
 import com.provoly.common.error.ProvolyResponseExceptionMapper;
-import com.provoly.common.model.FieldDto;
 import com.provoly.common.model.OClassDetailsDto;
 import com.provoly.common.model.OClassReadDto;
 import com.provoly.common.model.OClassWriteDto;
+import com.provoly.common.model.field.FieldDto;
 
 import io.quarkus.cache.CacheResult;
 
@@ -56,5 +56,17 @@ public interface ModelService {
 
     @POST
     @Path("/fields")
-    void addFields(Collection<FieldDto> fieldDtoCollection);
+    void addField(FieldDto fieldDto);
+
+    @PUT
+    @Path("/fields/id/{id}")
+    void updateField(@PathParam("id") UUID id, FieldDto fieldDto);
+
+    @GET
+    @Path("/fields")
+    public Collection<FieldDto> getFields();
+
+    @DELETE
+    @Path("/fields/{id}")
+    public void deleteFieldById(UUID id);
 }

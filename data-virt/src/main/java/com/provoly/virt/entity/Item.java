@@ -6,8 +6,8 @@ import java.util.stream.Collectors;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.model.AttributeDefDetailsDto;
-import com.provoly.common.model.FieldDto;
 import com.provoly.common.model.OClassDetailsDto;
+import com.provoly.common.model.field.FieldDto;
 
 public class Item {
 

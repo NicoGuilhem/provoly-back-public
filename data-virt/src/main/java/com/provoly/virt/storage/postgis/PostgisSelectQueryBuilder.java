@@ -19,6 +19,7 @@ import com.provoly.common.item.GeoFormat;
 import com.provoly.common.metadata.MetadataSystem;
 import com.provoly.common.model.AttributeDefDetailsDto;
 import com.provoly.common.model.OClassDetailsDto;
+import com.provoly.common.model.field.FieldGeoDto;
 import com.provoly.common.search.*;
 import com.provoly.virt.GeoHolder;
 import com.provoly.virt.ProvolySpanManager;
@@ -355,9 +356,13 @@ class PostgisSelectQueryBuilder {
             case EXISTS -> appendOperators(" is not null", columnName);
             //FIXME INSTANCE and INTERSECT are workaround
             //Other operator won't work at all.
-            case DISTANCE -> appendOperators("st_distance(%s, 'SRID=%s;%s', true) <= ?"
-                    .formatted(columnName, attribute.getField().checkAndExtractSRID(), condition.getLocation()),
-                    Double.valueOf(condition.getValue()));
+            case DISTANCE -> {
+                attribute.getField().checkField();
+                appendOperators("st_distance(%s, 'SRID=%s;%s', true) <= ?"
+                        .formatted(columnName, ((FieldGeoDto) attribute.getField()).checkAndExtractSRID(),
+                                condition.getLocation()),
+                        Double.valueOf(condition.getValue()));
+            }
             case INTERSECTS -> appendOperators("st_intersects(%s, st_geomfromgeojson(?))".formatted(columnName), value);
         }
 
@@ -376,13 +381,14 @@ class PostgisSelectQueryBuilder {
     }
 
     private Object getGeoValue(AttributeDefDetailsDto attribute, AttributeConditionDto conditionDto) {
+        FieldGeoDto fieldGeoDto = (FieldGeoDto) attribute.getField();
         if (conditionDto.getLocation() != null) {
-            var geo = new GeoHolder(conditionDto.getLocation(), attribute.getField().crs, GeoFormat.WKT).toString();
+            var geo = new GeoHolder(conditionDto.getLocation(), fieldGeoDto.getCrs(), GeoFormat.WKT).toString();
             return typedValue(attribute, geo);
         }
 
         if (conditionDto.getValue() != null) {
-            var geo = new GeoHolder(conditionDto.getValue(), attribute.getField().crs, GeoFormat.GEO_JSON).toString();
+            var geo = new GeoHolder(conditionDto.getValue(), fieldGeoDto.getCrs(), GeoFormat.GEO_JSON).toString();
             return typedValue(attribute, geo);
         }
         throw new BusinessException(ErrorCode.TECHNICAL, "A geo value must be set on geoJson or location property");

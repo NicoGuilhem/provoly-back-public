@@ -16,6 +16,7 @@ import com.provoly.common.dataset.DatasetType;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.model.AttributeDefDto;
 import com.provoly.common.model.OClassWriteDto;
+import com.provoly.common.model.field.FieldDto;
 import com.provoly.common.search.*;
 import com.provoly.common.user.Role;
 import com.provoly.ref.dataset.Dataset;
@@ -243,9 +244,9 @@ public class NamedQueryControllerTest {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
         UUID attributeId = UUID.randomUUID();
         UUID fieldId = UUID.randomUUID();
-        testService.createAndSaveField(fieldId);
+        FieldDto fieldDto = testService.createAndSaveField(fieldId);
         AttributeDefDto attributeDefDto = testService.createAttributeDto(attributeId, "attributeName",
-                "attributeId" + attributeId, fieldId);
+                "attributeId" + attributeId, fieldDto);
         OClassWriteDto classDto = testService.createClassWriteDto(UUID.randomUUID(), "classDto", attributeDefDto);
         modelService.saveEntity(modelMapper.toModel(classDto));
         DatasetDto datasetDto = createDatasetDto(classDto);

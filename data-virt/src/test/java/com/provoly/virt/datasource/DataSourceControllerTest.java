@@ -59,38 +59,39 @@ public class DataSourceControllerTest {
     public void prepareData(Storage storage) {
         authService.authenticate();
 
-        var dateField = testData.createField("aggregate_date", Type.INSTANT);
+        var dateField = testData.createField("aggregate_date_%s".formatted(UUID.randomUUID()), Type.INSTANT, "MONTH");
         var attributeDate = testData.createAttribute("aggregate_dateCrea", dateField);
-        var attributeChoc = testData.createAttribute("aggregate_choc", testData.createField("aggregate_number", Type.INTEGER));
+        var attributeChoc = testData.createAttribute("aggregate_choc",
+                testData.createField("aggregate_number_%s".formatted(UUID.randomUUID()), Type.INTEGER, "mètre"));
         var multiAttributeKeyword = testData.createAttributeMulti("aggregate_multi",
-                testData.createField("aggregate_multi", Type.KEYWORD), true);
+                testData.createField("aggregate_multi_%s".formatted(UUID.randomUUID()), Type.KEYWORD), true);
         var attributeKeyword = testData.createAttribute("aggregate_string",
-                testData.createField("aggregate_string", Type.KEYWORD));
+                testData.createField("aggregate_string_%s".formatted(UUID.randomUUID()), Type.KEYWORD));
         var vehicleClass = testData.createClass(companion, "aggregate_vehicle", storage, attributeDate, attributeChoc,
                 attributeKeyword, multiAttributeKeyword);
         dataStorages.get(storage).attributeDate = attributeDate;
         dataStorages.get(storage).attributeChoc = attributeChoc;
         dataStorages.get(storage).attributeKeyword = attributeKeyword;
         dataStorages.get(storage).multiAttributeKeyword = multiAttributeKeyword;
-        var datasetVersionDto = testData.createDataset("aggregate_vehicle", vehicleClass.getId());
-        dsMock.addDataSource(datasetVersionDto.getId(), DataSourceType.DATASET_VERSION, datasetVersionDto.getoClass());
-        dsMock.addDataSource(datasetVersionDto.getDataset(), DataSourceType.DATASET, datasetVersionDto.getoClass());
-
-        dataStorages.get(storage).datasetVersionDto = datasetVersionDto;
+        dataStorages.get(storage).datasetVersionDto = testData.createDataset("aggregate_vehicle", vehicleClass.getId());
+        dsMock.addDataSource(dataStorages.get(storage).datasetVersionDto.getId(), DataSourceType.DATASET_VERSION,
+                dataStorages.get(storage).datasetVersionDto.getoClass());
+        dsMock.addDataSource(dataStorages.get(storage).datasetVersionDto.getDataset(), DataSourceType.DATASET,
+                dataStorages.get(storage).datasetVersionDto.getoClass());
 
         Map<String, Object> attributes = new HashMap<>();
         attributes.put(attributeDate.getTechnicalName(), Instant.parse("2015-01-01T00:00:00+01:00"));
         attributes.put(attributeKeyword.getTechnicalName(), "marie");
         attributes.put(attributeChoc.getTechnicalName(), "12");
         attributes.put(multiAttributeKeyword.getTechnicalName(), "12");
-        itemsTestTools.addItem(datasetVersionDto, attributes);
+        itemsTestTools.addItem(dataStorages.get(storage).datasetVersionDto, attributes);
 
         Map<String, Object> attributes2 = new HashMap<>();
         attributes2.put(attributeDate.getTechnicalName(), Instant.parse("2015-01-01T00:00:00+01:00"));
         attributes2.put(attributeKeyword.getTechnicalName(), "MaRie");
         attributes2.put(attributeChoc.getTechnicalName(), "15");
         attributes2.put(multiAttributeKeyword.getTechnicalName(), "12");
-        itemsTestTools.addItem(datasetVersionDto, attributes2);
+        itemsTestTools.addItem(dataStorages.get(storage).datasetVersionDto, attributes2);
     }
 
     @AfterAll
@@ -402,9 +403,10 @@ public class DataSourceControllerTest {
     @Order(20)
     public void should_get_empty_result_when_dataset_doesnt_exist(Storage storage) {
         var dataStorage = dataStorages.get(storage);
-        var dateField = testData.createField("aggregate_date", Type.INSTANT);
+        var dateField = testData.createField("aggregate_date_%s".formatted(storage), Type.INSTANT, "MONTH");
         var attributeDate = testData.createAttribute("aggregate_dateCrea", dateField);
-        var attributeChoc = testData.createAttribute("aggregate_choc", testData.createField("aggregate_number", Type.INTEGER));
+        var attributeChoc = testData.createAttribute("aggregate_choc",
+                testData.createField("aggregate_number_%s".formatted(storage), Type.INTEGER));
         var vehicleClass = testData.createClass(companion, "aggregate_vehicle", attributeDate, attributeChoc);
         dataStorage.datasetVersionDto = testData.createDataset("aggregate_vehicle", vehicleClass.getId());
         dsMock.addDataSource(dataStorage.datasetVersionDto.getId(), DataSourceType.DATASET,
