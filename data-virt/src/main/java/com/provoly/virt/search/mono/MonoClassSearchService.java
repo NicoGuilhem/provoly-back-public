@@ -13,7 +13,7 @@ import com.provoly.clients.PredicateService;
 import com.provoly.common.Storage;
 import com.provoly.common.abac.AbacRuleDto;
 import com.provoly.common.abac.AbacRuleType;
-import com.provoly.common.dataset.DatasetVersionDto;
+import com.provoly.common.dataset.DatasetVersionDetailsDto;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.metadata.MetadataSystem;
@@ -287,11 +287,11 @@ public class MonoClassSearchService {
         // Execute the request and map result
         var classId = request.getoClass();
         log.debugf("Get dataset conditions for class %s", classId);
-        Collection<DatasetVersionDto> datasetVersions = new ArrayList<>();
+        Collection<DatasetVersionDetailsDto> datasetVersions = new ArrayList<>();
         if (request.getDatasetVersionIds() == null) {
             datasetVersions = datasetVersionService.getAllActiveForClass(classId);
             log.infof("Use Dataset versions (%s):%s ", datasetVersions.size(),
-                    datasetVersions.stream().map(DatasetVersionDto::getId).toList());
+                    datasetVersions.stream().map(DatasetVersionDetailsDto::getId).toList());
         } else {
             log.infof("Use only provided dataset versions %s", request.getDatasetVersionIds());
             for (UUID datasetVersionId : request.getDatasetVersionIds()) {

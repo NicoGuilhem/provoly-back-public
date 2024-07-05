@@ -96,8 +96,13 @@ public class NamedQueryControllerTest {
     public void init() {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
         // add class
+        FieldDto field = testService.createAndSaveField();
+        AttributeDefDto attributeDefDto = testService.createAttributeDto(UUID.randomUUID(), "attributeName",
+                "fakeAttributeId", field);
+        ArrayList<AttributeDefDto> attributes = new ArrayList<>();
+        attributes.add(attributeDefDto);
         classDtoTest = new OClassWriteDto(UUID.fromString("999a19f5-9d00-4028-b4b6-4b04101f6316"), "classTest",
-                new ArrayList<>(),
+                attributes,
                 Storage.ELASTIC);
         if (!modelService.exists(modelMapper.toModel(classDtoTest))) {
             modelService.saveEntity(modelMapper.toModel(classDtoTest));

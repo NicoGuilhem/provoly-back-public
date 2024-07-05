@@ -1,5 +1,6 @@
 package com.provoly.ref.datasetversion;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -8,10 +9,14 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
+import com.provoly.common.dataset.DatasetState;
+import com.provoly.common.dataset.DatasetVersionDetailsDto;
 import com.provoly.common.dataset.DatasetVersionDto;
 import com.provoly.common.dataset.DatasetVersionInformationDto;
 import com.provoly.common.metadata.MetadataValueWriteDto;
+import com.provoly.common.search.Direction;
 import com.provoly.common.user.Role;
 import com.provoly.ref.entity.EntityType;
 import com.provoly.ref.metadata.MetadataService;
@@ -21,6 +26,7 @@ import com.provoly.ref.metadata.MetadataService;
 @Consumes(MediaType.APPLICATION_JSON)
 public class DatasetVersionController {
 
+    private static final String RESPONSE_HEADER_TOTAL_COUNT = "X-Total-Count";
     private DatasetVersionService datasetVersionService;
     private DatasetVersionMapper datasetVersionMapper;
     private MetadataService metadataService;
@@ -36,8 +42,25 @@ public class DatasetVersionController {
 
     @GET
     @RolesAllowed({ Role.STR_DATASET_READ })
-    public Collection<DatasetVersionDetailsDto> getAll() {
-        return datasetVersionMapper.toDatasetVersionDetailsDto(datasetVersionRepository.getAll());
+    //FIXME only retrieve datasetVersion allowed to user (@see GrantService)
+    public Response getAll(@QueryParam("limit") Integer limit,
+            @QueryParam("offset") Integer offset,
+            @QueryParam("dateMax") String dateMaxString,
+            @QueryParam("dateMin") String dateMinString,
+            @QueryParam("dataset") UUID datasetId,
+            @QueryParam("state") DatasetState state,
+            @DefaultValue("DATE") @QueryParam("orderBy") DatasetVersionOrderBy orderBy,
+            @DefaultValue("asc") @QueryParam("sortBy") Direction sortBy) {
+        DatasetVersionGetAllParams params = new DatasetVersionGetAllParams(limit, offset,
+                dateMaxString != null ? Instant.parse(dateMaxString) : null,
+                dateMinString != null ? Instant.parse(dateMinString) : null,
+                datasetId, state, orderBy, sortBy);
+        Collection<DatasetVersionDetailsDto> datasetVersionsList = datasetVersionMapper
+                .toDatasetVersionDetailsDto(datasetVersionRepository.getAll(params));
+        long countAll = datasetVersionRepository.getCountAll(params);
+        return Response.ok(datasetVersionsList)
+                .header(RESPONSE_HEADER_TOTAL_COUNT, countAll)
+                .build();
     }
 
     @GET

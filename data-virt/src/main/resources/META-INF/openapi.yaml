@@ -1196,7 +1196,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DatasetVersionDto'
+                $ref: '#/components/schemas/DatasetVersionDetailsDto'
         "401":
           description: Not Authorized
         "403":
@@ -2206,6 +2206,98 @@ components:
         - DELETE_ERROR
         - DELETING
       type: string
+    DatasetType:
+      enum:
+        - OPEN
+        - CLOSED
+        - MODIFIABLE
+      type: string
+      example: CLOSED
+    VariableTypeDto:
+      enum:
+        - INTEGER
+        - STRING
+        - DOUBLE
+        - DATE
+        - UUID
+        - LIST
+      type: string
+    MetadataDefDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          nullable: true
+          example: "my metadata definition"
+        type:
+          $ref: '#/components/schemas/VariableTypeDto'
+        description:
+          type: string
+          example: "metadata definition description"
+        allowedValues:
+          type: array
+          items:
+            type: string
+        slug:
+          type: string
+          example: "87280_my_metadata_definition"
+        readOnly:
+          type: boolean
+        system:
+          type: boolean
+    MetadataValueReadDto:
+      type: object
+      properties:
+        value:
+          type: string
+          example: "my_value"
+        metadataDef:
+          $ref: '#/components/schemas/MetadataDefDto'
+    CategoryDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          example: "category_name"
+    DatasetDetailsDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          example: "my dataset"
+        oClass:
+          $ref: '#/components/schemas/UUID'
+        type:
+          $ref: '#/components/schemas/DatasetType'
+        metadata:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetadataValueReadDto'
+        groups:
+          type: array
+          items:
+            type: string
+          example: [ "first_group", "second_group" ]
+        description:
+          type: string
+          example: "my description"
+        owner:
+          type: boolean
+          example: false
+        slug:
+          type: string
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryDto'
+        activeVersion:
+          $ref: '#/components/schemas/DatasetVersionDto'
     DatasetVersionDto:
       type: object
       properties:
@@ -2230,6 +2322,33 @@ components:
           $ref: '#/components/schemas/Instant'
         additionalInformation:
           type: string
+    DatasetVersionDetailsDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        dataset:
+          $ref: '#/components/schemas/DatasetDetailsDto'
+        oClass:
+          $ref: '#/components/schemas/UUID'
+        lastModified:
+          $ref: '#/components/schemas/Instant'
+        version:
+          format: int32
+          type: integer
+          example: 2
+        state:
+          $ref: '#/components/schemas/DatasetState'
+        withFile:
+          type: boolean
+          example: false
+        metadata:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetadataValueReadDto'
+        hasWarnings:
+          type: boolean
+          example: false
     DatasetVersionInformationDto:
       type: object
       properties:

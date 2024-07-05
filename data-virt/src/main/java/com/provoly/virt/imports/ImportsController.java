@@ -9,7 +9,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
-import com.provoly.common.dataset.DatasetVersionDto;
+import com.provoly.common.dataset.DatasetVersionDetailsDto;
 import com.provoly.common.dataset.DatasetVersionInformationDto;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
@@ -41,7 +41,7 @@ public class ImportsController {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.STR_ITEM_WRITE })
-    public DatasetVersionDto importNewDataset(
+    public DatasetVersionDetailsDto importNewDataset(
             UUID datasetId,
             @RestForm FileUpload file, @RestForm boolean normalizeGeo, @RestForm int chunkSize,
             @RestForm @PartType(MediaType.APPLICATION_JSON) DatasetVersionInformationDto datasetVersionInformation) {

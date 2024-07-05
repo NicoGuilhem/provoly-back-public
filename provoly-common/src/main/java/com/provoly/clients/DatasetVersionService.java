@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import jakarta.ws.rs.*;
 
+import com.provoly.common.dataset.DatasetVersionDetailsDto;
 import com.provoly.common.dataset.DatasetVersionDto;
 import com.provoly.common.dataset.DatasetVersionInformationDto;
 import com.provoly.common.error.ProvolyResponseExceptionMapper;
@@ -23,7 +24,7 @@ public interface DatasetVersionService {
     @GET
     @Path("/id/{id}")
     @CacheResult(cacheName = "get-dataset-version")
-    DatasetVersionDto get(@PathParam("id") UUID id);
+    DatasetVersionDetailsDto get(@PathParam("id") UUID id);
 
     @POST
     void create(DatasetVersionDto datasetVersionDto);
@@ -46,5 +47,5 @@ public interface DatasetVersionService {
 
     @GET
     @Path("/class/{classId}")
-    Collection<DatasetVersionDto> getAllActiveForClass(@PathParam("classId") UUID classId);
+    Collection<DatasetVersionDetailsDto> getAllActiveForClass(@PathParam("classId") UUID classId);
 }

@@ -60,7 +60,7 @@ public class ImportService {
         this.bus = bus;
     }
 
-    public DatasetVersionDto runImportFromFile(UUID datasetId, ImportFileParameters importFileParameters,
+    public DatasetVersionDetailsDto runImportFromFile(UUID datasetId, ImportFileParameters importFileParameters,
             DatasetVersionInformationDto datasetVersionInformationDto) {
         log.infof("Importing new dataset for datasetId %s", datasetId);
         if (importFileParameters.file() == null) {

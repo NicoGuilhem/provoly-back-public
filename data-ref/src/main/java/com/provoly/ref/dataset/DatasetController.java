@@ -10,13 +10,17 @@ import jakarta.ws.rs.core.MediaType;
 
 import com.provoly.common.dataset.DatasetDetailsDto;
 import com.provoly.common.dataset.DatasetDto;
+import com.provoly.common.dataset.DatasetVersionDetailsDto;
+import com.provoly.common.dataset.DatasetVersionDto;
+import com.provoly.common.error.BusinessException;
+import com.provoly.common.error.ErrorCode;
 import com.provoly.common.metadata.MetadataValueWriteDto;
 import com.provoly.common.model.CategoryDto;
 import com.provoly.common.user.Role;
 import com.provoly.ref.category.CategoryMapper;
 import com.provoly.ref.category.CategoryService;
 import com.provoly.ref.category.WithCategoryEntityType;
-import com.provoly.ref.datasetversion.DatasetVersionDetailsDto;
+import com.provoly.ref.datasetversion.DatasetVersion;
 import com.provoly.ref.datasetversion.DatasetVersionMapper;
 import com.provoly.ref.datasetversion.DatasetVersionRepository;
 import com.provoly.ref.entity.EntityType;
@@ -25,6 +29,7 @@ import com.provoly.ref.metadata.MetadataService;
 import com.provoly.ref.model.AssociationsDto;
 
 import org.jboss.resteasy.reactive.RestQuery;
+import org.jetbrains.annotations.NotNull;
 
 @Path("/datasets")
 @Produces(MediaType.APPLICATION_JSON)
@@ -55,14 +60,18 @@ public class DatasetController {
     @GET
     @RolesAllowed({ Role.STR_DATASET_READ })
     public Collection<DatasetDetailsDto> getAll() {
-        return datasetMapper.toDatasetDetailsDtoList(datasetService.getAll());
+        List<Dataset> datasets = datasetService.getAll();
+        return toDatasetDetailsDtoWithActiveVersionComputed(datasets);
     }
 
     @GET
     @Path("/id/{id}")
     @RolesAllowed({ Role.STR_DATASET_READ, Role.STR_SEARCH })
     public DatasetDetailsDto get(UUID id) {
-        return datasetMapper.toDatasetDetailsDto(datasetService.getById(id));
+        DatasetDetailsDto datasetDetailsDto = datasetMapper.toDatasetDetailsDto(datasetService.getById(id));
+        datasetVersionRepository.getByDatasetId(id).map(datasetVersionMapper::toDto)
+                .ifPresent(datasetDetailsDto::setActiveVersion);
+        return datasetDetailsDto;
     }
 
     @GET
@@ -76,7 +85,10 @@ public class DatasetController {
     @Path("/name/{name}")
     @RolesAllowed({ Role.STR_DATASET_READ })
     public DatasetDetailsDto getByName(String name) {
-        return datasetMapper.toDatasetDetailsDto(datasetService.getByName(name));
+        DatasetDetailsDto datasetDetailsDto = datasetMapper.toDatasetDetailsDto(datasetService.getByName(name));
+        datasetVersionRepository.getByDatasetId(datasetDetailsDto.getId()).map(datasetVersionMapper::toDto)
+                .ifPresent(datasetDetailsDto::setActiveVersion);
+        return datasetDetailsDto;
     }
 
     //FIXME /datasets/search n'est pas documenté dans l'openapi
@@ -98,14 +110,17 @@ public class DatasetController {
     @Path("/id/{datasetId}/dataset-version")
     @RolesAllowed({ Role.STR_DATASET_READ })
     public DatasetVersionDetailsDto getDatasetVersionByDatasetId(UUID datasetId) {
-        return datasetVersionMapper.toDatasetVersionDetailsDto(datasetVersionRepository.getByDatasetId(datasetId));
+        return datasetVersionMapper.toDatasetVersionDetailsDto(datasetVersionRepository.getByDatasetId(datasetId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND,
+                        "No dataset version found for dataset %s.".formatted(datasetId))));
     }
 
     @GET
     @Path("/class/{id}")
     @RolesAllowed({ Role.STR_CLASS_READ, Role.STR_SEARCH })
     public Collection<DatasetDetailsDto> getAllForClass(UUID id) {
-        return datasetMapper.toDatasetDetailsDtoList(datasetService.getAllClassAllowedDatasets(id));
+        Collection<Dataset> datasets = datasetService.getAllClassAllowedDatasets(id);
+        return toDatasetDetailsDtoWithActiveVersionComputed(datasets);
     }
 
     @POST
@@ -167,5 +182,22 @@ public class DatasetController {
     @Path("/categories")
     public void addCategory(CategoryDto categoryDto) {
         datasetService.addCategory(categoryDto);
+    }
+
+    private @NotNull Collection<DatasetDetailsDto> toDatasetDetailsDtoWithActiveVersionComputed(Collection<Dataset> datasets) {
+        Collection<DatasetDetailsDto> datasetDetailsDtoList = datasetMapper.toDatasetDetailsDtoList(datasets);
+        List<DatasetVersion> activeDatasetVersions = datasetService.getActiveVersionsOrderedByVersionNumberDesc(datasets);
+        for (DatasetDetailsDto dataset : datasetDetailsDtoList) {
+            activeDatasetVersions.stream()
+                    .filter(version -> version.getDataset().getId().equals(dataset.getId()))
+                    .findFirst()
+                    .ifPresent(version -> {
+                        DatasetVersionDto dtoWithoutDataset = datasetVersionMapper.toDtoWithoutDataset(version);
+                        dtoWithoutDataset.setDataset(dataset.getId());
+                        dtoWithoutDataset.setoClass(dataset.getoClass());
+                        dataset.setActiveVersion(dtoWithoutDataset);
+                    });
+        }
+        return datasetDetailsDtoList;
     }
 }

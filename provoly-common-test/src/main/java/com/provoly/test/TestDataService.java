@@ -14,6 +14,7 @@ import com.provoly.common.abac.AbacRuleType;
 import com.provoly.common.abac.PredicateDto;
 import com.provoly.common.dataset.DatasetDto;
 import com.provoly.common.dataset.DatasetType;
+import com.provoly.common.dataset.DatasetVersionDetailsDto;
 import com.provoly.common.dataset.DatasetVersionDto;
 import com.provoly.common.metadata.MetadataDefDto;
 import com.provoly.common.metadata.MetadataValueWriteDto;
@@ -121,7 +122,11 @@ public class TestDataService {
         datasetService.save(dataset);
         log.infof("Dataset created " + dataset.getName());
         datasets.add(dataset);
-        return datasetService.getDatasetVersionByDatasetId(dataset.getId());
+        DatasetVersionDetailsDto datasetVersion = datasetService.getDatasetVersionByDatasetId(dataset.getId());
+        return new DatasetVersionDto(datasetVersion.getId(), datasetVersion.getDataset().getId(),
+                datasetVersion.getoClass(), datasetVersion.getLastModified(), datasetVersion.getVersion(),
+                datasetVersion.getState(), datasetVersion.getFileName(), datasetVersion.getProductionDate(),
+                datasetVersion.getProducer(), datasetVersion.getAdditionalInformation());
     }
 
     public FieldDto createField(String name, String type, String additionalProperty) {
@@ -259,10 +264,6 @@ public class TestDataService {
 
     public void deleteDatasetVersion(UUID datasetVersionId) {
         datasetVersionService.delete(datasetVersionId);
-    }
-
-    public List<DatasetVersionDto> getAllDatasetVersionByDatasetId(UUID datasetId) {
-        return datasetService.getAllById(datasetId);
     }
 
     private void deleteRule(AbacRuleDto r) {

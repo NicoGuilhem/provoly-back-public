@@ -12,7 +12,7 @@ import com.provoly.clients.DatasetVersionService;
 import com.provoly.common.dataset.DatasetDto;
 import com.provoly.common.dataset.DatasetState;
 import com.provoly.common.dataset.DatasetType;
-import com.provoly.common.dataset.DatasetVersionDto;
+import com.provoly.common.dataset.DatasetVersionDetailsDto;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.item.ItemDto;
@@ -88,7 +88,7 @@ public class ItemsController {
 
     private void canAdd(DatasetDto dataset, UUID datasetVersionDtoId) {
         if (dataset.getType().equals(DatasetType.CLOSED)) {
-            DatasetVersionDto datasetVersionDto = datasetVersionService.get(datasetVersionDtoId);
+            DatasetVersionDetailsDto datasetVersionDto = datasetVersionService.get(datasetVersionDtoId);
             if (!datasetVersionDto.getState().equals(DatasetState.INDEXING)) {
                 throw new BusinessException(ErrorCode.NOT_MODIFIABLE,
                         "Dataset %s is not in INDEXING state".formatted(dataset.getName()));

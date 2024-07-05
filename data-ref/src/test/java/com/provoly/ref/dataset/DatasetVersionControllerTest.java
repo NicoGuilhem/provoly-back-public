@@ -6,10 +6,8 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.hamcrest.CoreMatchers.is;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -23,8 +21,10 @@ import com.provoly.common.error.ProvolyNotFoundException;
 import com.provoly.common.imports.*;
 import com.provoly.common.metadata.MetadataDefDto;
 import com.provoly.common.metadata.MetadataValueWriteDto;
+import com.provoly.common.model.AttributeDefDto;
 import com.provoly.common.model.OClassWriteDto;
 import com.provoly.common.model.Type;
+import com.provoly.common.model.field.FieldDto;
 import com.provoly.common.user.Role;
 import com.provoly.ref.datasetversion.*;
 import com.provoly.ref.entity.EntityType;
@@ -44,6 +44,7 @@ import io.quarkus.test.security.TestSecurity;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 
+import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -105,7 +106,12 @@ public class DatasetVersionControllerTest {
     }
 
     private void initOClass(String OClassId, String name) {
-        OClassWriteDto classDtoTest = new OClassWriteDto(UUID.fromString(OClassId), name, new ArrayList<>(), Storage.ELASTIC);
+        FieldDto field = testService.createAndSaveField();
+        AttributeDefDto attributeDefDto = testService.createAttributeDto(UUID.randomUUID(), "attributeName",
+                "fakeAttributeId", field);
+        ArrayList<AttributeDefDto> attributes = new ArrayList<>();
+        attributes.add(attributeDefDto);
+        OClassWriteDto classDtoTest = new OClassWriteDto(UUID.fromString(OClassId), name, attributes, Storage.ELASTIC);
         oClass = modelMapper.toModel(classDtoTest);
         if (!modelService.exists(oClass)) {
             modelService.saveEntity(oClass);
@@ -575,12 +581,12 @@ public class DatasetVersionControllerTest {
 
     @Test
     @TestSecurity(user = "testUser", roles = { Role.STR_ITEM_WRITE, Role.STR_DATASET_WRITE })
-    public void getZeroDatasetVersionOfADataset_shouldThrow() {
+    public void getZeroDatasetVersionOfADataset_shouldReturnEmpty() {
         initDataset(DatasetType.CLOSED);
 
-        assertThatThrownBy(() -> datasetVersionRepository.getByDatasetId(datasetId))
-                .isInstanceOf(BusinessException.class)
-                .hasMessage("No dataset version found for dataset %s.".formatted(datasetId));
+        Optional<DatasetVersion> result = datasetVersionRepository.getByDatasetId(datasetId);
+
+        assertThat(result).isEmpty();
     }
 
     @Test
@@ -643,4 +649,47 @@ public class DatasetVersionControllerTest {
                 .body("productionDate", is(fixedDate.toString()));
     }
 
+    @Test
+    @TestSecurity(user = "testUser", roles = { Role.STR_DATASET_READ })
+    public void getAllDatasetVersion_shouldSucceed() {
+
+        initDataset(DatasetType.CLOSED);
+        generateDatasetVersionDto(false);
+        saveDatasetVersion();
+
+        given()
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/dataset-versions")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .header("X-Total-Count", "1")
+                .body("size()", is(1));
+    }
+
+    @Test
+    @TestSecurity(user = "testUser", roles = { Role.STR_DATASET_READ })
+    public void getAllDatasetVersion_withFiltersAndPagination_shouldSucceed() {
+
+        initDataset(DatasetType.CLOSED);
+        generateDatasetVersionDto(false);
+        saveDatasetVersion();
+
+        given()
+                .contentType(ContentType.JSON)
+                .queryParam("limit", "1")
+                .queryParam("offset", "0")
+                .queryParam("dateMax", Instant.now().plus(2, ChronoUnit.DAYS).toString())
+                .queryParam("dateMin", Instant.now().minus(2, ChronoUnit.DAYS).toString())
+                .queryParam("dataset", datasetId)
+                .queryParam("state", "INDEXING")
+                .queryParam("orderBy", "DATASET_NAME")
+                .queryParam("sortBy", "desc")
+                .when()
+                .get("/dataset-versions")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .header("X-Total-Count", "1")
+                .body("size()", is(1));
+    }
 }

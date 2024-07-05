@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.provoly.common.Default;
+import com.provoly.common.dataset.DatasetVersionDetailsDto;
 import com.provoly.common.dataset.DatasetVersionDto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -27,6 +28,11 @@ public class ItemDto {
     }
 
     public ItemDto(DatasetVersionDto datasetVersionDto, String id) {
+        this.id = datasetVersionDto.getId() + "@" + id;
+        this.oClass = datasetVersionDto.getoClass();
+    }
+
+    public ItemDto(DatasetVersionDetailsDto datasetVersionDto, String id) {
         this.id = datasetVersionDto.getId() + "@" + id;
         this.oClass = datasetVersionDto.getoClass();
     }

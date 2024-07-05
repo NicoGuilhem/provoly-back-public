@@ -1,26 +1,22 @@
 package com.provoly.ref.datasetversion;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.Root;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.*;
+import jakarta.transaction.Transactional;
 
 import com.provoly.common.dataset.DatasetState;
-import com.provoly.common.error.BusinessException;
-import com.provoly.common.error.ErrorCode;
 import com.provoly.common.error.ProvolyNotFoundException;
 import com.provoly.common.imports.MessageLevel;
 import com.provoly.ref.dataset.Dataset;
 import com.provoly.ref.dataset.Dataset_;
 import com.provoly.ref.entity.EntityIdRepository;
+import com.provoly.ref.model.OClass;
 import com.provoly.ref.model.OClass_;
 
 import org.jboss.logging.Logger;
@@ -66,8 +62,38 @@ public class DatasetVersionRepository {
         return entityIdRepository.findById(id, DatasetVersion.class);
     }
 
-    public List<DatasetVersion> getAll() {
-        return entityIdRepository.getAll(DatasetVersion.class);
+    @Transactional
+    public List<DatasetVersion> getAll(DatasetVersionGetAllParams params) {
+        EntityManager em = entityIdRepository.getEm();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        var q = cb.createQuery(DatasetVersion.class);
+        var rootQuery = q.from(DatasetVersion.class);
+        q.select(rootQuery);
+        Fetch<DatasetVersion, Dataset> fetch = rootQuery.fetch(DatasetVersion_.dataset);
+        Fetch<Dataset, OClass> fetchOClass = fetch.fetch(Dataset_.oClass);
+        fetchOClass.fetch(OClass_.attributes);
+        var dataset = rootQuery.join(DatasetVersion_.dataset);
+
+        q.where(params.getFilters(cb, rootQuery));
+        q.orderBy(params.getOrderBy(cb, rootQuery, dataset));
+
+        TypedQuery<DatasetVersion> query = em.createQuery(q);
+
+        params.addPaginationOptions(query);
+
+        return query.getResultList();
+    }
+
+    @Transactional
+    public long getCountAll(DatasetVersionGetAllParams params) {
+        EntityManager em = entityIdRepository.getEm();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        var q = cb.createQuery(Long.class);
+        var rootQuery = q.from(DatasetVersion.class);
+        q.select(cb.count(rootQuery));
+        q.where(params.getFilters(cb, rootQuery));
+        TypedQuery<Long> query = em.createQuery(q);
+        return query.getSingleResult();
     }
 
     public boolean exists(DatasetVersion entity) {
@@ -119,7 +145,7 @@ public class DatasetVersionRepository {
         return entityIdRepository.getEm().createQuery(q).getResultList();
     }
 
-    public DatasetVersion getByDatasetId(UUID datasetId) {
+    public Optional<DatasetVersion> getByDatasetId(UUID datasetId) {
         var cb = entityIdRepository.getEm().getCriteriaBuilder();
         var q = cb.createQuery(DatasetVersion.class);
         var rootQuery = q.from(DatasetVersion.class);
@@ -127,9 +153,20 @@ public class DatasetVersionRepository {
         q.where(cb.equal(dataset.get(Dataset_.id), datasetId),
                 cb.equal(rootQuery.get(DatasetVersion_.state), DatasetState.ACTIVE));
         q.orderBy(cb.desc(rootQuery.get(DatasetVersion_.version)));
-        return entityIdRepository.getEm().createQuery(q).setMaxResults(1).getResultList().stream().findFirst()
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND,
-                        "No dataset version found for dataset %s.".formatted(datasetId)));
+        return entityIdRepository.getEm().createQuery(q).setMaxResults(1).getResultList().stream().findFirst();
+    }
+
+    public List<DatasetVersion> getActiveVersionsOrderedByVersionNumberDesc(Collection<Dataset> datasetList) {
+        var cb = entityIdRepository.getEm().getCriteriaBuilder();
+        var q = cb.createQuery(DatasetVersion.class);
+        var rootQuery = q.from(DatasetVersion.class);
+        Fetch<DatasetVersion, Dataset> fetch = rootQuery.fetch(DatasetVersion_.dataset);
+        Fetch<Dataset, OClass> fetchOClass = fetch.fetch(Dataset_.oClass);
+        fetchOClass.fetch(OClass_.attributes);
+        q.where(rootQuery.get(DatasetVersion_.dataset).in(datasetList),
+                cb.equal(rootQuery.get(DatasetVersion_.state), DatasetState.ACTIVE));
+        q.orderBy(cb.desc(rootQuery.get(DatasetVersion_.version)));
+        return entityIdRepository.getEm().createQuery(q).getResultList();
     }
 
     public void deleteDatasetVersion(UUID datasetVersionId) {

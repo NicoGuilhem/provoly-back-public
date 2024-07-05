@@ -7,7 +7,7 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import com.provoly.clients.*;
-import com.provoly.common.dataset.DatasetVersionDto;
+import com.provoly.common.dataset.DatasetVersionDetailsDto;
 import com.provoly.common.datasource.DataSourceDetailsDto;
 import com.provoly.common.datasource.DataSourceType;
 import com.provoly.common.datasource.Search;
@@ -115,7 +115,7 @@ public class DataSourceItemsService {
         // Required in #28 to only get the first value for now
         var datasourceByAttribute = search.attributes().getFirst();
         var dataSourceDetails = dataSourceService.getDataSourceDetails(datasourceByAttribute.getDatasource());
-        DatasetVersionDto datasetVersionDto = switch (dataSourceDetails.type()) {
+        DatasetVersionDetailsDto datasetVersionDto = switch (dataSourceDetails.type()) {
             case DATASET_VERSION -> datasetVersionService.get(datasourceByAttribute.getDatasource());
             case DATASET -> datasetService.getDatasetVersionByDatasetId(datasourceByAttribute.getDatasource());
             case SEARCH ->
@@ -146,7 +146,7 @@ public class DataSourceItemsService {
     private MonoClassRequestDto buildMonoClassRequestWithDataset(DataSourceDetailsDto datasource, boolean excludeGeo,
             int limit, ConditionDto conditionDto) {
         try {
-            DatasetVersionDto datasetVersion = datasetService.getDatasetVersionByDatasetId(datasource.id());
+            DatasetVersionDetailsDto datasetVersion = datasetService.getDatasetVersionByDatasetId(datasource.id());
             return new MonoClassRequestDto(datasource.oClass(), List.of(datasetVersion.getId()), excludeGeo, limit,
                     conditionDto);
         } catch (BusinessException e) {
@@ -195,7 +195,7 @@ public class DataSourceItemsService {
     }
 
     private List<String> searchForAttributeValue(UUID attributeId,
-            DatasetVersionDto datasetVersion, String search, Integer limit) {
+            DatasetVersionDetailsDto datasetVersion, String search, Integer limit) {
         OClassDetailsDto oClassDto = modelService.getDetails(datasetVersion.getoClass());
 
         AttributeDefDetailsDto attributesFormatted = oClassDto.getAttributes()

@@ -17,7 +17,9 @@ import com.provoly.common.dataset.DatasetType;
 import com.provoly.common.dataset.DatasetVersionDto;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ProvolyNotFoundException;
+import com.provoly.common.model.AttributeDefDto;
 import com.provoly.common.model.OClassWriteDto;
+import com.provoly.common.model.field.FieldDto;
 import com.provoly.common.search.MonoClassRequestDto;
 import com.provoly.common.search.NamedQueryDto;
 import com.provoly.common.search.VisibilityDto;
@@ -77,13 +79,19 @@ public class WidgetControllerTest {
     CurrentSubjectProvider currentSubjectProvider;
     UUID privateId = UUID.fromString("d64155fc-9e36-4fc3-84f3-19f2e12ea851");
     UUID publicId = UUID.fromString("d13d7cf3-4b86-458b-8113-f04c613e584d");
-    OClassWriteDto classDtoTest = new OClassWriteDto(UUID.fromString("999a19f5-9d00-4028-b4b6-4b04101f6316"), "classTest",
-            new ArrayList<>(), Storage.ELASTIC);
+    OClassWriteDto classDtoTest = null;
 
     @BeforeEach
     public void init() {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
         testService.clean();
+        FieldDto field = testService.createAndSaveField();
+        AttributeDefDto attributeDefDto = testService.createAttributeDto(UUID.randomUUID(), "attributeName",
+                "fakeAttributeId", field);
+        ArrayList<AttributeDefDto> attributes = new ArrayList<>();
+        attributes.add(attributeDefDto);
+        classDtoTest = new OClassWriteDto(UUID.fromString("999a19f5-9d00-4028-b4b6-4b04101f6316"), "classTest",
+                attributes, Storage.ELASTIC);
         OClass oClass = modelMapper.toModel(classDtoTest);
         if (!modelService.exists(oClass)) {
             modelService.saveEntity(oClass);
@@ -202,9 +210,14 @@ public class WidgetControllerTest {
 
     private void createNamedQuery(UUID id) {
         VisibilityDto visibilityDto = new VisibilityDto(VisibilityType.PUBLIC.toString(), List.of());
+        FieldDto field = testService.createAndSaveField();
+        AttributeDefDto attributeDefDto = testService.createAttributeDto(UUID.randomUUID(), "attributeName",
+                "fakeAttributeId", field);
+        ArrayList<AttributeDefDto> attributes = new ArrayList<>();
+        attributes.add(attributeDefDto);
         OClassWriteDto classDtoTest = new OClassWriteDto(UUID.fromString("999a19f5-9d00-4028-b4b6-4b04101f6316"),
                 "classTest",
-                new ArrayList<>(), Storage.ELASTIC);
+                attributes, Storage.ELASTIC);
         if (!modelService.exists(modelMapper.toModel(classDtoTest))) {
             modelService.saveEntity(modelMapper.toModel(classDtoTest));
         }

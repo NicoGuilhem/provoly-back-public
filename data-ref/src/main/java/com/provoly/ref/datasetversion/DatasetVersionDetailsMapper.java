@@ -2,6 +2,7 @@ package com.provoly.ref.datasetversion;
 
 import jakarta.inject.Inject;
 
+import com.provoly.common.dataset.DatasetVersionDetailsDto;
 import com.provoly.common.imports.MessageLevel;
 
 import org.mapstruct.AfterMapping;

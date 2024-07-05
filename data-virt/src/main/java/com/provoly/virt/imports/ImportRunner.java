@@ -8,6 +8,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import com.provoly.clients.DatasetVersionService;
 import com.provoly.clients.ModelService;
 import com.provoly.common.dataset.DatasetState;
+import com.provoly.common.dataset.DatasetVersionDetailsDto;
 import com.provoly.common.dataset.DatasetVersionDto;
 import com.provoly.common.imports.*;
 import com.provoly.common.item.ItemDto;
@@ -76,7 +77,7 @@ public class ImportRunner {
         long itemsCount = 0;
 
         log.info("Get dataset %s and associated OClass".formatted(datasetVersionId));
-        DatasetVersionDto datasetVersionDto = datasetVersionService.get(datasetVersionId);
+        DatasetVersionDetailsDto datasetVersionDto = datasetVersionService.get(datasetVersionId);
         OClassDetailsDto oClassDto = modelService.getDetails(datasetVersionDto.getoClass());
         Stream<String> oClassAttributes = oClassDto.getAttributes().stream().map(AttributeDefDetailsDto::getTechnicalName);
         log.infof("Get dataset associated file: %s", datasetVersionId);
@@ -232,7 +233,7 @@ public class ImportRunner {
     }
 
     private ItemDto mapRecordToItem(ItemRecord itemRecord,
-            DatasetVersionDto datasetVersionDto) {
+            DatasetVersionDetailsDto datasetVersionDto) {
         var itemDto = new ItemDto(datasetVersionDto, UUID.randomUUID().toString());
 
         itemRecord.values().entrySet().stream().filter(val -> val.getValue() != null)

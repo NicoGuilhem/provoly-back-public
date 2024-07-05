@@ -161,6 +161,10 @@ public class DatasetService {
         return grantService.getAllUserAllowed(DATASET, user);
     }
 
+    public List<DatasetVersion> getActiveVersionsOrderedByVersionNumberDesc(Collection<Dataset> datasets) {
+        return datasetVersionRepository.getActiveVersionsOrderedByVersionNumberDesc(datasets);
+    }
+
     public AssociationsDto getDatasetAssociations(UUID datasetId) {
         getById(datasetId);
         List<AssociationDto> result = new ArrayList<>();

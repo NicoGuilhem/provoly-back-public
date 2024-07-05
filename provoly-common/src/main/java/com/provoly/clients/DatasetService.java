@@ -8,7 +8,7 @@ import jakarta.ws.rs.*;
 
 import com.provoly.common.dataset.DatasetDetailsDto;
 import com.provoly.common.dataset.DatasetDto;
-import com.provoly.common.dataset.DatasetVersionDto;
+import com.provoly.common.dataset.DatasetVersionDetailsDto;
 import com.provoly.common.error.ProvolyResponseExceptionMapper;
 
 import io.quarkus.cache.CacheResult;
@@ -44,7 +44,7 @@ public interface DatasetService {
 
     @GET
     @Path("/id/{id}/dataset-versions")
-    List<DatasetVersionDto> getAllById(@PathParam("id") UUID id);
+    List<DatasetVersionDetailsDto> getAllById(@PathParam("id") UUID id);
 
     @GET
     @Path("/search")
@@ -53,10 +53,10 @@ public interface DatasetService {
 
     @GET
     @Path("/name/{datasetName}/dataset-version")
-    DatasetVersionDto getDatasetVersionByDatasetName(@PathParam("datasetName") String datasetName);
+    DatasetVersionDetailsDto getDatasetVersionByDatasetName(@PathParam("datasetName") String datasetName);
 
     @GET
     @Path("/id/{datasetId}/dataset-version")
-    DatasetVersionDto getDatasetVersionByDatasetId(@PathParam("datasetId") UUID datasetId);
+    DatasetVersionDetailsDto getDatasetVersionByDatasetId(@PathParam("datasetId") UUID datasetId);
 
 }

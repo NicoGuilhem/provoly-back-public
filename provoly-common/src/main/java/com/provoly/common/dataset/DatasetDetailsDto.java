@@ -19,6 +19,7 @@ public class DatasetDetailsDto {
     private boolean owner;
     private String slug;
     private List<CategoryDto> categories;
+    private DatasetVersionDto activeVersion;
 
     public DatasetDetailsDto(UUID id,
             String name,
@@ -120,5 +121,13 @@ public class DatasetDetailsDto {
 
     public void setCategories(List<CategoryDto> categories) {
         this.categories = categories;
+    }
+
+    public DatasetVersionDto getActiveVersion() {
+        return activeVersion;
+    }
+
+    public void setActiveVersion(DatasetVersionDto activeVersion) {
+        this.activeVersion = activeVersion;
     }
 }

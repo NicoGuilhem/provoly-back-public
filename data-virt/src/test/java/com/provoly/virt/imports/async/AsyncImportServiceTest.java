@@ -16,9 +16,10 @@ import com.provoly.clients.DatasetService;
 import com.provoly.clients.DatasetVersionService;
 import com.provoly.clients.ModelService;
 import com.provoly.common.Storage;
+import com.provoly.common.dataset.DatasetDetailsDto;
 import com.provoly.common.dataset.DatasetDto;
 import com.provoly.common.dataset.DatasetType;
-import com.provoly.common.dataset.DatasetVersionDto;
+import com.provoly.common.dataset.DatasetVersionDetailsDto;
 import com.provoly.common.model.AttributeDefDetailsDto;
 import com.provoly.common.model.AttributeDefDto;
 import com.provoly.common.model.OClassDetailsDto;
@@ -92,7 +93,10 @@ public class AsyncImportServiceTest {
             List.of());
 
     private final DatasetDto dataset = new DatasetDto(UUID.randomUUID(), "dataset", classId, DatasetType.MODIFIABLE);
-    private final DatasetVersionDto datasetVersion = new DatasetVersionDto(datasetVersionId, dataset.getId(), classId);
+    private final DatasetDetailsDto datasetDetail = new DatasetDetailsDto(UUID.randomUUID(), "dataset", classId,
+            DatasetType.MODIFIABLE, null, null, null, false, null, null);
+    private final DatasetVersionDetailsDto datasetVersionDetail = new DatasetVersionDetailsDto(datasetVersionId, datasetDetail,
+            classId, null, null, null, null, null, null, null, null);
 
     public final String TOPIC_DATASET = "dataset-%s".formatted(classDetails.getSlug());
 
@@ -102,7 +106,7 @@ public class AsyncImportServiceTest {
         when(modelService.getDetails(classId)).thenReturn(classDetails);
         when(datasetService.searchByDatasetVersionId(datasetVersionId)).thenReturn(dataset);
 
-        when(datasetVersionService.getAllActiveForClass(classId)).thenReturn(List.of(datasetVersion));
+        when(datasetVersionService.getAllActiveForClass(classId)).thenReturn(List.of(datasetVersionDetail));
         when(abacService.getRuleFor(classId)).thenReturn(List.of());
 
     }

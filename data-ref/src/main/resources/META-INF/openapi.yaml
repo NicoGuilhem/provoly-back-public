@@ -1298,6 +1298,10 @@ paths:
           description: Retrieve all datasets
           content:
             application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DatasetDetailsDto'
               examples:
                 getAllDatasets:
                   summary: Get all datasets
@@ -1760,9 +1764,73 @@ paths:
         A dataset version is an instantiation of a dataset. It allows us to have coherent and versioned class data. 
         The parameter hasWarnings in the response body is a boolean used to indicate if dataset-version import's generated some warnings.
       operationId: com.provoly.ref.dataset.DatasetVersionController_getAll
+      parameters:
+        - name: limit
+          in: query
+          description: maximum number of elements to retrieve
+          required: false
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          description: "index of first element to retrieve (starting from the default value : 0)"
+          required: false
+          schema:
+            type: integer
+        - name: state
+          in: query
+          description: "State of the dataset version. Only datasets versions of this state are retrieved"
+          required: false
+          schema:
+            $ref: '#/components/schemas/DatasetState'
+        - name: dateMax
+          in: query
+          description: "maximum lastModified of dataset version. Only datasets version with lastModified before this date are retrieved."
+          required: false
+          schema:
+            type: string
+            format: date
+            example: "2024-12-29"
+        - name: dateMin
+          in: query
+          description: "minimum lastModified of dataset version. Only datasets versions with lastModified after this date are retrieved."
+          required: false
+          schema:
+            type: string
+            format: date
+            example: "2018-01-15"
+        - name: dataset
+          in: query
+          description: "UUID of the dataset. Only datasets versions of this dataset are retrieved"
+          required: false
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: orderBy
+          in: query
+          description: "Data for ordering results."
+          required: false
+          schema:
+            $ref: '#/components/schemas/DatasetVersionOrderBy'
+        - name: sortBy
+          in: query
+          description: "Sorting order."
+          required: false
+          schema:
+            $ref: '#/components/schemas/Direction'
       responses:
         "200":
-          $ref: '#/components/responses/listdatasetVersionDetailsDto'
+          description: 'list of datasets versions'
+          headers:
+            X-Total-Count:
+              description: 'Total count of all the elements of the request (without applying the limit parameter)'
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DatasetVersionDetailsDto'
         "401":
           description: Not Authorized
         "403":
@@ -4705,6 +4773,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CategoryDto'
+        activeVersion:
+          $ref: '#/components/schemas/DatasetVersionDto'
     CategoriesDto:
       type: array
       items:
@@ -4766,7 +4836,7 @@ components:
         id:
           $ref: '#/components/schemas/UUID'
         dataset:
-          $ref: '#/components/schemas/UUID'
+          $ref: '#/components/schemas/DatasetDetailsDto'
         oClass:
           $ref: '#/components/schemas/UUID'
         lastModified:
@@ -5350,6 +5420,12 @@ components:
           type: string
         operator:
           $ref: '#/components/schemas/Operator'
+    DatasetVersionOrderBy:
+      enum:
+        - DATASET_NAME
+        - DATE
+      type: string
+      default: DATE
     Direction:
       enum:
         - asc

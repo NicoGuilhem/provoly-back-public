@@ -11,7 +11,7 @@ import jakarta.inject.Inject;
 
 import com.provoly.clients.DatasetService;
 import com.provoly.common.Storage;
-import com.provoly.common.dataset.DatasetVersionDto;
+import com.provoly.common.dataset.DatasetVersionDetailsDto;
 import com.provoly.common.datasource.DataSourceType;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.model.AttributeDefDto;
@@ -114,7 +114,7 @@ public class DeleteDatasetVersionTest {
         var result = datasetService.getAllById(datasetVersionId);
 
         assertThat(result)
-                .extracting(DatasetVersionDto::getId)
+                .extracting(DatasetVersionDetailsDto::getId)
                 .doesNotContain(datasetVersionId)
                 .isEmpty();
     }
