@@ -161,7 +161,7 @@ paths:
               id: "fcc51f53-9295-4caf-968e-873b601763b1"
               name: "field_code"
               type: integer
-              isLocaleFormat: false
+              localeFormat: false
       responses:
         "201":
           description: Created
@@ -198,38 +198,6 @@ paths:
             - search
             - datasource_read
   /model/fields/{id}:
-    put:
-      parameters:
-        - name: id
-          in: path
-          description: Field UUID
-          required: true
-          schema:
-            $ref: '#/components/schemas/UUID'
-      tags:
-        - Model
-      summary: Update an existing field
-      operationId: com.provoly.ref.model.FieldController_updateField
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FieldDto'
-            example:
-              id: "fcc51f53-9295-4caf-968e-873b601763b1"
-              name: "field_code"
-              type: integer
-              isLocaleFormat: false
-      responses:
-        "201":
-          description: Created
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-        - oidc:
-            - field_write
     get:
       tags:
         - Model
@@ -289,6 +257,39 @@ paths:
             - item_write
             - search
             - datasource_read
+  /model/fields/id/{id}:
+    put:
+      parameters:
+        - name: id
+          in: path
+          description: Field UUID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      tags:
+        - Model
+      summary: Update an existing field
+      operationId: com.provoly.ref.model.FieldController_updateField
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FieldDto'
+            example:
+              id: "fcc51f53-9295-4caf-968e-873b601763b1"
+              name: "field_code"
+              type: integer
+              localeFormat: false
+      responses:
+        "201":
+          description: Created
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+        - oidc:
+            - field_write
   /model/fields/{id}/associations:
     get:
       tags:
@@ -5005,7 +5006,7 @@ components:
         unit:
           type: string
           nullable: true
-        isLocaleFormat:
+        localeFormat:
           type: boolean
           default: true
         decimalPrecision:
@@ -5036,7 +5037,7 @@ components:
         unit:
           type: string
           nullable: true
-        isLocaleFormat:
+        localeFormat:
           type: boolean
           default: true
     FullSearchConditionDto:

@@ -4,13 +4,10 @@ import java.util.UUID;
 
 import jakarta.persistence.*;
 
-import com.provoly.common.Default;
 import com.provoly.common.model.Type;
 import com.provoly.ref.entity.EntitySlug;
 
 import org.hibernate.annotations.DiscriminatorFormula;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
 
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
@@ -33,8 +30,6 @@ public class Field extends EntitySlug {
         super(id);
     }
 
-    @Default
-    @JsonCreator
     public Field(UUID id, String name, String slug, Type type) {
         super(id);
         this.slug = slug;

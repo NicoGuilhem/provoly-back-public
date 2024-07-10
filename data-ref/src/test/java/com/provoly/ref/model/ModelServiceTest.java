@@ -20,6 +20,7 @@ import com.provoly.common.link.LinkDto;
 import com.provoly.common.metadata.MetadataDefDto;
 import com.provoly.common.metadata.MetadataValueWriteDto;
 import com.provoly.common.model.AttributeDefDto;
+import com.provoly.common.model.AttributeDefWriteDto;
 import com.provoly.common.model.OClassDetailsDto;
 import com.provoly.common.model.OClassWriteDto;
 import com.provoly.common.model.field.FieldDto;
@@ -357,7 +358,8 @@ public class ModelServiceTest {
     public void saveClassWithMetadata_shouldSucceed() {
         UUID attributeId = UUID.randomUUID();
         FieldDto fieldDto = testService.createAndSaveField();
-        AttributeDefDto attributeDefDto = testService.createAttributeDto(attributeId, "attribute", "attributeId" + attributeId,
+        AttributeDefWriteDto attributeDefDto = testService.createAttributeWriteDto(attributeId, "attribute",
+                "attributeId" + attributeId,
                 fieldDto);
         MetadataValueWriteDto metadataValueWriteDto = new MetadataValueWriteDto();
         metadataValueWriteDto.setMetadataDefId(metadataDefDto.id);
@@ -382,7 +384,8 @@ public class ModelServiceTest {
     public void deleteClassReferencedByDataset_shouldTrow() {
         UUID attributeId = UUID.randomUUID();
         FieldDto fieldDto = testService.createAndSaveField();
-        AttributeDefDto attributeDefDto = testService.createAttributeDto(attributeId, "attribute", "attributeId" + attributeId,
+        AttributeDefWriteDto attributeDefDto = testService.createAttributeWriteDto(attributeId, "attribute",
+                "attributeId" + attributeId,
                 fieldDto);
 
         UUID oclassId = UUID.randomUUID();
@@ -405,7 +408,8 @@ public class ModelServiceTest {
     public void deleteClassWithCustomClass_shouldSucceed() {
         UUID attributeId = UUID.randomUUID();
         FieldDto fieldDto = testService.createAndSaveField();
-        AttributeDefDto attributeDefDto = testService.createAttributeDto(attributeId, "attribute", "attributeId" + attributeId,
+        AttributeDefWriteDto attributeDefDto = testService.createAttributeWriteDto(attributeId, "attribute",
+                "attributeId" + attributeId,
                 fieldDto);
 
         UUID oclassId = UUID.randomUUID();

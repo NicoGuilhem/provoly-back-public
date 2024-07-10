@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 
 public class FieldServiceUTest {
     FieldService fieldService;
-    ModelMapper modelMapper;
+    FieldMapper fieldMapper;
     EntityIdRepository entityIdRepository;
     RefEventService refEventService;
     AssociationService associationService;
@@ -31,10 +31,10 @@ public class FieldServiceUTest {
     public void init() {
         entityIdRepository = mock(EntityIdRepository.class);
         refEventService = mock(RefEventService.class);
-        modelMapper = mock(ModelMapper.class);
+        fieldMapper = mock(FieldMapper.class);
         associationService = mock(AssociationService.class);
         fieldRepository = mock(FieldRepository.class);
-        fieldService = new FieldService(modelMapper, entityIdRepository, refEventService, associationService, fieldRepository);
+        fieldService = new FieldService(fieldMapper, entityIdRepository, refEventService, associationService, fieldRepository);
     }
 
     @Test
@@ -234,7 +234,7 @@ public class FieldServiceUTest {
         FieldGeo fieldGeo = new FieldGeo(id, "name", "slug", "ESPG:4326", Type.POINT);
         FieldGeoDto fieldGeoDto = new FieldGeoDto(id, "name", Type.POINT.getName(), "slug", "EPSG:4326");
 
-        when(modelMapper.toModel(fieldGeoDto)).thenReturn(fieldGeo);
+        when(fieldMapper.toModel(fieldGeoDto)).thenReturn(fieldGeo);
         fieldService.addField(fieldGeoDto);
         verify(entityIdRepository).saveEntity(fieldGeo);
     }

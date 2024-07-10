@@ -5,21 +5,16 @@ import java.util.UUID;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 
-import com.provoly.common.Default;
 import com.provoly.common.model.Type;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
 
 @Entity
 @DiscriminatorValue("DECIMAL")
 public class FieldDecimal extends FieldNumeric {
     private Integer decimalPrecision;
 
-    @JsonCreator
-    @Default
-    public FieldDecimal(UUID id, String name, String slug, Type type, Integer decimalPrecision, boolean isLocaleFormat,
+    public FieldDecimal(UUID id, String name, String slug, Type type, Integer decimalPrecision, boolean localeFormat,
             String unit) {
-        super(id, name, slug, type, isLocaleFormat, unit);
+        super(id, name, slug, type, localeFormat, unit);
         this.decimalPrecision = decimalPrecision;
     }
 

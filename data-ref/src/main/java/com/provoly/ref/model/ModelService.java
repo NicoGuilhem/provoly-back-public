@@ -13,6 +13,7 @@ import com.provoly.common.Storage;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.model.AttributeDefDto;
+import com.provoly.common.model.AttributeDefWriteDto;
 import com.provoly.common.model.OClassWriteDto;
 import com.provoly.ref.category.Category;
 import com.provoly.ref.category.CategoryService;
@@ -123,7 +124,7 @@ public class ModelService {
         });
     }
 
-    private void processAttribute(AttributeDefDto attributeDefDto) {
+    private void processAttribute(AttributeDefWriteDto attributeDefDto) {
         if (attributeDefDto.getCategory() != null) {
             categoryService.updateEntityCategories(List.of(attributeDefDto.getCategory()),
                     attributeDefDto.getId(), WithCategoryEntityType.ATTRIBUTES);

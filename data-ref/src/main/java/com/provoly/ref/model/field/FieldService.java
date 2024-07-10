@@ -15,13 +15,13 @@ import com.provoly.ref.model.*;
 
 @ApplicationScoped
 public class FieldService {
-    private ModelMapper modelMapper;
+    private FieldMapper modelMapper;
     private EntityIdRepository entityIdRepository;
     private RefEventService refEventService;
     private AssociationService associationService;
     private FieldRepository fieldRepository;
 
-    public FieldService(ModelMapper modelMapper, EntityIdRepository entityIdRepository,
+    public FieldService(FieldMapper modelMapper, EntityIdRepository entityIdRepository,
             RefEventService refEventService, AssociationService associationService,
             FieldRepository fieldRepository) {
         this.modelMapper = modelMapper;

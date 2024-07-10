@@ -14,13 +14,14 @@ public class OClassWriteDto implements WithMetadata {
     private final String name;
     private final Storage storage;
     private final String icon;
-    private final List<AttributeDefDto> attributes;
+    private final List<AttributeDefWriteDto> attributes;
     private final String slug;
     private List<MetadataValueWriteDto> metadata;
 
     @Default
     @JsonCreator
-    public OClassWriteDto(UUID id, String name, String icon, List<AttributeDefDto> attributes, String slug, Storage storage,
+    public OClassWriteDto(UUID id, String name, String icon, List<AttributeDefWriteDto> attributes, String slug,
+            Storage storage,
             List<MetadataValueWriteDto> metadata) {
         this.id = id;
         this.name = name;
@@ -31,12 +32,12 @@ public class OClassWriteDto implements WithMetadata {
         this.metadata = metadata;
     }
 
-    public OClassWriteDto(UUID id, String name, List<AttributeDefDto> attributes, Storage storage,
+    public OClassWriteDto(UUID id, String name, List<AttributeDefWriteDto> attributes, Storage storage,
             List<MetadataValueWriteDto> metadata) {
         this(id, name, null, attributes, null, storage, metadata);
     }
 
-    public OClassWriteDto(UUID id, String name, List<AttributeDefDto> attributes) {
+    public OClassWriteDto(UUID id, String name, List<AttributeDefWriteDto> attributes) {
         this.id = id;
         this.name = name;
         this.attributes = attributes;
@@ -46,7 +47,7 @@ public class OClassWriteDto implements WithMetadata {
         this.metadata = List.of();
     }
 
-    public OClassWriteDto(UUID id, String name, List<AttributeDefDto> attributes, Storage storage) {
+    public OClassWriteDto(UUID id, String name, List<AttributeDefWriteDto> attributes, Storage storage) {
         this.id = id;
         this.name = name;
         this.attributes = attributes;
@@ -69,7 +70,7 @@ public class OClassWriteDto implements WithMetadata {
         return icon;
     }
 
-    public List<AttributeDefDto> getAttributes() {
+    public List<AttributeDefWriteDto> getAttributes() {
         return attributes;
     }
 

@@ -4,14 +4,14 @@ import java.util.UUID;
 
 public class FieldDecimalDto extends FieldDto {
     private Integer decimalPrecision;
-    private boolean isLocaleFormat;
+    private boolean localeFormat;
     private String unit;
 
-    public FieldDecimalDto(UUID id, String name, String slug, String type, Integer decimalPrecision, boolean isLocaleFormat,
+    public FieldDecimalDto(UUID id, String name, String slug, String type, Integer decimalPrecision, boolean localeFormat,
             String unit) {
         super(id, name, type, slug);
         this.decimalPrecision = decimalPrecision;
-        this.isLocaleFormat = isLocaleFormat;
+        this.localeFormat = localeFormat;
         this.unit = unit;
     }
 
@@ -20,7 +20,7 @@ public class FieldDecimalDto extends FieldDto {
     }
 
     public boolean isLocaleFormat() {
-        return isLocaleFormat;
+        return localeFormat;
     }
 
     public String getUnit() {

@@ -9,17 +9,17 @@ import jakarta.ws.rs.core.MediaType;
 
 import com.provoly.common.model.field.FieldDto;
 import com.provoly.common.user.Role;
-import com.provoly.ref.model.ModelMapper;
+import com.provoly.ref.model.FieldMapper;
 
 @Path("/model")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class FieldController {
 
-    private ModelMapper mapper;
+    private FieldMapper mapper;
     private FieldService fieldService;
 
-    public FieldController(ModelMapper mapper, FieldService fieldService) {
+    public FieldController(FieldMapper mapper, FieldService fieldService) {
         this.mapper = mapper;
         this.fieldService = fieldService;
     }

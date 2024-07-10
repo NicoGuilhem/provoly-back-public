@@ -15,7 +15,7 @@ import com.provoly.common.dataset.DatasetState;
 import com.provoly.common.dataset.DatasetType;
 import com.provoly.common.dataset.DatasetVersionDto;
 import com.provoly.common.imports.*;
-import com.provoly.common.model.AttributeDefDto;
+import com.provoly.common.model.AttributeDefWriteDto;
 import com.provoly.common.model.OClassWriteDto;
 import com.provoly.common.model.field.FieldDto;
 import com.provoly.ref.dataset.Dataset;
@@ -73,9 +73,9 @@ public class DatasetVersionErrorTest {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
         ProvolyUser provolyUser = userService.getCurrentUser();
         FieldDto field = testService.createAndSaveField();
-        AttributeDefDto attributeDefDto = testService.createAttributeDto(UUID.randomUUID(), "attributeName",
+        AttributeDefWriteDto attributeDefDto = testService.createAttributeWriteDto(UUID.randomUUID(), "attributeName",
                 "fakeAttributeId", field);
-        ArrayList<AttributeDefDto> attributes = new ArrayList<>();
+        ArrayList<AttributeDefWriteDto> attributes = new ArrayList<>();
         attributes.add(attributeDefDto);
         OClassWriteDto oclassWriteDto = new OClassWriteDto(UUID.randomUUID(), "datasetVersionTest", attributes,
                 Storage.ELASTIC);

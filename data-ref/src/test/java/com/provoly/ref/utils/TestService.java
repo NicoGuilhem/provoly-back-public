@@ -3,6 +3,7 @@ package com.provoly.ref.utils;
 import static org.mockito.BDDMockito.given;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -11,6 +12,7 @@ import jakarta.transaction.Transactional;
 
 import com.provoly.common.Storage;
 import com.provoly.common.model.AttributeDefDto;
+import com.provoly.common.model.AttributeDefWriteDto;
 import com.provoly.common.model.OClassWriteDto;
 import com.provoly.common.model.Type;
 import com.provoly.common.model.field.FieldDto;
@@ -54,7 +56,18 @@ public class TestService {
     }
 
     public OClassWriteDto createClassWriteDto(UUID id, String name, Storage storage, AttributeDefDto... attributeDefDtos) {
-        return new OClassWriteDto(id, name + "-" + id, new ArrayList<>(Arrays.asList(attributeDefDtos)), storage);
+
+        var writeAttributes = Arrays.stream(attributeDefDtos)
+                .map(att -> new AttributeDefWriteDto(att.getId(),
+                        att.getName(),
+                        att.getTechnicalName(),
+                        att.getField().getId(),
+                        att.getCategory(),
+                        att.isMultiValued(),
+                        att.getSlug()))
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        return new OClassWriteDto(id, name + "-" + id, writeAttributes, storage);
     }
 
     public void ensureGroups(List<String> groupsName) {
@@ -68,6 +81,10 @@ public class TestService {
 
     public AttributeDefDto createAttributeDto(UUID id, String name, String technicalName, FieldDto fieldDto) {
         return new AttributeDefDto(id, name, technicalName, fieldDto);
+    }
+
+    public AttributeDefWriteDto createAttributeWriteDto(UUID id, String name, String technicalName, FieldDto fieldDto) {
+        return new AttributeDefWriteDto(id, name, technicalName, fieldDto.getId());
     }
 
     public FieldDto createAndSaveField(UUID fieldId) {

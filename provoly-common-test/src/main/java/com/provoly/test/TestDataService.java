@@ -19,6 +19,7 @@ import com.provoly.common.dataset.DatasetVersionDto;
 import com.provoly.common.metadata.MetadataDefDto;
 import com.provoly.common.metadata.MetadataValueWriteDto;
 import com.provoly.common.model.AttributeDefDto;
+import com.provoly.common.model.AttributeDefWriteDto;
 import com.provoly.common.model.OClassWriteDto;
 import com.provoly.common.model.Type;
 import com.provoly.common.model.field.FieldDateDto;
@@ -184,7 +185,17 @@ public class TestDataService {
     public OClassWriteDto createClassWithId(KafkaCompanion companion, UUID id, String name, Storage storage,
             List<MetadataValueWriteDto> metadata,
             AttributeDefDto... attributes) {
-        var classDto = new OClassWriteDto(id, name + "-" + id, List.of(attributes), storage, metadata);
+        var writeAttributes = Arrays.stream(attributes)
+                .map(att -> new AttributeDefWriteDto(att.getId(),
+                        att.getName(),
+                        att.getTechnicalName(),
+                        att.getField().getId(),
+                        att.getCategory(),
+                        att.isMultiValued(),
+                        att.getSlug()))
+                .toList();
+
+        var classDto = new OClassWriteDto(id, name + "-" + id, writeAttributes, storage, metadata);
         if (storage == Storage.KUZZLE_ASSET || storage == Storage.KUZZLE_MEASURE) {
             modelService.addClass(classDto);
         } else {
@@ -196,7 +207,17 @@ public class TestDataService {
     }
 
     public OClassWriteDto createClassWithoutIdInName(String name, AttributeDefDto... attributes) {
-        var classDto = new OClassWriteDto(UUID.randomUUID(), name, List.of(attributes), Storage.ELASTIC);
+        var writeAttributes = Arrays.stream(attributes)
+                .map(att -> new AttributeDefWriteDto(att.getId(),
+                        att.getName(),
+                        att.getTechnicalName(),
+                        att.getField().getId(),
+                        att.getCategory(),
+                        att.isMultiValued(),
+                        att.getSlug()))
+                .toList();
+
+        var classDto = new OClassWriteDto(UUID.randomUUID(), name, writeAttributes, Storage.ELASTIC);
         modelService.addClass(classDto);
         classDtos.add(classDto);
 

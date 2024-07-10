@@ -17,7 +17,7 @@ import com.provoly.common.dataset.DatasetType;
 import com.provoly.common.dataset.DatasetVersionDto;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ProvolyNotFoundException;
-import com.provoly.common.model.AttributeDefDto;
+import com.provoly.common.model.AttributeDefWriteDto;
 import com.provoly.common.model.OClassWriteDto;
 import com.provoly.common.model.field.FieldDto;
 import com.provoly.common.search.MonoClassRequestDto;
@@ -86,9 +86,9 @@ public class WidgetControllerTest {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
         testService.clean();
         FieldDto field = testService.createAndSaveField();
-        AttributeDefDto attributeDefDto = testService.createAttributeDto(UUID.randomUUID(), "attributeName",
+        AttributeDefWriteDto attributeDefDto = testService.createAttributeWriteDto(UUID.randomUUID(), "attributeName",
                 "fakeAttributeId", field);
-        ArrayList<AttributeDefDto> attributes = new ArrayList<>();
+        ArrayList<AttributeDefWriteDto> attributes = new ArrayList<>();
         attributes.add(attributeDefDto);
         classDtoTest = new OClassWriteDto(UUID.fromString("999a19f5-9d00-4028-b4b6-4b04101f6316"), "classTest",
                 attributes, Storage.ELASTIC);
@@ -211,9 +211,9 @@ public class WidgetControllerTest {
     private void createNamedQuery(UUID id) {
         VisibilityDto visibilityDto = new VisibilityDto(VisibilityType.PUBLIC.toString(), List.of());
         FieldDto field = testService.createAndSaveField();
-        AttributeDefDto attributeDefDto = testService.createAttributeDto(UUID.randomUUID(), "attributeName",
+        AttributeDefWriteDto attributeDefDto = testService.createAttributeWriteDto(UUID.randomUUID(), "attributeName",
                 "fakeAttributeId", field);
-        ArrayList<AttributeDefDto> attributes = new ArrayList<>();
+        ArrayList<AttributeDefWriteDto> attributes = new ArrayList<>();
         attributes.add(attributeDefDto);
         OClassWriteDto classDtoTest = new OClassWriteDto(UUID.fromString("999a19f5-9d00-4028-b4b6-4b04101f6316"),
                 "classTest",

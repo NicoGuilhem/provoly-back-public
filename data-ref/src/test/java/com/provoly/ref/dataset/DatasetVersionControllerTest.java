@@ -21,7 +21,7 @@ import com.provoly.common.error.ProvolyNotFoundException;
 import com.provoly.common.imports.*;
 import com.provoly.common.metadata.MetadataDefDto;
 import com.provoly.common.metadata.MetadataValueWriteDto;
-import com.provoly.common.model.AttributeDefDto;
+import com.provoly.common.model.AttributeDefWriteDto;
 import com.provoly.common.model.OClassWriteDto;
 import com.provoly.common.model.Type;
 import com.provoly.common.model.field.FieldDto;
@@ -107,9 +107,9 @@ public class DatasetVersionControllerTest {
 
     private void initOClass(String OClassId, String name) {
         FieldDto field = testService.createAndSaveField();
-        AttributeDefDto attributeDefDto = testService.createAttributeDto(UUID.randomUUID(), "attributeName",
+        AttributeDefWriteDto attributeDefDto = testService.createAttributeWriteDto(UUID.randomUUID(), "attributeName",
                 "fakeAttributeId", field);
-        ArrayList<AttributeDefDto> attributes = new ArrayList<>();
+        ArrayList<AttributeDefWriteDto> attributes = new ArrayList<>();
         attributes.add(attributeDefDto);
         OClassWriteDto classDtoTest = new OClassWriteDto(UUID.fromString(OClassId), name, attributes, Storage.ELASTIC);
         oClass = modelMapper.toModel(classDtoTest);
