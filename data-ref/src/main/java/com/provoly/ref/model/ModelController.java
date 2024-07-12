@@ -127,7 +127,7 @@ public class ModelController {
     @PUT
     @Path("/class/id/{id}/attribute")
     @RolesAllowed({ Role.STR_CLASS_WRITE })
-    public void addAttribute(UUID id, AttributeDefDto attributeDefDto) {
+    public void addAttribute(UUID id, AttributeDefWriteDto attributeDefDto) {
         modelService.addOrUpdateAttribute(id, attributeDefDto);
     }
 

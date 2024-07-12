@@ -12,7 +12,7 @@ import jakarta.transaction.Transactional;
 import com.provoly.common.Storage;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
-import com.provoly.common.model.AttributeDefDto;
+import com.provoly.common.model.AttributeBaseDto;
 import com.provoly.common.model.AttributeDefWriteDto;
 import com.provoly.common.model.OClassWriteDto;
 import com.provoly.ref.category.Category;
@@ -158,7 +158,7 @@ public class ModelService {
     }
 
     @Transactional
-    public void addOrUpdateAttribute(UUID oClassId, AttributeDefDto attributeDefDto) {
+    public void addOrUpdateAttribute(UUID oClassId, AttributeDefWriteDto attributeDefDto) {
         OClass oClass = entityIdRepository.getLinkedById(oClassId, OClass.class);
         getAttributeInSet(attributeDefDto, oClass.getAttributes()).ifPresentOrElse(
                 oldAttributeDef -> {
@@ -269,7 +269,7 @@ public class ModelService {
         customClassService.deleteByoClassId(oClassId);
     }
 
-    private Optional<AttributeDef> getAttributeInSet(AttributeDefDto attributeDefDto, Set<AttributeDef> attributeDefSet) {
+    private Optional<AttributeDef> getAttributeInSet(AttributeBaseDto attributeDefDto, Set<AttributeDef> attributeDefSet) {
         return attributeDefSet.stream()
                 .filter(attributeDef -> attributeDef.getId().equals(attributeDefDto.getId()))
                 .findFirst();

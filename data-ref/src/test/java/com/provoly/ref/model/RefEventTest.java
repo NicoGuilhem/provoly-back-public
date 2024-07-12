@@ -201,7 +201,8 @@ public class RefEventTest {
         var oClass = testService.createClassWriteDto(UUID.randomUUID(), "whenClassAddedAttribute_eventSent_myClass", attribute);
         modelController.saveClass(oClass);
         // Modifying class - Add an attribute
-        var attribute2 = testService.createAttributeDto(UUID.randomUUID(), "attr2", "whenClassAddedAttribute_eventSent_attr2",
+        var attribute2 = testService.createAttributeWriteDto(UUID.randomUUID(), "attr2",
+                "whenClassAddedAttribute_eventSent_attr2",
                 field);
         modelController.addAttribute(oClass.getId(), attribute2);
         //then

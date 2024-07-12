@@ -631,7 +631,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AttributeDefDto'
+              $ref: '#/components/schemas/AttributeDefWriteDto'
             examples:
               addAttribute:
                 summary: Adding an attribute to a class
@@ -4465,6 +4465,27 @@ components:
         field:
           $ref: '#/components/schemas/FieldDto'
     AttributeDefDto:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          example: "Attribute name"
+        technicalName:
+          type: string
+          example: "Technical name"
+        field:
+          $ref: '#/components/schemas/FieldDto'
+        category:
+          $ref: '#/components/schemas/UUID'
+        multiValued:
+          type: boolean
+          example: false
+        slug:
+          type: string
+          example: "12390_attribute_name"
+    AttributeDefWriteDto:
       type: object
       properties:
         id:
