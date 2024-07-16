@@ -6,6 +6,7 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.criteria.Root;
 import jakarta.transaction.Transactional;
 
 import com.provoly.common.error.BusinessException;
@@ -58,6 +59,14 @@ public class EntityIdRepository {
     @Transactional
     public void removeEntity(EntityId entityId) {
         em.remove(entityId);
+    }
+
+    @Transactional
+    public <T extends EntityId> void removeEntities(List<T> entities, Class<T> entityClass) {
+        var q = em.getCriteriaBuilder().createCriteriaDelete(entityClass);
+        Root<T> root = q.from(entityClass);
+        q.where(root.get(EntityId_.id).in(entities.stream().map(EntityId::getId).toList()));
+        em.createQuery(q).executeUpdate();
     }
 
     @Transactional

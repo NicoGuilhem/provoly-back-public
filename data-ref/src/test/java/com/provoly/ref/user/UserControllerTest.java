@@ -4,13 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.tuple;
 import static org.mockito.BDDMockito.given;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
 import jakarta.inject.Inject;
 
 import com.provoly.common.VariableType;
-import com.provoly.common.metadata.MetadataValueWriteDto;
+import com.provoly.common.metadata.UserMetadataValueWriteDto;
 import com.provoly.common.metadata.UserProfileValueReadDto;
 import com.provoly.common.user.Role;
 import com.provoly.common.user.UserDto;
@@ -48,10 +49,16 @@ class UserControllerTest {
                 UUID.randomUUID().toString());
     }
 
-    private void addProfileToUser(UserProfile metadataDefDto, UserDto originalUser) {
-        MetadataValueWriteDto metadataValueWriteDto = new MetadataValueWriteDto();
-        metadataValueWriteDto.setValue("nouvelleValeur");
-        userController.addProfileForUser(originalUser.getId(), metadataDefDto.getId(), metadataValueWriteDto);
+    private void addProfileToUser(UserProfile metadataDefDto, UserDto originalUser, String... profileValues) {
+        UserMetadataValueWriteDto metadataValueWriteDto = new UserMetadataValueWriteDto();
+        List<String> list;
+        if (profileValues == null || profileValues.length == 0) {
+            list = List.of("nouvelleValeur");
+        } else {
+            list = Arrays.asList(profileValues);
+        }
+        metadataValueWriteDto.setValues(list);
+        userController.addProfilesForUser(originalUser.getId(), metadataDefDto.getId(), metadataValueWriteDto);
     }
 
     @BeforeEach
@@ -96,6 +103,55 @@ class UserControllerTest {
         assertThat(userMetadatas).extracting("value", "userProfile.id")
                 .containsExactly(tuple("nouvelleValeur", userProfileId));
 
+        // cleaning
+        userController.deleteProfileForUser(originalUser.getId(), userProfile.getId());
+    }
+
+    @Test
+    @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_USER_REF_WRITE, Role.STR_METADATA_USER_READ,
+            Role.STR_METADATA_USER_WRITE })
+    void shouldAddMetadatas() {
+        var userProfile = addUserProfile("fakeProfile");
+        userProfileService.saveUserProfile(userProfile);
+
+        UserDto originalUser = userController.getCurrentUserInfo();
+        List<UserProfileValueReadDto> userProfiles = userController.getProfileValuesByUserId(originalUser.getId());
+        assertThat(userProfiles).isEmpty();
+        addProfileToUser(userProfile, originalUser, "nouvelleValeur", "nouvelleAutreValeur");
+
+        List<UserProfileValueReadDto> userMetadatas = userController.getProfileValuesByUserId(originalUser.getId());
+        assertThat(userMetadatas).extracting("value", "userProfile.id")
+                .containsExactly(tuple("nouvelleValeur", userProfileId), tuple("nouvelleAutreValeur", userProfileId));
+
+        // cleaning
+        userController.deleteProfileForUser(originalUser.getId(), userProfile.getId());
+    }
+
+    @Test
+    @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_USER_REF_WRITE, Role.STR_METADATA_USER_READ,
+            Role.STR_METADATA_USER_WRITE })
+    void shouldUpdateExistingMetadatas() {
+        var userProfile = addUserProfile("fakeUpdateProfile");
+        userProfileService.saveUserProfile(userProfile);
+
+        UserDto originalUser = userController.getCurrentUserInfo();
+        List<UserProfileValueReadDto> userProfiles = userController.getProfileValuesByUserId(originalUser.getId());
+        assertThat(userProfiles).isEmpty();
+        addProfileToUser(userProfile, originalUser, "nouvelleValeur", "nouvelleAutreValeur");
+
+        List<UserProfileValueReadDto> userMetadatas = userController.getProfileValuesByUserId(originalUser.getId());
+        assertThat(userMetadatas).extracting("value", "userProfile.id")
+                .containsExactly(tuple("nouvelleValeur", userProfileId), tuple("nouvelleAutreValeur", userProfileId));
+
+        addProfileToUser(userProfile, originalUser, "nouvelleValeur", "nouvelleAutreValeurUpdated", "valeurFinale");
+
+        userMetadatas = userController.getProfileValuesByUserId(originalUser.getId());
+        assertThat(userMetadatas).extracting("value", "userProfile.id")
+                .containsExactly(tuple("nouvelleValeur", userProfileId),
+                        tuple("nouvelleAutreValeurUpdated", userProfileId),
+                        tuple("valeurFinale", userProfileId));
+        // cleaning
+        userController.deleteProfileForUser(originalUser.getId(), userProfile.getId());
     }
 
     @Test

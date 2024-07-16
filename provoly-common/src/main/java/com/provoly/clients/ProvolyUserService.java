@@ -6,7 +6,7 @@ import java.util.UUID;
 import jakarta.ws.rs.*;
 
 import com.provoly.common.error.ProvolyResponseExceptionMapper;
-import com.provoly.common.metadata.MetadataValueWriteDto;
+import com.provoly.common.metadata.UserMetadataValueWriteDto;
 import com.provoly.common.metadata.UserProfileDto;
 import com.provoly.common.metadata.UserProfileValueReadDto;
 import com.provoly.common.search.NamedQueryDto;
@@ -65,6 +65,6 @@ public interface ProvolyUserService {
     @PUT
     @Path("/id/{userId}/metadata/id/{userProfileId}")
     void setUserProfile(@PathParam("userId") UUID userId, @PathParam("userProfileId") UUID metadataDefId,
-            MetadataValueWriteDto metadata);
+            UserMetadataValueWriteDto metadata);
 
 }

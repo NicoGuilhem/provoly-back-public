@@ -1,15 +1,9 @@
 package com.provoly.ref.user.metadata;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
-import java.util.Set;
 import java.util.UUID;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
 
-import com.provoly.common.VariableType;
-import com.provoly.common.error.BusinessException;
-import com.provoly.common.error.ErrorCode;
 import com.provoly.ref.entity.EntityId;
 
 @Entity
@@ -30,32 +24,15 @@ public class UserProfileValue extends EntityId {
         this.provolyUserId = provolyUserId;
     }
 
-    public String getValue() {
-        return value;
-    }
-
-    public <T extends UserProfileAllowedValue> void validateAndSetValue(String value, VariableType type, Set<T> allowedValues) {
-        try {
-            switch (type) {
-                case LIST -> checkValueAllowed(value, allowedValues);
-                case INTEGER -> Integer.parseInt(value);
-                case DOUBLE -> Double.parseDouble(value);
-                case DATE -> LocalDate.parse(value);
-                case UUID -> UUID.fromString(value);
-            }
-        } catch (IllegalArgumentException | DateTimeParseException e) {
-            throw new IllegalArgumentException("User profile value should be of type : %s".formatted(type), e);
-        }
+    public UserProfileValue(UserProfile userProfile, UUID provolyUserId, String value) {
+        this(userProfile.getId(), provolyUserId);
+        userProfile.getType().checkValue(value,
+                userProfile.getValues().stream().map(UserProfileAllowedValue::getValue).toList());
         this.value = value;
     }
 
-    public <T extends UserProfileAllowedValue> void checkValueAllowed(String valueToSet, Set<T> allowedValues) {
-        allowedValues.stream()
-                .map(UserProfileAllowedValue::getValue)
-                .filter(value -> value.equals(valueToSet))
-                .findFirst()
-                .orElseThrow(() -> new BusinessException(ErrorCode.BAD_REQUEST,
-                        "Values %s isn't allowed.".formatted(valueToSet)));
+    public String getValue() {
+        return value;
     }
 
     public UUID getProvolyUserId() {

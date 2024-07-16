@@ -3310,7 +3310,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/MetadataValueWriteDto'
+              $ref: '#/components/schemas/UserMetadataValueWriteDto'
             examples:
               default:
                 summary: Adding metadata for a user
@@ -5161,6 +5161,16 @@ components:
           example: "my_value"
         metadataDef:
           $ref: '#/components/schemas/MetadataDefDto'
+    UserMetadataValueWriteDto:
+      type: object
+      nullable: true
+      properties:
+        values:
+          type: array
+          items:
+            type: string
+        metadataDefId:
+          $ref: '#/components/schemas/UUID'
     MetadataValueWriteDto:
       type: object
       nullable: true

@@ -8,7 +8,7 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
-import com.provoly.common.metadata.MetadataValueWriteDto;
+import com.provoly.common.metadata.UserMetadataValueWriteDto;
 import com.provoly.common.metadata.UserProfileValueReadDto;
 import com.provoly.common.user.Role;
 import com.provoly.common.user.UserDto;
@@ -58,8 +58,8 @@ public class UserController {
     @PUT
     @Path("/id/{userId}/metadata/id/{metadataDefId}")
     @RolesAllowed(Role.STR_METADATA_USER_WRITE)
-    public void addProfileForUser(UUID userId, UUID metadataDefId, MetadataValueWriteDto metadata) {
-        userService.addUserProfile(userId, metadataDefId, metadata);
+    public void addProfilesForUser(UUID userId, UUID metadataDefId, UserMetadataValueWriteDto metadatas) {
+        userService.addUserProfiles(userId, metadataDefId, metadatas);
     }
 
     @DELETE

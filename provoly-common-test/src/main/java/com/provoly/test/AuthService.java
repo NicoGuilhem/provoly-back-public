@@ -13,7 +13,7 @@ import jakarta.interceptor.Interceptor;
 
 import com.provoly.clients.ProvolyUserService;
 import com.provoly.common.VariableType;
-import com.provoly.common.metadata.MetadataValueWriteDto;
+import com.provoly.common.metadata.UserMetadataValueWriteDto;
 import com.provoly.common.metadata.UserProfileDto;
 import com.provoly.common.user.UserDto;
 
@@ -184,10 +184,10 @@ public class AuthService {
         for (User user : User.values()) {
             var userDto = users.get(user);
             for (var metadataUserStringEntry : user.getMetadata().entrySet()) {
-                MetadataValueWriteDto metadataValue = new MetadataValueWriteDto();
-                metadataValue.setValue(metadataUserStringEntry.getValue());
+                UserMetadataValueWriteDto metadataValues = new UserMetadataValueWriteDto();
+                metadataValues.setValues(List.of(metadataUserStringEntry.getValue()));
                 UserProfile userProfileName = metadataUserStringEntry.getKey();
-                provolyUserService.setUserProfile(userDto.getId(), userProfileMap.get(userProfileName).id, metadataValue);
+                provolyUserService.setUserProfile(userDto.getId(), userProfileMap.get(userProfileName).id, metadataValues);
             }
         }
     }

@@ -1,16 +1,17 @@
 package com.provoly.ref.user;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.NoResultException;
 import jakarta.persistence.criteria.Path;
 import jakarta.transaction.Transactional;
 
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
-import com.provoly.common.metadata.MetadataValueWriteDto;
+import com.provoly.common.metadata.UserMetadataValueWriteDto;
 import com.provoly.common.metadata.UserProfileValueReadDto;
 import com.provoly.common.user.UserDto;
 import com.provoly.ref.entity.EntityIdRepository;
@@ -185,47 +186,39 @@ public class UserService {
     }
 
     @Transactional
-    public void addUserProfile(UUID provolyUserId, UUID userProfileId, MetadataValueWriteDto metadataValueWriteDto) {
+    public void addUserProfiles(UUID provolyUserId, UUID userProfileId, UserMetadataValueWriteDto metadataValueWriteDto) {
         var userProfile = userProfileService.getById(userProfileId);
         checkProvolyUserEntityExists(provolyUserId);
 
-        var metadataValue = getUserProfileAssignedToUser(provolyUserId, userProfileId);
-        metadataValue.ifPresentOrElse(
-                mv -> mv.validateAndSetValue(metadataValueWriteDto.getValue(), userProfile.getType(), userProfile.getValues()),
-                () -> {
-                    var newUserProfileValue = new UserProfileValue(userProfile.getId(), provolyUserId);
-                    newUserProfileValue.validateAndSetValue(metadataValueWriteDto.getValue(), userProfile.getType(),
-                            userProfile.getValues());
-                    entityIdRepository.saveEntity(newUserProfileValue, false);
-                });
+        var userProfileValues = getUserProfilesAssignedToUser(provolyUserId, userProfileId);
+        entityIdRepository.removeEntities(userProfileValues, UserProfileValue.class);
+
+        metadataValueWriteDto.getValues().stream()
+                .map(value -> new UserProfileValue(userProfile, provolyUserId, value))
+                .forEach(entityIdRepository::saveEntity);
     }
 
     @Transactional
     public void deleteProfileForUser(UUID userId, UUID userProfileId) {
-        checkProvolyUserEntityExists(userId);
-        checkUserProfileEntityExists(userProfileId);
-        var userProfileValue = getUserProfileAssignedToUser(userId, userProfileId);
-        userProfileValue.ifPresentOrElse(
-                mv -> em.remove(em.merge(mv)),
-                () -> {
-                    throw new BusinessException(ErrorCode.BAD_REQUEST,
-                            "User profile %s is not assigned to user %s".formatted(userProfileId, userId));
-                });
+        var userProfileValues = getUserProfilesAssignedToUser(userId, userProfileId);
+        if (userProfileValues.isEmpty()) {
+            checkProvolyUserEntityExists(userId);
+            checkUserProfileEntityExists(userProfileId);
+            throw new BusinessException(ErrorCode.BAD_REQUEST,
+                    "User profile %s is not assigned to user %s".formatted(userProfileId, userId));
+        }
+
+        entityIdRepository.removeEntities(userProfileValues, UserProfileValue.class);
     }
 
-    private Optional<UserProfileValue> getUserProfileAssignedToUser(UUID userId, UUID userProfileId) {
+    private List<UserProfileValue> getUserProfilesAssignedToUser(UUID userId, UUID userProfileId) {
         var cb = em.getCriteriaBuilder();
         var q = cb.createQuery(UserProfileValue.class);
         var root = q.from(UserProfileValue.class);
         q = q.where(cb.and(
                 cb.equal(root.get(UserProfileValue_.provolyUserId), userId),
                 cb.equal(root.get(UserProfileValue_.userProfileId), userProfileId)));
-        try {
-            return Optional.of(em.createQuery(q).setMaxResults(1).getSingleResult());
-        } catch (NoResultException e) {
-            return Optional.empty();
-        }
-
+        return em.createQuery(q).getResultList();
     }
 
     public List<UUID> getAllUserIdExceptCurrent() {
