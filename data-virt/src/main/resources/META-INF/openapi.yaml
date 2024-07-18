@@ -839,6 +839,11 @@ paths:
                 file:
                   type: string
                   format: binary
+                filename:
+                  type: string
+                  description: |
+                    Name of the file (unique identifier).
+                    If filename is not sent, file identifier is generated with random UUID (returned is response).
       responses:
         "200":
           description: OK
@@ -846,6 +851,7 @@ paths:
             text/plain:
               schema:
                 type: string
+                description: the file identifier (same as filename from request body if sent)
                 example: "generated_file_id"
         "400":
           description: Bad Request

@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
         @JsonSubTypes.Type(value = FieldDto.class, name = "string"),
         @JsonSubTypes.Type(value = FieldDto.class, name = "keyword"),
         @JsonSubTypes.Type(value = FieldGeoDto.class, name = "Point"),
-        @JsonSubTypes.Type(value = FieldGeoDto.class, name = "Multipoint"),
+        @JsonSubTypes.Type(value = FieldGeoDto.class, name = "MultiPoint"),
         @JsonSubTypes.Type(value = FieldGeoDto.class, name = "LineString"),
         @JsonSubTypes.Type(value = FieldGeoDto.class, name = "MultiLineString"),
         @JsonSubTypes.Type(value = FieldGeoDto.class, name = "Polygon"),

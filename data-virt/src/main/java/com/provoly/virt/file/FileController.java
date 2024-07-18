@@ -41,12 +41,13 @@ public class FileController {
     @Produces(MediaType.TEXT_PLAIN)
     @RolesAllowed({ Role.STR_ITEM_WRITE })
     public String receiveFile(
-            @RestForm("file") FileUpload fileUpload) {
+            @RestForm("file") FileUpload fileUpload,
+            @RestForm("filename") String fileName) {
         if (fileUpload == null) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "File is required.");
         }
         try (InputStream is = new FileInputStream(fileUpload.uploadedFile().toFile())) {
-            return "\"%s\"".formatted(fileService.receive(is, FileType.valueOf(fileUpload.contentType())));
+            return "\"%s\"".formatted(fileService.receive(is, fileName, FileType.valueOf(fileUpload.contentType())));
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
@@ -54,7 +55,7 @@ public class FileController {
 
     @GET
     @Path("/id/{id}")
-    @Produces({ "image/*", "video/*", MediaType.APPLICATION_JSON })
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @RolesAllowed({ Role.STR_SEARCH, Role.STR_DASHBOARD_READ, Role.STR_DATASET_READ, Role.STR_WIDGET_CATALOG_READ })
     public RestResponse<InputStream> getFile(
             String id,
@@ -64,7 +65,7 @@ public class FileController {
         Long start = null, end = null;
         if (tokens.length > 1) {
             String[] rangeToken = tokens[1].split("-");
-            if (rangeToken[0].length() > 0) {
+            if (!rangeToken[0].isEmpty()) {
                 start = Long.parseLong(rangeToken[0]);
             } else {
                 start = 0L;
@@ -81,8 +82,7 @@ public class FileController {
                 end = start + MAX_SIZE - 1;
             }
         }
-        FileInformation file = fileService.getFile(id, start, end);
-        return getResponseBuilder(file, range);
+        return getResponseBuilder(fileService.getFile(id, start, end));
     }
 
     @POST
@@ -118,7 +118,7 @@ public class FileController {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public RestResponse<InputStream> getIcon(
             String name) {
-        return getResponseBuilder(fileService.getIcon(name), null);
+        return getResponseBuilder(fileService.getIcon(name));
     }
 
     @PUT
@@ -127,7 +127,7 @@ public class FileController {
             Role.STR_WIDGET_CATALOG_WRITE })
     public void setIconType(String id,
             String type) {
-        fileService.setTags(id, type);
+        fileService.setIconTags(id, type);
     }
 
     @DELETE
@@ -138,9 +138,9 @@ public class FileController {
         fileService.deleteIcon(id);
     }
 
-    private RestResponse<InputStream> getResponseBuilder(FileInformation fileInformation, String range) {
+    private RestResponse<InputStream> getResponseBuilder(FileInformation fileInformation) {
         RestResponse.ResponseBuilder<InputStream> builder;
-        if (fileInformation.end() < fileInformation.objectStats().size()) {
+        if (fileInformation.end() + 1 < fileInformation.objectStats().size()) {
             builder = RestResponse.ResponseBuilder.create(Response.Status.PARTIAL_CONTENT);
             builder.header("Content-Range", "bytes " + fileInformation.start() + "-" + fileInformation.end() + "/"
                     + fileInformation.objectStats().size());

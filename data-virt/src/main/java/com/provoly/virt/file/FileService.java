@@ -8,6 +8,7 @@ import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.MediaType;
@@ -59,13 +60,12 @@ public class FileService {
     }
 
     public String receive(InputStream inputStream, MediaType mediaType) {
-        String fileName = UUID.randomUUID().toString();
-        receive(inputStream, fileName, mediaType, null, dataVirtProperties.filesBucketName());
-        return fileName;
+        return receive(inputStream, null, mediaType, null, dataVirtProperties.filesBucketName());
     }
 
-    public void receive(InputStream inputStream, MediaType mediaType, UUID fileId) {
-        receive(inputStream, fileId.toString(), mediaType, null, dataVirtProperties.filesBucketName());
+    public String receive(InputStream inputStream, String fileName, MediaType mediaType) {
+        return receive(inputStream, fileName != null ? fileName : UUID.randomUUID().toString(), mediaType, null,
+                dataVirtProperties.filesBucketName());
     }
 
     public void associateFileToDataset(InputStream is, MediaType mediaType, DatasetVersionDto datasetVersionDto) {
@@ -90,33 +90,25 @@ public class FileService {
         return receive(inputStream, fileName, fileType, type, dataVirtProperties.iconsBucketName());
     }
 
-    public void deleteRawFile(DatasetVersionDto dto) throws ErrorResponseException {
-        String formattedPath = getFormattedPath(dto.getId().toString());
-        StatObjectResponse statObjectResponse = null;
-        try {
-            statObjectResponse = minio.statObject(StatObjectArgs.builder()
-                    .bucket(dataVirtProperties.filesBucketName())
-                    .object(formattedPath).build());
-            log.infof("Deleting raw file %s", formattedPath);
-            if (statObjectResponse != null) {
-                minio.removeObject(RemoveObjectArgs.builder()
-                        .bucket(dataVirtProperties.filesBucketName())
-                        .object(formattedPath).build());
-            }
-        } catch (ErrorResponseException e) {
-            if (e.errorResponse().code().equals("NoSuchKey"))
-                log.errorf(e, "Raw file not found %s", formattedPath);
-            else
-                throw e;
-        } catch (ServerException | InsufficientDataException | IOException | NoSuchAlgorithmException | InvalidKeyException
-                | InvalidResponseException | XmlParserException | InternalException e) {
-            throw new BusinessException(ErrorCode.BAD_REQUEST,
-                    "An error as occured during delete raw file %s".formatted(dto.getId().toString()));
-        }
+    public void deleteIcon(String filename) {
+        deleteFileFromBucket(filename, dataVirtProperties.iconsBucketName());
     }
 
-    private String getFormattedPath(String fileNameSha1) {
-        return UriBuilder.fromPath(dataVirtProperties.filesBucketName()).path(fileNameSha1).build().toString();
+    public void deleteRawFile(DatasetVersionDto dto) {
+        deleteFileFromBucket(dto.getId().toString(), dataVirtProperties.filesBucketName());
+    }
+
+    private void deleteFileFromBucket(String fileName, String bucket) {
+        try {
+            // checking file presence
+            getStatObjectResponse(fileName, bucket);
+            log.infof("Deleting file %s", fileName);
+            minio.removeObject(buildObjectArgsWithBucketAndFileName(RemoveObjectArgs::builder, bucket, fileName));
+        } catch (ServerException | InsufficientDataException | IOException | NoSuchAlgorithmException | InvalidKeyException
+                | InvalidResponseException | XmlParserException | InternalException | ErrorResponseException e) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST,
+                    "An error as occurred while deleting file %s".formatted(fileName));
+        }
     }
 
     private String receive(InputStream inputStream, String fileName, MediaType mediaType, String type, String bucket) {
@@ -127,17 +119,22 @@ public class FileService {
         if (fileName == null) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "File name is required.");
         }
-        String uploadFileName = getFormattedPath(fileName, bucket);
 
+        StatObjectResponse statObjectResponse = null;
         try {
-            if (getStatObjectResponse(uploadFileName, bucket) != null) {
-                if (getTags(uploadFileName).contains(type)) {
+            statObjectResponse = getStatObjectResponse(fileName, bucket);
+        } catch (BusinessException e) {
+            // file was not found, adding the file
+        }
+        try {
+            if (statObjectResponse != null) {
+                if (getTags(fileName, bucket).contains(type == null ? "null" : type)) {
                     throw new BusinessException(ErrorCode.NAME_ALREADY_USED,
                             "File name %s is already used.".formatted(fileName));
                 }
-                setTags(fileName, type);
+                setTags(fileName, type, bucket);
             } else {
-                uploadFile(new MinIoFileUpload(inputStream, uploadFileName, mediaType.toString(), bucket, type));
+                uploadFile(new MinIoFileUpload(inputStream, fileName, mediaType.toString(), bucket, type));
             }
         } catch (MinioException | GeneralSecurityException | IOException e) {
             throw new IllegalStateException(e);
@@ -145,11 +142,15 @@ public class FileService {
         return fileName;
     }
 
-    public void setTags(String name, String type) {
-        getIcon(name);
-        name = getFormattedIconPath(name);
+    public void setIconTags(String name, String type) {
+        setTags(name, type, dataVirtProperties.iconsBucketName());
+    }
+
+    public void setTags(String name, String type, String bucket) {
+        // checking file presence
+        getStatObjectResponse(name, bucket);
         try {
-            var tags = new ArrayList<>(getTags(name));
+            var tags = new ArrayList<>(getTags(name, bucket));
 
             if (tags.contains(type)) {
                 throw new BusinessException(ErrorCode.BAD_REQUEST, "Type %s already exists for file %s".formatted(type, name));
@@ -159,7 +160,7 @@ public class FileService {
             String types = String.join(TAG_SEPARATOR, tags);
 
             minio.setObjectTags(
-                    SetObjectTagsArgs.builder().bucket(dataVirtProperties.iconsBucketName()).object(name)
+                    initObjectArgsBuilderWithBucketAndFileName(SetObjectTagsArgs::builder, bucket, name)
                             .tags(Map.of(IMAGE_TYPE, types)).build());
         } catch (MinioException | IOException | NoSuchAlgorithmException | InvalidKeyException e) {
             throw new RuntimeException(e);
@@ -179,9 +180,6 @@ public class FileService {
         String fileId = item.getAttributeSimple(attributeName).getValue().toString();
 
         StatObjectResponse objectStats = getStatObjectResponse(fileId, dataVirtProperties.filesBucketName());
-        if (objectStats == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND, "File not found");
-        }
         long objectSize = objectStats.size();
 
         if (end == null) {
@@ -193,14 +191,15 @@ public class FileService {
             end = objectSize - 1L;
         }
 
-        GetObjectArgs.Builder builded = GetObjectArgs.builder()
-                .bucket(dataVirtProperties.filesBucketName())
-                .object(fileId)
+        GetObjectArgs.Builder builder = initObjectArgsBuilderWithBucketAndFileName(GetObjectArgs::builder,
+                dataVirtProperties.filesBucketName(), fileId)
                 .offset(start)
                 .length(end + 1);
 
-        try (InputStream is = minio.getObject(builded.build())) {
-            return new FileInformation(id, objectStats, is, start, end);
+        try {
+            // input stream is not in the try with ressource as it must be kept opened (consumed by caller)
+            InputStream is = minio.getObject(builder.build());
+            return new FileInformation(fileId, objectStats, is, start, end);
         } catch (MinioException | GeneralSecurityException | IOException e) {
             throw new IllegalStateException(e);
         }
@@ -214,20 +213,13 @@ public class FileService {
         return getFileFromBucket(filename, dataVirtProperties.filesBucketName());
     }
 
-    public FileInformation getFileFromBucket(String filename, String bucket) {
-        filename = getFormattedPath(filename, bucket);
+    private FileInformation getFileFromBucket(String filename, String bucket) {
         StatObjectResponse objectStats = getStatObjectResponse(filename, bucket);
 
-        if (objectStats == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND, "File %s not found".formatted(filename));
-        }
-        GetObjectArgs.Builder builded = GetObjectArgs.builder()
-                .bucket(bucket)
-                .object(filename);
-
         try {
-            InputStream is = minio.getObject(builded.build());
-            return new FileInformation(filename, objectStats, is, 0, objectStats.size()); // Is it necessary to specify a start and end, or is it better to set as null
+            // input stream is not in the try with ressource as it must be kept opened (consumed by caller)
+            InputStream is = minio.getObject(buildObjectArgsWithBucketAndFileName(GetObjectArgs::builder, bucket, filename));
+            return new FileInformation(filename, objectStats, is, 0, objectStats.size());
         } catch (MinioException | GeneralSecurityException | IOException e) {
             throw new IllegalStateException(e);
         }
@@ -245,7 +237,7 @@ public class FileService {
             try {
                 Item item = result.get();
                 Path p = Paths.get(item.objectName());
-                var tags = getTags(item.objectName());
+                var tags = getTagsFromObjectName(item.objectName(), dataVirtProperties.iconsBucketName());
 
                 if (type == null || tags.contains(type)) {
                     responses.add(new ImageInfoDto(p.getFileName().toString(), tags));
@@ -257,23 +249,11 @@ public class FileService {
         return responses;
     }
 
-    public void deleteIcon(String filename) {
-        getIcon(filename);
-        try {
-            filename = getFormattedIconPath(filename);
-            minio.removeObject(
-                    RemoveObjectArgs.builder().bucket(dataVirtProperties.iconsBucketName()).object(filename).build());
-        } catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     private void uploadFile(MinIoFileUpload fileUpload) throws MinioException, GeneralSecurityException, IOException {
         createBucketIfNeeded(fileUpload.bucket());
         log.tracef("Upload %s to bucket %s", fileUpload.fileName(), fileUpload.bucket());
-        var builder = PutObjectArgs.builder()
-                .bucket(fileUpload.bucket())
-                .object(fileUpload.fileName())
+        var builder = initObjectArgsBuilderWithBucketAndFileName(PutObjectArgs::builder, fileUpload.bucket(),
+                fileUpload.fileName())
                 .contentType(fileUpload.mediaType())
                 .stream(fileUpload.inputStream(), -1, partSize);
 
@@ -301,22 +281,24 @@ public class FileService {
     }
 
     private StatObjectResponse getStatObjectResponse(String fileId, String bucket) {
-        StatObjectResponse objectStats = null;
         try {
             log.debugf("get info for file: %s", fileId);
-            objectStats = minio.statObject(StatObjectArgs.builder().bucket(bucket).object(fileId).build());
+            return minio.statObject(buildObjectArgsWithBucketAndFileName(StatObjectArgs::builder, bucket, fileId));
         } catch (MinioException | IOException | InvalidKeyException | NoSuchAlgorithmException e) {
-            log.info(e.getMessage());
+            throw new BusinessException(ErrorCode.NOT_FOUND, "File %s not found".formatted(fileId), e);
         }
-        return objectStats;
     }
 
-    private List<String> getTags(String fileName)
+    private List<String> getTags(String fileName, String bucket)
+            throws MinioException, IOException, NoSuchAlgorithmException, InvalidKeyException {
+        String uploadFileName = getFormattedPath(fileName, bucket);
+        return getTagsFromObjectName(uploadFileName, bucket);
+    }
+
+    private List<String> getTagsFromObjectName(String objectName, String bucket)
             throws MinioException, IOException, NoSuchAlgorithmException, InvalidKeyException {
         var tags = minio.getObjectTags(
-                GetObjectTagsArgs.builder()
-                        .bucket(dataVirtProperties.iconsBucketName())
-                        .object(fileName).build())
+                addBucketAndObject(GetObjectTagsArgs.builder(), bucket, objectName).build())
                 .get()
                 .get(IMAGE_TYPE);
         if (tags == null) {
@@ -325,12 +307,32 @@ public class FileService {
         return Arrays.asList(tags.split(TAG_SEPARATOR));
     }
 
-    private String getFormattedIconPath(String fileNameSha1) {
-        return UriBuilder.fromPath(dataVirtProperties.iconsBucketName()).path(fileNameSha1).build().toString();
-    }
-
     private String getFormattedPath(String fileNameSha1, String bucket) {
         return UriBuilder.fromPath(bucket).path(fileNameSha1).build().toString();
     }
 
+    private <B extends ObjectArgs.Builder<B, A>, A extends ObjectArgs> A buildObjectArgsWithBucketAndFileName(
+            Supplier<B> builderFunction,
+            String bucket, String fileName) {
+        return addBucketAndFileName(builderFunction.get(), bucket, fileName).build();
+    }
+
+    private <B extends ObjectArgs.Builder<B, A>, A extends ObjectArgs> B initObjectArgsBuilderWithBucketAndFileName(
+            Supplier<B> builderFunction,
+            String bucket, String fileName) {
+        return addBucketAndFileName(builderFunction.get(), bucket, fileName);
+    }
+
+    private <B extends ObjectArgs.Builder<B, A>, A extends ObjectArgs> B addBucketAndFileName(
+            B builder,
+            String bucket, String fileName) {
+        String objectName = getFormattedPath(fileName, bucket);
+        return addBucketAndObject(builder, bucket, objectName);
+    }
+
+    private <B extends ObjectArgs.Builder<B, A>, A extends ObjectArgs> B addBucketAndObject(
+            B builder, String bucket,
+            String objectName) {
+        return builder.bucket(bucket).object(objectName);
+    }
 }

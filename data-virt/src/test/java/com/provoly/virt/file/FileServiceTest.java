@@ -141,7 +141,7 @@ public class FileServiceTest {
     @Test
     public void set_tag_icon() {
         fileService.receiveIcon(fileUploadIs, fileUpload.fileName(), MediaType.valueOf(fileUpload.contentType()), type);
-        fileService.setTags(fileUpload.fileName(), "type2");
+        fileService.setIconTags(fileUpload.fileName(), "type2");
         ImageInfoDto info = fileService.getAllIcons(null).get(0);
         assertThat(info.type()).containsExactlyInAnyOrder("type2", "restit");
     }
@@ -150,13 +150,13 @@ public class FileServiceTest {
     public void set_tag_icon_tag_already_exists() {
         fileService.receiveIcon(fileUploadIs, fileUpload.fileName(), MediaType.valueOf(fileUpload.contentType()), type);
         Assertions.assertThrows(BusinessException.class,
-                () -> fileService.setTags("08deae8d9ea9bc0b84f94475d868351830e9f7e7", "restit"));
+                () -> fileService.setIconTags("08deae8d9ea9bc0b84f94475d868351830e9f7e7", "restit"));
     }
 
     @Test
     public void set_tag_icon_not_found() {
         Assertions.assertThrows(BusinessException.class,
-                () -> fileService.setTags("toto", "type2"));
+                () -> fileService.setIconTags("toto", "type2"));
     }
 
     @Test
@@ -180,7 +180,22 @@ public class FileServiceTest {
 
         assertThatThrownBy(() -> fileService.getFile(fileName.toString()))
                 .isInstanceOf(BusinessException.class)
-                .hasMessage("File provoly/%s not found".formatted(fileName.toString()));
+                .hasMessage("File %s not found".formatted(fileName.toString()));
     }
 
+    @Test
+    public void add_file_without_name_ok() {
+        String filename = fileService.receive(fileUploadIs, null, MediaType.valueOf(fileUpload.contentType()));
+
+        assertThat(filename).isNotEqualTo(fileUpload.fileName());
+        assertThat(fileService.getFile(filename)).isNotNull().hasFieldOrPropertyWithValue("id", filename);
+    }
+
+    @Test
+    public void add_file_with_name_ok() {
+        String filename = fileService.receive(fileUploadIs, fileUpload.fileName(), MediaType.valueOf(fileUpload.contentType()));
+
+        assertThat(filename).isEqualTo(fileUpload.fileName());
+        assertThat(fileService.getFile(filename)).isNotNull().hasFieldOrPropertyWithValue("id", filename);
+    }
 }

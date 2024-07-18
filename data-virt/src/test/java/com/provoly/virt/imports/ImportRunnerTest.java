@@ -120,8 +120,10 @@ public class ImportRunnerTest {
                 dataStorages.get(storageData).datasetDto.getId(), dataStorages.get(storageData).datasetDto.getoClass(),
                 DatasetState.INDEXING, null, "producer", Instant.now());
         datasetVersionService.create(dataStorages.get(storageData).datasetVersionDto);
-        fileService.receive(new FileInputStream(fileUpload.filePath().toFile()), mediaType,
-                dataStorages.get(storageData).datasetVersionDto.getId());
+        fileService.receive(
+                new FileInputStream(fileUpload.filePath().toFile()),
+                dataStorages.get(storageData).datasetVersionDto.getId().toString(),
+                mediaType);
     }
 
     public void initGoodDatasetGeo(StorageData storageData) {

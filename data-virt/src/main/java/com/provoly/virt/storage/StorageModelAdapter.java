@@ -7,14 +7,10 @@ import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 
 import com.provoly.common.dataset.DatasetVersionDto;
-import com.provoly.common.error.BusinessException;
-import com.provoly.common.error.ErrorCode;
 import com.provoly.common.model.OClassDetailsDto;
 import com.provoly.common.virt.VirtChangeEvent;
 import com.provoly.virt.event.VirtEventEmitter;
 import com.provoly.virt.file.FileService;
-
-import io.minio.errors.*;
 
 import org.jboss.logging.Logger;
 
@@ -55,20 +51,16 @@ public class StorageModelAdapter implements StorageModelService {
     @Override
     public void deleteDatasetVersion(DatasetVersionDto datasetVersionDto, OClassDetailsDto oClassDetailsDto) {
         log.infof("delete dataset version %s", datasetVersionDto.getId());
-        if (datasetVersionDto.isWithFile()) {
-            try {
-                fileService.deleteRawFile(datasetVersionDto);
-            } catch (ErrorResponseException e) {
-                virtEventEmitter.sendDatasetVersionDelete(VirtChangeEvent.Type.DELETE_DATASET_VERSION_ERROR, datasetVersionDto);
-                throw new BusinessException(ErrorCode.TECHNICAL, "Unable to delete raw file");
-            }
-        }
         try {
+            if (datasetVersionDto.isWithFile()) {
+                fileService.deleteRawFile(datasetVersionDto);
+            }
             getService(storageModelServices, oClassDetailsDto.getStorage()).deleteDatasetVersion(datasetVersionDto,
                     oClassDetailsDto);
             log.warn("Dataset version items deleted");
             virtEventEmitter.sendDatasetVersionDelete(VirtChangeEvent.Type.DELETED_DATASET_VERSION, datasetVersionDto);
         } catch (Exception e) {
+            log.errorf(e, "Error occured while deleting dataset version %s", datasetVersionDto.getId());
             virtEventEmitter.sendDatasetVersionDelete(VirtChangeEvent.Type.DELETE_DATASET_VERSION_ERROR, datasetVersionDto);
         }
 
