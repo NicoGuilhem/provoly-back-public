@@ -11,6 +11,9 @@ quarkus:
   kubernetes-client:
     devservices:
       enabled: false
+  datasource:
+    metrics:
+      enabled: true
   management:
     enabled: true
     port: 8081

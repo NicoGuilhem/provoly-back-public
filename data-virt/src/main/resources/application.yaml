@@ -3,6 +3,8 @@ quarkus:
     enabled: true
     port: 8081
   datasource:
+    metrics:
+      enabled: true
     db-kind: other
     jdbc:
       driver: net.postgis.jdbc.jts.JtsGisWrapper
