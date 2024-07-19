@@ -148,7 +148,7 @@
                 </property>
             </activation>
             <properties>
-                <quarkus.jib.jvm-arguments>-Djava.util.logging.manager=org.jboss.logmanager.LogManager
+                <quarkus.jib.jvm-arguments>-Djava.util.logging.manager=org.jboss.logmanager.LogManager -Djib.serialize=false
                 </quarkus.jib.jvm-arguments>
                 <quarkus.jib.base-jvm-image>
                     dh2wltsh.gra7.container-registry.ovh.net/quay-mirror/ubi9/openjdk-21-runtime:1.17-2.1705482271
