@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.criteria.Root;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 
@@ -14,6 +15,10 @@ import com.provoly.common.error.ErrorCode;
 import com.provoly.ref.dataset.Dataset;
 import com.provoly.ref.dataset.DatasetRepository;
 import com.provoly.ref.dataset.Dataset_;
+import com.provoly.ref.datasetversion.DatasetVersion;
+import com.provoly.ref.datasetversion.DatasetVersionGetAllParams;
+import com.provoly.ref.datasetversion.DatasetVersionRepository;
+import com.provoly.ref.datasetversion.DatasetVersion_;
 import com.provoly.ref.entity.EntityId;
 import com.provoly.ref.entity.EntityIdRepository;
 import com.provoly.ref.model.OClass_;
@@ -28,14 +33,16 @@ public class GrantService {
     private EntityIdRepository entityIdRepository;
     private GroupRepository groupRepository;
     private DatasetRepository datasetRepository;
+    private DatasetVersionRepository datasetVersionRepository;
 
     public GrantService(Logger log, EntityIdRepository entityIdRepository,
             GroupRepository groupRepository,
-            DatasetRepository datasetRepository) {
+            DatasetRepository datasetRepository, DatasetVersionRepository datasetVersionRepository) {
         this.log = log;
         this.entityIdRepository = entityIdRepository;
         this.groupRepository = groupRepository;
         this.datasetRepository = datasetRepository;
+        this.datasetVersionRepository = datasetVersionRepository;
     }
 
     private boolean isUserGrantedOnEntity(WithGrantRestrictions entityWithGrantRestrictions,
@@ -113,5 +120,31 @@ public class GrantService {
                 user.getGroups().stream().map(Group::getName).toList());
         return groupRepository.getAllowedEntityId(user, Dataset.class,
                 (cb, query, root) -> cb.equal(root.get(Dataset_.oClass).get(OClass_.id), oclassId));
+    }
+
+    public Collection<DatasetVersion> getUserAllowedDatasetVersions(final @NotNull ProvolyUser user,
+            DatasetVersionGetAllParams params) {
+        if (user.isAdmin()) {
+            log.info("Admin user, getting all datasets versions");
+            return datasetVersionRepository.getAll(params);
+        }
+        log.infof("Get datasets versions for user %s with groups %s", user.getId(),
+                user.getGroups().stream().map(Group::getName).toList());
+        return groupRepository.getAllowedEntityId(user, DatasetVersion.class,
+                (cb, query, root) -> DatasetVersionRepository.getFiltersAndAddFetchForGetAllParams(params, root, query, cb),
+                params::addPaginationOptions,
+                (query, root) -> ((Root<DatasetVersion>) root).join(DatasetVersion_.dataset));
+    }
+
+    public long countUserAllowedDatasetVersions(final @NotNull ProvolyUser user, DatasetVersionGetAllParams params) {
+        if (user.isAdmin()) {
+            log.info("Admin user, getting all datasets versions");
+            return datasetVersionRepository.getCountAll(params);
+        }
+        log.infof("Get datasets versions for user %s with groups %s", user.getId(),
+                user.getGroups().stream().map(Group::getName).toList());
+        return groupRepository.countAllowedEntityId(user, DatasetVersion.class,
+                (cb, query, root) -> params.getFilters(cb, root),
+                (query, root) -> ((Root<DatasetVersion>) root).join(DatasetVersion_.dataset));
     }
 }

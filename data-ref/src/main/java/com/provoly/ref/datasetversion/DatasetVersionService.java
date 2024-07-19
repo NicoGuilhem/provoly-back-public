@@ -1,6 +1,7 @@
 package com.provoly.ref.datasetversion;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,6 +15,8 @@ import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.imports.MessageLevel;
 import com.provoly.ref.event.RefEventService;
+import com.provoly.ref.groups.GrantService;
+import com.provoly.ref.user.UserService;
 
 import org.jboss.logging.Logger;
 
@@ -25,15 +28,28 @@ public class DatasetVersionService {
     private DatasetVersionMapper datasetVersionMapper;
     private Logger logger;
     private DatasetVersionRepository datasetVersionRepository;
+    private GrantService grantService;
+    private UserService userService;
 
     public DatasetVersionService(RefEventService eventService,
             DatasetVersionMessageService datasetVersionMessageService,
-            DatasetVersionMapper datasetVersionMapper, Logger logger, DatasetVersionRepository datasetVersionRepository) {
+            DatasetVersionMapper datasetVersionMapper, Logger logger, DatasetVersionRepository datasetVersionRepository,
+            GrantService grantService, UserService userService) {
         this.eventService = eventService;
         this.datasetVersionMessageService = datasetVersionMessageService;
         this.datasetVersionMapper = datasetVersionMapper;
         this.logger = logger;
         this.datasetVersionRepository = datasetVersionRepository;
+        this.grantService = grantService;
+        this.userService = userService;
+    }
+
+    public Collection<DatasetVersion> getAll(DatasetVersionGetAllParams params) {
+        return grantService.getUserAllowedDatasetVersions(userService.getCurrentUser(), params);
+    }
+
+    public Long countAll(DatasetVersionGetAllParams params) {
+        return grantService.countUserAllowedDatasetVersions(userService.getCurrentUser(), params);
     }
 
     public void createDatasetVersion(DatasetVersion datasetVersion) {

@@ -3,11 +3,13 @@ package com.provoly.ref.groups;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
@@ -133,37 +135,110 @@ public class GroupRepository {
     }
 
     public <T extends EntityId> List<T> getAllowedEntityId(final @NotNull ProvolyUser user, final Class<T> entityId) {
-        return getAllowedEntityId(user, entityId, null);
+        return getAllowedEntityId(user, entityId, null, null);
     }
 
     public <T extends EntityId> List<T> getAllowedEntityId(final @NotNull ProvolyUser user,
             final Class<T> entityId,
-            final AdditionalFiltersBuilder<T> additionalFiltersBuilder) {
+            final CriteriaQueryOptionsFunction<T> criteriaQueryOptionsFunction) {
+        return getAllowedEntityId(user, entityId, criteriaQueryOptionsFunction, null);
+    }
+
+    public <T extends EntityId> List<T> getAllowedEntityId(final @NotNull ProvolyUser user,
+            final Class<T> entityId,
+            final CriteriaQueryOptionsFunction<T> criteriaQueryOptionsFunction,
+            final Consumer<TypedQuery<T>> additionalTypedQueryModifier) {
+
+        return getAllowedEntityId(user, entityId, criteriaQueryOptionsFunction, additionalTypedQueryModifier,
+                null);
+    }
+
+    public <T extends EntityId> List<T> getAllowedEntityId(final @NotNull ProvolyUser user,
+            final Class<T> entityId,
+            final CriteriaQueryOptionsFunction<T> criteriaQueryOptionsFunction,
+            final Consumer<TypedQuery<T>> additionalTypedQueryModifier,
+            final SupplierFromUserEntity getFromUserAllowed) {
         final var cb = em.getCriteriaBuilder();
-        final var q = cb.createQuery(entityId);
+        final var query = cb.createQuery(entityId);
+
+        final var root = query.from(entityId);
+
+        final Predicate userIsOwnerOfEntity;
+        final Predicate userHasGroupOfEntity;
+
+        if (getFromUserAllowed != null) {
+            var fromUserAllowed = getFromUserAllowed.get(query, root);
+            userIsOwnerOfEntity = cb.equal(fromUserAllowed.get("user"), user);
+            userHasGroupOfEntity = fromUserAllowed.get(EntityId_.id)
+                    .in(this.selectEntityIdsFromGroupListNames(query, user.getGroups()));
+        } else {
+            userIsOwnerOfEntity = cb.equal(root.get("user"), user);
+            userHasGroupOfEntity = root.get(EntityId_.id)
+                    .in(this.selectEntityIdsFromGroupListNames(query, user.getGroups()));
+        }
+
+        final Predicate allowedEntity = cb.or(userHasGroupOfEntity, userIsOwnerOfEntity);
+
+        Predicate filters = allowedEntity;
+        if (criteriaQueryOptionsFunction != null) {
+            Predicate additionalFilters = criteriaQueryOptionsFunction.build(cb, query, root);
+            if (additionalFilters != null) {
+                filters = cb.and(additionalFilters, allowedEntity);
+            }
+        }
+        query.select(root).where(filters);
+
+        var typedQuery = em.createQuery(query);
+
+        if (additionalTypedQueryModifier != null) {
+            additionalTypedQueryModifier.accept(typedQuery);
+        }
+
+        return typedQuery.getResultList();
+    }
+
+    public <T extends EntityId> long countAllowedEntityId(final @NotNull ProvolyUser user,
+            final Class<T> entityId,
+            final CriteriaCountQueryOptionsFunction<T> criteriaQueryOptionsFunction,
+            final SupplierFromUserEntity getFromUserAllowed) {
+        final var cb = em.getCriteriaBuilder();
+        final var q = cb.createQuery(Long.class);
 
         final var root = q.from(entityId);
 
-        final Predicate userIsOwnerOfEntity = cb.equal(root.get("user"), user);
-        final Predicate userHasGroupOfEntity = root.get(EntityId_.id)
+        var fromUserAllowed = getFromUserAllowed.get(q, root);
+        final Predicate userIsOwnerOfEntity = cb.equal(fromUserAllowed.get("user"), user);
+        final Predicate userHasGroupOfEntity = fromUserAllowed.get(EntityId_.id)
                 .in(this.selectEntityIdsFromGroupListNames(q, user.getGroups()));
 
         final Predicate allowedEntity = cb.or(userHasGroupOfEntity, userIsOwnerOfEntity);
 
         Predicate filters = allowedEntity;
-        if (additionalFiltersBuilder != null) {
-            Predicate additionalFilters = additionalFiltersBuilder.build(cb, q, root);
+        if (criteriaQueryOptionsFunction != null) {
+            Predicate additionalFilters = criteriaQueryOptionsFunction.build(cb, q, root);
             if (additionalFilters != null) {
                 filters = cb.and(additionalFilters, allowedEntity);
             }
         }
-        q.select(root).where(filters);
+        q.select(cb.count(root)).where(filters);
 
-        return em.createQuery(q).getResultList();
+        var typesQuery = em.createQuery(q);
+
+        return typesQuery.getSingleResult();
     }
 
     @FunctionalInterface
-    public interface AdditionalFiltersBuilder<T extends EntityId> {
+    public interface CriteriaQueryOptionsFunction<T extends EntityId> {
         public Predicate build(CriteriaBuilder cb, CriteriaQuery<T> q, Root<T> root);
+    }
+
+    @FunctionalInterface
+    public interface CriteriaCountQueryOptionsFunction<T extends EntityId> {
+        public Predicate build(CriteriaBuilder cb, CriteriaQuery<Long> q, Root<T> root);
+    }
+
+    @FunctionalInterface
+    public interface SupplierFromUserEntity<R extends From<?, ? extends EntityId>> {
+        public R get(CriteriaQuery<?> q, Root<?> root);
     }
 }

@@ -15,6 +15,7 @@ import com.provoly.ref.dashboard.Dashboard;
 import com.provoly.ref.dashboard.DashboardService;
 import com.provoly.ref.dataset.Dataset;
 import com.provoly.ref.dataset.DatasetRepository;
+import com.provoly.ref.datasetversion.DatasetVersionRepository;
 import com.provoly.ref.datasetversion.DatasetVersionService;
 import com.provoly.ref.entity.EntityIdRepository;
 import com.provoly.ref.groups.*;
@@ -37,6 +38,7 @@ public class GrantServiceUTest {
     GroupRepository groupRepository;
     DatasetRepository datasetRepository;
     WidgetCatalog widgetCatalog;
+    DatasetVersionRepository datasetVersionRepository;
     Logger logger = Logger.getLogger(DatasetVersionService.class);
 
     @BeforeEach
@@ -46,9 +48,10 @@ public class GrantServiceUTest {
         entityIdRepository = mock(EntityIdRepository.class);
         groupRepository = mock(GroupRepository.class);
         datasetRepository = mock(DatasetRepository.class);
+        datasetVersionRepository = mock(DatasetVersionRepository.class);
         widgetCatalog = mock(WidgetCatalog.class);
         grantService = new GrantService(logger, entityIdRepository, groupRepository,
-                datasetRepository);
+                datasetRepository, datasetVersionRepository);
     }
 
     @Test

@@ -56,8 +56,8 @@ public class DatasetVersionController {
                 dateMinString != null ? Instant.parse(dateMinString) : null,
                 datasetId, state, orderBy, sortBy);
         Collection<DatasetVersionDetailsDto> datasetVersionsList = datasetVersionMapper
-                .toDatasetVersionDetailsDto(datasetVersionRepository.getAll(params));
-        long countAll = datasetVersionRepository.getCountAll(params);
+                .toDatasetVersionDetailsDto(datasetVersionService.getAll(params));
+        long countAll = datasetVersionService.countAll(params);
         return Response.ok(datasetVersionsList)
                 .header(RESPONSE_HEADER_TOTAL_COUNT, countAll)
                 .build();

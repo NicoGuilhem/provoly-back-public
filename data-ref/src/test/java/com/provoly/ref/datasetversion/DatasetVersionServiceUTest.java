@@ -47,7 +47,7 @@ class DatasetVersionServiceUTest {
     @BeforeEach
     public void init() {
         datasetVersionRepository = mock(DatasetVersionRepository.class);
-        datasetVersionService = new DatasetVersionService(null, null, null, logger, datasetVersionRepository);
+        datasetVersionService = new DatasetVersionService(null, null, null, logger, datasetVersionRepository, null, null);
     }
 
     @Test

@@ -24,7 +24,7 @@ import org.jboss.logging.Logger;
 @ApplicationScoped
 public class DatasetVersionRepository {
 
-    private EntityIdRepository entityIdRepository;
+    private static EntityIdRepository entityIdRepository;
     private Logger logger;
     public static final int PREVIEW_MAX_RESULT = 5;
 
@@ -69,19 +69,24 @@ public class DatasetVersionRepository {
         var q = cb.createQuery(DatasetVersion.class);
         var rootQuery = q.from(DatasetVersion.class);
         q.select(rootQuery);
+        q.where(getFiltersAndAddFetchForGetAllParams(params,
+                rootQuery, q, cb));
+
+        var typedQuery = em.createQuery(q);
+        params.addPaginationOptions(typedQuery);
+
+        return typedQuery.getResultList();
+    }
+
+    public static Predicate getFiltersAndAddFetchForGetAllParams(DatasetVersionGetAllParams params,
+            Root<DatasetVersion> rootQuery, CriteriaQuery<?> q, CriteriaBuilder cb) {
+        //TODO this method should not and fetches and change query by reference. Refactor this method to only retrieve Predicate for filters
         Fetch<DatasetVersion, Dataset> fetch = rootQuery.fetch(DatasetVersion_.dataset);
         Fetch<Dataset, OClass> fetchOClass = fetch.fetch(Dataset_.oClass);
         fetchOClass.fetch(OClass_.attributes);
         var dataset = rootQuery.join(DatasetVersion_.dataset);
-
-        q.where(params.getFilters(cb, rootQuery));
         q.orderBy(params.getOrderBy(cb, rootQuery, dataset));
-
-        TypedQuery<DatasetVersion> query = em.createQuery(q);
-
-        params.addPaginationOptions(query);
-
-        return query.getResultList();
+        return params.getFilters(cb, rootQuery);
     }
 
     @Transactional
