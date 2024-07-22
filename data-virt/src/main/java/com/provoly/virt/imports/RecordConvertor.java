@@ -16,6 +16,7 @@ import com.provoly.common.imports.ExtractMessageCode;
 import com.provoly.common.imports.ExtractedMessage;
 import com.provoly.common.imports.FileImportDto;
 import com.provoly.common.imports.MessageLevel;
+import com.provoly.common.item.AttributeSimpleValueDto;
 import com.provoly.common.item.GeoFormat;
 import com.provoly.common.model.AttributeDefDetailsDto;
 import com.provoly.common.model.OClassDetailsDto;
@@ -30,6 +31,7 @@ import org.jboss.logging.Logger;
 @ApplicationScoped
 public class RecordConvertor {
 
+    private static final String MULTIVALUE_ATTRIBUTE_SEPARATOR = "\\|";
     private Logger log;
 
     public RecordConvertor(Logger log) {
@@ -89,7 +91,26 @@ public class RecordConvertor {
         return new ConversionResult(new ItemRecord(itemRecord.recordId(), values), errors); // retourne soit l'item soit la liste des erreurs
     }
 
-    private Object assignTo(Object value, Type type, boolean normalizeGeo, String crs, GeoFormat geoFormat) {
+    private Object assignTo(Object value, Type type, boolean normalizeGeo, String crs, GeoFormat geoFormat,
+            boolean multiValued) {
+        if (multiValued) {
+            if (value instanceof Collection) {
+                return ((Collection<?>) value).stream()
+                        .map(multiValue -> multiValue instanceof AttributeSimpleValueDto multiValueAttribute
+                                ? multiValueAttribute.value
+                                : multiValue)
+                        .map(multiValue -> assignTo(multiValue, type, normalizeGeo, crs, geoFormat, false))
+                        .toList();
+            } else if (value instanceof String valueAsString) {
+                String[] values = valueAsString.split(MULTIVALUE_ATTRIBUTE_SEPARATOR);
+                return Arrays.stream(values)
+                        .map(multiValue -> assignTo(multiValue, type, normalizeGeo, crs, geoFormat, false))
+                        .toList();
+            }
+
+            throw new BusinessException(ErrorCode.BAD_REQUEST,
+                    "Cannot assign value %s to multivalued attribute, value must be a String or a List".formatted(value));
+        }
         return switch (value) {
             case Integer i -> assignTo(i, type);
             case Long l -> assignTo(l, type);
@@ -188,10 +209,11 @@ public class RecordConvertor {
         try {
             if (attribute.getField().getType().isGeo()) {
                 values.put(attribute.getTechnicalName(),
-                        assignTo(value, type, normalizeGeo, ((FieldGeoDto) attribute.getField()).getCrs(), geoFormat));
+                        assignTo(value, type, normalizeGeo, ((FieldGeoDto) attribute.getField()).getCrs(), geoFormat,
+                                attribute.isMultiValued()));
             } else {
                 values.put(attribute.getTechnicalName(),
-                        assignTo(value, type, normalizeGeo, null, geoFormat));
+                        assignTo(value, type, normalizeGeo, null, geoFormat, attribute.isMultiValued()));
             }
         } catch (BusinessException | IllegalArgumentException | DateTimeParseException exception) {
             FileImportDto.ParamsTypeError paramsError = new FileImportDto.ParamsTypeError(attribute.getName(),

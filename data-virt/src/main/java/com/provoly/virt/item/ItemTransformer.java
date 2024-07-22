@@ -117,7 +117,7 @@ public class ItemTransformer {
             switch (attributeDto.getType()) {
                 case VALUE -> mapSimpleDtoValueToItem(item.getAttributeSimple(name), (AttributeSimpleValueDto) attributeDto,
                         normalizedValues);
-                case MULTI -> mapMultiDtoValueToItem(item, name, (AttributeMultiValueDto) attributeDto); // TODO: MultiValued attribute currently instable, should consider removing or rework
+                case MULTI -> mapMultiDtoValueToItem(item, name, (AttributeMultiValueDto) attributeDto);
                 default -> throw new IllegalStateException("Unknown attribute type " + attributeDto.getType());
             }
 

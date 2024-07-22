@@ -30,13 +30,6 @@ The separator used must be a semicolon (`;`). Encoding is `utf-8`.
 
 The csv import will be much less effective if it contains more than 150 columns.
 
-Geo data can be added to the csv as follows :
-
-[source]
-----
-"{""type"": ""Point"", ""coordinates"": [102.0, 0.5]}"
-----
-
 Let `car` be a data model with the following attributes:
 
 * `model` : text field
@@ -63,6 +56,25 @@ nissan;3;red;1977-04-22T00:00:00Z;"{""type"": ""Point"",""coordinates"": [102.0,
 peugeot;;blue;;;
 ----
 
+===== Geo attributes
+
+Geo data can be added to the csv as follows :
+
+.Geo data
+[example]
+"{""type"": ""Point"", ""coordinates"": [102.0, 0.5]}"
+
+===== Multivalued attributes
+
+The separator used for multivalued attributes is a pipe (`|`).
+
+.String attribute with 2 values `valueA` and `valueB`
+[example]
+`valueA|valueB`
+
+.Geo attribute with 2 points `[102.0, 0.5]` and `[92.0, 2.5]`
+[example]
+`"{""type"": ""Point"", ""coordinates"": [102.0, 0.5]}|{""type"": ""Point"", ""coordinates"": [92.0, 2.5]}"`
 
 ==== Geo import
 

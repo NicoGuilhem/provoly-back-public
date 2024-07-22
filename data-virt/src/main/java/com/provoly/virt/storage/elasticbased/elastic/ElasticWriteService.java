@@ -166,7 +166,7 @@ class ElasticWriteService implements StorageWriteService {
         // Add all multi value attributes
         for (AttributeMultiValue attributes : item.getAttributes(AttributeMultiValue.class)) {
             var multiValues = new ArrayList<>();
-            valuesMap.put(StorageLayout.MULTI_ITEM_PREFIX + attributes.getTechnicalName(), multiValues);
+            valuesMap.put(StorageLayout.MULTI_ITEM_PREFIX + attributes.getSlug(), multiValues);
 
             // For every values in the attribute
             for (AttributeSimpleValue attribute : attributes.getValues()) {

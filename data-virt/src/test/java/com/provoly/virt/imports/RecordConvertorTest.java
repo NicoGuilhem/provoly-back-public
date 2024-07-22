@@ -10,6 +10,7 @@ import java.util.*;
 import com.provoly.common.Storage;
 import com.provoly.common.imports.ExtractedMessage;
 import com.provoly.common.imports.MessageLevel;
+import com.provoly.common.model.AttributeBaseDto;
 import com.provoly.common.model.AttributeDefDetailsDto;
 import com.provoly.common.model.OClassDetailsDto;
 import com.provoly.common.model.Type;
@@ -46,23 +47,8 @@ public class RecordConvertorTest {
         log = Logger.getLogger(RecordConvertorTest.class);
         recordConvertor = new RecordConvertor(log);
 
-        List<AttributeDefDetailsDto> attributeDefDetailsDtoList = new ArrayList<>();
-        for (Type type : Type.values()) {
-            FieldDto fieldDto = new FieldDto();
-            if (type.isGeo()) {
-                fieldDto = new FieldGeoDto(UUID.randomUUID(), "name_%s".formatted(UUID.randomUUID()), type.getName(),
-                        type.getName(), "EPSG:4326");
-            } else {
-                fieldDto = new FieldDto(UUID.randomUUID(), "name_%s".formatted(UUID.randomUUID()), type.getName(),
-                        type.getName());
-            }
-            AttributeDefDetailsDto att = new AttributeDefDetailsDto();
-            att.setName(type.getName().toLowerCase());
-            att.setTechnicalName(type.getName().toLowerCase());
-            att.setField(fieldDto);
-            //TODO ajouter category random -> pas d'appel à ref
-            attributeDefDetailsDtoList.add(att);
-        }
+        List<AttributeDefDetailsDto> attributeDefDetailsDtoList = getAttributes(false);
+        attributeDefDetailsDtoList.addAll(getAttributes(true));
 
         oClassDetailsDto = new OClassDetailsDto(UUID.randomUUID(), "name", "slug", "", attributeDefDetailsDtoList,
                 Storage.ELASTIC,
@@ -74,6 +60,30 @@ public class RecordConvertorTest {
         multiLineString = "{ \"type\": \"MultiLineString\", \"coordinates\": [ [ [30.0, 10.0], [10.0, 30.0], [40.0, 40.0] ], [ [30.0, 10.0], [10.0, 30.0], [40.0, 40.0] ] ] }";
         polygon = "{ \"type\": \"Polygon\", \"coordinates\": [ [ [30.0, 10.0], [40.0, 40.0], [20.0, 40.0], [10.0, 20.0], [30.0, 10.0] ] ] }";
         multiPolygon = "{ \"type\": \"MultiPolygon\", \"coordinates\": [ [ [ [30.0, 10.0], [40.0, 40.0], [20.0, 40.0], [10.0, 20.0], [30.0, 10.0] ], [ [30.0, 10.0], [40.0, 40.0], [20.0, 40.0], [10.0, 20.0], [30.0, 10.0] ] ] ] }";
+    }
+
+    private static List<AttributeDefDetailsDto> getAttributes(boolean multiValued) {
+        List<AttributeDefDetailsDto> attributeDefDetailsDtoList = new ArrayList<>();
+        for (Type type : Type.values()) {
+            FieldDto fieldDto;
+            String fieldName = "name_%s%s".formatted(UUID.randomUUID(), multiValued ? "_MULTI" : "");
+            if (type.isGeo()) {
+                fieldDto = new FieldGeoDto(UUID.randomUUID(), fieldName, type.getName(),
+                        type.getName(), "EPSG:4326");
+            } else {
+                fieldDto = new FieldDto(UUID.randomUUID(), fieldName, type.getName(),
+                        type.getName());
+            }
+            AttributeDefDetailsDto att = new AttributeDefDetailsDto();
+            String attributeName = type.getName().toLowerCase() + (multiValued ? "MultiValued" : "");
+            att.setName(attributeName);
+            att.setTechnicalName(attributeName);
+            att.setField(fieldDto);
+            att.setMultiValued(multiValued);
+            //TODO ajouter category random -> pas d'appel à ref
+            attributeDefDetailsDtoList.add(att);
+        }
+        return attributeDefDetailsDtoList;
     }
 
     @Test
@@ -92,30 +102,19 @@ public class RecordConvertorTest {
         values.put("multilinestring", multiLineString);
         values.put("polygon", polygon);
         values.put("multipolygon", multiPolygon);
-
-        ItemRecord itemRecord = new ItemRecord("1", values);
-
-        ConversionResult result = recordConvertor.convert(itemRecord, oClassDetailsDto);
-
-        assertThat(result.messages()).isEmpty();
-    }
-
-    @Test
-    void validate_withCorrectValueAndValidConversion_shouldReturnOK() {
-        Map<String, Object> values = new HashMap<>();
-        values.put("string", "String");
-        values.put("keyword", "keyword");
-        values.put("integer", "1");
-        values.put("long", 1);
-        values.put("decimal", 1L);
-        values.put("raw", "rawwwwwww");
-        values.put("instant", Date.from(Instant.now()));
-        values.put("point", point);
-        values.put("multipoint", multiPoint);
-        values.put("linestring", lineString);
-        values.put("multilinestring", multiLineString);
-        values.put("polygon", polygon);
-        values.put("multipolygon", multiPolygon);
+        values.put("stringMultiValued", "String");
+        values.put("keywordMultiValued", "keyword");
+        values.put("integerMultiValued", "1");
+        values.put("longMultiValued", "1");
+        values.put("decimalMultiValued", "1.5");
+        values.put("rawMultiValued", "rawwwwwww");
+        values.put("instantMultiValued", "2024-07-22T07:27:05.073817400Z");
+        values.put("pointMultiValued", point);
+        values.put("multipointMultiValued", multiPoint);
+        values.put("linestringMultiValued", lineString);
+        values.put("multilinestringMultiValued", multiLineString);
+        values.put("polygonMultiValued", polygon);
+        values.put("multipolygonMultiValued", multiPolygon);
 
         ItemRecord itemRecord = new ItemRecord("1", values);
 
@@ -163,6 +162,19 @@ public class RecordConvertorTest {
         values.put("multilinestring", "");
         values.put("polygon", "");
         values.put("multipolygon", "");
+        values.put("stringMultiValued", "");
+        values.put("keywordMultiValued", "");
+        values.put("integerMultiValued", "");
+        values.put("longMultiValued", "");
+        values.put("decimalMultiValued", "");
+        values.put("rawMultiValued", "");
+        values.put("instantMultiValued", "");
+        values.put("pointMultiValued", "");
+        values.put("multipointMultiValued", "");
+        values.put("linestringMultiValued", "");
+        values.put("multilinestringMultiValued", "");
+        values.put("polygonMultiValued", "");
+        values.put("multipolygonMultiValued", "");
 
         ItemRecord itemRecord = new ItemRecord("1", values);
 
@@ -187,6 +199,19 @@ public class RecordConvertorTest {
         values.put("multilinestring", null);
         values.put("polygon", null);
         values.put("multipolygon", null);
+        values.put("stringMultiValued", null);
+        values.put("keywordMultiValued", null);
+        values.put("integerMultiValued", null);
+        values.put("longMultiValued", null);
+        values.put("decimalMultiValued", null);
+        values.put("rawMultiValued", null);
+        values.put("instantMultiValued", null);
+        values.put("pointMultiValued", null);
+        values.put("multipointMultiValued", null);
+        values.put("linestringMultiValued", null);
+        values.put("multilinestringMultiValued", null);
+        values.put("polygonMultiValued", null);
+        values.put("multipolygonMultiValued", null);
 
         ItemRecord itemRecord = new ItemRecord("1", values);
 
@@ -211,9 +236,22 @@ public class RecordConvertorTest {
         values.add("multilinestring");
         values.add("polygon");
         values.add("multipolygon");
+        values.add("stringMultiValued");
+        values.add("keywordMultiValued");
+        values.add("integerMultiValued");
+        values.add("longMultiValued");
+        values.add("decimalMultiValued");
+        values.add("rawMultiValued");
+        values.add("instantMultiValued");
+        values.add("pointMultiValued");
+        values.add("multipointMultiValued");
+        values.add("linestringMultiValued");
+        values.add("multilinestringMultiValued");
+        values.add("polygonMultiValued");
+        values.add("multipolygonMultiValued");
 
         List<ExtractedMessage> result = recordConvertor.validateAttributeNames(values,
-                oClassDetailsDto.getAttributes().stream().map(attribute -> attribute.getName()));
+                oClassDetailsDto.getAttributes().stream().map(AttributeBaseDto::getName));
 
         assertThat(result).isEmpty();
     }
@@ -233,7 +271,7 @@ public class RecordConvertorTest {
         values.add("multipolygon");
 
         List<ExtractedMessage> result = recordConvertor.validateAttributeNames(values,
-                oClassDetailsDto.getAttributes().stream().map(attribute -> attribute.getName()));
+                oClassDetailsDto.getAttributes().stream().map(AttributeBaseDto::getName));
 
         assertThat(result).isEmpty();
     }
@@ -257,10 +295,10 @@ public class RecordConvertorTest {
         values.add("decimal");
 
         List<ExtractedMessage> result = recordConvertor.validateAttributeNames(values,
-                oClassDetailsDto.getAttributes().stream().map(attribute -> attribute.getName()));
+                oClassDetailsDto.getAttributes().stream().map(AttributeBaseDto::getName));
 
         assertEquals(1, result.size());
-        assertEquals(MessageLevel.WARNING, result.get(0).messageLevel());
+        assertEquals(MessageLevel.WARNING, result.getFirst().messageLevel());
     }
 
     @Test
@@ -300,6 +338,27 @@ public class RecordConvertorTest {
         ConversionResult result = recordConvertor.convert(itemRecord, oClassDetailsDto, true);
 
         assertThat(result.messages()).isEmpty();
+    }
+
+    @Test
+    void convert_withMultiValued_returnOK() {
+        Map<String, Object> values = new HashMap<>();
+        values.put("stringMultiValued", "valueA|valueB");
+        values.put("pointMultiValued",
+                "{ \"type\": \"Point\", \"coordinates\": [30.0, 10.0] }|{ \"type\": \"Point\", \"coordinates\": [35.0, 15.0] }");
+
+        ItemRecord itemRecord = new ItemRecord("1", values);
+
+        ConversionResult result = recordConvertor.convert(itemRecord, oClassDetailsDto, true);
+
+        assertThat(result.messages()).isEmpty();
+        assertThat(result.record().values()).hasSize(2);
+        assertThat(result.record().values().get("stringMultiValued")).isInstanceOf(List.class);
+        assertThat(result.record().values().get("pointMultiValued")).isInstanceOf(List.class);
+        List stringMultiValued = (List) result.record().values().get("stringMultiValued");
+        assertThat(stringMultiValued).hasSize(2);
+        List pointMultiValued = (List) result.record().values().get("pointMultiValued");
+        assertThat(pointMultiValued).hasSize(2);
     }
 
     @Test

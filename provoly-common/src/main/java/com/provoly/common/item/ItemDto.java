@@ -1,6 +1,7 @@
 package com.provoly.common.item;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -60,7 +61,16 @@ public class ItemDto {
     }
 
     public void put(String name, Object value) {
-        attributes.put(name, new AttributeSimpleValueDto(value));
+        //FIXME Multivalued attribute should not be determined by instance of value but by AttributeDef
+        if (value instanceof List) {
+            AttributeMultiValueDto multiValuedAttribute = new AttributeMultiValueDto();
+            multiValuedAttribute.values = ((List<?>) value).stream()
+                    .map(AttributeSimpleValueDto::new)
+                    .toList();
+            attributes.put(name, multiValuedAttribute);
+        } else {
+            attributes.put(name, new AttributeSimpleValueDto(value));
+        }
     }
 
     public void putMetadata(String name, Object value) {

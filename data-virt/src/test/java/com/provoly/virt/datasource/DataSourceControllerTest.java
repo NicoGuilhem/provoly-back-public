@@ -13,6 +13,7 @@ import com.provoly.common.datasource.DataSourceType;
 import com.provoly.common.datasource.Search;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.model.AttributeDefDto;
+import com.provoly.common.model.OClassWriteDto;
 import com.provoly.common.model.Type;
 import com.provoly.common.search.*;
 import com.provoly.test.*;
@@ -67,8 +68,14 @@ public class DataSourceControllerTest {
                 testData.createField("aggregate_multi_%s".formatted(UUID.randomUUID()), Type.KEYWORD), true);
         var attributeKeyword = testData.createAttribute("aggregate_string",
                 testData.createField("aggregate_string_%s".formatted(UUID.randomUUID()), Type.KEYWORD));
-        var vehicleClass = testData.createClass(companion, "aggregate_vehicle", storage, attributeDate, attributeChoc,
-                attributeKeyword, multiAttributeKeyword);
+        OClassWriteDto vehicleClass;
+        if (storage == Storage.ELASTIC) {
+            vehicleClass = testData.createClass(companion, "aggregate_vehicle", storage, attributeDate, attributeChoc,
+                    attributeKeyword, multiAttributeKeyword);
+        } else {
+            vehicleClass = testData.createClass(companion, "aggregate_vehicle", storage, attributeDate, attributeChoc,
+                    attributeKeyword);
+        }
         dataStorages.get(storage).attributeDate = attributeDate;
         dataStorages.get(storage).attributeChoc = attributeChoc;
         dataStorages.get(storage).attributeKeyword = attributeKeyword;
@@ -83,14 +90,18 @@ public class DataSourceControllerTest {
         attributes.put(attributeDate.getTechnicalName(), Instant.parse("2015-01-01T00:00:00+01:00"));
         attributes.put(attributeKeyword.getTechnicalName(), "marie");
         attributes.put(attributeChoc.getTechnicalName(), "12");
-        attributes.put(multiAttributeKeyword.getTechnicalName(), "12");
+        if (storage == Storage.ELASTIC) {
+            attributes.put(multiAttributeKeyword.getTechnicalName(), List.of("12"));
+        }
         itemsTestTools.addItem(dataStorages.get(storage).datasetVersionDto, attributes);
 
         Map<String, Object> attributes2 = new HashMap<>();
         attributes2.put(attributeDate.getTechnicalName(), Instant.parse("2015-01-01T00:00:00+01:00"));
         attributes2.put(attributeKeyword.getTechnicalName(), "MaRie");
         attributes2.put(attributeChoc.getTechnicalName(), "15");
-        attributes2.put(multiAttributeKeyword.getTechnicalName(), "12");
+        if (storage == Storage.ELASTIC) {
+            attributes2.put(multiAttributeKeyword.getTechnicalName(), List.of("12"));
+        }
         itemsTestTools.addItem(dataStorages.get(storage).datasetVersionDto, attributes2);
     }
 
@@ -273,7 +284,7 @@ public class DataSourceControllerTest {
     }
 
     @ParameterizedTest
-    @EnumSource(names = { "ELASTIC", "POSTGIS" })
+    @EnumSource(names = { "ELASTIC" })
     @Order(12)
     public void autocompleteCalledWithMultiValueAttribute_shouldThrowError(Storage storage) {
         var dataStorage = dataStorages.get(storage);

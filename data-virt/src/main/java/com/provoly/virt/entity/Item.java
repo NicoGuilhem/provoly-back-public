@@ -61,25 +61,21 @@ public class Item {
     }
 
     public AttributeSimpleValue getAttributeSimple(String technicalName) {
-        // TODO : Check attributeDef is simple attribute
-        var attribute = (AttributeSimpleValue) attributes.get(technicalName);
-        if (attribute == null) {
-            AttributeDefDetailsDto attributeDef = getAttributeDefByTechnicalName(technicalName);
-            attribute = new AttributeSimpleValue(this, attributeDef);
-            attributes.put(technicalName, attribute);
+        var attribute = attributes.computeIfAbsent(technicalName, this::buildAttributeFromAttributeDefByTechnicalName);
+        if (attribute instanceof AttributeSimpleValue attributeSimpleValue) {
+            return attributeSimpleValue;
         }
-        return attribute;
+        throw new BusinessException(ErrorCode.TECHNICAL,
+                "Attribute " + technicalName + " is not a simple valued attribute.");
     }
 
     public AttributeMultiValue getAttributeMulti(String technicalName) {
-        // TODO : Check attributeDef is multi attribute
-        var attribute = (AttributeMultiValue) attributes.get(technicalName);
-        if (attribute == null) {
-            AttributeDefDetailsDto attributeDef = getAttributeDefByTechnicalName(technicalName);
-            attribute = new AttributeMultiValue(this, attributeDef);
-            attributes.put(technicalName, attribute);
+        var attribute = attributes.computeIfAbsent(technicalName, this::buildAttributeFromAttributeDefByTechnicalName);
+        if (attribute instanceof AttributeMultiValue attributeMultiValue) {
+            return attributeMultiValue;
         }
-        return attribute;
+        throw new BusinessException(ErrorCode.TECHNICAL,
+                "Attribute " + technicalName + " is not a multi valued attribute.");
     }
 
     AttributeDefDetailsDto getAttributeDefByTechnicalName(String technicalName) {
@@ -89,6 +85,15 @@ public class Item {
                     "Attribute " + technicalName + " not found in " + oClass.getName());
         }
         return attrDef;
+    }
+
+    private AttributeValue buildAttributeFromAttributeDefByTechnicalName(String technicalName) {
+        AttributeDefDetailsDto attributeDef = getAttributeDefByTechnicalName(technicalName);
+        if (attributeDef.isMultiValued()) {
+            return new AttributeMultiValue(this, attributeDef);
+        } else {
+            return new AttributeSimpleValue(this, attributeDef);
+        }
     }
 
     public <T extends AttributeValue> T getAttributeByTechnicalName(String name, Class<T> clazz) {
