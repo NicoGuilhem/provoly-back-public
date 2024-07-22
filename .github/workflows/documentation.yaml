@@ -5,6 +5,7 @@ on:
       - 'main'
     paths:
       - 'docs/**'
+      - '**/openapi.yaml'
 jobs:
   dispatch-event:
     name: Dispatch event
