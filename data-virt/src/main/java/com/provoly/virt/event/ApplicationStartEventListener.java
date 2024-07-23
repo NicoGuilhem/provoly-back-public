@@ -13,9 +13,8 @@ import com.provoly.common.error.ErrorCode;
 import com.provoly.virt.storage.StorageInitEventListener;
 import com.provoly.virt.storage.elasticbased.KuzzleClient;
 
-import io.quarkus.agroal.runtime.DataSourceJdbcRuntimeConfig;
-import io.quarkus.agroal.runtime.DataSourcesJdbcRuntimeConfig;
 import io.quarkus.datasource.common.runtime.DataSourceUtil;
+import io.quarkus.datasource.runtime.DataSourceSupport;
 import io.quarkus.runtime.StartupEvent;
 
 import org.elasticsearch.client.RestClient;
@@ -24,14 +23,14 @@ import org.elasticsearch.client.RestClient;
 public final class ApplicationStartEventListener {
 
     private final List<StorageInitEventListener> storageInitEventListeners;
-    private final DataSourcesJdbcRuntimeConfig dataSourcesJdbcRuntimeConfig;
+    private final DataSourceSupport dataSourceSupport;
 
     public ApplicationStartEventListener(
             RestClient elasticRestClient,
             KuzzleClient kuzzleClient,
             @Any Instance<StorageInitEventListener> storageInitEventListeners,
-            DataSourcesJdbcRuntimeConfig dataSourcesJdbcRuntimeConfig) {
-        this.dataSourcesJdbcRuntimeConfig = dataSourcesJdbcRuntimeConfig;
+            DataSourceSupport dataSourceSupport) {
+        this.dataSourceSupport = dataSourceSupport;
         atLeastOneStorage(elasticRestClient, kuzzleClient);
         this.storageInitEventListeners = storageInitEventListeners
                 .stream()
@@ -56,8 +55,6 @@ public final class ApplicationStartEventListener {
     }
 
     private boolean isPostgisDatasourceConfigured() {
-        DataSourceJdbcRuntimeConfig dataSourceJdbcRuntimeConfig = dataSourcesJdbcRuntimeConfig
-                .dataSources().get(DataSourceUtil.DEFAULT_DATASOURCE_NAME).jdbc();
-        return dataSourceJdbcRuntimeConfig.url().isPresent();
+        return !dataSourceSupport.getInactiveNames().contains(DataSourceUtil.DEFAULT_DATASOURCE_NAME);
     }
 }
