@@ -26,6 +26,13 @@
       "matchPackagePrefixes": [
         "org.mapstruct:"
       ]
+    },
+    {
+      "groupName": "githubActions",
+      "matchDepTypes": [
+        "action"
+      ],
+      "automerge": true
     }
   ]
 }
