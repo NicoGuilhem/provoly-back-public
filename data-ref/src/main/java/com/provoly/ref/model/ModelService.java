@@ -172,7 +172,13 @@ public class ModelService {
                                 WithCategoryEntityType.ATTRIBUTES);
                     }
                 },
-                () -> oClass.addAttribute(modelMapper.toModel(attributeDefDto)));
+                () -> {
+                    oClass.addAttribute(modelMapper.toModel(attributeDefDto));
+                    if (attributeDefDto.getCategory() != null) {
+                        categoryService.updateEntityCategories(List.of(attributeDefDto.getCategory()),
+                                attributeDefDto.getId(), WithCategoryEntityType.ATTRIBUTES);
+                    }
+                });
         refEventService.classUpdated(oClass);
     }
 

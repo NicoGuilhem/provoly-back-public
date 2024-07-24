@@ -19,10 +19,7 @@ import com.provoly.common.error.BusinessException;
 import com.provoly.common.link.LinkDto;
 import com.provoly.common.metadata.MetadataDefDto;
 import com.provoly.common.metadata.MetadataValueWriteDto;
-import com.provoly.common.model.AttributeDefDto;
-import com.provoly.common.model.AttributeDefWriteDto;
-import com.provoly.common.model.OClassDetailsDto;
-import com.provoly.common.model.OClassWriteDto;
+import com.provoly.common.model.*;
 import com.provoly.common.model.field.FieldDto;
 import com.provoly.common.relation.RelationTypeDto;
 import com.provoly.common.search.*;
@@ -424,6 +421,140 @@ public class ModelServiceTest {
         assertThatThrownBy(() -> modelController.getById(oclassId))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("%s : %s inexistant.".formatted("OClass", oclassId));
+    }
+
+    @Test
+    @TestSecurity(user = "testUser", roles = { Role.STR_CLASS_READ, Role.STR_CLASS_WRITE })
+    public void updateAttribute_shouldSucceed() {
+
+        // GIVEN
+        UUID attributeId = UUID.randomUUID();
+        FieldDto fieldDto = testService.createAndSaveField();
+        AttributeDefWriteDto attributeDefDto = testService.createAttributeWriteDto(attributeId, "attribute",
+                "attributeId" + attributeId, fieldDto);
+
+        UUID oclassId = UUID.randomUUID();
+        OClassWriteDto oclassWriteDto = new OClassWriteDto(oclassId, "oclass", "icon", List.of(attributeDefDto), "slug",
+                Storage.ELASTIC, List.of());
+
+        modelController.saveClass(oclassWriteDto);
+
+        // WHEN
+        attributeDefDto.setName("attributeNameChanged");
+        attributeDefDto.setTechnicalName("attributeTechnicalNameChanged");
+        modelController.addAttribute(oclassId, attributeDefDto);
+
+        // THEN
+        assertThat(modelController.getById(oclassId))
+                .isInstanceOf(OClassReadDto.class)
+                .extracting(OClassReadDto::getAttributes)
+                .extracting(List::getFirst)
+                .hasFieldOrPropertyWithValue("name", "attributeNameChanged")
+                .hasFieldOrPropertyWithValue("technicalName", "attributeTechnicalNameChanged");
+    }
+
+    @Test
+    @TestSecurity(user = "testUser", roles = { Role.STR_CLASS_READ, Role.STR_CLASS_WRITE })
+    public void updateAttributeWithCategory_shouldSucceed() {
+
+        // GIVEN
+        UUID attributeId = UUID.randomUUID();
+        FieldDto fieldDto = testService.createAndSaveField();
+        AttributeDefWriteDto attributeDefDto = testService.createAttributeWriteDto(attributeId, "attribute",
+                "attributeId" + attributeId, fieldDto);
+
+        UUID oclassId = UUID.randomUUID();
+        OClassWriteDto oclassWriteDto = new OClassWriteDto(oclassId, "oclass", "icon", List.of(attributeDefDto), "slug",
+                Storage.ELASTIC, List.of());
+
+        modelController.saveClass(oclassWriteDto);
+
+        // WHEN
+        attributeDefDto.setName("attributeNameChanged");
+        attributeDefDto.setTechnicalName("attributeTechnicalNameChanged");
+        UUID categoryId = UUID.randomUUID();
+        CategoryDto category = new CategoryDto(categoryId, "fakeCategoryName");
+        modelController.addCategory(category);
+        attributeDefDto.setCategory(categoryId);
+        modelController.addAttribute(oclassId, attributeDefDto);
+
+        // THEN
+        assertThat(modelController.getById(oclassId))
+                .isInstanceOf(OClassReadDto.class)
+                .extracting(OClassReadDto::getAttributes)
+                .extracting(List::getFirst)
+                .hasFieldOrPropertyWithValue("name", "attributeNameChanged")
+                .hasFieldOrPropertyWithValue("technicalName", "attributeTechnicalNameChanged")
+                .hasFieldOrPropertyWithValue("category", categoryId);
+    }
+
+    @Test
+    @TestSecurity(user = "testUser", roles = { Role.STR_CLASS_READ, Role.STR_CLASS_WRITE })
+    public void addAttribute_shouldSucceed() {
+
+        // GIVEN
+        UUID attributeId = UUID.randomUUID();
+        FieldDto fieldDto = testService.createAndSaveField();
+        AttributeDefWriteDto attributeDefDto = testService.createAttributeWriteDto(attributeId, "attribute",
+                "attributeId" + attributeId, fieldDto);
+
+        UUID oclassId = UUID.randomUUID();
+        OClassWriteDto oclassWriteDto = new OClassWriteDto(oclassId, "oclass", "icon", List.of(attributeDefDto), "slug",
+                Storage.ELASTIC, List.of());
+
+        modelController.saveClass(oclassWriteDto);
+
+        // WHEN
+        UUID otherAttributeId = UUID.randomUUID();
+        AttributeDefWriteDto otherAttributeDefDto = testService.createAttributeWriteDto(otherAttributeId, "otherAttribute",
+                "otherAttributeTechnicalName", fieldDto);
+        modelController.addAttribute(oclassId, otherAttributeDefDto);
+
+        // THEN
+        assertThat(modelController.getById(oclassId))
+                .isInstanceOf(OClassReadDto.class)
+                .extracting(OClassReadDto::getAttributes)
+                .extracting(attributes -> attributes.stream().filter(attribute -> attribute.getId().equals(otherAttributeId))
+                        .findFirst().orElseThrow())
+                .hasFieldOrPropertyWithValue("name", "otherAttribute")
+                .hasFieldOrPropertyWithValue("technicalName", "otherAttributeTechnicalName");
+    }
+
+    @Test
+    @TestSecurity(user = "testUser", roles = { Role.STR_CLASS_READ, Role.STR_CLASS_WRITE })
+    public void addAttributeWithCategory_shouldSucceed() {
+
+        // GIVEN
+        UUID attributeId = UUID.randomUUID();
+        FieldDto fieldDto = testService.createAndSaveField();
+        AttributeDefWriteDto attributeDefDto = testService.createAttributeWriteDto(attributeId, "attribute",
+                "attributeId" + attributeId, fieldDto);
+
+        UUID oclassId = UUID.randomUUID();
+        OClassWriteDto oclassWriteDto = new OClassWriteDto(oclassId, "oclass", "icon", List.of(attributeDefDto), "slug",
+                Storage.ELASTIC, List.of());
+
+        modelController.saveClass(oclassWriteDto);
+
+        // WHEN
+        UUID otherAttributeId = UUID.randomUUID();
+        AttributeDefWriteDto otherAttributeDefDto = testService.createAttributeWriteDto(otherAttributeId, "otherAttribute",
+                "otherAttributeTechnicalName", fieldDto);
+        UUID categoryId = UUID.randomUUID();
+        CategoryDto category = new CategoryDto(categoryId, "fakeCategoryName");
+        modelController.addCategory(category);
+        otherAttributeDefDto.setCategory(categoryId);
+        modelController.addAttribute(oclassId, otherAttributeDefDto);
+
+        // THEN
+        assertThat(modelController.getById(oclassId))
+                .isInstanceOf(OClassReadDto.class)
+                .extracting(OClassReadDto::getAttributes)
+                .extracting(attributes -> attributes.stream().filter(attribute -> attribute.getId().equals(otherAttributeId))
+                        .findFirst().orElseThrow())
+                .hasFieldOrPropertyWithValue("name", "otherAttribute")
+                .hasFieldOrPropertyWithValue("technicalName", "otherAttributeTechnicalName")
+                .hasFieldOrPropertyWithValue("category", categoryId);
     }
 
     public DatasetDto createClosedDataset(String name, UUID oclassId) {
