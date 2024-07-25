@@ -28,11 +28,33 @@
       ]
     },
     {
-      "groupName": "githubActions",
+      "groupName": "LocalDockerComposeFiles",
+      "description": "Docker-compose files only used for local testing to be auto merged",
+      "matchFileNames": [
+        "**/docker-compose.yaml",
+        "**/docker-compose-extended.yaml"
+      ],
+      "automerge": true,
+      "autoApprove": true
+    },
+    {
+      "groupName": "GithubActions",
+      "matchDepTypes": [
+        "action"
+      ]
+    },
+    {
+      "groupName": "GithubActions non major",
+      "description": "Github actions that are non major to be auto merged",
       "matchDepTypes": [
         "action"
       ],
-      "automerge": true
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": true,
+      "autoApprove": true
     }
   ]
 }
