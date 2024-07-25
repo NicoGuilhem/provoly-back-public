@@ -43,6 +43,15 @@
         "action"
       ],
       "automerge": true
+    },
+    {
+      "groupName": "AllPatchUpdates",
+      "description": "All patch and digest updates are grouped, and skip 'Required approvals' rule",
+      "matchUpdateTypes": [
+        "patch",
+        "digest"
+      ],
+      "automerge": true
     }
   ]
 }
