@@ -34,27 +34,15 @@
         "**/docker-compose.yaml",
         "**/docker-compose-extended.yaml"
       ],
-      "automerge": true,
-      "autoApprove": true
+      "automerge": true
     },
     {
       "groupName": "GithubActions",
-      "matchDepTypes": [
-        "action"
-      ]
-    },
-    {
-      "groupName": "GithubActions non major",
-      "description": "Github actions that are non major to be auto merged",
+      "description": "Github actions are grouped, and skip 'Required approvals' rule",
       "matchDepTypes": [
         "action"
       ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
-      ],
-      "automerge": true,
-      "autoApprove": true
+      "automerge": true
     }
   ]
 }
