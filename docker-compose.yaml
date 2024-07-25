@@ -7,7 +7,7 @@ services:
       - POSTGRES_PASSWORD=mysecretpassword
 
   es01:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.1@sha256:03ee4816f20c429ba83d000a0e202d8beaee5041a6db19bf5c0f892dc96ac236
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.3@sha256:96ae58e574cb40b2caf8bdebc6dda7b789e1fae7d56346cc83c288374e18b1c2
     environment:
       - discovery.type=single-node
     volumes:
