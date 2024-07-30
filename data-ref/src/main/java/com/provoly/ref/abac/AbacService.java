@@ -4,10 +4,10 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 
 import com.provoly.common.Constant;
@@ -37,25 +37,21 @@ public class AbacService {
     }
 
     @Transactional
-    public Collection<AbacRule> getAllForClass(UUID oClassId) {
+    public Collection<AbacRule> getAllForClass(UUID oClassId, boolean includeInactiveRules) {
         log.infof("get All rules for class %s", oClassId);
         OClass oClass = entityIdRepository.getLinkedById(oClassId, OClass.class);
 
-        var cb = em.getCriteriaBuilder();
-        var q = cb.createQuery(AbacRule.class);
-        var root = q.from(AbacRule.class);
-        var isAttributeType = cb.equal(root.get(AbacRule_.O_CLASS), oClass);
-        var isMetadataType = cb.equal(root.get(AbacRule_.TYPE), AbacRuleType.METADATA);
+        EntityIdRepository.CriteriaQueryOptionsFunction<AbacRule> filterFunction = (cb, q, root) -> {
+            Predicate where = cb.equal(root.get(AbacRule_.O_CLASS), oClass);
+            if (!includeInactiveRules) {
+                log.debug("not including inactive rules, retrieving only active rules");
+                var isRuleActive = cb.equal(root.get(AbacRule_.active), true);
+                where = cb.and(where, isRuleActive);
+            }
+            return where;
+        };
 
-        q.where(cb.or(isAttributeType, isMetadataType));
-        return em.createQuery(q).getResultList();
-    }
-
-    @Transactional
-    public Collection<AbacRule> getActiveForClass(UUID oClassId) {
-        log.infof("get All actives rules for class %s", oClassId);
-        Collection<AbacRule> getAll = getAllForClass(oClassId);
-        return getAll.stream().filter(AbacRule::isActive).collect(Collectors.toList());
+        return entityIdRepository.getAll(AbacRule.class, filterFunction);
     }
 
     @Transactional
@@ -139,7 +135,7 @@ public class AbacService {
 
     @Transactional
     public void deleteContextVariable(String name) throws BusinessException {
-        for (AbacRule rule : getAllRules()) {
+        for (AbacRule rule : getAllRules(null)) {
             if (rule.getPredicate().getValue().contains(Constant.VARIABLE_PREFIX + "." + name)) {
                 throw new BusinessException(ErrorCode.NOT_MODIFIABLE, "this context is used in rule " + rule.getId());
             }
@@ -147,8 +143,9 @@ public class AbacService {
         em.remove(getContextVariable(name));
     }
 
-    public Collection<AbacRule> getAllRules() {
-        return entityIdRepository.getAll(AbacRule.class);
+    public Collection<AbacRule> getAllRules(AbacRuleType type) {
+        return entityIdRepository.getAll(AbacRule.class,
+                type != null ? (cb, q, r) -> cb.equal(r.get(AbacRule_.type), type) : null);
     }
 
     public AbacRule getRule(UUID ruleId) {

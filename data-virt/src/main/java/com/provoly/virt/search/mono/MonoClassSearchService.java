@@ -211,6 +211,9 @@ public class MonoClassSearchService {
 
     private void addSecurity(UUID classId, MonoClassRequestDto request, MonoClassContextRequest monoClassContextRequest) {
         var rulesDto = abacService.getRuleFor(classId);
+        log.debugf("Found %s rules for class, now adding all rules based on metadata (not associated with class).",
+                rulesDto.size());
+        rulesDto.addAll(abacService.getAllRules(AbacRuleType.METADATA));
         log.tracef("Rules for oclass %s : %s, total : %s", classId, rulesDto.size(), rulesDto);
         var context = abacService.listContextVariables();
 

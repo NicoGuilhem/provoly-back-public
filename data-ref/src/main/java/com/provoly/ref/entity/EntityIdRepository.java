@@ -6,6 +6,9 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.transaction.Transactional;
 
@@ -71,8 +74,18 @@ public class EntityIdRepository {
 
     @Transactional
     public <T extends EntityId> List<T> getAll(Class<T> entityClass) {
-        var q = em.getCriteriaBuilder().createQuery(entityClass);
-        q.select(q.from(entityClass));
+        return getAll(entityClass, null);
+    }
+
+    @Transactional
+    public <T extends EntityId> List<T> getAll(Class<T> entityClass, CriteriaQueryOptionsFunction<T> additionalFilter) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        var q = cb.createQuery(entityClass);
+        Root<T> from = q.from(entityClass);
+        q.select(from);
+        if (additionalFilter != null) {
+            q.where(additionalFilter.build(cb, q, from));
+        }
         return em.createQuery(q).getResultList();
     }
 
@@ -123,5 +136,10 @@ public class EntityIdRepository {
         if (em.find(entityClass, id) == null) {
             throw new ProvolyNotFoundException(entityClass, id);
         }
+    }
+
+    @FunctionalInterface
+    public interface CriteriaQueryOptionsFunction<T extends EntityId> {
+        public Predicate build(CriteriaBuilder cb, CriteriaQuery<T> q, Root<T> root);
     }
 }

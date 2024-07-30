@@ -1,6 +1,9 @@
 package com.provoly.ref.model;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
@@ -228,7 +231,7 @@ public class AssociationService {
 
     private List<AssociationDto> getAbacRulesAssociationsForClass(UUID id) {
         List<AssociationDto> associationDtos = new ArrayList<>();
-        var abac = abacService.getAllForClass(id);
+        var abac = abacService.getAllForClass(id, true);
         abac.forEach(dataset -> associationDtos
                 .add(new AssociationDto(dataset.getId(), dataset.getName(), VisibilityType.PUBLIC,
                         AssociationsType.ABAC)));

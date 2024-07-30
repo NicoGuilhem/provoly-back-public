@@ -9,6 +9,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
 import com.provoly.common.abac.AbacRuleDto;
+import com.provoly.common.abac.AbacRuleType;
 import com.provoly.common.user.Role;
 
 import org.jboss.resteasy.reactive.RestQuery;
@@ -26,9 +27,9 @@ public class AbacController {
 
     @GET
     @Path("/rules")
-    @RolesAllowed({ Role.STR_DATA_ACCESS_READ })
-    public Collection<AbacRuleDto> getRules() {
-        return mapper.toRuleDto(abacService.getAllRules());
+    @RolesAllowed({ Role.STR_DATA_ACCESS_READ, Role.STR_SEARCH })
+    public Collection<AbacRuleDto> getRules(@RestQuery("type") AbacRuleType type) {
+        return mapper.toRuleDto(abacService.getAllRules(type));
     }
 
     @GET
@@ -42,9 +43,7 @@ public class AbacController {
     @Path("/rules/class/{oClassId}")
     @RolesAllowed({ Role.STR_DATA_ACCESS_READ, Role.STR_SEARCH, Role.STR_DATASOURCE_READ })
     public Collection<AbacRuleDto> getRulesFor(UUID oClassId, @RestQuery("include-inactive") boolean includeInactive) {
-        Collection<AbacRule> rules = includeInactive ? abacService.getAllForClass(oClassId)
-                : abacService.getActiveForClass(oClassId);
-        return mapper.toRuleDto(rules);
+        return mapper.toRuleDto(abacService.getAllForClass(oClassId, includeInactive));
     }
 
     @POST

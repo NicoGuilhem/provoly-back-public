@@ -101,7 +101,7 @@ public class TestDataService {
 
     private void deactivateAllRule() {
         // FIXME : Not compatible with multiple test running in parallel
-        for (var rule : abacService.getAllRules()) {
+        for (var rule : abacService.getAllRules(null)) {
             rule.active = false;
             abacService.addRule(rule);
         }

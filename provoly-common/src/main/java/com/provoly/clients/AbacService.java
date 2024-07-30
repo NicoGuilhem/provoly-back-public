@@ -6,6 +6,7 @@ import java.util.UUID;
 import jakarta.ws.rs.*;
 
 import com.provoly.common.abac.AbacRuleDto;
+import com.provoly.common.abac.AbacRuleType;
 import com.provoly.common.abac.ContextVariableDto;
 import com.provoly.common.error.ProvolyResponseExceptionMapper;
 
@@ -13,6 +14,7 @@ import io.quarkus.cache.CacheResult;
 
 import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+import org.jboss.resteasy.reactive.RestQuery;
 
 @Path("/abac")
 @RegisterRestClient(configKey = "data-ref")
@@ -27,7 +29,7 @@ public interface AbacService {
 
     @GET
     @Path("/rules")
-    Collection<AbacRuleDto> getAllRules();
+    Collection<AbacRuleDto> getAllRules(@RestQuery("type") AbacRuleType type);
 
     @POST
     @Path("/rules")

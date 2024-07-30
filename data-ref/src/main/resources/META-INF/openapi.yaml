@@ -404,28 +404,41 @@ paths:
                     - id: "7527bd0a-5059-4edd-a053-83189be6a920"
                       name: "date_accident"
                       technicalName: "date_accident"
-                      field: "872ff200-b4cc-47e6-a45b-fe3ea9c1ab9f"
+                      field:
+                        id: "872ff200-b4cc-47e6-a45b-fe3ea9c1ab9f"
+                        name: "dateField"
+                        type: "instant"
                       category: "4270b521-6424-4e86-8a83-44648e72d1a7"
                       multiValued: false
                       slug: "slug"
                     - id: "430b3c66-d621-466a-9fa0-1f2e3ae3b15d"
                       name: "location"
                       technicalName: "location"
-                      field: "5510a2a9-dcbb-4861-bdb1-f0091a824767"
+                      field:
+                        id: "5510a2a9-dcbb-4861-bdb1-f0091a824767"
+                        name: "pointField"
+                        type: "Point"
+                        crs: "EPSG:4326"
                       category: "cf666d66-838f-4d92-a4d2-a315df21fac9"
                       multiValued: false
                       slug: "slug"
                     - id: "24b31150-5acc-4f13-bf9f-3987abb32ffe"
                       name: "weather"
                       technicalName: "weather"
-                      field: "5510a2a9-dcbb-4861-bdb1-f0091a824767"
+                      field:
+                        id: "5510a2a9-dcbb-4861-bdb1-f0091a824767"
+                        name: "stringField"
+                        type: "string"
                       category: "cf666d66-838f-4d92-a4d2-a315df21fac9"
                       multiValued: false
                       slug: "slug"
                     - id: "4b8b4f6c-7dfd-4613-9414-c9daf00016af"
                       name: "car_id"
                       technicalName: "car_id"
-                      field: "7000506c-049b-47d3-b92d-a2e823b46b81"
+                      field:
+                        id: "7000506c-049b-47d3-b92d-a2e823b46b81"
+                        name: "longField"
+                        type: "long"
                       multiValued: true
                       slug: "slug"
       responses:
@@ -1313,7 +1326,7 @@ paths:
                       name: "classification des sols"
                       oClass: "9d37e039-272b-463e-942e-6c6af0c2f440"
                       type: "CLOSED"
-                      metadata": []
+                      metadata: [ ]
         "401":
           description: Not Authorized
         "403":
@@ -2221,27 +2234,24 @@ paths:
                 - level: "ERROR"
                   messages: 
                     - level: "ERROR"
-                      extractMessageCode: "NO_ATTRIBUTES"
-                      type: 
-                      name: 
-                      recordId: 
+                      extractedMessageCode: "NO_ATTRIBUTES"
                       datasetVersionId: "aba17aa9-fe0f-4610-8f36-60a244e875bb"
                   count: 1
                 - level: "WARNING"
                   messages: 
                     - level: "WARNING"
-                      extractMessageCode: "UNRECOGNIZED"
-                      type: 
+                      extractedMessageCode: "UNRECOGNIZED"
+                      type: "Point"
                       name: "Geo Point"
-                      recordId: 
+                      recordId: "12"
                       datasetVersionId: "ff8dc620-57b4-4132-8326-efb01daac5b9"
                     - level: "WARNING"
-                      extractMessageCode: "UNRECOGNIZED"
-                      type: 
+                      extractedMessageCode: "UNRECOGNIZED"
+                      type: "Point"
                       name: "Geo Shape"
-                      recordId: 
+                      recordId: "12"
                       datasetVersionId: "ff8dc620-57b4-4132-8326-efb01daac5b9"
-                  count: 1
+                  count: 2
         "401":
           description: Not Authorized
         "403":
@@ -2626,6 +2636,12 @@ paths:
         The ABAC (Attribute-Based Access Control) are rules and predicates.
         They allow us to provide access to users based on who they are rather than what they do.
       operationId: com.provoly.ref.abac.AbacController_getRules
+      parameters:
+        - name: type
+          in: query
+          description: Retrieve only rules with selected type.
+          schema:
+            $ref: '#/components/schemas/AbacRuleType'
       responses:
         "200":
           description: OK
@@ -2677,24 +2693,20 @@ paths:
                   condition:
                     type: OR
                     composed:
-                    - type: AND
-                      composed:
+                      - type: AND
+                        composed:
+                          - type: ATTRIBUTE
+                            attribute: 9d82213c-db91-42db-8675-5f2e70ae2f05
+                            value: "202000010265"
+                          - type: ATTRIBUTE
+                            attribute: dbf3917f-1af8-495e-94af-67d8315a7772
+                            value: "3"
                       - type: ATTRIBUTE
-                        oClass: 411a19f5-9d00-4028-b4b6-4b04101f6316
                         attribute: 9d82213c-db91-42db-8675-5f2e70ae2f05
-                        value: 202000010265
+                        value: "202000010265"
                       - type: ATTRIBUTE
-                        oClass: 411a19f5-9d00-4028-b4b6-4b04101f6316
                         attribute: dbf3917f-1af8-495e-94af-67d8315a7772
-                        value: 3
-                    - type: ATTRIBUTE
-                      oClass: 411a19f5-9d00-4028-b4b6-4b04101f6316
-                      attribute: 9d82213c-db91-42db-8675-5f2e70ae2f05
-                      value: 202000010265
-                    - type: ATTRIBUTE
-                      oClass: 411a19f5-9d00-4028-b4b6-4b04101f6316
-                      attribute: dbf3917f-1af8-495e-94af-67d8315a7772
-                      value: 3
+                        value: "3"
       responses:
         "201":
           description: Created
@@ -3315,11 +3327,11 @@ paths:
               default:
                 summary: Adding metadata for a user
                 value:
-                  value: "some value"
+                  values: [ "some value" ]
               incorrect:
-                summary: Adding null metadata for a user
+                summary: Removing metadatas for a user
                 value:
-                  value: null
+                  values: [ ]
       responses:
         "204":
           description: No Content
@@ -4281,7 +4293,11 @@ components:
               description: Example of a disabled dataset version that has warnings.
               value:
                 - id: "b1a08d9d-4c38-4d43-90f3-25015537ebfd"
-                  dataset: "423b5c01-1816-41d4-b358-200000000010"
+                  dataset:
+                    id: "423b5c01-1816-41d4-b358-200000000010"
+                    name: "datasetName"
+                    oClass: "991eb4b2-253c-4875-b708-8209fa5bfd51"
+                    type: "CLOSED"
                   oClass: "991eb4b2-253c-4875-b708-8209fa5bfd51"
                   lastModified: "2023-04-27T13:56:13.861018Z"
                   version: 1
@@ -4293,7 +4309,11 @@ components:
               description: Example of a dataset version with metadata
               value:
                 - id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-                  dataset: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                  dataset:
+                    id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                    name: "datasetName"
+                    oClass: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                    type: "CLOSED"
                   oClass: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
                   lastModified: "2022-03-10T16:15:50Z"
                   version: 0
@@ -4319,7 +4339,11 @@ components:
               description: Example of a dataset version that has warnings.
               value:
                 id: "b1a08d9d-4c38-4d43-90f3-25015537ebfd"
-                dataset: "423b5c01-1816-41d4-b358-200000000010"
+                dataset:
+                  id: "423b5c01-1816-41d4-b358-200000000010"
+                  name: "datasetName"
+                  oClass: "991eb4b2-253c-4875-b708-8209fa5bfd51"
+                  type: "CLOSED"
                 oClass: "991eb4b2-253c-4875-b708-8209fa5bfd51"
                 lastModified: "2023-04-27T13:56:13.861018Z"
                 version: 1
@@ -4331,8 +4355,12 @@ components:
               description: Example of a dataset version with metadata
               value:
                 id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-                dataset: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-                oClass: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                dataset:
+                  id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                  name: "datasetName"
+                  oClass: "3fa85f64-5717-4562-b3fc-2c963f66afa8"
+                  type: "CLOSED"
+                oClass: "3fa85f64-5717-4562-b3fc-2c963f66afa8"
                 lastModified: "2022-03-10T16:15:50Z"
                 version: 2
                 state: "ACTIVE"
@@ -4598,9 +4626,7 @@ components:
         composed:
           type: array
           items:
-            properties:
-              items:
-                $ref: '#/components/schemas/ConditionDto'
+            $ref: '#/components/schemas/ConditionDto'
     MetadataConditionDto:
       description: Condition based on metadata used when params type equals METADATA
       type: object
@@ -4953,10 +4979,6 @@ components:
           example: "73981_my_field"
         type:
           $ref: '#/components/schemas/Type'
-          enum:
-            - string
-            - raw
-            - keyword
     FieldGeoDto:
       required:
         - id
@@ -4975,8 +4997,6 @@ components:
           example: "73981_my_field"
         type:
           $ref: '#/components/schemas/Type'
-          enum:
-            - instant
         crs:
           type: string
           example: "EPSG:1233"
@@ -5000,8 +5020,6 @@ components:
           example: "73981_my_field"
         type:
           $ref: '#/components/schemas/Type'
-          enum:
-            - instant
         format:
           type: string
           format: date
@@ -5024,8 +5042,6 @@ components:
           example: "73981_my_field"
         type:
           $ref: '#/components/schemas/Type'
-          enum:
-            - decimal
         unit:
           type: string
           nullable: true
@@ -5054,9 +5070,6 @@ components:
           example: "73981_my_field"
         type:
           $ref: '#/components/schemas/Type'
-          enum:
-            - integer
-            - long
         unit:
           type: string
           nullable: true
@@ -5365,7 +5378,6 @@ components:
       properties:
         type:
           $ref: '#/components/schemas/SearchRequestType'
-          default: MONO_CLASS
         fullSearch:
           $ref: '#/components/schemas/FullSearchConditionDto'
         oClass:
