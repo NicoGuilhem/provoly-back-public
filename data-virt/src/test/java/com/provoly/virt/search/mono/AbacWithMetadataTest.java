@@ -74,7 +74,7 @@ public class AbacWithMetadataTest {
 
         // Add a rule on juridiction = "statut_juridique" = "judiciaire"
         var statutJuridique = testData.createMetadataItem("statut_juridique");
-        testData.createMetadataRule(statutJuridique, "judiciaire", "user.metadata('statut') == 'policier'");
+        testData.createMetadataRule(statutJuridique, "judiciaire", "user.metadata('statut').contains('policier')");
 
         condition = new AttributeConditionDto(nbWordAttribute.getId(), "42", Operator.EQUALS);
 

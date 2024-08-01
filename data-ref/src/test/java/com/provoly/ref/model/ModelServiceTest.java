@@ -596,7 +596,7 @@ public class ModelServiceTest {
         ruleCondition.setLocation("location");
         ruleCondition.setValue("value");
         ruleCondition.setUpperValue("upperValue");
-        createRule(AbacRuleType.ATTRIBUTE, "user.metadata('statut') == 'policier'", attributeId);
+        createRule(AbacRuleType.ATTRIBUTE, "user.metadata('statut').contains('policier')", attributeId);
     }
 
     private Predicate createPredicate(String value) {

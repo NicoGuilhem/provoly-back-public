@@ -65,7 +65,7 @@ public class AbacAttributeVisibilityTest {
         var classificationMeta = testData.createMetadataItem("classification");
 
         // Add a rule on classification SECRET
-        testData.createMetadataRule(classificationMeta, "secret", "user.metadata('statut') == 'policier'");
+        testData.createMetadataRule(classificationMeta, "secret", "user.metadata('statut').contains('policier')");
 
         insertItems();
 

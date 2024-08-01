@@ -79,7 +79,8 @@ public class AbacWithMetadataELTest {
         condition = new AttributeConditionDto(nbWordAttribute.getId(), "42", Operator.EQUALS);
         itemsTestTools.addMetadataToItem(policeDoc, statutJuridique, "policier");
 
-        testData.createMetadataRule(statutJuridique, Operator.NOT_EQUALS, "${user.metadata('statut')}",
+        testData.createMetadataRule(statutJuridique, Operator.NOT_EQUALS,
+                "${user.metadata('statut').isEmpty() ? '' : user.metadata('statut').getFirst()}",
                 "user.login == 'iamsuperadmin'");
     }
 

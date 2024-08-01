@@ -36,7 +36,7 @@ public class UserController {
 
     @GET
     @Path("/me/metadata")
-    @RolesAllowed({ Role.STR_METADATA_USER_REF_READ, Role.STR_METADATA_USER_READ, Role.STR_SEARCH })
+    @RolesAllowed({ Role.STR_METADATA_USER_REF_READ, Role.STR_METADATA_USER_READ, Role.STR_SEARCH, Role.STR_DATASOURCE_READ })
     public Collection<UserProfileValueReadDto> getMines() {
         ProvolyUser user = userService.getCurrentUser();
         return userService.getUserProfileValueReadDtos(user.getId());

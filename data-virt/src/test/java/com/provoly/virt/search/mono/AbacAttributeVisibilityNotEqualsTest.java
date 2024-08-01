@@ -69,7 +69,7 @@ public class AbacAttributeVisibilityNotEqualsTest {
         var classificationMeta = testData.createMetadataItem("classification");
 
         // Add a rule on classification SECRET
-        testData.createMetadataRule(classificationMeta, operator, "open", "user.metadata('statut') == 'policier'");
+        testData.createMetadataRule(classificationMeta, operator, "open", "user.metadata('statut').contains('policier')");
         insertItems();
 
         itemsTestTools.addMetadataToAttribute(document, authorAttribute, classificationMeta, "secret");
@@ -78,7 +78,7 @@ public class AbacAttributeVisibilityNotEqualsTest {
     private void addRuleOnAttribute(Operator operator) {
         var ruleCondition = new AttributeConditionDto(authorAttribute.getId(), "toto", operator);
 
-        testData.createAttributeRule(ruleCondition, "user.metadata('statut') == 'policier'");
+        testData.createAttributeRule(ruleCondition, "user.metadata('statut').contains('policier')");
         insertItems();
     }
 

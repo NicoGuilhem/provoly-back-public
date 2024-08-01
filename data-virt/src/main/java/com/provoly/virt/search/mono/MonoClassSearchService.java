@@ -203,6 +203,7 @@ public class MonoClassSearchService {
             addSecurity(classDto.getId(), request, monoClassContextRequest);
         } catch (Exception e) {
             spanManager.recordException(span, e);
+            throw e;
         } finally {
             span.end();
         }
@@ -210,7 +211,7 @@ public class MonoClassSearchService {
     }
 
     private void addSecurity(UUID classId, MonoClassRequestDto request, MonoClassContextRequest monoClassContextRequest) {
-        var rulesDto = abacService.getRuleFor(classId);
+        var rulesDto = new ArrayList<>(abacService.getRuleFor(classId));
         log.debugf("Found %s rules for class, now adding all rules based on metadata (not associated with class).",
                 rulesDto.size());
         rulesDto.addAll(abacService.getAllRules(AbacRuleType.METADATA));

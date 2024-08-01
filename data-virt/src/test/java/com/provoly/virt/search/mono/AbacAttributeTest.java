@@ -72,7 +72,7 @@ public class AbacAttributeTest {
 
         // Add a rule on POLICE can see author with Dredd
         var ruleCondition = new AttributeConditionDto(authorAttribute.getId(), "dredd", Operator.CONTAINS);
-        testData.createAttributeRule(ruleCondition, "user.metadata('statut') == 'policier'");
+        testData.createAttributeRule(ruleCondition, "user.metadata('statut').contains('policier')");
 
         condition = new AttributeConditionDto(nbWordAttribute.getId(), "42", Operator.EQUALS);
 
