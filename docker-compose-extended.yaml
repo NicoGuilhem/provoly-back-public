@@ -9,7 +9,7 @@ services:
 
 
   kafka:
-    image: docker.io/bitnami/kafka:3.8.0@sha256:b3d13a3af1400f9524609bc2b023a9fe65f7576f20f1c91e71526ecb33e82f46
+    image: docker.io/bitnami/kafka:3.8.0@sha256:7184837473019f79d011bae6a4474f6623d61c87094183b7ce826e86f3301d5f
     ports:
       - "9093:9093"
     environment:
