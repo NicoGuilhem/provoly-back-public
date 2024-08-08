@@ -38,7 +38,7 @@ services:
 
 
   es01:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.3@sha256:96ae58e574cb40b2caf8bdebc6dda7b789e1fae7d56346cc83c288374e18b1c2
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0@sha256:84a73ced8390c059e7bc2858595c68dc36e6f8bdb98895dcab0074eda35ac96e
     environment:
       - discovery.type=single-node
     volumes:
@@ -47,7 +47,7 @@ services:
       - "9200:9200"
 
   kib01:
-    image: docker.elastic.co/kibana/kibana:8.14.3@sha256:70740c7735524d4df593d2ef209f7d51e870cac51dc7ec589dfaa8ea17e32e24
+    image: docker.elastic.co/kibana/kibana:8.15.0@sha256:ff5f6b9a49f410658b74b337b102c302bbeb52b470efe1f0e3af3c7526fbe0e7
     ports:
       - "5601:5601"
     environment:
