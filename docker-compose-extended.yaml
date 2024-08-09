@@ -60,7 +60,7 @@ services:
       - "16686:16686"
 
   postgres:
-    image: postgres:16.3@sha256:d0f363f8366fbc3f52d172c6e76bc27151c3d643b870e1062b4e8bfe65baf609
+    image: postgres:16.4@sha256:d6ac4635444233a66d564e8b8da510a0aaf0e86d527369e084fd1c1bc98c6d07
     ports:
       - "5432:5432"
     environment:
