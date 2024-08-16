@@ -52,7 +52,7 @@
                         <path>
                             <groupId>org.hibernate.orm</groupId>
                             <artifactId>hibernate-jpamodelgen</artifactId>
-                            <version>6.5.2.Final</version>
+                            <version>6.6.0.Final</version>
                         </path>
                         <path>
                             <groupId>org.mapstruct</groupId>
