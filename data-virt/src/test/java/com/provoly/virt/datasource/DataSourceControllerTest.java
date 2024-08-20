@@ -412,6 +412,42 @@ public class DataSourceControllerTest {
     @ParameterizedTest
     @EnumSource(names = { "ELASTIC", "POSTGIS" })
     @Order(20)
+    public void getItemsSearch_withFilterIn_ShouldNotReturnItems(Storage storage) {
+        var dataStorage = dataStorages.get(storage);
+
+        var condition = new AttributeConditionDto(dataStorage.attributeChoc.getId(), "12", Operator.EQUALS, null);
+        FilterDto filterDto = new FilterDto(dataStorage.attributeKeyword.getId(), Operator.IN,
+                List.of("fakeKeywordNotInAttributeValue", "anotherFakeKeywordNotInAttributeValue"));
+        SearchRequestDto searchRequestDto = new MonoClassRequestDto(dataStorage.datasetVersionDto.getoClass(), List.of(),
+                condition);
+
+        var result = dataSourceController.getItemsSearch(dataStorage.datasetVersionDto.getId(), null, List.of(filterDto),
+                searchRequestDto);
+
+        assertThat(result.items()).isEmpty();
+    }
+
+    @ParameterizedTest
+    @EnumSource(names = { "ELASTIC", "POSTGIS" })
+    @Order(21)
+    public void getItemsSearch_withFilterNotIn_ShouldNotReturnItems(Storage storage) {
+        var dataStorage = dataStorages.get(storage);
+
+        var condition = new AttributeConditionDto(dataStorage.attributeChoc.getId(), "12", Operator.EQUALS, null);
+        FilterDto filterDto = new FilterDto(dataStorage.attributeKeyword.getId(), Operator.NOT_IN,
+                List.of("fakeKeywordNotInAttributeValue", "anotherFakeKeywordNotInAttributeValue"));
+        SearchRequestDto searchRequestDto = new MonoClassRequestDto(dataStorage.datasetVersionDto.getoClass(), List.of(),
+                condition);
+
+        var result = dataSourceController.getItemsSearch(dataStorage.datasetVersionDto.getId(), null, List.of(filterDto),
+                searchRequestDto);
+
+        assertThat(result.items()).hasSize(1);
+    }
+
+    @ParameterizedTest
+    @EnumSource(names = { "ELASTIC", "POSTGIS" })
+    @Order(22)
     public void should_get_empty_result_when_dataset_doesnt_exist(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         var dateField = testData.createField("aggregate_date_%s".formatted(storage), Type.INSTANT, "MONTH");
@@ -430,7 +466,7 @@ public class DataSourceControllerTest {
 
     @ParameterizedTest
     @EnumSource(names = { "ELASTIC", "POSTGIS" })
-    @Order(21)
+    @Order(23)
     public void aggregate_groupBy_withOrder_should_throwError(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         // GIVEN
@@ -449,7 +485,7 @@ public class DataSourceControllerTest {
 
     @ParameterizedTest
     @EnumSource(names = { "ELASTIC", "POSTGIS" })
-    @Order(22)
+    @Order(24)
     public void aggregate_withLimitNegative_should_throwError(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         String intervalFormat = "hour";

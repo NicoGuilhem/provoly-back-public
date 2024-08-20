@@ -737,7 +737,21 @@
     } ],
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
-    "realmRoles" : [ "notification_read", "field_read", "link_read", "data_access_read", "dashboard_read", "class_read", "item_write", "metadata_context_read", "dashboard_write", "default-roles-provoly", "metadata_item_ref_read", "search" ],
+    "realmRoles": [
+      "notification_read",
+      "field_read",
+      "link_read",
+      "data_access_read",
+      "dashboard_read",
+      "class_read",
+      "item_write",
+      "metadata_context_read",
+      "dashboard_write",
+      "default-roles-provoly",
+      "metadata_item_ref_read",
+      "search",
+      "datasource_read"
+    ],
     "notBefore" : 0,
     "groups" : [ "/default_group", "/another_group" ]
   }, {

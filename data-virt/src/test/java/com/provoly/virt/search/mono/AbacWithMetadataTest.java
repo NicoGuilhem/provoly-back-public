@@ -60,6 +60,7 @@ public class AbacWithMetadataTest {
     private ConditionDto condition;
 
     public void prepareData() {
+        authService.init();
         authService.authenticate(AuthService.User.SUPER_ADMIN);
 
         // create class vehicule

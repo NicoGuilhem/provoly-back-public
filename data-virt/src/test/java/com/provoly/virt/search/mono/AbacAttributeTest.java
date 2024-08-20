@@ -139,8 +139,21 @@ public class AbacAttributeTest {
 
         var result = itemsTestTools.searchFull(condition);
         assertThat(result.items().get(documentClass.getId())).extracting("id").containsExactlyInAnyOrder(openDoc.getId());
-        cleaning();
-
     }
 
+    @Test
+    @Order(5)
+    public void onSearchAll_withRuleBasedOnUserProfile_user_cannotSee() {
+        authService.authenticate(AuthService.User.SUPER_ADMIN);
+
+        // Add a rule on user profile
+        var ruleCondition = new AttributeConditionDto(authorAttribute.getId(), "${user.metadata('autorizedListOfAuthors')}",
+                Operator.NOT_IN);
+        testData.createAttributeRule(ruleCondition, "false");
+
+        var result = itemsTestTools.searchAll(documentClass.getId(), datasetVersionDto, condition);
+        assertThat(result.items()).isEmpty();
+
+        cleaning();
+    }
 }

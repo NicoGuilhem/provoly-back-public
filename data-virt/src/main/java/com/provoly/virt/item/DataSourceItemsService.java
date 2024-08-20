@@ -3,6 +3,7 @@ package com.provoly.virt.item;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -184,8 +185,17 @@ public class DataSourceItemsService {
             orCondition.composed
                     .add(new AttributeConditionDto(filter.attribute(), filter.value(), filter.operator(), filter.upperValue()));
         }
-        filter.values().forEach(
-                value -> orCondition.composed.add(new AttributeConditionDto(filter.attribute(), value, filter.operator())));
+
+        if (filter.operator().isWithNativeListOfValues()) {
+            String expressionLanguageForListOfValues = "${ ["
+                    + filter.values().stream().map(value -> "'" + value + "'").collect(Collectors.joining(",")) + "] }";
+            orCondition.composed
+                    .add(new AttributeConditionDto(filter.attribute(), expressionLanguageForListOfValues, null, null, null,
+                            filter.operator()));
+        } else {
+            filter.values().forEach(
+                    value -> orCondition.composed.add(new AttributeConditionDto(filter.attribute(), value, filter.operator())));
+        }
 
         return orCondition;
     }

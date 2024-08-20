@@ -17,4 +17,10 @@ public record MonoClassContextRequest(OrConditionDto securityCondition, OrCondit
                 ", requestedAttributes:" + requestedAttributes +
                 "} ";
     }
+
+    public boolean isWithSecurityConditions() {
+        return (securityCondition != null && securityCondition.composed != null && !securityCondition.composed.isEmpty())
+                || (securityMetaCondition != null && securityMetaCondition.composed != null
+                        && !securityMetaCondition.composed.isEmpty());
+    }
 }

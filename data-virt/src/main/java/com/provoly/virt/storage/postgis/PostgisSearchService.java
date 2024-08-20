@@ -133,7 +133,7 @@ class PostgisSearchService implements StorageSearchService {
         if (request.getSort() != null && request.getSearchAfter() != null) {
             try {
                 var searchAfterContext = storageSupport.getSearchAfterContext(request.getSearchAfter());
-                searchAfter = Integer.parseInt(searchAfterContext.searchAfter().get(0));
+                searchAfter = Integer.parseInt(searchAfterContext.searchAfter().getFirst());
             } catch (JsonProcessingException e) {
                 throw new BusinessException(ErrorCode.TECHNICAL, "could not read search After");
             }
@@ -145,9 +145,7 @@ class PostgisSearchService implements StorageSearchService {
     private PostgisSelectQueryBuilder buildSelectSql(OClassDetailsDto oClass, MonoClassRequestDto request,
             MonoClassContextRequest context, int limit,
             long searchAfter, List<String> columnsName) {
-        if (request.getFullSearch() != null) {
-            throw new NotSupportedStorageException("Postgis does not support fullSearch"); // TODO : Implement fullSearch, issue #115
-        }
+        checkPostgisSupportedFeatures(request, context);
 
         var selectQueryBuilder = new PostgisSelectQueryBuilder(postgisSupport, mapper, log, storageSupport, oClass,
                 spanManager);
@@ -167,11 +165,19 @@ class PostgisSearchService implements StorageSearchService {
 
     }
 
+    private void checkPostgisSupportedFeatures(MonoClassRequestDto request, MonoClassContextRequest context) {
+        if (request.getFullSearch() != null) {
+            throw new NotSupportedStorageException("Postgis does not support fullSearch");
+        }
+
+        if (context.isWithSecurityConditions()) {
+            throw new NotSupportedStorageException("Postgis does not support security conditions");
+        }
+    }
+
     private PostgisSelectQueryBuilder count(OClassDetailsDto oClass, MonoClassRequestDto request,
             MonoClassContextRequest context) {
-        if (request.getFullSearch() != null) {
-            throw new NotSupportedStorageException("Postgis does not support fullSearch"); // TODO : Implement fullSearch, issue #115
-        }
+        checkPostgisSupportedFeatures(request, context);
 
         var selectQueryBuilder = new PostgisSelectQueryBuilder(postgisSupport, mapper, log, storageSupport, oClass,
                 spanManager);

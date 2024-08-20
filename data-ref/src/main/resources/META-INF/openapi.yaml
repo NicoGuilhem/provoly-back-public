@@ -4658,6 +4658,8 @@ components:
         - I_CONTAINS
         - I_START_WITH
         - I_END_WITH
+        - IN
+        - NOT_IN
       type: string
     ContextVariableDto:
       type: object

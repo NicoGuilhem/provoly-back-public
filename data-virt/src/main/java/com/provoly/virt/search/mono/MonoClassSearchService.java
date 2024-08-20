@@ -224,7 +224,7 @@ public class MonoClassSearchService {
                 continue;
             }
             String expression = "${" + predicateService.getPredicate(ruleDto.predicate).value + "}";
-            if (!predicatEvaluator.evaluate(expression, Boolean.class, context)) {
+            if (!predicatEvaluator.evaluateAsBoolean(expression, context)) {
                 ConditionDto computedCondition = ruleDto.condition;
                 if (ruleDto.type == AbacRuleType.METADATA) {
                     log.trace("Build metadata security condition");
@@ -238,7 +238,7 @@ public class MonoClassSearchService {
 
         if (request.getCondition() != null) {
             log.trace("Evaluate request conditions");
-            // TODO : condition should be a TrueConditionDto instead of null
+            // TODO : request condition is not linked to security but to NamedQuery or Filters, move this block outside of this method
             predicatEvaluator.evaluate(request.getCondition(), context);
         }
         log.trace("Evaluate security condition");

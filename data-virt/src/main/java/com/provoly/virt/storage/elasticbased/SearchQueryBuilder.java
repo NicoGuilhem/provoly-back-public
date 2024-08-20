@@ -1,6 +1,8 @@
 package com.provoly.virt.storage.elasticbased;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -18,12 +20,12 @@ import com.provoly.virt.storage.StorageSupport;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
+import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.GeoShapeRelation;
-import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.ChildScoreMode;
+import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.json.JsonData;
+import co.elastic.clients.util.ObjectBuilder;
 
 @ApplicationScoped
 public class SearchQueryBuilder {
@@ -186,8 +188,9 @@ public class SearchQueryBuilder {
                                     b -> b.field(elasticFieldPath)
                                             .shape(s -> s.relation(GeoShapeRelation.Intersects)
                                                     .shape(JsonData.fromJson(geoToString)))));
-
             }
+            case IN -> buildIn(elasticFieldPath, conditionDto);
+            case NOT_IN -> buildNotIn(elasticFieldPath, conditionDto);
         };
         // spotless:on
     }
@@ -293,6 +296,30 @@ public class SearchQueryBuilder {
                 .match(t -> t
                         .field(elasticFieldPath)
                         .query(conditionDto)));
+    }
+
+    private Query buildIn(String elasticFieldPath, AttributeConditionDto conditionDto) {
+        return Query.of(
+                query -> query
+                        .bool(boolQuery -> boolQuery.must(this.buildListConditionFunction(elasticFieldPath, conditionDto))));
+    }
+
+    private Query buildNotIn(String elasticFieldPath, AttributeConditionDto conditionDto) {
+        return Query.of(
+                query -> query
+                        .bool(boolQuery -> boolQuery.mustNot(this.buildListConditionFunction(elasticFieldPath, conditionDto))));
+    }
+
+    private Function<Query.Builder, ObjectBuilder<Query>> buildListConditionFunction(String elasticFieldPath,
+            AttributeConditionDto conditionDto) {
+        List<FieldValue> values;
+        if (conditionDto.getValues() != null) {
+            values = conditionDto.getValues().stream().map(FieldValue::of).toList();
+        } else {
+            values = List.of(FieldValue.of(conditionDto.getValue()));
+        }
+        return query -> query.terms(termsQuery -> termsQuery.field(elasticFieldPath)
+                .terms(TermsQueryField.of(field -> field.value(values))));
     }
 
     private Query buildQuery(MetadataConditionDto conditionDto, String elasticPath) {

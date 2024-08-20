@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
@@ -58,13 +59,17 @@ class PostgisSelectQueryBuilder {
     }
 
     private void addParam(Object value) {
-        preparedStatementConsumer = preparedStatementConsumer.andThen(ps -> {
-            try {
-                ps.setObject(index.getAndIncrement(), value);
-            } catch (SQLException e) {
-                throw new BusinessException(ErrorCode.TECHNICAL, "Unable to generate request", e);
-            }
-        });
+        if (value instanceof List values) {
+            values.stream().forEach(valueFromList -> addParam(valueFromList));
+        } else {
+            preparedStatementConsumer = preparedStatementConsumer.andThen(ps -> {
+                try {
+                    ps.setObject(index.getAndIncrement(), value);
+                } catch (SQLException e) {
+                    throw new BusinessException(ErrorCode.TECHNICAL, "Unable to generate request", e);
+                }
+            });
+        }
     }
 
     public PostgisSelectQueryBuilder select(String valueFieldName, AggregateOperation aggregateOperation,
@@ -364,6 +369,11 @@ class PostgisSelectQueryBuilder {
                         Double.valueOf(condition.getValue()));
             }
             case INTERSECTS -> appendOperators("st_intersects(%s, st_geomfromgeojson(?))".formatted(columnName), value);
+            case IN -> appendOperators(
+                    "%s IN (%s)".formatted(columnName, ((List) value).stream().map(x -> "?").collect(Collectors.joining(", "))),
+                    value);
+            case NOT_IN -> appendOperators("%s NOT IN (%s)".formatted(columnName,
+                    ((List) value).stream().map(x -> "?").collect(Collectors.joining(", "))), value);
         }
 
     }
@@ -374,9 +384,15 @@ class PostgisSelectQueryBuilder {
     }
 
     private Object typedValue(AttributeDefDetailsDto attribute, AttributeConditionDto conditionDto) {
-        return switch (attribute.getField().getType()) {
-            case INTEGER, LONG, DECIMAL, STRING, KEYWORD, RAW, INSTANT -> typedValue(attribute, conditionDto.getValue());
-            default -> getGeoValue(attribute, conditionDto);
+        return switch (conditionDto.getOperator()) {
+            case IN, NOT_IN -> switch (attribute.getField().getType()) {
+                case INTEGER, LONG, DECIMAL, STRING, KEYWORD, RAW, INSTANT -> typedValue(attribute, conditionDto.getValues());
+                default -> List.of(getGeoValue(attribute, conditionDto));
+            };
+            default -> switch (attribute.getField().getType()) {
+                case INTEGER, LONG, DECIMAL, STRING, KEYWORD, RAW, INSTANT -> typedValue(attribute, conditionDto.getValue());
+                default -> getGeoValue(attribute, conditionDto);
+            };
         };
     }
 
@@ -403,6 +419,10 @@ class PostgisSelectQueryBuilder {
             default -> value;
             // FIXME Geometry handling is far from optimal
         };
+    }
+
+    private Object typedValue(AttributeDefDetailsDto attribute, List<String> values) {
+        return values.stream().map(value -> typedValue(attribute, value)).toList();
     }
 
     private void prepareSerie(String aggregatedByName) {
