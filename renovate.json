@@ -14,8 +14,8 @@
       "matchDepNames": [
         "org.geotools"
       ],
-      "matchPackagePrefixes": [
-        "org.geotools:"
+      "matchPackageNames": [
+        "org.geotools:{/,}**"
       ]
     },
     {
@@ -23,8 +23,8 @@
       "matchDepNames": [
         "org.mapstruct"
       ],
-      "matchPackagePrefixes": [
-        "org.mapstruct:"
+      "matchPackageNames": [
+        "org.mapstruct:{/,}**"
       ]
     },
     {
