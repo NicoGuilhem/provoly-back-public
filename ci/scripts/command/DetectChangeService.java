@@ -26,7 +26,7 @@ public class DetectChangeService {
     public static final Logger LOG = Logger.getLogger(DetectChangeService.class);
 
     public static final List<String> build_all = List.of(
-            ".gitlab-ci.yml",
+            ".github/workflows",
             "provoly-common",
             "provoly-common-test",
             "provoly-parent",

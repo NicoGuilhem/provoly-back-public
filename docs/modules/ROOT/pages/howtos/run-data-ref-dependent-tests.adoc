@@ -2,8 +2,7 @@
 
 === With data-ref from registry
 
-It's first necessary to log into the private registry. Credentials info are here:
-https://gitlab.groupeonepoint.com/cds-bdx/pole-edition/yap/yap-deploy/-/blob/master/provoly/templates/register-credentials.yaml
+It's first necessary to log into the private registry, as specified here: xref:index.adoc#_docker_login[Accueil]
 
 run :
 

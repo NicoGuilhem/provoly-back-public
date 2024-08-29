@@ -1,3 +1,1 @@
-image:https://gitlab.groupeonepoint.com/cds-bdx/pole-edition/yap/yap-back/badges/main/pipeline.svg[link="https://gitlab.groupeonepoint.com/cds-bdx/pole-edition/pry/pry-back/-/commits/main",title="pipeline status"]
-
 include::docs/modules/ROOT/pages/index.adoc[]

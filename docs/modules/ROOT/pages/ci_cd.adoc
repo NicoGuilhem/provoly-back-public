@@ -37,7 +37,6 @@ Each activity is breaking, meaning that a failing activity will stop the pipelin
 
 If at least one of the file of the following list has changed, then everything is rebuilt, else a module is only built if it has been modified by the merge request :
 
-* `.gitlab-ci.yml`
 * `provoly-common/*`
 * `provoly-common-test/*`
 * `provoly-parent/pom.xml`
