@@ -6,11 +6,14 @@ import java.util.UUID;
 import com.provoly.common.Default;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class AttributeConditionDto extends ConditionDto {
 
     private UUID attribute;
-    private String value;
+    private String value; // Can either be an expression language or a constant value
+    @JsonIgnore
+    private String evaluatedValue; // Either the value evaluated if it's an EL or the value. Used to avoid references modifications and side effects #517
     private String upperValue;
     private List<String> values;
     private String location;
@@ -35,6 +38,7 @@ public class AttributeConditionDto extends ConditionDto {
         this.type = ConditionType.ATTRIBUTE;
         this.attribute = attribute;
         this.value = value;
+        this.evaluatedValue = value; // some process does not evaluates condition as they do not permit Expression language value so it is necessary to init evaluatedValue with value. Change this behaviour with #517
         this.upperValue = upperValue;
         this.values = values;
         this.location = location;
@@ -110,4 +114,11 @@ public class AttributeConditionDto extends ConditionDto {
                 "} ";
     }
 
+    public String getEvaluatedValue() {
+        return evaluatedValue;
+    }
+
+    public void setEvaluatedValue(String evaluatedValue) {
+        this.evaluatedValue = evaluatedValue;
+    }
 }

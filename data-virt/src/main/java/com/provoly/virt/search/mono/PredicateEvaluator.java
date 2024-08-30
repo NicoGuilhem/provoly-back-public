@@ -113,7 +113,7 @@ public class PredicateEvaluator {
     private void evaluate(AttributeConditionDto condition, StandardELContext context) {
         log.trace("Evaluate attribute condition");
         String expressionLanguageString = condition.getValue();
-        condition.setValue(evaluateAsString(expressionLanguageString, context));
+        condition.setEvaluatedValue(evaluateAsString(expressionLanguageString, context));
         condition.setLocation(evaluateAsString(condition.getLocation(), context));
         try {
             condition.setValues(evaluateAsList(expressionLanguageString, context));
@@ -125,7 +125,7 @@ public class PredicateEvaluator {
     private void evaluate(MetadataConditionDto condition, StandardELContext context) {
         log.trace("Evaluate metadata condition");
         String expressionLanguageString = condition.getValue();
-        condition.setValue(evaluateAsString(expressionLanguageString, context));
+        condition.setEvaluatedValue(evaluateAsString(expressionLanguageString, context));
         try {
             condition.setValues(evaluateAsList(expressionLanguageString, context));
         } catch (ELException e) {

@@ -119,7 +119,7 @@ public class SearchQueryBuilder {
             AttributeConditionDto conditionDto,
             ComposedConditionDto securityMetadata) {
         String elasticPath = storageLayout.buildAttributeRootPath(attribute);
-        validateTypeFieldValue(attribute.getField().getType(), conditionDto.getValue());
+        validateTypeFieldValue(attribute.getField().getType(), conditionDto.getEvaluatedValue());
 
         if (conditionDto.getUpperValue() != null) {
             validateTypeFieldValue(attribute.getField().getType(), conditionDto.getUpperValue());
@@ -140,7 +140,7 @@ public class SearchQueryBuilder {
         var elasticFieldPath = storageLayout.buildAttributePath(attribute);
 
         // spotless:off
-        String value = conditionDto.getValue();
+        String value = conditionDto.getEvaluatedValue();
         return switch (conditionDto.getOperator()) {
             case EQUALS -> buildEquals(attribute, elasticFieldPath, value, false);
             case I_EQUALS -> buildEquals(attribute, elasticFieldPath, value, true);
@@ -182,7 +182,7 @@ public class SearchQueryBuilder {
                             .location(l -> l.text(conditionDto.getLocation()))
                             .distance(value)));
             case INTERSECTS -> {
-                String geoToString = conditionDto.getValue();
+                String geoToString = conditionDto.getEvaluatedValue();
                     yield Query.of(
                             q -> q.geoShape(
                                     b -> b.field(elasticFieldPath)
@@ -316,7 +316,7 @@ public class SearchQueryBuilder {
         if (conditionDto.getValues() != null) {
             values = conditionDto.getValues().stream().map(FieldValue::of).toList();
         } else {
-            values = List.of(FieldValue.of(conditionDto.getValue()));
+            values = List.of(FieldValue.of(conditionDto.getEvaluatedValue()));
         }
         return query -> query.terms(termsQuery -> termsQuery.field(elasticFieldPath)
                 .terms(TermsQueryField.of(field -> field.value(values))));
@@ -327,7 +327,7 @@ public class SearchQueryBuilder {
         if (MetadataSystem.ID.is(conditionDto.getMetadata())) {
             return Query.of(q -> q
                     .ids(i -> i
-                            .values(conditionDto.getValue())));
+                            .values(conditionDto.getEvaluatedValue())));
         }
 
         var metadata = metadataService.get(conditionDto.getMetadata());
@@ -335,10 +335,10 @@ public class SearchQueryBuilder {
                 + storageLayout.buildElasticMetadataPath(metadata);
         // spotless:off
         return switch (conditionDto.getOperator()) {
-            case EQUALS -> buildEqualsKeyword(elasticFieldPath, conditionDto.getValue(), false);
-            case I_EQUALS -> buildEqualsKeyword(elasticFieldPath, conditionDto.getValue(), true);
-            case NOT_EQUALS -> buildNotEqualsKeyword(elasticFieldPath, conditionDto.getValue(), false);
-            case I_NOT_EQUALS -> buildNotEqualsKeyword(elasticFieldPath, conditionDto.getValue(), true);
+            case EQUALS -> buildEqualsKeyword(elasticFieldPath, conditionDto.getEvaluatedValue(), false);
+            case I_EQUALS -> buildEqualsKeyword(elasticFieldPath, conditionDto.getEvaluatedValue(), true);
+            case NOT_EQUALS -> buildNotEqualsKeyword(elasticFieldPath, conditionDto.getEvaluatedValue(), false);
+            case I_NOT_EQUALS -> buildNotEqualsKeyword(elasticFieldPath, conditionDto.getEvaluatedValue(), true);
             case EXISTS -> Query.of(q -> q
                     .exists(e -> e
                             .field(elasticFieldPath)));

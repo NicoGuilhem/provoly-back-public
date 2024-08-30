@@ -31,7 +31,7 @@ public class ConditionsEvaluator {
     }
 
     public boolean conditionEvaluator(AttributeSimpleValue attribute, MetadataConditionDto condition) {
-        var expectedValue = condition.getValue();
+        var expectedValue = condition.getEvaluatedValue();
         var actualValue = attribute.getMetadata(condition.getMetadata());
 
         return switch (condition.getOperator()) {

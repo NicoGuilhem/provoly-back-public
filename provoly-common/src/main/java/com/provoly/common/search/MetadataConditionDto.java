@@ -7,11 +7,14 @@ import com.provoly.common.Default;
 import com.provoly.common.metadata.MetadataSystem;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class MetadataConditionDto extends ConditionDto {
 
     private UUID metadata;
     private String value;
+    @JsonIgnore
+    private String evaluatedValue; // Either the value evaluated if it's an EL or the value. Used to avoid references modifications and side effects #517
     private List<String> values;
 
     private Operator operator;
@@ -26,6 +29,7 @@ public class MetadataConditionDto extends ConditionDto {
         this.type = ConditionType.METADATA;
         this.metadata = metadata;
         this.value = value;
+        this.evaluatedValue = value; // some process does not evaluates condition as they do not permit Expression language value so it is necessary to init evaluatedValue with value. Change this behaviour with #517
         this.values = values;
         this.operator = operator == null ? Operator.EQUALS : operator;
     }
@@ -71,5 +75,13 @@ public class MetadataConditionDto extends ConditionDto {
                 ", values: \"" + values + '"' +
                 ", operator: \"" + operator + '"' +
                 "} ";
+    }
+
+    public String getEvaluatedValue() {
+        return evaluatedValue;
+    }
+
+    public void setEvaluatedValue(String evaluatedValue) {
+        this.evaluatedValue = evaluatedValue;
     }
 }

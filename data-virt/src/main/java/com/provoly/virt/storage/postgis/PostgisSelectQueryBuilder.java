@@ -305,7 +305,7 @@ class PostgisSelectQueryBuilder {
             case MetadataConditionDto metadataCondition -> {
                 if (metadataCondition.getMetadata().equals(MetadataSystem.DATASET_VERSION.getId())) {
                     sql.append(" provoly_dataset_version = ? ").append(System.lineSeparator());
-                    addParam(UUID.fromString(metadataCondition.getValue()));
+                    addParam(UUID.fromString(metadataCondition.getEvaluatedValue()));
                 } else {
                     throw new NotSupportedStorageException("Postgis storage not support meta condition");
                 }
@@ -366,7 +366,7 @@ class PostgisSelectQueryBuilder {
                 appendOperators("st_distance(%s, 'SRID=%s;%s', true) <= ?"
                         .formatted(columnName, ((FieldGeoDto) attribute.getField()).checkAndExtractSRID(),
                                 condition.getLocation()),
-                        Double.valueOf(condition.getValue()));
+                        Double.valueOf(condition.getEvaluatedValue()));
             }
             case INTERSECTS -> appendOperators("st_intersects(%s, st_geomfromgeojson(?))".formatted(columnName), value);
             case IN -> appendOperators(
@@ -390,7 +390,8 @@ class PostgisSelectQueryBuilder {
                 default -> List.of(getGeoValue(attribute, conditionDto));
             };
             default -> switch (attribute.getField().getType()) {
-                case INTEGER, LONG, DECIMAL, STRING, KEYWORD, RAW, INSTANT -> typedValue(attribute, conditionDto.getValue());
+                case INTEGER, LONG, DECIMAL, STRING, KEYWORD, RAW, INSTANT ->
+                    typedValue(attribute, conditionDto.getEvaluatedValue());
                 default -> getGeoValue(attribute, conditionDto);
             };
         };
@@ -403,8 +404,8 @@ class PostgisSelectQueryBuilder {
             return typedValue(attribute, geo);
         }
 
-        if (conditionDto.getValue() != null) {
-            var geo = new GeoHolder(conditionDto.getValue(), fieldGeoDto.getCrs(), GeoFormat.GEO_JSON).toString();
+        if (conditionDto.getEvaluatedValue() != null) {
+            var geo = new GeoHolder(conditionDto.getEvaluatedValue(), fieldGeoDto.getCrs(), GeoFormat.GEO_JSON).toString();
             return typedValue(attribute, geo);
         }
         throw new BusinessException(ErrorCode.TECHNICAL, "A geo value must be set on geoJson or location property");
