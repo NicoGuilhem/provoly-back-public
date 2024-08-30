@@ -404,41 +404,28 @@ paths:
                     - id: "7527bd0a-5059-4edd-a053-83189be6a920"
                       name: "date_accident"
                       technicalName: "date_accident"
-                      field:
-                        id: "872ff200-b4cc-47e6-a45b-fe3ea9c1ab9f"
-                        name: "dateField"
-                        type: "instant"
+                      field: "872ff200-b4cc-47e6-a45b-fe3ea9c1ab9f"
                       category: "4270b521-6424-4e86-8a83-44648e72d1a7"
                       multiValued: false
                       slug: "slug"
                     - id: "430b3c66-d621-466a-9fa0-1f2e3ae3b15d"
                       name: "location"
                       technicalName: "location"
-                      field:
-                        id: "5510a2a9-dcbb-4861-bdb1-f0091a824767"
-                        name: "pointField"
-                        type: "Point"
-                        crs: "EPSG:4326"
+                      field: "5510a2a9-dcbb-4861-bdb1-f0091a824767"
                       category: "cf666d66-838f-4d92-a4d2-a315df21fac9"
                       multiValued: false
                       slug: "slug"
                     - id: "24b31150-5acc-4f13-bf9f-3987abb32ffe"
                       name: "weather"
                       technicalName: "weather"
-                      field:
-                        id: "5510a2a9-dcbb-4861-bdb1-f0091a824767"
-                        name: "stringField"
-                        type: "string"
+                      field: "5510a2a9-dcbb-4861-bdb1-f0091a824767"
                       category: "cf666d66-838f-4d92-a4d2-a315df21fac9"
                       multiValued: false
                       slug: "slug"
                     - id: "4b8b4f6c-7dfd-4613-9414-c9daf00016af"
                       name: "car_id"
                       technicalName: "car_id"
-                      field:
-                        id: "7000506c-049b-47d3-b92d-a2e823b46b81"
-                        name: "longField"
-                        type: "long"
+                      field: "7000506c-049b-47d3-b92d-a2e823b46b81"
                       multiValued: true
                       slug: "slug"
       responses:
@@ -5326,7 +5313,7 @@ components:
         attributes:
           type: array
           items:
-            $ref: '#/components/schemas/AttributeDefDto'
+            $ref: '#/components/schemas/AttributeDefWriteDto'
         slug:
           type: string
         metadata:
