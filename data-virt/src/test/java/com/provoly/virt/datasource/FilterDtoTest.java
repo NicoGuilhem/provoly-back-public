@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.search.Operator;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -77,6 +78,13 @@ class FilterDtoTest {
     public void it_should_accept_other_operator_with_multi_values(Operator operator) {
         assertThat(new FilterDto(UUID.randomUUID(), operator, List.of("20", "20", "22", "24")))
                 .isNotNull();
+    }
+
+    @Test
+    public void it_should_split_values_by_comma_ignoring_escaped_commas() {
+        FilterDto result = FilterDto.fromString(UUID.randomUUID() + ",EQUALS,value1,value\\,2value\\,2,value3\\,3");
+        assertThat(result.values())
+                .containsExactlyInAnyOrder("value1", "value,2value,2", "value3,3");
     }
 
     static Stream<Operator> withUpperValueProvider() {

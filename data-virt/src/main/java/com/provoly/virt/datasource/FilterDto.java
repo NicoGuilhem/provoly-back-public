@@ -1,6 +1,10 @@
 package com.provoly.virt.datasource;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.regex.Pattern;
 
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
@@ -42,13 +46,15 @@ public record FilterDto(UUID attribute, Operator operator, List<String> values) 
         if (param == null) {
             return null;
         }
-        String[] arg = param.split(",");
+        // splitting on "," with negative look behind on "\" to prevent splitting escaped commas ("\,")
+        String[] arg = param.split("(?<!\\\\)" + Pattern.quote(","));
 
         var attribute = UUID.fromString(arg[0]);
         var operator = Operator.valueOf(arg[1]);
 
         String[] values = Arrays.copyOfRange(arg, 2, arg.length);
-        return new FilterDto(attribute, operator, Arrays.asList(values));
+        // replacing escaped commas with commas (not escaped)
+        List<String> listValues = Arrays.stream(values).map(value -> value.replaceAll("\\\\,", ",")).toList();
+        return new FilterDto(attribute, operator, listValues);
     }
-
 }
