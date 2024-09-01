@@ -26,7 +26,7 @@ services:
 #      - SCHEMA_REGISTRY_KAFKA_BROKERS=PLAINTEXT://kafka:9092
 
   kafka:
-    image: docker.io/bitnami/kafka:3.8.0@sha256:864379e966cad4c2a37843a9c25f258df21250e70d6d1ce4ef6cfd88acb2205d
+    image: docker.io/bitnami/kafka:3.8.0@sha256:3a94b361d938e45b42cd2b5fc2d7708b762e4be4295a8e139311833acae2065b
     ports:
       - "9901:9901"
     environment:
