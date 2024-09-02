@@ -110,7 +110,7 @@ jobs:
       - name: Build Ref
         id: ref-build
         run: mvn ${{ env.MAVEN_CLI_OPTS }} -DskipTests=${{ env.SKIP_TEST }} verify -pl data-ref -Dquarkus.container-image.additional-tags=${{ env.DOCKER_IMAGE_ADDITIONAL_TAGS }} -am  ${{ env.MAVEN_JIB_OPTIONS }} ${{ env.IMAGE_NAME }} -Pdocker-image
-        if: steps.changed-ref-files.outputs.any_changed == 'true'
+        if: steps.changed-ref-files.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
         env:
           CI_REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
           CI_REGISTRY_SERVER: ${{ vars.REGISTRY_URL }}
