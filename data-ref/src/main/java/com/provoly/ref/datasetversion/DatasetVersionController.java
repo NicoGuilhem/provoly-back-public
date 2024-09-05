@@ -71,7 +71,7 @@ public class DatasetVersionController {
     }
 
     @GET
-    @RolesAllowed({ Role.STR_SEARCH })
+    @RolesAllowed({ Role.STR_SEARCH, Role.STR_DATASOURCE_READ })
     @Path("/class/{classId}")
     public Collection<DatasetVersionDetailsDto> getAllActiveForClass(UUID classId) {
         return datasetVersionMapper.toDatasetVersionDetailsDto(datasetVersionRepository.getAllActiveForClass(classId));
