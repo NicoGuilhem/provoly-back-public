@@ -39,6 +39,7 @@ public class KafkaTools {
     private final Optional<String> kafkaSecurityProtocol;
     private final Optional<String> kafkaSaslMechanism;
     private final Optional<String> kafkaSaslJassConfig;
+    private final Optional<Short> replicas;
     private final Optional<String> kafkaSaslLoginCallbackHandlerClass;
     private final Set<String> alreadyExistsTopic = new HashSet<>();
     private static final String ERROR_CONNECTION_KAFKA = "Unable to connect to kafka broker";
@@ -49,7 +50,8 @@ public class KafkaTools {
             @ConfigProperty(name = "mp.messaging.connector.smallrye-kafka.security.protocol") Optional<String> kafkaSecurityProtocol,
             @ConfigProperty(name = "mp.messaging.connector.smallrye-kafka.sasl.mechanism") Optional<String> kafkaSaslMechanism,
             @ConfigProperty(name = "mp.messaging.connector.smallrye-kafka.sasl.jaas.config") Optional<String> kafkaSaslJassConfig,
-            @ConfigProperty(name = "mp.messaging.connector.smallrye-kafka.sasl.login.callback.handler.class") Optional<String> kafkaSaslLoginCallbackHandlerClass) {
+            @ConfigProperty(name = "mp.messaging.connector.smallrye-kafka.sasl.login.callback.handler.class") Optional<String> kafkaSaslLoginCallbackHandlerClass,
+            @ConfigProperty(name = "mp.messaging.replicas") Optional<Short> replicas) {
         this.log = log;
         this.kafkaConfig = kafkaConfig;
 
@@ -57,6 +59,7 @@ public class KafkaTools {
         this.kafkaSaslMechanism = kafkaSaslMechanism;
         this.kafkaSaslJassConfig = kafkaSaslJassConfig;
         this.kafkaSaslLoginCallbackHandlerClass = kafkaSaslLoginCallbackHandlerClass;
+        this.replicas = replicas;
         addSecurityProperties();
     }
 
@@ -93,8 +96,7 @@ public class KafkaTools {
         try (var client = getAdmin()) {
             if (!client.listTopics().names().get().contains(topicName)) {
                 log.infof("Creating topic %s", topicName);
-                short replication = 1;
-                NewTopic newTopic = new NewTopic(topicName, 3, replication);
+                NewTopic newTopic = new NewTopic(topicName, 3, replicas.orElse((short) 1));
                 newTopic.configs(TOPIC_CONFIG);
                 client.createTopics(List.of(newTopic)).all().get();
             }

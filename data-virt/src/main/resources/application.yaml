@@ -64,6 +64,7 @@ quarkus:
 
 mp:
   messaging:
+    replicas: 3
     incoming:
       ref-event:
         failure-strategy: dead-letter-queue
