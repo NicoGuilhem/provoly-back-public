@@ -1,7 +1,7 @@
 version: '2.2'
 services:
   es01:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0@sha256:84a73ced8390c059e7bc2858595c68dc36e6f8bdb98895dcab0074eda35ac96e
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.1@sha256:ca844065f663d0a91fe82b4d540ad1e6f4c4ddc58b354cd1724bf19e56f01409
     container_name: es01
     environment:
       - discovery.type=single-node
@@ -25,7 +25,7 @@ services:
 #      - provoly
 
   db01:
-    image: postgres:16.4-alpine@sha256:492898505cb45f9835acc327e98711eaa9298ed804e0bb36f29e08394229550d
+    image: postgres:16.4-alpine@sha256:d898b0b78a2627cb4ee63464a14efc9d296884f1b28c841b0ab7d7c42f1fffdf
     container_name: db01
     ports:
       - "5432:5432"
