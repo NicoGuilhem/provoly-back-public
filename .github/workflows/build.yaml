@@ -119,7 +119,7 @@ jobs:
 
       #  CHECK AND BUILD REQUIRED MODULES
       - name: Detect Changes
-        uses: jbangdev/jbang-action@9f8c55e0a2b6b297711162b20c209c5e07076e59 # v0.117.1
+        uses: jbangdev/jbang-action@4d418212d8b3a80dddd94e8ba1b68e6ef3f7afd2 # v0.118.0
         with:
           script: ./ci/scripts/CiScripts.java
           scriptargs: select-target-modules --merge_request=${{ github.event.pull_request.base.sha }}
