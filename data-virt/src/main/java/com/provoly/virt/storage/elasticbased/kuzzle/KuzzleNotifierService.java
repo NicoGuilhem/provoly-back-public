@@ -5,7 +5,6 @@ import static com.provoly.virt.storage.elasticbased.kuzzlemeasure.KuzzleMeasureL
 import java.util.HashMap;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.event.Observes;
 
 import com.provoly.virt.entity.AttributeMultiValue;
 import com.provoly.virt.entity.AttributeSimpleValue;
@@ -16,58 +15,39 @@ import com.provoly.virt.storage.elasticbased.kuzzlemeasure.KuzzleMeasureLayout;
 
 import io.kuzzle.sdk.coreClasses.maps.KuzzleMap;
 import io.kuzzle.sdk.coreClasses.responses.Response;
-import io.kuzzle.sdk.events.NetworkStateChangeEvent;
 import io.kuzzle.sdk.handlers.NotificationHandler;
-import io.kuzzle.sdk.protocol.ProtocolState;
-import io.quarkus.runtime.StartupEvent;
 
 import org.jboss.logging.Logger;
 import org.jetbrains.annotations.NotNull;
-
-import kotlin.Unit;
 
 @ApplicationScoped
 public class KuzzleNotifierService implements NotificationHandler {
 
     private final Logger log;
-    private final KuzzleClient kuzzleClient;
     private final KuzzleMeasureLayout measureLayout;
     private final ItemsNotifier notifier;
-
+    private final KuzzleClient kuzzleClient;
     private boolean isSubscribed = false;
 
     public KuzzleNotifierService(Logger log,
-            KuzzleClient kuzzleClient,
             KuzzleMeasureLayout measureLayout,
-            ItemsNotifier notifier) {
+            ItemsNotifier notifier, KuzzleClient kuzzleClient) {
         this.log = log;
-        this.kuzzleClient = kuzzleClient;
         this.measureLayout = measureLayout;
         this.notifier = notifier;
+        this.kuzzleClient = kuzzleClient;
     }
 
-    void onStart(@Observes StartupEvent ev) {
-        if (!kuzzleClient.isConfigured()) {
-            log.info("Kuzzle is not configured, Kuzzle notifier service is disabled");
-            return;
-        }
-
-        log.info("Starting Kuzzle notifier service");
-        this.kuzzleClient.client().getProtocol().addListener(NetworkStateChangeEvent.class, event -> {
-            if (event.getState() == ProtocolState.OPEN) {
-                // onKuzzleConnect use KuzzleClient we already are in a Kuzzle listener
-                // Kuzzle client is not reentrant we need to move to another thread
-                new Thread(this::onKuzzleConnect).start();
-            }
-            return Unit.INSTANCE; // Needed for Kotlin interop with Java
-        });
-    }
-
-    private void onKuzzleConnect() {
+    /*
+     * Notification service must be init once,
+     * no need to subscribe again when kuzzle lost connection
+     */
+    public void startNotificationService() {
         log.info("Kuzzle is connected");
         if (isSubscribed) {
             // Subscriptions are persistant even across reconnection
             // We need to subscribe only at the first connection
+            log.debugf("Already subscribed");
             return;
         }
 

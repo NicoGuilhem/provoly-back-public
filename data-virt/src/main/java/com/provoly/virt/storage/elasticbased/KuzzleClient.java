@@ -7,19 +7,24 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.virt.DataVirtProperties;
 import com.provoly.virt.storage.InsertionError;
+import com.provoly.virt.storage.elasticbased.kuzzle.KuzzleNotifierService;
+import com.provoly.virt.storage.elasticbased.kuzzle.KuzzleUnconfiguredClient;
 
 import io.kuzzle.sdk.Kuzzle;
 import io.kuzzle.sdk.coreClasses.SearchResult;
 import io.kuzzle.sdk.coreClasses.maps.KuzzleMap;
+import io.kuzzle.sdk.events.LoginAttemptEvent;
 import io.kuzzle.sdk.events.NetworkStateChangeEvent;
 import io.kuzzle.sdk.protocol.ProtocolState;
 import io.kuzzle.sdk.protocol.WebSocket;
 import io.quarkus.cache.CacheResult;
+import io.quarkus.runtime.StartupEvent;
 
 import org.jboss.logging.Logger;
 
@@ -36,47 +41,49 @@ public class KuzzleClient {
     private final Logger log;
     private Kuzzle kuzzle;
     private final Optional<DataVirtProperties.KuzzleConfiguration> kuzzleConfiguration;
+    private final KuzzleNotifierService kuzzleNotifierService;
     private Thread reconnectThread = null;
     private int replicas;
 
-    public KuzzleClient(DataVirtProperties config, Logger log) {
-        log.info("Initializing Kuzzle client");
+    public KuzzleClient(DataVirtProperties config, Logger log, KuzzleNotifierService kuzzleNotifierService) {
         this.log = log;
         this.kuzzleConfiguration = config.kuzzle();
-        this.kuzzleConfiguration.ifPresent(this::initKuzzleClient);
+        this.kuzzleNotifierService = kuzzleNotifierService;
         replicas = kuzzleConfiguration.flatMap(DataVirtProperties.KuzzleConfiguration::replicas)
                 .orElse(DEFAULT_REPLICAS);
     }
 
-    private void initKuzzleClient(DataVirtProperties.KuzzleConfiguration kuzzleConfiguration) {
-        WebSocket ws = new WebSocket(kuzzleConfiguration.host(), kuzzleConfiguration.port().orElse(DEFAULT_PORT), false, false);
-        this.kuzzle = new Kuzzle(ws);
+    /*
+     * *
+     * Kuzzle connection is initialized when application starts.
+     * Liveness and readiness are available when startup is finished.
+     * this.kuzzle is obviously initialized.
+     */
+    void initKuzzleClient(@Observes StartupEvent ev) {
+        kuzzleConfiguration.ifPresent(config -> {
+            log.info("Initializing Kuzzle client");
 
-        kuzzleConfiguration.credentials()
-                .ifPresent(credentials -> authenticate(credentials.username(), credentials.password()));
+            WebSocket ws = new WebSocket(config.host(), config.port().orElse(DEFAULT_PORT), false,
+                    false);
+            this.kuzzle = new Kuzzle(ws);
 
-        ws.addListener(NetworkStateChangeEvent.class, event -> {
-            log.info("Network state changed: " + event.getState());
-            if (event.getState() == ProtocolState.CLOSE) {
-                startReconnectThreadToKuzzle(log);
-            }
-            return Unit.INSTANCE;
+            addNetworkChangeListener(config, ws);
+            addLoginListener(ws);
+
+            startReconnectThreadToKuzzle(log, config);
+            startKeepAlive();
         });
-
-        startReconnectThreadToKuzzle(log);
-        startKeepAlive();
     }
 
     public Kuzzle client() {
         if (kuzzle == null) {
-            throw new BusinessException(ErrorCode.TECHNICAL,
-                    "Can't use Kuzzle client as it is not configured.");
+            throw new KuzzleUnconfiguredClient();
         }
         return kuzzle;
     }
 
-    public Optional<String> getHost() {
-        return kuzzleConfiguration.map(DataVirtProperties.KuzzleConfiguration::host);
+    public boolean isConfigured() {
+        return kuzzleConfiguration.isPresent();
     }
 
     public String getTenantName() {
@@ -144,10 +151,9 @@ public class KuzzleClient {
         Map<String, Object> credentials = new HashMap<>();
         credentials.put("username", username);
         credentials.put("password", password);
-
+        kuzzle.connect();
         try {
             kuzzle.getAuthController().login(AUTH_STRATEGY, credentials).get();
-            log.infof("Kuzzle authentication successful.");
         } catch (InterruptedException | ExecutionException e) {
             throw new BusinessException(ErrorCode.TECHNICAL, "Unable to authenticate to Kuzzle", e);
         }
@@ -170,7 +176,7 @@ public class KuzzleClient {
 
     // Kuzzle reconnect option is not working, so we are implementing our own reconnect mechanism
     // Delete this code when Kuzzle will fix the issue : https://github.com/kuzzleio/sdk-jvm/issues/86
-    private void startReconnectThreadToKuzzle(Logger log) {
+    private void startReconnectThreadToKuzzle(Logger log, DataVirtProperties.KuzzleConfiguration config) {
         if (reconnectThread != null && reconnectThread.isAlive()) {
             log.warn("Reconnect thread already started");
             return;
@@ -182,6 +188,10 @@ public class KuzzleClient {
                 try {
                     Thread.sleep(10000);
                     kuzzle.connect();
+                    config.credentials()
+                            .ifPresentOrElse(credentials -> authenticate(credentials.username(), credentials.password()),
+                                    kuzzleNotifierService::startNotificationService);
+                    // If authentication is not configured, the notification service must be called, as it will not be triggered by the listener.
                 } catch (Exception e) {
                     log.error("Error while reconnecting to Kuzzle :" + e.getMessage());
                 }
@@ -215,10 +225,27 @@ public class KuzzleClient {
                 }
             }
         }, "kuzzle-keep-alive").start();
-
     }
 
-    public boolean isConfigured() {
-        return getHost().isPresent();
+    private void addLoginListener(WebSocket ws) {
+        ws.addListener(LoginAttemptEvent.class, //  wait for authentication to be established
+                event -> {
+                    if (event.getSuccess()) {
+                        log.infof("Kuzzle authentication successful.");
+                        new Thread(kuzzleNotifierService::startNotificationService).start();
+                    }
+                    return Unit.INSTANCE;
+                });
     }
+
+    private void addNetworkChangeListener(DataVirtProperties.KuzzleConfiguration config, WebSocket ws) {
+        ws.addListener(NetworkStateChangeEvent.class, event -> {
+            log.info("Network state changed: " + event.getState());
+            if (event.getState() == ProtocolState.CLOSE) {
+                startReconnectThreadToKuzzle(log, config);
+            }
+            return Unit.INSTANCE;
+        });
+    }
+
 }

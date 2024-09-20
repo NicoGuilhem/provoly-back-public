@@ -31,7 +31,6 @@ public class KuzzleLivenessCheck implements HealthCheck {
             if (kuzzleClient.client().getServerController().info().get() == null) {
                 builder.down();
             }
-
         } catch (Exception e) {
             return builder.down().withData("reason", e.getMessage()).build();
         }
