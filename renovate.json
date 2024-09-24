@@ -12,13 +12,13 @@
     {
       "groupName": "geotools",
       "matchDepNames": [
-        "org.geotools"
+        "org.geotools:**"
       ]
     },
     {
       "groupName": "mapstruct",
       "matchDepNames": [
-        "org.mapstruct"
+        "org.mapstruct:**"
       ]
     },
     {
