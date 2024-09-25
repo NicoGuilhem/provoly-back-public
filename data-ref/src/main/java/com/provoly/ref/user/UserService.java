@@ -21,6 +21,7 @@ import com.provoly.ref.user.metadata.*;
 import com.provoly.security.AnonymousConfiguration;
 import com.provoly.security.CurrentSubjectProvider;
 
+import org.hibernate.query.criteria.JpaExpression;
 import org.jboss.logging.Logger;
 
 /**
@@ -87,7 +88,8 @@ public class UserService {
         var cb = em.getCriteriaBuilder();
         var q = cb.createQuery(ProvolyUser.class);
         var root = q.from(ProvolyUser.class);
-        q = q.where(cb.notEqual(root.get(ProvolyUser_.subject), root.get(EntityId_.id).as(String.class)));
+        q = q.where(
+                cb.notEqual(root.get(ProvolyUser_.subject), ((JpaExpression<UUID>) root.get(EntityId_.id)).cast(String.class)));
         return em.createQuery(q).getResultList();
     }
 

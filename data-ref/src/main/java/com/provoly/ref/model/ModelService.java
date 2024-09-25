@@ -30,6 +30,7 @@ import com.provoly.ref.model.field.Field;
 import com.provoly.ref.model.field.Field_;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.hibernate.query.criteria.JpaExpression;
 
 @ApplicationScoped
 public class ModelService {
@@ -210,8 +211,8 @@ public class ModelService {
         var q = cb.createQuery(CountDto.class);
         var dataset = q.from(Dataset.class);
         q.groupBy(dataset.get(Dataset_.oClass).get(OClass_.id));
-        q.multiselect(dataset.get(Dataset_.oClass).get(OClass_.id).as(UUID.class),
-                cb.count(dataset).as(Integer.class));
+        q.multiselect(dataset.get(Dataset_.oClass).get(OClass_.id),
+                ((JpaExpression<Long>) cb.count(dataset)).asInteger());
 
         return em.createQuery(q).getResultList();
     }
