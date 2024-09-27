@@ -141,7 +141,7 @@ public class ProvolyTestContainers implements QuarkusTestResourceLifecycleManage
 
     private GenericContainer<?> buildElasticContainer() {
         var elasticContainer = new GenericContainer<>(
-                DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch:8.4.1"))
+                DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch:8.14.3"))
                 .withLabel(ELASTIC_SERVICE_LABEL, ELASTIC_VALUE)
                 .withNetwork(sharedNetwork)
                 .withExposedPorts(ELASTIC_PORT)
