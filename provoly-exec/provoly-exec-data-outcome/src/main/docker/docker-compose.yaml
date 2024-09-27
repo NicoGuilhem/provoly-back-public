@@ -25,7 +25,7 @@ services:
 #      - provoly
 
   db01:
-    image: postgres:16.4-alpine@sha256:d898b0b78a2627cb4ee63464a14efc9d296884f1b28c841b0ab7d7c42f1fffdf
+    image: postgres:17.0-alpine@sha256:5e6ebbcc4a10913f7aa9f838d0debe3b84a6fc5bd37962db4e6d4397fb3c5fcf
     container_name: db01
     ports:
       - "5432:5432"
