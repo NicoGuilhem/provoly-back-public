@@ -27,7 +27,7 @@ public class AbacController {
 
     @GET
     @Path("/rules")
-    @RolesAllowed({ Role.STR_DATA_ACCESS_READ, Role.STR_SEARCH })
+    @RolesAllowed({ Role.STR_DATA_ACCESS_READ, Role.STR_SEARCH, Role.STR_DATASOURCE_READ })
     public Collection<AbacRuleDto> getRules(@RestQuery("type") AbacRuleType type) {
         return mapper.toRuleDto(abacService.getAllRules(type));
     }
