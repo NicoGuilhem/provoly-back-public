@@ -154,7 +154,7 @@ public class NotificationService implements MessageListener {
         userNotificationsAssociation.forEach(association -> {
             UUID notificationId = association.getNotification().getId();
             if (usersByKnownNotifications.containsKey(notificationId)) {
-                log.infof("Notification %s already sent to some users, send it only to new connected user", notificationId);
+                log.debugf("Notification %s already sent to some users, send it only to new connected user", notificationId);
                 connectedUserIds.removeAll(usersByKnownNotifications.get(notificationId));
             }
             messageSocketServer.sendMessage(messageService.createMessage(association.getNotification()), connectedUserIds);

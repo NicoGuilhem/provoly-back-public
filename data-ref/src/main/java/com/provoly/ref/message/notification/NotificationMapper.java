@@ -1,7 +1,7 @@
 package com.provoly.ref.message.notification;
 
-import java.util.HashMap;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -14,9 +14,12 @@ import com.provoly.ref.message.notification.model.NotificationParameter;
 public class NotificationMapper {
 
     public NotificationPayload toPayload(Notification notification) {
-        var parameterMap = new HashMap<String, String>();
-        notification.getParameterValues().forEach(param -> parameterMap.put(param.getKey(), param.getValue()));
-        var notificationTextDto = new NotificationTextDto(notification.getTitleCode(), notification.getMessageCode(),
+        var parameterMap = notification.getParameterValues()
+                .stream()
+                .collect(Collectors.toMap(NotificationParameter::getKey, NotificationParameter::getValue));
+        var notificationTextDto = new NotificationTextDto(
+                notification.getTitleCode(),
+                notification.getMessageCode(),
                 parameterMap);
         return new NotificationPayload(notificationTextDto, notification.getLink(),
                 notification.getCreationDate());

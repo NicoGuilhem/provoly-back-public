@@ -14,7 +14,9 @@ public record NotificationTextDto(String title,
         Map<String, String> param) {
 
     public NotificationTextDto {
-        param = new HashMap<>();
+        if (param == null) {
+            param = new HashMap<>();
+        }
     }
 
     public NotificationTextDto(String code, Map<String, String> param) {
