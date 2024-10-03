@@ -2,113 +2,58 @@ package com.provoly.ref.message.notification;
 
 import java.text.MessageFormat;
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.Root;
 import jakarta.transaction.Transactional;
-import jakarta.websocket.Session;
 
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.user.Role;
 import com.provoly.ref.dashboard.dto.DashboardDto;
-import com.provoly.ref.entity.EntityIdRepository;
 import com.provoly.ref.message.Message;
 import com.provoly.ref.message.MessageListener;
 import com.provoly.ref.message.MessageService;
 import com.provoly.ref.message.notification.dto.NotificationRequestDto;
 import com.provoly.ref.message.notification.dto.NotificationTextDto;
-import com.provoly.ref.message.notification.model.*;
+import com.provoly.ref.message.notification.model.Notification;
+import com.provoly.ref.message.notification.model.NotificationMessageCode;
+import com.provoly.ref.message.notification.model.ProvolyUserNotification;
 import com.provoly.ref.message.websocket.MessageSocketServer;
 import com.provoly.ref.user.ProvolyUser;
-import com.provoly.ref.user.ProvolyUser_;
 import com.provoly.ref.user.UserService;
 
 import io.quarkus.security.identity.SecurityIdentity;
 
+import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class NotificationService implements MessageListener {
 
-    private static Map<UUID, Set<UUID>> userByNotificationMap = new HashMap<>();
+    private static Map<UUID, Set<UUID>> usersByKnownNotifications = new HashMap<>(); // Map<NotificationId,Set<userIds>>, to avoid sending the same notifications to users
+
     private SecurityIdentity identity;
-
+    private NotificationRepository notificationRepository;
     private UserService userService;
-
     private NotificationMapper notificationMapper;
-
     private MessageService messageService;
-
     private MessageSocketServer messageSocketServer;
     private Logger log;
 
-    private EntityIdRepository entityIdRepository;
-    @PersistenceContext
-    EntityManager em;
-
-    public NotificationService(SecurityIdentity securityIdentity, UserService userService,
-            NotificationMapper notificationMapper, MessageService messageService, MessageSocketServer messageSocketServer,
-            Logger log, EntityIdRepository entityIdRepository) {
+    public NotificationService(SecurityIdentity securityIdentity,
+            UserService userService,
+            NotificationMapper notificationMapper,
+            MessageService messageService,
+            MessageSocketServer messageSocketServer,
+            Logger log,
+            NotificationRepository notificationRepository) {
         this.identity = securityIdentity;
         this.userService = userService;
         this.notificationMapper = notificationMapper;
         this.messageService = messageService;
         this.messageSocketServer = messageSocketServer;
         this.log = log;
-        this.entityIdRepository = entityIdRepository;
-    }
-
-    public Notification findById(UUID id) {
-        return entityIdRepository.findById(id, Notification.class);
-    }
-
-    public Notification getById(UUID id) {
-        return entityIdRepository.getById(id, Notification.class);
-    }
-
-    public List<Notification> getAllNotifications() {
-        return entityIdRepository.getAll(Notification.class);
-    }
-
-    @Transactional
-    public void addNotification(NotificationRequestDto notificationRequestDto) {
-        if (findById(notificationRequestDto.id()) == null) {
-            var users = entityIdRepository.getAll(ProvolyUser.class).stream()
-                    .collect(Collectors.toMap(ProvolyUser::getId, Function.identity(), (a, b) -> a));
-            var notification = notificationMapper.toModel(notificationRequestDto);
-            notificationRequestDto.users().stream()
-                    .filter(users::containsKey)
-                    .forEach(userId -> notification.addUser(users.get(userId)));
-            em.persist(notification);
-        } else {
-            throw new BusinessException(ErrorCode.NOT_MODIFIABLE,
-                    MessageFormat.format("Notification id=[{0}] not modifiable", notificationRequestDto.id()));
-        }
-    }
-
-    @Transactional
-    public void acknowledgeNotification(UUID id) {
-        var currentUser = userService.getCurrentUser();
-        var notification = getById(id);
-        if (notification.getForUser(currentUser) == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND,
-                    MessageFormat.format("Notification {0} has not linked with user {1}", notification.getId(),
-                            currentUser.getId()));
-        }
-        notification.remove(currentUser);
-        deleteFromKnownNotifications(id, currentUser.getId());
-
-        if (notification.belongToNobody()) {
-            entityIdRepository.removeEntity(notification);
-        }
+        this.notificationRepository = notificationRepository;
     }
 
     @Override
@@ -125,122 +70,130 @@ public class NotificationService implements MessageListener {
         }
     }
 
+    @Incoming("notifications")
+    public void receiveNotifications(ExternalNotificationPayload payload) {
+        log.debugf("Receive new notification from topic, save it");
+        var userIds = userService.getAllUserIdsExcept(payload.creator());
+        var notification = new NotificationRequestDto(UUID.randomUUID(), userIds, payload.text(), payload.link());
+        saveNotification(notification);
+    }
+
+    public void sendNotification(DashboardDto dashboard, boolean isCreated) {
+        log.infof("Save notification for dashboard %s to all users except current", dashboard.getName());
+        NotificationMessageCode messageCode = isCreated
+                ? getPublicOrPrivateCode(dashboard)
+                : NotificationMessageCode.DASHBOARD_DELETED;
+        var userIds = userService.getAllUserIdsExcept(userService.getCurrentUser().getSubject());
+
+        var notificationTextDto = new NotificationTextDto(messageCode.name(), Map.of("name", dashboard.getName()));
+        var notification = new NotificationRequestDto(UUID.randomUUID(), userIds, notificationTextDto, null);
+        saveNotification(notification);
+    }
+
+    private NotificationMessageCode getPublicOrPrivateCode(DashboardDto dashboard) {
+        return dashboard.getAccessRightsByGroup() == null || dashboard.getAccessRightsByGroup().isEmpty()
+                ? NotificationMessageCode.DASHBOARD_PRIVATE
+                : NotificationMessageCode.DASHBOARD_PUBLIC;
+    }
+
     @Transactional
-    public void acknowledgeAllNotificationForCurrentUser() {
-        getAllNotificationsForCurrentUser().stream().forEach(notif -> acknowledgeNotification(notif.getId()));
+    public void saveNotification(NotificationRequestDto notificationRequestDto) {
+        if (notificationRepository.findById(notificationRequestDto.id()).isPresent()) {
+            throw new BusinessException(ErrorCode.NOT_MODIFIABLE,
+                    MessageFormat.format("Notification id=[{0}] not modifiable", notificationRequestDto.id()));
+        }
+        var notification = notificationMapper.toModel(notificationRequestDto);
+        userService.getAllUsersWithIds(notificationRequestDto.users())
+                .forEach(notification::addUser);
+        notificationRepository.save(notification);
+    }
+
+    @Transactional
+    public void acknowledgeNotification(UUID id) {
+        log.infof("Acknowledge notification %s for current user", id);
+        var currentUser = userService.getCurrentUser();
+        var notification = getById(id);
+        if (notification.getForUser(currentUser) == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND,
+                    MessageFormat.format("Notification {0} has not linked with user {1}", notification.getId(),
+                            currentUser.getId()));
+        }
+        deleteNotification(notification, currentUser);
+    }
+
+    @Transactional
+    public void acknowledgeAllNotificationsForCurrentUser() {
+        log.info("Acknowledge all notifications for current user");
+        var currentUser = userService.getCurrentUser();
+        notificationRepository.getNotificationsForUsers(Set.of(currentUser.getId()))
+                .forEach(association -> deleteNotification(association.getNotification(), currentUser));
+    }
+
+    @Transactional
+    public Notification getById(UUID id) {
+        return notificationRepository.getById(id);
+    }
+
+    @Transactional
+    public List<Notification> getAllNotifications() {
+        return notificationRepository.getAllNotifications();
+    }
+
+    @Transactional
+    public void refreshNotifications() {
+        log.debug("Refresh notifications for all connected users");
+
+        // Get all connected users
+        var connectedUserIds = messageSocketServer.getSessionsById().keySet();
+
+        log.debug("Get all notifications associated to users");
+        List<ProvolyUserNotification> userNotificationsAssociation = notificationRepository
+                .getNotificationsForUsers(connectedUserIds);
+
+        log.debug("Send unknown notifications only for connected user");
+        userNotificationsAssociation.forEach(association -> {
+            UUID notificationId = association.getNotification().getId();
+            if (usersByKnownNotifications.containsKey(notificationId)) {
+                log.infof("Notification %s already sent to some users, send it only to new connected user", notificationId);
+                connectedUserIds.removeAll(usersByKnownNotifications.get(notificationId));
+            }
+            messageSocketServer.sendMessage(messageService.createMessage(association.getNotification()), connectedUserIds);
+            addToKnownNotifications(notificationId, connectedUserIds);
+        });
     }
 
     private void sendAllMessagesForMe(String sessionId) {
-        var notifications = getAllNotificationsForCurrentUser();
-
+        log.debugf("Get all notifications for user", sessionId);
         var currentUser = userService.getCurrentUser();
-        for (Notification notification : notifications) {
-            addToKnownNotifications(notification.getId(), new HashSet<>(List.of(currentUser.getId())));
-            messageService.sendMessage(messageService.createMessage(notification), sessionId);
+        var associations = notificationRepository.getNotificationsForUsers(Set.of(currentUser.getId()));
+        associations.forEach(association -> {
+            addToKnownNotifications(association.getNotification().getId(), List.of(currentUser.getId()));
+            messageService.sendMessage(messageService.createMessage(association.getNotification()), sessionId);
+        });
+    }
+
+    private void deleteNotification(Notification notification, ProvolyUser currentUser) {
+        notification.remove(currentUser);
+        deleteFromKnownNotifications(notification.getId(), currentUser.getId());
+
+        if (notification.belongToNobody()) {
+            log.debugf("Notification %s is acknowledged for all users, delete it", notification.getId());
+            notificationRepository.removeNotification(notification);
         }
-    }
-
-    private List<Notification> getAllNotificationsForCurrentUser() {
-        var currentUser = userService.getCurrentUser();
-
-        CriteriaBuilder builder = em.getCriteriaBuilder();
-        CriteriaQuery<Notification> query = builder.createQuery(Notification.class);
-        Root<Notification> notificationRoot = query.from(Notification.class);
-        Join<Notification, ProvolyUserNotification> joinProvolyUserNotification = notificationRoot.join(Notification_.belongTo);
-        query.select(notificationRoot)
-                .where(builder.equal(joinProvolyUserNotification.get(ProvolyUserNotification_.USER), currentUser))
-                .orderBy(builder.desc(notificationRoot.get(Notification_.creationDate)));
-
-        return em.createQuery(query).getResultList();
-    }
-
-    @Transactional
-    public void sendNotification(DashboardDto dashboard, boolean isCreated) {
-        NotificationMessageCode messageCode;
-        if (isCreated) {
-            messageCode = dashboard.getAccessRightsByGroup() == null || dashboard.getAccessRightsByGroup().isEmpty()
-                    ? NotificationMessageCode.DASHBOARD_PRIVATE
-                    : NotificationMessageCode.DASHBOARD_PUBLIC;
-        } else {
-            // dashboard is deleted
-            messageCode = NotificationMessageCode.DASHBOARD_DELETED;
-        }
-
-        var userIds = userService.getAllUserIdExceptCurrent();
-
-        // create and send a notification
-        var parameterMap = new HashMap<String, String>();
-        parameterMap.put("name", dashboard.getName());
-        saveNotification(messageCode, null, userIds, parameterMap);
-    }
-
-    private void saveNotification(NotificationMessageCode messageCode, String link, List<UUID> users, Map parameterMap) {
-        var notificationTextDto = new NotificationTextDto(messageCode, parameterMap);
-        var notification = new NotificationRequestDto(UUID.randomUUID(), users, notificationTextDto, link);
-        addNotification(notification);
-    }
-
-    private List<ProvolyUserNotification> getUsersNotification(Set<UUID> usersId) {
-        var cb = em.getCriteriaBuilder();
-        CriteriaQuery<ProvolyUserNotification> query = cb.createQuery(ProvolyUserNotification.class);
-        Root<ProvolyUserNotification> queryRoot = query.from(ProvolyUserNotification.class);
-        query.where(queryRoot.get(ProvolyUserNotification_.USER).get(ProvolyUser_.ID).in(usersId));
-
-        return em.createQuery(query).getResultList();
     }
 
     private void deleteFromKnownNotifications(UUID notificationId, UUID userId) {
-        userByNotificationMap.get(notificationId).remove(userId);
-        if (userByNotificationMap.get(notificationId).isEmpty())
-            userByNotificationMap.remove(notificationId);
+        usersByKnownNotifications.get(notificationId).remove(userId);
+        if (usersByKnownNotifications.get(notificationId).isEmpty()) {
+            usersByKnownNotifications.remove(notificationId);
+        }
     }
 
     public boolean isNotificationKnown(UUID notificationId) {
-        return userByNotificationMap.containsKey(notificationId);
+        return usersByKnownNotifications.containsKey(notificationId);
     }
 
-    private void addToKnownNotifications(UUID notificationId, Set<UUID> userId) {
-        userByNotificationMap.merge(notificationId, userId, (old, value) -> {
-            Set<UUID> newSet = new HashSet<>();
-            newSet.addAll(old);
-            newSet.addAll(value);
-            return newSet;
-        });
-    }
-
-    public void refreshNotifications() {
-        // Get all connected users
-        Map<UUID, List<Session>> sessions = messageSocketServer.getSessionsById();
-
-        // Get all notifications associated to users
-        List<ProvolyUserNotification> notificationList = getUsersNotification(sessions.keySet());
-
-        // Filter and set a new Map of new Notification with users
-        Map<Notification, Set<UUID>> newNotificationsMap = getUnknownNotification(notificationList);
-
-        // Send new notifications and save in replica map
-        newNotificationsMap.forEach((key, value) -> {
-            messageService.sendMessage(messageService.createMessage(key), value.stream().toList());
-            addToKnownNotifications(key.getId(), value);
-        });
-    }
-
-    private Map<Notification, Set<UUID>> getUnknownNotification(List<ProvolyUserNotification> notificationList) {
-        Map<Notification, Set<UUID>> notificationFromDatabase = notificationList.stream()
-                .collect(Collectors.groupingBy(
-                        ProvolyUserNotification::getNotification,
-                        Collectors.mapping(
-                                provolyUserNotification -> provolyUserNotification.getUser().getId(),
-                                Collectors.toSet())));
-
-        Map<Notification, Set<UUID>> result = new HashMap<>();
-        notificationFromDatabase.forEach((notification, userIds) -> {
-            if (userByNotificationMap.get(notification.getId()) != null) {
-                userIds.removeAll(userByNotificationMap.get(notification.getId()));
-            }
-            result.put(notification, userIds);
-        });
-
-        return result;
+    private void addToKnownNotifications(UUID notificationId, Collection<UUID> userIds) {
+        usersByKnownNotifications.computeIfAbsent(notificationId, user -> new HashSet<>()).addAll(userIds);
     }
 }

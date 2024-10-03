@@ -119,7 +119,7 @@ public class MessageSocketServer {
      * @param message list of message
      * @param users the list of users of message destination
      */
-    public void sendMessage(Message message, List<UUID> users) {
+    public void sendMessage(Message message, Collection<UUID> users) {
         users.forEach(u -> sendMessage(message, u));
     }
 

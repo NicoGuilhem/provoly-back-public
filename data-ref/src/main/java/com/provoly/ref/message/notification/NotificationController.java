@@ -21,7 +21,7 @@ public class NotificationController {
     @POST
     @RolesAllowed({ Role.STR_CLASS_WRITE_NOTIFICATION })
     public void addNotification(NotificationRequestDto notificationDto) {
-        notificationService.addNotification(notificationDto);
+        notificationService.saveNotification(notificationDto);
     }
 
     @DELETE
@@ -32,7 +32,7 @@ public class NotificationController {
 
     @DELETE
     @Path("/me")
-    public void acknowledgeAllNotification() {
-        notificationService.acknowledgeAllNotificationForCurrentUser();
+    public void acknowledgeAllNotifications() {
+        notificationService.acknowledgeAllNotificationsForCurrentUser();
     }
 }

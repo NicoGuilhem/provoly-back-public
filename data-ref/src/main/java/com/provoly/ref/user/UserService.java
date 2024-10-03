@@ -223,14 +223,24 @@ public class UserService {
         return em.createQuery(q).getResultList();
     }
 
-    public List<UUID> getAllUserIdExceptCurrent() {
+    @Transactional
+    public List<UUID> getAllUserIdsExcept(String subject) {
         var cb = em.getCriteriaBuilder();
         var q = cb.createQuery(UUID.class);
         var root = q.from(ProvolyUser.class);
         Path<UUID> idPath = root.get(ProvolyUser_.ID);
         q = q.select(idPath);
-        q = q.where(cb.notEqual(root.get(ProvolyUser_.subject), currentSubjectProvider.getSub()));
+        q = q.where(cb.notEqual(root.get(ProvolyUser_.subject), subject));
         return em.createQuery(q).getResultList();
+    }
+
+    @Transactional
+    public List<ProvolyUser> getAllUsersWithIds(List<UUID> userIds) {
+        var cb = em.getCriteriaBuilder();
+        var query = cb.createQuery(ProvolyUser.class);
+        var root = query.from(ProvolyUser.class);
+        query = query.select(root).where(root.get(ProvolyUser_.id).in(userIds));
+        return em.createQuery(query).getResultList();
     }
 
 }

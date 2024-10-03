@@ -74,10 +74,11 @@ public class NotificationServiceTest {
     }
 
     private NotificationRequestDto createNotification() {
-        NotificationTextDto textDto = new NotificationTextDto(NotificationMessageCode.DASHBOARD_PRIVATE, new HashMap<>());
+        NotificationTextDto textDto = new NotificationTextDto(NotificationMessageCode.DASHBOARD_PRIVATE.name(),
+                new HashMap<>());
         var users = List.of(userService.getCurrentUser().getId());
         var dto = new NotificationRequestDto(UUID.randomUUID(), users, textDto, "link");
-        notificationService.addNotification(dto);
+        notificationService.saveNotification(dto);
         return dto;
     }
 

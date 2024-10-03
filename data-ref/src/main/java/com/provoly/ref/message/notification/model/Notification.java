@@ -25,8 +25,9 @@ public class Notification extends EntityId {
     @Column(updatable = false)
     private Instant creationDate;
 
-    @Enumerated(EnumType.STRING)
-    private NotificationMessageCode messageCode;
+    private String titleCode; // either a title translation code or directly the text if not internationalized
+
+    private String messageCode; // either a message translation code or directly the text if not internationalized
 
     @OneToMany(mappedBy = "notification", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<NotificationParameter> parameterValues = new ArrayList<>();
@@ -86,11 +87,19 @@ public class Notification extends EntityId {
         this.creationDate = creationDate;
     }
 
-    public NotificationMessageCode getMessageCode() {
+    public String getTitleCode() {
+        return titleCode;
+    }
+
+    public void setTitleCode(String titleCode) {
+        this.titleCode = titleCode;
+    }
+
+    public String getMessageCode() {
         return messageCode;
     }
 
-    public void setMessageCode(NotificationMessageCode messageCode) {
+    public void setMessageCode(String messageCode) {
         this.messageCode = messageCode;
     }
 

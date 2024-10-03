@@ -25,6 +25,13 @@ public class NotificationParameter extends EntityId {
         this.id = id;
     }
 
+    public NotificationParameter(UUID id, Notification notification, String key, String value) {
+        super(id);
+        this.notification = notification;
+        this.key = key;
+        this.value = value;
+    }
+
     public Notification getNotification() {
         return notification;
     }

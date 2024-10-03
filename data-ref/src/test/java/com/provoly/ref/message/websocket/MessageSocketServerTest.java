@@ -63,7 +63,7 @@ public class MessageSocketServerTest {
     private NotificationRequestDto createNotification() {
         var paramMap = new HashMap<String, String>();
         paramMap.put("key", "value");
-        var notificationTextDto = new NotificationTextDto(NotificationMessageCode.DASHBOARD_PRIVATE,
+        var notificationTextDto = new NotificationTextDto(NotificationMessageCode.DASHBOARD_PRIVATE.name(),
                 paramMap);
         return new NotificationRequestDto(UUID.randomUUID(), List.of(), notificationTextDto,
                 "/link");

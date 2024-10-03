@@ -1,6 +1,5 @@
 package com.provoly.ref.message.notification;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -16,29 +15,28 @@ public class NotificationMapper {
 
     public NotificationPayload toPayload(Notification notification) {
         var parameterMap = new HashMap<String, String>();
-        notification.getParameterValues().stream().forEach(param -> parameterMap.put(param.getKey(), param.getValue()));
-        var notificationTextDto = new NotificationTextDto(notification.getMessageCode(), parameterMap);
+        notification.getParameterValues().forEach(param -> parameterMap.put(param.getKey(), param.getValue()));
+        var notificationTextDto = new NotificationTextDto(notification.getTitleCode(), notification.getMessageCode(),
+                parameterMap);
         return new NotificationPayload(notificationTextDto, notification.getLink(),
                 notification.getCreationDate());
     }
 
     public Notification toModel(NotificationRequestDto dto) {
-        var notif = new Notification(dto.id());
-        notif.setLink(dto.link());
-        notif.setMessageCode(dto.notificationTextDto().code());
+        var notification = new Notification(dto.id());
+        notification.setLink(dto.link());
+        notification.setMessageCode(dto.notificationTextDto().code());
+        notification.setTitleCode(dto.notificationTextDto().title());
 
-        var parameters = new ArrayList<NotificationParameter>();
-        dto.notificationTextDto().param().entrySet().forEach(entry -> {
-            var notifParameter = new NotificationParameter(UUID.randomUUID());
-            notifParameter.setKey(entry.getKey());
-            notifParameter.setValue(entry.getValue());
-            notifParameter.setNotification(notif);
+        var parameters = dto.notificationTextDto().param()
+                .entrySet()
+                .stream()
+                .map(param -> new NotificationParameter(UUID.randomUUID(), notification, param.getKey(), param.getValue()))
+                .toList();
 
-            parameters.add(notifParameter);
-        });
-        notif.getParameterValues().addAll(parameters);
+        notification.getParameterValues().addAll(parameters);
 
-        return notif;
+        return notification;
     }
 
 }
