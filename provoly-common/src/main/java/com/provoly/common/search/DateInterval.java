@@ -10,6 +10,7 @@ public enum DateInterval {
     HOUR,
     DAY,
     WEEK,
+    MONTH,
     QUARTER,
     YEAR,
     ;

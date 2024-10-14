@@ -184,9 +184,7 @@ public class DataSourceItemsService {
         if (filter.operator().isWithUpperValue()) {
             orCondition.composed
                     .add(new AttributeConditionDto(filter.attribute(), filter.value(), filter.operator(), filter.upperValue()));
-        }
-
-        if (filter.operator().isWithNativeListOfValues()) {
+        } else if (filter.operator().isWithNativeListOfValues()) {
             String expressionLanguageForListOfValues = "${ ["
                     + filter.values().stream().map(value -> "'" + value + "'").collect(Collectors.joining(",")) + "] }";
             orCondition.composed

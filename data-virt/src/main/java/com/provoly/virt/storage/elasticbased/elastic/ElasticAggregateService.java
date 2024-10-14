@@ -12,7 +12,10 @@ import com.provoly.common.Storage;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.model.OClassDetailsDto;
-import com.provoly.common.search.*;
+import com.provoly.common.search.AggregationParamDto;
+import com.provoly.common.search.AggregationResultDto;
+import com.provoly.common.search.ItemAggregationDto;
+import com.provoly.common.search.MonoClassRequestDto;
 import com.provoly.virt.search.mono.MonoClassContextRequest;
 import com.provoly.virt.storage.StorageAggregateService;
 import com.provoly.virt.storage.StorageQualifier;
@@ -87,9 +90,9 @@ class ElasticAggregateService implements StorageAggregateService {
         } catch (IOException e) {
             throw new BusinessException(ErrorCode.TECHNICAL, "An error occured during search", e);
         } catch (ElasticsearchException e) {
-            log.infof("error : %s", e.response().error().rootCause());
+            log.errorf("error : %s, %s", e.getMessage(), e.response().error().toString());
             throw new BusinessException(ErrorCode.TECHNICAL,
-                    "An error occured: %s".formatted(e.response().error().rootCause()));
+                    "An error occured: %s".formatted(e.response().error().toString()), e);
         }
     }
 

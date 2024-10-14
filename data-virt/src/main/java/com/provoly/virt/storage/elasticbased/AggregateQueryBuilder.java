@@ -1,7 +1,10 @@
 package com.provoly.virt.storage.elasticbased;
 
 import static com.provoly.common.search.AggregateOperation.isOperationUsePercentile;
-import static com.provoly.virt.storage.StorageSupport.*;
+import static com.provoly.virt.storage.StorageSupport.BOTTOM_RIGHT;
+import static com.provoly.virt.storage.StorageSupport.LAT;
+import static com.provoly.virt.storage.StorageSupport.LON;
+import static com.provoly.virt.storage.StorageSupport.TOP_LEFT;
 
 import java.util.List;
 import java.util.Map;
@@ -104,7 +107,9 @@ public class AggregateQueryBuilder {
             log.debug("Aggregation is an histogram");
             return new Aggregation.Builder()
                     .histogram(h -> {
-                        h.field(elasticFieldPath).interval(aggregation.interval());
+                        h.field(elasticFieldPath)
+                                .interval(aggregation.interval())
+                                .minDocCount(1);
                         addSort(h::order, aggregation, aggregationName);
                         return h;
                     });
@@ -126,7 +131,8 @@ public class AggregateQueryBuilder {
             return new Aggregation.Builder()
                     .dateHistogram(dh -> {
                         dh.field(elasticFieldPath)
-                                .calendarInterval(calendarIntervalValue);
+                                .calendarInterval(calendarIntervalValue)
+                                .minDocCount(1);
                         addSort(dh::order, aggregation, aggregationName);
                         return dh;
                     });

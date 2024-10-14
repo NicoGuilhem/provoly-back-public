@@ -459,6 +459,7 @@ class PostgisSelectQueryBuilder {
             case HOUR -> "hours";
             case DAY -> "days";
             case WEEK -> "weeks";
+            case MONTH -> "months";
             case QUARTER -> "quarters";
             case YEAR -> "years";
         };

@@ -352,8 +352,8 @@ public class AggregateServiceTest {
 
         //THEN
         assertThat(result.operation()).isEqualTo(AggregateOperation.COUNT);
-        assertThat(result.values()).extracting(ItemAggregationDto::getKey).containsExactlyInAnyOrder(0.0, 10.0, 20.0, 30.0);
-        assertThat(result.values()).extracting(ItemAggregationDto::getValue).containsExactlyInAnyOrder(1L, 1L, 0L, 1L);
+        assertThat(result.values()).extracting(ItemAggregationDto::getKey).containsExactlyInAnyOrder(0.0, 10.0, 30.0);
+        assertThat(result.values()).extracting(ItemAggregationDto::getValue).containsExactlyInAnyOrder(1L, 1L, 1L);
     }
 
     @ParameterizedTest
