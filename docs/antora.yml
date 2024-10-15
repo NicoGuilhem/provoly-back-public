@@ -13,4 +13,4 @@ ext:
     - scan:
         dir: generated/
         files: "**/*.html"
-        into: modules/ROOT/attachments
+        into: modules/API/attachments
