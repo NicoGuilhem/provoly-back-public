@@ -2,6 +2,7 @@ package com.provoly.virt.storage.elasticbased;
 
 import static com.provoly.virt.storage.elasticbased.kuzzlemeasure.KuzzleMeasureLayout.MEASURE_COLLECTION;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -38,12 +39,15 @@ public class KuzzleClient {
     public static final String AUTH_STRATEGY = "local";
     public static final int DEFAULT_PORT = 7512;
     public static final int DEFAULT_REPLICAS = 1;
+    private static final String JWT_PROPERTY = "jwt";
+    private static final int SECONDS_TO_REFRESH_TOKEN_BEFORE_IT_EXPIRES = 120;
     private final Logger log;
     private Kuzzle kuzzle;
     private final Optional<DataVirtProperties.KuzzleConfiguration> kuzzleConfiguration;
     private final KuzzleNotifierService kuzzleNotifierService;
     private Thread reconnectThread = null;
     private int replicas;
+    private String token;
 
     public KuzzleClient(DataVirtProperties config, Logger log, KuzzleNotifierService kuzzleNotifierService) {
         this.log = log;
@@ -153,7 +157,7 @@ public class KuzzleClient {
         credentials.put("password", password);
         kuzzle.connect();
         try {
-            kuzzle.getAuthController().login(AUTH_STRATEGY, credentials).get();
+            updateToken(kuzzle.getAuthController().login(AUTH_STRATEGY, credentials).get());
         } catch (InterruptedException | ExecutionException e) {
             throw new BusinessException(ErrorCode.TECHNICAL, "Unable to authenticate to Kuzzle", e);
         }
@@ -216,6 +220,9 @@ public class KuzzleClient {
                             break;
                         case OPEN:
                             log.trace("Sending keep-alive to kuzzle");
+                            if (token != null) {
+                                refreshTokenIfNeeded();
+                            }
                             var date = kuzzle.getServerController().now().get(10, TimeUnit.SECONDS);
                             log.debugf("Keep-alive sent to Kuzzle %s", date);
                             break;
@@ -246,6 +253,22 @@ public class KuzzleClient {
             }
             return Unit.INSTANCE;
         });
+    }
+
+    private void refreshTokenIfNeeded() throws InterruptedException, ExecutionException {
+        log.trace("Check token validity");
+        var validityToken = kuzzle.getAuthController().checkToken(token).get();
+        var expiresAt = Long.parseLong(validityToken.get("expiresAt").toString());
+
+        if (Instant.now().plusSeconds(SECONDS_TO_REFRESH_TOKEN_BEFORE_IT_EXPIRES).isAfter(Instant.ofEpochMilli(expiresAt))) {
+            log.debug("Token expires in less than 2 min, refresh it");
+            updateToken(kuzzle.getAuthController().refreshToken().get());
+        }
+    }
+
+    private void updateToken(Map<String, Object> loginOrRefresh) {
+        var jwt = loginOrRefresh.get(JWT_PROPERTY);
+        token = jwt.toString();
     }
 
 }
