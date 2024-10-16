@@ -153,26 +153,26 @@ public class SearchQueryBuilder {
             case END_WITH -> buildEndsWith(attribute, elasticFieldPath, value, false);
             case I_END_WITH -> buildEndsWith(attribute, elasticFieldPath, value, true);
             case GREATER_THAN -> Query.of(q -> q
-                    .range(r -> r
+                    .range(r -> r.untyped(s -> s // query is "untyped" as value can be either a number or a date
                             .field(elasticFieldPath)
-                            .gt(JsonData.of(value))));
+                            .gt(JsonData.of(value)))));
             case LOWER_THAN -> Query.of(q -> q
-                    .range(r -> r
+                    .range(r -> r.untyped(s -> s // query is "untyped" as value can be either a number or a date
                             .field(elasticFieldPath)
-                            .lt(JsonData.of(value))));
+                            .lt(JsonData.of(value)))));
 
             case INSIDE -> Query.of(q -> q
-                    .range(r -> r
+                    .range(r -> r.untyped(s -> s // query is "untyped" as value can be either a number or a date
                             .field(elasticFieldPath)
-                            .from(value)
-                            .to(conditionDto.getUpperValue())));
+                            .from(JsonData.of(value))
+                            .to(JsonData.of(conditionDto.getUpperValue())))));
             case OUTSIDE -> Query.of(q -> q
                     .bool(b -> b
                             .mustNot(c -> c
-                                    .range(r -> r
+                                    .range(r -> r.untyped(s -> s // query is "untyped" as value can be either a number or a date
                                             .field(elasticFieldPath)
-                                            .from(value)
-                                            .to(conditionDto.getUpperValue())))));
+                                            .from(JsonData.of(value))
+                                            .to(JsonData.of(conditionDto.getUpperValue())))))));
             case EXISTS -> Query.of(q -> q
                     .exists(e -> e
                             .field(elasticFieldPath)));
