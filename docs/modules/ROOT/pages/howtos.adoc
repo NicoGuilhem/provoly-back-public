@@ -10,6 +10,7 @@
 * xref:howtos/import.adoc[Import data with APIs]
 * xref:howtos/tracing-locally-tests.adoc[Run traces locally with jaeger]
 * xref:howtos/run-exec-engine-locally.adoc[Run exec-engine module locally]
+* xref:howtos/insert-items-into-database.adoc[Insert (or update) items into database]
 --
 
 == Check list

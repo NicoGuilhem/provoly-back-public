@@ -1,0 +1,139 @@
+== Inserting (or updating) datas into the `data-virt` module database
+
+This page describe how to insert (or update) datas into the `data-virt` module database independent of the storage system (Postgis or Elastic) for each dataset type (`OPEN`, `CLOSED` ou `MODIFIABLE`).
+
+In other words, this page tells how to add (or update) items to datasets.
+
+[NOTE]
+====
+It is not possible to remove datas from one dataset.
+====
+
+=== `OPEN` or `MODIFIABLE` datasets
+
+There is 2 ways to insert (or update) datas into an `OPEN` or `MODIFIABLE` dataset.
+
+Item is inserted if its id is not already in the dataset, otherwise it is updated.
+
+[WARNING]
+====
+In both ways, attributes that are not sent are reset to `null`.
+This means that to update only some attributes of an item, you must send all attributes otherwise other values will be lost.
+====
+
+[NOTE]
+====
+It is not possible to insert datas in an `OPEN` or `MODIFIABLE` datasets using a file.
+====
+
+==== Synchronously using _data-virt_ endpoint `POST /items`
+
+This endpoint is synchronous and takes a list of `ItemDto` as body.
+
+[NOTE]
+====
+This endpoint supports inserting or updating items with metadatas
+====
+
+[NOTE]
+====
+See Virtualization API documentation
+====
+
+==== Asynchronously using a kafka topic
+
+Items can be sent to a Kafka topic wich prefix is `dataset-`.
+
+.Topic name example
+[EXAMPLE]
+====
+dataset-902918_enterprises
+====
+
+The message must have the following headers :
+
+- `provoly-dataset-version-id` (mandatory) : the dataset version id
+- `provoly-item-id` (optional) : the item id, generated if not sent, used to update item if sent and already present in database.
+
+The message must be a JSON object of which each field is the `technicalName` of the attribute.
+
+```json
+{
+    "attribute_1_technicalName" : "256", // simple value attribute
+    "attribute_2_technicalName" : "12|3215|6546",  // multi valued attribute
+    "attribute_3_technicalName" : [ "12", "3215", "6546" ]  // multi valued attribute
+}
+```
+
+[WARNING]
+====
+Does not support inserting or updating items with metadatas
+====
+
+=== `CLOSED` datasets
+
+There is 3 ways to insert datas into a `CLOSED` dataset.
+
+[NOTE]
+====
+Attributes that are not sent are set to `null`.
+====
+
+[NOTE]
+====
+It is not possible to update an item of a `CLOSED` dataset.
+To update an item, create a new complete dataset version with all items.
+====
+
+==== Synchronously using _data-virt_ endpoint `POST /imports/dataset/id/:datasetId`
+
+This endpoint is synchronous and takes the list of items to insert as a file (`CSV` or `SHAPEFILE`)
+
+[WARNING]
+====
+Does not support inserting or updating items with metadatas
+====
+
+[NOTE]
+====
+See Virtualization API documentation
+====
+
+==== Asynchronously using _data-virt_ endpoint `POST /datasets/id/:datasetId/dataset-versions/id/:datasetVersionId`
+
+This endpoint is asynchronous and takes a list of `ItemDto` as body.
+
+[NOTE]
+====
+This endpoint supports inserting or updating items with metadatas
+====
+
+[NOTE]
+====
+See Virtualization API documentation
+====
+
+==== Asynchronously using a kafka topic
+
+This way is accomplished in 3 steps :
+
+. Create a new dataset version using _data-ref_ endpoint `POST /data-ref/dataset-versions` (without any reference to a file)
+. Send items to a Kafka topic wich prefix is `dataset-` (same method as `OPEN` or `MODIFIABLE` dataset, see above).
+. Update dataset version state to `ACTIVE` by sending a message of type `UPDATE_DATASET_VERSION_STATE` in the topic `virt-event` consumed by _data-ref_
+
+.Update dataset version state message example
+[EXAMPLE]
+====
+
+```json
+{
+    "datasetVersionDto": {
+        "id":"6838a2b2-bd59-4959-85bd-3f1573aac614",
+        "dataset":"71eeb9dd-821e-4183-bde4-ea139c1dc1d5",
+        "state": "ACTIVE"
+    },
+    "type":"UPDATE_DATASET_VERSION_STATE"
+}
+```
+
+====
