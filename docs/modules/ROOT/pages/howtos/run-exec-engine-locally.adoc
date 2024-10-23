@@ -1,0 +1,255 @@
+== Running exec-engine module locally
+
+This page describe how to run and debug the exec-engine module locally with the IDE in devmode :
+
+- using devservices for database and kafka broker
+- connecting to a kubernetes cluster (locally or distant)
+- connecting to a Provoly environment (local or distant)
+
+=== Prerequisites
+
+This _howto_ assumes that you have already the following requirements :
+
+- A Kubernetes cluster accessible from local machine for the module to start and monitor kubernetes jobs (connexion to a distant cluster or locally using Docker for Desktop or Minikube for example)
+
+- A Provoly environment (local or distant) with oidc (keycloak), data-ref and data-virt modules running
+
+=== Configuration
+
+==== Kubernetes configuration
+
+The following kubernetes objects are required by exec-engine module to run properly :
+
+.Secret "regcred" for docker registry authentication to pull images from harbor
+[source,yaml]
+----
+apiVersion: v1
+kind: Secret
+metadata:
+  name: regcred
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: xxx # base64 encoded docker registry credentials
+----
+
+.ServiceAccount, Role and RoleBinding for exec-file-provision to read config map
+[source,yaml]
+----
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: provoly-exec-file-provision
+  labels:
+    app: provoly
+    module: provoly-exec-file-provision
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: configmap-reader
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - get
+      - watch
+      - list
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: configmap-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: configmap-reader
+subjects:
+  - kind: ServiceAccount
+    name: provoly-exec-file-provision
+---
+----
+
+.ConfigMap for exec-file-provision his own configuration
+[source,yaml]
+----
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: provoly-exec-file-provision
+  labels:
+    app: provoly
+    module: provoly-exec-file-provision
+data:
+  application.yaml: |
+    quarkus:
+      banner:
+        enabled: false
+      log:
+        console:
+          json: false
+          level: TRACE
+          format: "%d{HH:mm:ss} %-5p traceId=%X{traceId} parentId=%X{parentId} spanId=%X{spanId} [%c{2.}] (%t) %s%e%n"
+
+      oidc:
+        auth-server-url: https://sso.dev.provoly.net/auth/realms/provoly
+        roles:
+          role-claim-path: "realm_access/roles"
+
+      oidc-client:
+        auth-server-url: https://sso.dev.provoly.net/auth/realms/provoly
+        client-id: provoly
+        credentials:
+          secret: secret
+        grant:
+          type: password
+        grant-options:
+          password:
+            username: ${provoly.exec-engine.user}
+            password: ${provoly.exec-engine.password}
+
+      otel:
+        enabled: false
+
+      rest-client:
+        "provoly-exec-engine":
+          url: http://host.docker.internal:8780
+
+    provoly:
+      application:
+        version: dev
+        chart:
+          version: dev
+      exec-engine:
+        user: provoly_exec
+        password: password
+----
+
+NOTE: This configuration works with kubernetes cluster in local using docker desktop.
+The `host.docker.internal` is a special DNS name which resolves to the internal IP address used by the host.
+
+==== Local exec-engine configuration
+
+.Dev profile to start quarkus:dev locally
+[source,yaml]
+----
+"%dev":
+  quarkus:
+    management:
+      port: 8090
+    live-reload:
+      instrumentation: true
+
+    kafka:
+      devservices:
+        enabled: true
+        port: 9093
+
+    datasource:
+      devservices:
+        port: 5434
+
+    oidc:
+      auth-server-url: https://sso.dev.provoly.net/auth/realms/provoly
+      roles:
+        role-claim-path: "realm_access/roles"
+
+    oidc-client:
+      auth-server-url: https://sso.dev.provoly.net/auth/realms/provoly
+      client-id: provoly
+      credentials:
+        secret: secret
+      grant:
+        type: password
+
+    rest-client:
+      "data-virt":
+        url: https://dev.provoly.net/api/data
+      "data-ref":
+        url: https://dev.provoly.net/api/ref
+
+    kubernetes-client:
+      api-server-url: https://kubernetes.docker.internal:6443
+      namespace: default
+      username: docker-desktop
+      client-cert-data: xxx # base64 encoded client certificate
+      client-key-data: xxx # base64 encoded client key
+
+  provoly:
+    exec:
+      user: provoly_exec
+      password: password
+    application:
+      version: dev
+      chart:
+        version: dev
+----
+
+NOTE: This configuration works with kubernetes cluster in local using docker desktop.
+The `kubernetes.docker.internal` is a special DNS name which resolves to the internal IP address used by the cluster.
+The `client-cert-data` and `client-key-data` are the base64 encoded client certificate and key used to authenticate to the kubernetes cluster.
+This informations are available in the `~/.kube/config` file.
+
+=== Start exec-engine module
+
+To start the exec-engine module locally, you can use the following command :
+
+.Start with maven
+[source,bash]
+----
+mvn quarkus:dev -Dquarkus.config.locations=file:local-path-to-application-config-file.yaml
+----
+
+.Start with quarkus cli
+[source,bash]
+----
+quarkus dev -Dquarkus.config.locations=file:local-path-to-application-config-file.yaml
+----
+
+.Configuration to start with intellij IDEA using quarkus plugin
+[source,xml]
+----
+<configuration name="provoly-exec-engine provoly-dev" type="QuarkusRunConfigurationType" factoryName="Quarkus">
+  <module name="provoly-exec-engine" />
+  <QsMavenRunConfiguration>
+    <MavenSettings>
+      <option name="myGeneralSettings" />
+      <option name="myRunnerSettings" />
+      <option name="myRunnerParameters">
+        <MavenRunnerParameters>
+          <option name="cmdOptions" value="-Dquarkus.config.locations=file:/$PROJECT_DIR$/../../env/exec-engine/provoly-dev.yml" />
+          <option name="profiles">
+            <set />
+          </option>
+          <option name="goals">
+            <list>
+              <option value="quarkus:dev" />
+            </list>
+          </option>
+          <option name="multimoduleDir" value="$PROJECT_DIR$" />
+          <option name="pomFileName" value="pom.xml" />
+          <option name="profilesMap">
+            <map />
+          </option>
+          <option name="projectsCmdOptionValues">
+            <list />
+          </option>
+          <option name="resolveToWorkspace" value="true" />
+          <option name="workingDirPath" value="$PROJECT_DIR$/provoly-exec/provoly-exec-engine" />
+        </MavenRunnerParameters>
+      </option>
+    </MavenSettings>
+    <targetMavenLocalRepo />
+    <emulateTerminal>false</emulateTerminal>
+    <profile>dev</profile>
+  </QsMavenRunConfiguration>
+  <method v="2">
+    <option name="Make" enabled="true" />
+  </method>
+</configuration>
+----
+
+NOTE: update the `cmdOptions` to match the path to the local configuration file.

@@ -9,6 +9,7 @@
 * xref:howtos/write-tests-with-kafka-companion.adoc[Write tests with kafka companion]
 * xref:howtos/import.adoc[Import data with APIs]
 * xref:howtos/tracing-locally-tests.adoc[Run traces locally with jaeger]
+* xref:howtos/run-exec-engine-locally.adoc[Run exec-engine module locally]
 --
 
 == Check list

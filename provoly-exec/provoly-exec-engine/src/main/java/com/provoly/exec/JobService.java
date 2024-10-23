@@ -39,7 +39,7 @@ public class JobService {
 
     // TODO : Is referencing the last version is a good idea ?
     // TODO : The registry and image should be a parameter
-    static final String FILE_PROVISION_IMAGE = "dh2wltsh.gra7.container-registry.ovh.net/provoly/provoly-exec-file-provision:0.3.0";
+    static final String FILE_PROVISION_IMAGE = "dh2wltsh.gra7.container-registry.ovh.net/provoly/provoly-exec-file-provision:latest";
     static final String JOB_CONTAINER_NAME = "job";
     private static final String DATA_VOLUME_NAME = "data";
     @Inject
