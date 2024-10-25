@@ -53,7 +53,12 @@ public class StorageModelAdapter implements StorageModelService {
         log.infof("delete dataset version %s", datasetVersionDto.getId());
         try {
             if (datasetVersionDto.isWithFile()) {
-                fileService.deleteRawFile(datasetVersionDto);
+                try {
+                    fileService.deleteRawFile(datasetVersionDto);
+                } catch (Exception e) {
+                    // error on file deletion should not block dataset version deletion
+                    log.warnf(e, "Error occurred while deleting th file for dataset version %s", datasetVersionDto.getId());
+                }
             }
             getService(storageModelServices, oClassDetailsDto.getStorage()).deleteDatasetVersion(datasetVersionDto,
                     oClassDetailsDto);
