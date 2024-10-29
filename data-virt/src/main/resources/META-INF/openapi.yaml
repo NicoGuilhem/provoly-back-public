@@ -1218,9 +1218,22 @@ paths:
     post:
       tags:
         - Items
-      summary: Synchronous insertion of ItemDto collection
-      description: Add items in the dataset version of a modifiable dataset.
-      operationId: com.provoly.virt.item.ItemsController_insert
+      summary: Synchronous insertion (or update) of ItemDto collection
+      description: |
+        Adds (or updates) items in the dataset version of an open or modifiable dataset.
+        The updateMode parameter is optional, used only for updating items that are already known.
+        It can be set to :
+         - REPLACE : previously existing item is fully replaced with new content as delete and insert
+         - MERGE : previously existing item is merged with new content
+      operationId: com.provoly.virt.item.ItemsController#insertOrUpdate
+      parameters:
+        - name: updateMode
+          in: query
+          description: Mode of update operation
+          required: false
+          schema:
+            $ref: '#/components/schemas/ItemUpdateMode'
+            default: 'REPLACE'
       requestBody:
         content:
           application/json:
@@ -2635,6 +2648,11 @@ components:
           type: string
         chartVersion:
           type: string
+    ItemUpdateMode:
+      enum:
+        - REPLACE
+        - MERGE
+      type: string
   securitySchemes:
     oidc:
       type: oauth2

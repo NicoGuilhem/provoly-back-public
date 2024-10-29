@@ -1,6 +1,5 @@
 package com.provoly.virt.imports.async;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
@@ -15,25 +14,26 @@ import com.provoly.common.error.ErrorCode;
 import com.provoly.common.imports.MessageLevel;
 import com.provoly.common.item.GeoFormat;
 import com.provoly.common.item.ItemDto;
+import com.provoly.common.item.ItemUpdateMode;
 import com.provoly.common.model.AttributeDefDetailsDto;
 import com.provoly.virt.imports.RecordConvertor;
 import com.provoly.virt.imports.model.ItemRecord;
 import com.provoly.virt.item.WriteItemsService;
+import com.provoly.virt.kafka.KafkaTools;
 
 import io.smallrye.common.annotation.Blocking;
 import io.vertx.core.json.JsonObject;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.common.header.Header;
-import org.apache.kafka.common.header.Headers;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class AsyncImportService {
-    public static final String ITEM_ID = "provoly-item-id";
-    public static final String DATASET_VERSION_ID = "provoly-dataset-version-id";
+    private static final String ITEM_ID = "provoly-item-id";
+    private static final String DATASET_VERSION_ID = "provoly-dataset-version-id";
+    private static final String ITEM_UPDATE_MODE = "provoly-item-update-mode";
 
     private Logger log;
     private WriteItemsService writeItemsService;
@@ -54,9 +54,9 @@ public class AsyncImportService {
 
     @Incoming("item")
     @Blocking
-    public void consume(ConsumerRecord<String, JsonObject> record) {
+    public void consume(ConsumerRecord<String, JsonObject> recordMessage) {
         var items = new ArrayList<ItemDto>();
-        var datasetVersionId = extractDatasetVersion(record.headers());
+        var datasetVersionId = extractDatasetVersion(recordMessage);
 
         var dataset = datasetService.searchByDatasetVersionId(datasetVersionId);
         if (dataset.getType() == DatasetType.CLOSED) {
@@ -64,8 +64,8 @@ public class AsyncImportService {
         }
         var oClassDetails = modelService.getDetails(dataset.getoClass());
 
-        var jsonItem = record.value();
-        var id = getId(record.headers());
+        var jsonItem = recordMessage.value();
+        var id = getId(recordMessage);
 
         ItemRecord itemRecord = new ItemRecord(id, jsonItem.getMap());
 
@@ -91,7 +91,7 @@ public class AsyncImportService {
             throw new BusinessException(ErrorCode.FORBIDDEN, "values invalid : %s".formatted(convertResult.messages()));
         }
 
-        writeItemsService.addItemsDto(items);
+        writeItemsService.addOrUpdateItemsDto(items, extractUpdateMode(recordMessage));
         log.debugf("%s items converted and inserted", items.size());
     }
 
@@ -105,22 +105,21 @@ public class AsyncImportService {
         return item;
     }
 
-    private UUID extractDatasetVersion(Headers headers) {
-        Header datasetDefinitionHeader = headers.lastHeader(DATASET_VERSION_ID);
-        if (datasetDefinitionHeader == null) {
-            throw new BusinessException(ErrorCode.FORBIDDEN, "Dataset header is mandatory");
-        }
-        return UUID.fromString(new String(datasetDefinitionHeader.value(), StandardCharsets.UTF_8));
+    private UUID extractDatasetVersion(ConsumerRecord<String, JsonObject> message) {
+        return UUID.fromString(KafkaTools.extractHeaderValueFromRecord(message, DATASET_VERSION_ID)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BAD_REQUEST,
+                        "Missing mandatory header %s".formatted(DATASET_VERSION_ID))));
     }
 
-    private String getId(Headers header) {
-        var headerItemFieldsKey = header.lastHeader(ITEM_ID);
-        if (headerItemFieldsKey == null) {
-            // Key is generated
-            return UUID.randomUUID().toString();
-        }
-        // Key is build from data value
-        return new String(headerItemFieldsKey.value(), StandardCharsets.UTF_8);
+    private ItemUpdateMode extractUpdateMode(ConsumerRecord<String, JsonObject> message) {
+        return KafkaTools.extractHeaderValueFromRecord(message, ITEM_UPDATE_MODE)
+                .map(ItemUpdateMode::fromString)
+                .orElse(ItemUpdateMode.REPLACE);
+    }
+
+    private String getId(ConsumerRecord<String, JsonObject> message) {
+        return KafkaTools.extractHeaderValueFromRecord(message, ITEM_ID)
+                .orElse(UUID.randomUUID().toString()); // if id is not provided, we generate a new one
     }
 
 }

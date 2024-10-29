@@ -1,6 +1,6 @@
 == Inserting (or updating) datas into the `data-virt` module database
 
-This page describe how to insert (or update) datas into the `data-virt` module database independent of the storage system (Postgis or Elastic) for each dataset type (`OPEN`, `CLOSED` ou `MODIFIABLE`).
+This page describe how to insert (or update) datas into the `data-virt` module database independent of the storage system (Postgis, Elastic or Kuzzle) for each dataset type (`OPEN`, `CLOSED` ou `MODIFIABLE`).
 
 In other words, this page tells how to add (or update) items to datasets.
 
@@ -15,10 +15,13 @@ There is 2 ways to insert (or update) datas into an `OPEN` or `MODIFIABLE` datas
 
 Item is inserted if its id is not already in the dataset, otherwise it is updated.
 
-[WARNING]
+[NOTE]
 ====
-In both ways, attributes that are not sent are reset to `null`.
-This means that to update only some attributes of an item, you must send all attributes otherwise other values will be lost.
+Updating known items supports 2 different modes :
+
+- `REPLACE` (default) : item is fully replaced by the new one.
+This means that attributes that are not sent are reset to `null`
+- `MERGE` : only attributes that are sent are updated, others are kept as they were before update
 ====
 
 [NOTE]
@@ -50,10 +53,11 @@ Items can be sent to a Kafka topic wich prefix is `dataset-`.
 dataset-902918_enterprises
 ====
 
-The message must have the following headers :
+The message may have the following headers :
 
 - `provoly-dataset-version-id` (mandatory) : the dataset version id
 - `provoly-item-id` (optional) : the item id, generated if not sent, used to update item if sent and already present in database.
+- `provoly-item-update-mode` (optional / default = `REPLACE`) : the mode to update item if already present in storage (`REPLACE` or `MERGE`, see above)
 
 The message must be a JSON object of which each field is the `technicalName` of the attribute.
 

@@ -20,6 +20,7 @@ import com.provoly.common.dataset.DatasetDetailsDto;
 import com.provoly.common.dataset.DatasetDto;
 import com.provoly.common.dataset.DatasetType;
 import com.provoly.common.dataset.DatasetVersionDetailsDto;
+import com.provoly.common.item.ItemUpdateMode;
 import com.provoly.common.model.AttributeDefDetailsDto;
 import com.provoly.common.model.AttributeDefDto;
 import com.provoly.common.model.OClassDetailsDto;
@@ -28,6 +29,8 @@ import com.provoly.common.ref.RefChangeEventClassCreated;
 import com.provoly.common.search.MonoClassRequestDto;
 import com.provoly.test.AuthService;
 import com.provoly.test.ProvolyTestContainers;
+import com.provoly.virt.entity.AttributeSimpleValue;
+import com.provoly.virt.entity.Item;
 import com.provoly.virt.event.RefChangeListener;
 import com.provoly.virt.search.SearchService;
 
@@ -39,11 +42,11 @@ import io.vertx.core.json.JsonObject;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 @QuarkusTest
 @QuarkusTestResource(ProvolyTestContainers.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class AsyncImportServiceTest {
     @Inject
     AsyncImportService asyncImportService;
@@ -77,17 +80,17 @@ public class AsyncImportServiceTest {
     private final UUID datasetVersionId = UUID.randomUUID();
     private final FieldDto field = new FieldDto(classId, "field", "string", "slug");
     private final OClassDetailsDto classDetails = new OClassDetailsDto(classId,
-            "slug",
+            "slug_test_async_import_service",
             "oclass",
             null,
             List.of(new AttributeDefDetailsDto(
-                    classId,
-                    new AttributeDefDto(classId,
-                            "name", "name", field, null, false, "slug"),
+                    UUID.randomUUID(),
+                    new AttributeDefDto(UUID.randomUUID(), "name", "name", field, null, false, "slug_name"),
                     field, null),
                     new AttributeDefDetailsDto(
-                            classId,
-                            new AttributeDefDto(classId, "family_name", "name", field, null, false, "slug"),
+                            UUID.randomUUID(),
+                            new AttributeDefDto(UUID.randomUUID(), "family_name", "family_name", field, null, false,
+                                    "slug_family_name"),
                             field, null)),
             Storage.ELASTIC,
             List.of());
@@ -98,7 +101,7 @@ public class AsyncImportServiceTest {
     private final DatasetVersionDetailsDto datasetVersionDetail = new DatasetVersionDetailsDto(datasetVersionId, datasetDetail,
             classId, null, null, null, null, null, null, null, null);
 
-    public final String TOPIC_DATASET = "dataset-%s".formatted(classDetails.getSlug());
+    public final String topicDataset = "dataset-%s".formatted(classDetails.getSlug());
 
     @BeforeEach
     public void init() {
@@ -112,19 +115,55 @@ public class AsyncImportServiceTest {
     }
 
     @Test
-    public void items_created_when_records_are_received_in_class_topic() {
+    @Order(1) // to be sure that the index is created before the test (used in the second test)
+    public void items_created_and_updated_when_records_are_received_in_class_topic() {
         // given
-        var record1 = generateRecord("name", "toto", "family_name", "toto");
-        var record2 = generateRecord("name", "titi", "family_name", "titi");
         refChangeListener.refEvent(new RefChangeEventClassCreated(classDetails)); // will create es index with a good mapping
 
+        var firstItemID = UUID.randomUUID();
+        var secondItemID = UUID.randomUUID();
+        var recordInsertItem1 = generateRecord(firstItemID, null, "name", "Mymi", "family_name", "Cool");
+        var recordInsertItem2 = generateRecord(secondItemID, null, "name", "Dam", "family_name", "Super");
+
         //when
-        asyncImportService.consume(record1);
-        asyncImportService.consume(record2);
+        asyncImportService.consume(recordInsertItem1);
+        asyncImportService.consume(recordInsertItem2);
+        List<Item> items = searchService.search(new MonoClassRequestDto(classId, null), null).getItems();
+        assertThat(items).hasSize(2);
+        var firstItem = items.stream().filter(i -> i.getId().getId().equals(firstItemID.toString())).findFirst().get();
+        assertThat(firstItem.getAttributes())
+                .hasSize(2)
+                .containsKeys("name", "family_name")
+                .matches(attributeValues -> ((AttributeSimpleValue) attributeValues.get("name")).getValue().equals("Mymi")
+                        && ((AttributeSimpleValue) attributeValues.get("family_name")).getValue().equals("Cool"));
+        var secondItem = items.stream().filter(i -> i.getId().getId().equals(secondItemID.toString())).findFirst().get();
+        assertThat(secondItem.getAttributes())
+                .hasSize(2)
+                .containsKeys("name", "family_name")
+                .matches(attributeValues -> ((AttributeSimpleValue) attributeValues.get("name")).getValue().equals("Dam")
+                        && ((AttributeSimpleValue) attributeValues.get("family_name")).getValue().equals("Super"));
+
+        // updating items
+        var recordReplaceItem1 = generateRecord(firstItemID, ItemUpdateMode.REPLACE, "name", "Myra", null, null);
+        var recordUpdateItem2 = generateRecord(secondItemID, ItemUpdateMode.MERGE, "name", "Daminou", null, null);
+        asyncImportService.consume(recordReplaceItem1);
+        asyncImportService.consume(recordUpdateItem2);
 
         //then
-        assertThat(searchService.search(new MonoClassRequestDto(classId, null), null).getItems())
-                .hasSize(2);
+        items = searchService.search(new MonoClassRequestDto(classId, null), null).getItems();
+        assertThat(items).hasSize(2);
+        firstItem = items.stream().filter(i -> i.getId().getId().equals(firstItemID.toString())).findFirst().get();
+        assertThat(firstItem.getAttributes())
+                .hasSize(1)
+                .containsKey("name")
+                .extractingByKey("name")
+                .matches(attributeValue -> ((AttributeSimpleValue) attributeValue).getValue().equals("Myra"));
+        secondItem = items.stream().filter(i -> i.getId().getId().equals(secondItemID.toString())).findFirst().get();
+        assertThat(secondItem.getAttributes())
+                .hasSize(2)
+                .containsKeys("name", "family_name")
+                .matches(attributeValues -> ((AttributeSimpleValue) attributeValues.get("name")).getValue().equals("Daminou")
+                        && ((AttributeSimpleValue) attributeValues.get("family_name")).getValue().equals("Super"));
     }
 
     @Test
@@ -132,11 +171,11 @@ public class AsyncImportServiceTest {
         // given
         JsonObject value = new JsonObject();
         value.put("name", "toto");
-        var record = new ConsumerRecord(TOPIC_DATASET, 0, 0, null, value);
+        var recordMessage = new ConsumerRecord<String, JsonObject>(topicDataset, 0, 0, null, value);
 
         //when
-        assertThatThrownBy(() -> asyncImportService.consume(record))
-                .hasMessage("Dataset header is mandatory");
+        assertThatThrownBy(() -> asyncImportService.consume(recordMessage))
+                .hasMessage("Missing mandatory header provoly-dataset-version-id");
     }
 
     @Test
@@ -144,43 +183,58 @@ public class AsyncImportServiceTest {
         // given
         DatasetDto invalidDataset = new DatasetDto(UUID.randomUUID(), "invalid-dataset", classId, DatasetType.CLOSED);
         when(datasetService.searchByDatasetVersionId(datasetVersionId)).thenReturn(invalidDataset);
-        var record = generateRecord("name", "toto", "family_name", "toto");
+        var recordMessage = generateRecord("name", "toto", "family_name", "toto");
 
         //when
-        assertThatThrownBy(() -> asyncImportService.consume(record))
+        assertThatThrownBy(() -> asyncImportService.consume(recordMessage))
                 .hasMessageContaining("can't be closed");
     }
 
     @Test
     public void throw_error_when_invalid_attributes() {
         // given
-        var record = generateRecord("invalid", "titi", "invalid2", "tata");
+        var recordMessage = generateRecord("invalid", "titi", "invalid2", "tata");
 
         //when
-        assertThatThrownBy(() -> asyncImportService.consume(record))
+        assertThatThrownBy(() -> asyncImportService.consume(recordMessage))
                 .hasMessageContaining("Error during attributes validation");
     }
 
     @Test
+    @Order(2) // to be sure that the index is created before the test (done by the first test)
     public void import_does_not_fail_with_attribute_value_null() {
         // given
-        JsonObject value = new JsonObject();
-        var record = generateRecord("name", "toto", "family_name", null);
+        var recordMessage = generateRecord("name", "toto", "family_name", null);
 
         //when
-        assertThatNoException().isThrownBy(() -> asyncImportService.consume(record));
+        assertThatNoException().isThrownBy(() -> asyncImportService.consume(recordMessage));
     }
 
     private ConsumerRecord<String, JsonObject> generateRecord(String attributeName, String attributeValue,
             String attributeName2, String attributeValue2) {
+        return generateRecord(null, null, attributeName, attributeValue, attributeName2, attributeValue2);
+    }
+
+    private ConsumerRecord<String, JsonObject> generateRecord(UUID itemID, ItemUpdateMode updateMode,
+            String attributeName, String attributeValue,
+            String attributeName2, String attributeValue2) {
         JsonObject value = new JsonObject();
         value.put(attributeName, attributeValue);
-        value.put(attributeName2, attributeValue2);
-        var record = new ConsumerRecord(TOPIC_DATASET, 0, 0, null, value);
-        record.headers().add(
+        if (attributeName2 != null) {
+            value.put(attributeName2, attributeValue2);
+        }
+        var recordMessage = new ConsumerRecord(topicDataset, 0, 0, null, value);
+        recordMessage.headers().add(
                 new RecordHeader("provoly-dataset-version-id", datasetVersionId.toString().getBytes(StandardCharsets.UTF_8)));
-        record.headers().add(new RecordHeader("provoly-item-id", attributeValue.getBytes(StandardCharsets.UTF_8)));
-        return record;
+        if (itemID != null) {
+            recordMessage.headers()
+                    .add(new RecordHeader("provoly-item-id", itemID.toString().getBytes(StandardCharsets.UTF_8)));
+        }
+        if (updateMode != null) {
+            recordMessage.headers()
+                    .add(new RecordHeader("provoly-item-update-mode", updateMode.name().getBytes(StandardCharsets.UTF_8)));
+        }
+        return recordMessage;
     }
 
 }

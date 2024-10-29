@@ -15,6 +15,7 @@ import com.provoly.common.Storage;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.item.GeoFormat;
+import com.provoly.common.item.ItemUpdateMode;
 import com.provoly.virt.GeoHolder;
 import com.provoly.virt.entity.AttributeSimpleValue;
 import com.provoly.virt.entity.AttributeValue;
@@ -41,7 +42,12 @@ public class KuzzleWriteService implements StorageWriteService {
     }
 
     @Override
-    public List<InsertionError> add(Collection<Item> items) {
+    public List<InsertionError> addOrUpdate(Collection<Item> items, ItemUpdateMode updateMode) {
+
+        if (updateMode == ItemUpdateMode.MERGE) {
+            throw new BusinessException(ErrorCode.TECHNICAL, "Update mode 'MERGE' is not supported by Kuzzle storage");
+        }
+
         var index = items.stream().toList().getFirst().getoClass().getSlug();
         logger.debugf("Store %s items in Kuzzle storage on index %s", items.size(), index);
 

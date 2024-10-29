@@ -84,7 +84,7 @@ public class ItemsServiceTest {
         item.put("Num_Acc", "200000000001L");
         List<ItemDto> itemDtos = List.of(item);
 
-        assertThatThrownBy(() -> itemsController.insert(itemDtos))
+        assertThatThrownBy(() -> itemsController.insertOrUpdate(itemDtos, null))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining(unknownDatasetId.toString());
     }
@@ -99,7 +99,7 @@ public class ItemsServiceTest {
         item.put("geo", new GeoHolder("{ \"type\": \"Point\", \"coordinates\": [30.0, 10.0] }"));
 
         List<ItemDto> itemDtos = List.of(item);
-        assertThatThrownBy(() -> itemsController.insert(itemDtos))
+        assertThatThrownBy(() -> itemsController.insertOrUpdate(itemDtos, null))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("FORMAT");
     }
@@ -114,7 +114,7 @@ public class ItemsServiceTest {
 
         item.put("geo", new GeoHolder("{ \"type\": \"LineString\", \"coordinates\": [[30.0, 10.0],[31.0, 12.0]] }"));
 
-        itemsController.insert(List.of(item));
+        itemsController.insertOrUpdate(List.of(item), null);
         itemsTestTools.checkItemExists(item.getId());
     }
 
@@ -127,7 +127,7 @@ public class ItemsServiceTest {
         var item = new ItemDto(dataStorages.get(storage).datasetVersionDto, itemId);
         item.put("Num_Acc", "200000000001L");
 
-        itemsController.insert(List.of(item));
+        itemsController.insertOrUpdate(List.of(item), null);
         itemsTestTools.checkItemExists(item.getId());
     }
 
@@ -150,7 +150,7 @@ public class ItemsServiceTest {
         var item = new ItemDto(UUID.randomUUID(), itemId);
         List<ItemDto> itemDtos = List.of(item);
 
-        assertThatThrownBy(() -> itemsController.insert(itemDtos))
+        assertThatThrownBy(() -> itemsController.insertOrUpdate(itemDtos, null))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining(
                         "All items must have same OclassId thant Dataset OclassId : %s"

@@ -15,6 +15,7 @@ import com.provoly.common.Storage;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.item.CountDto;
+import com.provoly.common.item.ItemUpdateMode;
 import com.provoly.common.metadata.MetadataDefDto;
 import com.provoly.common.model.AttributeDefDetailsDto;
 import com.provoly.common.model.OClassDetailsDto;
@@ -63,12 +64,13 @@ class ElasticWriteService implements StorageWriteService {
 
     /////////////////////////////////:
     // ITEM -> Elastic
-    public List<InsertionError> add(Collection<Item> items) {
-        return addItems(items, AtomicInteger::new);
+    public List<InsertionError> addOrUpdate(Collection<Item> items, ItemUpdateMode updateMode) {
+        return addOrUpdateItems(items, updateMode, AtomicInteger::new);
 
     }
 
-    private List<InsertionError> addItems(Collection<Item> items, IntConsumer chunkSizeCallBack) {
+    private List<InsertionError> addOrUpdateItems(Collection<Item> items, ItemUpdateMode updateMode,
+            IntConsumer chunkSizeCallBack) {
         if (items.isEmpty()) {
             return Collections.emptyList();
         }
@@ -77,7 +79,7 @@ class ElasticWriteService implements StorageWriteService {
         List<InsertionError> errors = new ArrayList<>();
         try {
             log.infof("called with %s items", items.size());
-            BulkResponse response = bulkItems(items);
+            BulkResponse response = bulkItems(items, updateMode);
             log.debugf("  Took %d / ingest took %d", response.took(), response.ingestTook());
             chunkSizeCallBack.accept(response.items().size());
             if (response.errors()) {
@@ -99,10 +101,10 @@ class ElasticWriteService implements StorageWriteService {
             List<Item> itemAsList = new ArrayList<>(items);
 
             List<Item> firstHalf = itemAsList.subList(0, itemAsList.size() / 2);
-            errors.addAll(addItems(firstHalf, chunkSize::set));
+            errors.addAll(addOrUpdateItems(firstHalf, updateMode, chunkSize::set));
             log.debug("First sublist inserted");
 
-            chunkAndBulkRemainingItems(chunkSize, errors, itemAsList, firstHalf.size());
+            chunkAndBulkRemainingItems(chunkSize, errors, itemAsList, firstHalf.size(), updateMode);
             chunkSizeCallBack.accept(chunkSize.get());
             return errors;
 
@@ -112,13 +114,13 @@ class ElasticWriteService implements StorageWriteService {
     }
 
     private void chunkAndBulkRemainingItems(AtomicInteger chunkSize, List<InsertionError> errors, List<Item> itemAsList,
-            int start) {
+            int start, ItemUpdateMode updateMode) {
         boolean shouldContinue = true;
         while (shouldContinue) {
             int nextStop = Math.min(start + chunkSize.get(), itemAsList.size());
             log.debugf("Bulking from %s to %s", start, nextStop);
             List<Item> nextChunk = itemAsList.subList(start, nextStop);
-            errors.addAll(addItems(nextChunk, chunkSize::set));
+            errors.addAll(addOrUpdateItems(nextChunk, updateMode, chunkSize::set));
             if (nextChunk.size() < chunkSize.get()) {
                 shouldContinue = false;
             } else {
@@ -128,18 +130,27 @@ class ElasticWriteService implements StorageWriteService {
         }
     }
 
-    private BulkResponse bulkItems(Collection<Item> items) throws IOException {
+    private BulkResponse bulkItems(Collection<Item> items, ItemUpdateMode updateMode) throws IOException {
         var request = new BulkRequest.Builder();
         for (Item item : items) {
-            request.operations(b -> b.index(
-                    i -> i.index(item.getoClass().getSlug())
-                            .id(item.getIdAsString())
-                            .document(buildSource(item))));
-            log.tracef("Add request : indexName=[%s] id=[%s] item=[%s]", item.getoClass().getSlug(), item.getId(), item);
+            if (updateMode == ItemUpdateMode.REPLACE) {
+                request.operations(b -> b.index(
+                        i -> i.index(item.getoClass().getSlug())
+                                .id(item.getIdAsString())
+                                .document(buildSource(item))));
+            } else {
+                request.operations(b -> b.update(
+                        i -> i.index(item.getoClass().getSlug())
+                                .id(item.getIdAsString())
+                                .action(a -> a.doc(buildSource(item))
+                                        .docAsUpsert(true))));
+            }
+            log.tracef("Add or update request : indexName=[%s] id=[%s] item=[%s]", item.getoClass().getSlug(), item.getId(),
+                    item);
         }
 
         elasticLayout.prepareRequest(request);
-        log.tracef("Adding %s item(s)", items.size());
+        log.tracef("Adding or updating %s item(s)", items.size());
 
         return elastic.bulk(request.build());
     }

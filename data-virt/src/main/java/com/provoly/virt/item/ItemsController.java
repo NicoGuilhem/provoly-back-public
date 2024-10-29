@@ -1,6 +1,7 @@
 package com.provoly.virt.item;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import jakarta.annotation.security.RolesAllowed;
@@ -16,6 +17,7 @@ import com.provoly.common.dataset.DatasetVersionDetailsDto;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.item.ItemDto;
+import com.provoly.common.item.ItemUpdateMode;
 import com.provoly.common.item.ItemsSearchResultDto;
 import com.provoly.common.user.Role;
 import com.provoly.virt.entity.ItemId;
@@ -23,6 +25,7 @@ import com.provoly.virt.search.mono.MonoMapper;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
+import org.jboss.resteasy.reactive.RestQuery;
 
 @Path("/items")
 @Produces(MediaType.APPLICATION_JSON)
@@ -48,10 +51,13 @@ public class ItemsController {
 
     @POST
     @RolesAllowed({ Role.STR_ITEM_WRITE })
-    public void insert(List<ItemDto> items) {
+    public void insertOrUpdate(List<ItemDto> items,
+            @DefaultValue("REPLACE") @RestQuery("updateMode") ItemUpdateMode updateMode) {
         long start = System.currentTimeMillis();
-        if (items.getFirst() == null) {
-            log.info("No items to insert");
+        try {
+            items.getFirst();
+        } catch (NoSuchElementException e) {
+            log.info("No items to insert or update");
             return;
         }
 
@@ -59,14 +65,17 @@ public class ItemsController {
         DatasetDto datasetDto = datasetService
                 .searchByDatasetVersionId(UUID.fromString(datasetVersionId));
 
-        canAdd(datasetDto, UUID.fromString(datasetVersionId));
+        canAddOrUpdate(datasetDto, UUID.fromString(datasetVersionId));
 
-        var errors = itemsService.addItemsDto(items);
+        var errors = itemsService.addOrUpdateItemsDto(items, updateMode);
         if (!errors.isEmpty()) {
-            throw new IllegalStateException("Add items fail : " + errors);
+            if (errors.size() == 1 && errors.getFirst().cause() != null) {
+                throw errors.getFirst().cause();
+            }
+            throw new IllegalStateException("Add or update items failed : " + errors);
         }
 
-        log.infof("Inserted %d items in %sms", items.size(), System.currentTimeMillis() - start);
+        log.infof("Inserted or updated %d items in %sms", items.size(), System.currentTimeMillis() - start);
 
     }
 
@@ -86,7 +95,7 @@ public class ItemsController {
         return mapper.toDto(getItemsService.searchRelationsFromItem(id));
     }
 
-    private void canAdd(DatasetDto dataset, UUID datasetVersionDtoId) {
+    private void canAddOrUpdate(DatasetDto dataset, UUID datasetVersionDtoId) {
         if (dataset.getType().equals(DatasetType.CLOSED)) {
             DatasetVersionDetailsDto datasetVersionDto = datasetVersionService.get(datasetVersionDtoId);
             if (!datasetVersionDto.getState().equals(DatasetState.INDEXING)) {

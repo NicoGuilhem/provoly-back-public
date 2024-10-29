@@ -10,6 +10,7 @@ import jakarta.inject.Inject;
 import com.provoly.clients.MetadataRefService;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
+import com.provoly.common.item.ItemUpdateMode;
 import com.provoly.common.metadata.MetadataDefDto;
 import com.provoly.virt.entity.Item;
 import com.provoly.virt.entity.ItemId;
@@ -52,7 +53,7 @@ public class MetadataService {
 
         var item = getItemsService.get(itemId);
         doAdd.accept(item, metadataDef);
-        List<InsertionError> errors = itemsService.addItems(Collections.singleton(item));
+        List<InsertionError> errors = itemsService.addOrUpdateItems(Collections.singleton(item), ItemUpdateMode.REPLACE);
 
         if (!errors.isEmpty()) {
             throw new IllegalStateException("Add items fail : " + item);

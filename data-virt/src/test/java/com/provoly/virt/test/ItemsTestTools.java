@@ -106,7 +106,7 @@ public class ItemsTestTools {
         var item = new ItemDto(dataset, itemId.toString());
         item.put("Num_Acc", "200000000001L");
         authService.authenticate();
-        itemsController.insert(List.of(item));
+        itemsController.insertOrUpdate(List.of(item), null);
         return item.getId();
     }
 
@@ -115,7 +115,7 @@ public class ItemsTestTools {
         var item = new ItemDto(datasetVersion, itemId.toString());
         attributes.forEach(item::put);
 
-        itemsController.insert(List.of(item));
+        itemsController.insertOrUpdate(List.of(item), null);
 
         return item;
     }

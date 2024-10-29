@@ -14,6 +14,7 @@ import com.provoly.common.dataset.DatasetDto;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.item.ItemDto;
+import com.provoly.common.item.ItemUpdateMode;
 import com.provoly.virt.DataVirtProperties;
 import com.provoly.virt.entity.Item;
 import com.provoly.virt.partition.PartitionService;
@@ -60,12 +61,12 @@ public class WriteItemsService {
         this.itemsNotifier = itemsNotifier;
     }
 
-    public List<InsertionError> addItems(Collection<Item> items) {
+    public List<InsertionError> addOrUpdateItems(Collection<Item> items, ItemUpdateMode updateMode) {
         if (items.stream().map(Item::getDatasetVersion).collect(Collectors.groupingBy(uuid -> uuid)).size() > 1) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "Items list is provided with multiple dataset versions");
         }
 
-        List<InsertionError> errors = storageItemService.add(items);
+        List<InsertionError> errors = storageItemService.addOrUpdate(items, updateMode);
 
         if (errors.isEmpty() && dataVirtProperties.notification()) {
             // Send items to notification service
@@ -77,8 +78,8 @@ public class WriteItemsService {
     }
 
     // TODO : This method should not exists. ItemDto is only for interface, it should not be used in the backend
-    public List<InsertionError> addItemsDto(Collection<ItemDto> itemsDto) {
-        log.debug("Start adding items");
+    public List<InsertionError> addOrUpdateItemsDto(Collection<ItemDto> itemsDto, ItemUpdateMode updateMode) {
+        log.debugf("Start adding or updating items with update mode %s", updateMode);
 
         if (itemsDto.isEmpty()) {
             log.debug("Empty list of items, returning empty errors");
@@ -101,7 +102,7 @@ public class WriteItemsService {
         List<InsertionError> errors = partitionService.partition(itemsDto.stream().toList(), dataVirtProperties.chunkSize())
                 .stream()
                 .map(itemDtoChunk -> itemTransformer.transform(datasetDto, itemDtoChunk))
-                .map(this::addItems)
+                .map(items -> this.addOrUpdateItems(items, updateMode))
                 .flatMap(List::stream)
                 .toList();
 

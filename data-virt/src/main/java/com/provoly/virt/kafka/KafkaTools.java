@@ -5,6 +5,7 @@ import static org.apache.kafka.common.config.TopicConfig.CLEANUP_POLICY_DELETE;
 import static org.apache.kafka.common.config.TopicConfig.RETENTION_BYTES_CONFIG;
 import static org.apache.kafka.common.config.TopicConfig.RETENTION_MS_CONFIG;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
@@ -12,14 +13,17 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 
 import io.smallrye.common.annotation.Identifier;
+import io.vertx.core.json.JsonObject;
 
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.admin.Admin;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.config.SaslConfigs;
+import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -127,5 +131,26 @@ public class KafkaTools {
         kafkaSaslJassConfig.ifPresent(value -> kafkaConfig.put(SaslConfigs.SASL_JAAS_CONFIG, value));
         kafkaSaslLoginCallbackHandlerClass
                 .ifPresent(value -> kafkaConfig.put(SaslConfigs.SASL_LOGIN_CALLBACK_HANDLER_CLASS, value));
+    }
+
+    /**
+     * Extract header value from record
+     *
+     * @param message the message from which we want to extract the header
+     * @param headerName the name of the header
+     * @return the header value (or empty if the header is not present or empty)
+     */
+    public static Optional<String> extractHeaderValueFromRecord(ConsumerRecord<String, JsonObject> message, String headerName) {
+        Header datasetDefinitionHeader = message.headers().lastHeader(headerName);
+
+        if (datasetDefinitionHeader == null) {
+            return Optional.empty();
+        }
+        var headerValue = new String(datasetDefinitionHeader.value(), StandardCharsets.UTF_8);
+        if (headerValue.isBlank()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(new String(datasetDefinitionHeader.value(), StandardCharsets.UTF_8));
     }
 }

@@ -135,4 +135,9 @@ public class Item {
         return attributes;
     }
 
+    public List<String> getSortedAttributes() {
+        return attributes.keySet().stream()
+                .sorted()
+                .toList();
+    }
 }

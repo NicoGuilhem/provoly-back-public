@@ -2,7 +2,9 @@ package com.provoly.virt.storage.elasticbased.elastic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
@@ -14,6 +16,7 @@ import java.util.UUID;
 import com.provoly.clients.MetadataRefService;
 import com.provoly.common.Storage;
 import com.provoly.common.error.BusinessException;
+import com.provoly.common.item.ItemUpdateMode;
 import com.provoly.common.model.OClassDetailsDto;
 import com.provoly.virt.entity.Item;
 import com.provoly.virt.entity.ItemId;
@@ -52,7 +55,7 @@ public class ElasticWriteServiceTest {
     }
 
     @Test
-    void test_addItems_with_too_large_throw_illegal() throws IOException {
+    void test_addOrUpdateItems_with_too_large_throw_illegal() throws IOException {
 
         // 1st try direct mock but final class and package visible
         when(elasticsearchClientMock.bulk(Mockito.any(BulkRequest.class))).thenThrow(
@@ -64,11 +67,12 @@ public class ElasticWriteServiceTest {
         for (int i = 0; i < 5; i++) {
             items.add(new Item(new ItemId(datasetId, UUID.randomUUID().toString()), oClassDto, Collections.emptyList()));
         }
-        Assert.assertThrows(IllegalStateException.class, () -> elasticStorageWriteAdapter.add(items));
+        Assert.assertThrows(IllegalStateException.class,
+                () -> elasticStorageWriteAdapter.addOrUpdate(items, ItemUpdateMode.REPLACE));
     }
 
     @Test
-    void test_addItems_with_too_large_throw_timeout() throws IOException {
+    void test_addOrUpdateItems_with_too_large_throw_timeout() throws IOException {
 
         // 1st try direct mock but final class and package visible
         when(elasticsearchClientMock.bulk(Mockito.any(BulkRequest.class))).thenThrow(
@@ -80,20 +84,21 @@ public class ElasticWriteServiceTest {
         for (int i = 0; i < 5; i++) {
             items.add(new Item(new ItemId(datasetId, UUID.randomUUID().toString()), oClassDto, Collections.emptyList()));
         }
-        Assert.assertThrows(BusinessException.class, () -> elasticStorageWriteAdapter.add(items));
+        Assert.assertThrows(BusinessException.class,
+                () -> elasticStorageWriteAdapter.addOrUpdate(items, ItemUpdateMode.REPLACE));
     }
 
     @Test
-    void test_addItems_with_nothing_return_empty_list() throws IOException {
+    void test_addOrUpdateItems_with_nothing_return_empty_list() throws IOException {
         when(elasticsearchClientMock.bulk(Mockito.any(BulkRequest.class))).thenThrow(
                 new ResponseException(ResponseBuilder.build()));
 
         List<Item> items = new ArrayList<>();
-        assertTrue(elasticStorageWriteAdapter.add(items).isEmpty());
+        assertTrue(elasticStorageWriteAdapter.addOrUpdate(items, ItemUpdateMode.REPLACE).isEmpty());
     }
 
     @Test
-    void test_addItems_success_with_one_item_error_should_return_one_error() throws IOException {
+    void test_addOrUpdateItems_success_with_one_item_error_should_return_one_error() throws IOException {
         OClassDetailsDto oClassDto = new OClassDetailsDto(UUID.randomUUID(), "name", "", "", List.of(), Storage.ELASTIC,
                 List.of());
         UUID datasetId = UUID.randomUUID();
@@ -127,11 +132,11 @@ public class ElasticWriteServiceTest {
         for (int i = 0; i < 5; i++) {
             items.add(new Item(new ItemId(datasetId, UUID.randomUUID().toString()), oClassDto, Collections.emptyList()));
         }
-        assertEquals(1, elasticStorageWriteAdapter.add(items).size());
+        assertEquals(1, elasticStorageWriteAdapter.addOrUpdate(items, ItemUpdateMode.REPLACE).size());
     }
 
     @Test
-    void test_addItems_success_with_no_error_should_return_empty_list() throws IOException {
+    void test_addOrUpdateItems_success_with_no_error_should_return_empty_list() throws IOException {
         OClassDetailsDto oClassDto = new OClassDetailsDto(UUID.randomUUID(), "name", "", "", List.of(), Storage.ELASTIC,
                 List.of());
         UUID datasetId = UUID.randomUUID();
@@ -152,6 +157,6 @@ public class ElasticWriteServiceTest {
         for (int i = 0; i < 5; i++) {
             items.add(new Item(new ItemId(datasetId, UUID.randomUUID().toString()), oClassDto, Collections.emptyList()));
         }
-        assertTrue(elasticStorageWriteAdapter.add(items).isEmpty());
+        assertTrue(elasticStorageWriteAdapter.addOrUpdate(items, ItemUpdateMode.REPLACE).isEmpty());
     }
 }

@@ -10,6 +10,7 @@ import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 
 import com.provoly.common.Storage;
+import com.provoly.common.item.ItemUpdateMode;
 import com.provoly.virt.entity.Item;
 
 import org.jboss.logging.Logger;
@@ -27,9 +28,9 @@ public class StorageWriteAdapter implements StorageWriteService {
     }
 
     @Override
-    public List<InsertionError> add(Collection<Item> items) {
+    public List<InsertionError> addOrUpdate(Collection<Item> items, ItemUpdateMode updateMode) {
         List<Storage> storages = items.stream().map(i -> i.getoClass().getStorage()).toList(); // TODO: Should we change signature to get OClass ? Or alway check consistency even if was checked before ?
-        return getService(storageWriteAdapters, storages.get(0)).add(items);
+        return getService(storageWriteAdapters, storages.get(0)).addOrUpdate(items, updateMode);
     }
 
 }

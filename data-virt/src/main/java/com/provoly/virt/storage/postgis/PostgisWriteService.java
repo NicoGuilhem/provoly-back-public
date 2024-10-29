@@ -13,8 +13,10 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import com.provoly.common.Storage;
+import com.provoly.common.error.BusinessException;
+import com.provoly.common.error.ErrorCode;
+import com.provoly.common.item.ItemUpdateMode;
 import com.provoly.common.model.AttributeDefDetailsDto;
-import com.provoly.common.model.OClassDetailsDto;
 import com.provoly.common.model.field.FieldGeoDto;
 import com.provoly.virt.GeoHolder;
 import com.provoly.virt.entity.Item;
@@ -42,23 +44,26 @@ class PostgisWriteService implements StorageWriteService {
     }
 
     @Override
-    public List<InsertionError> add(Collection<Item> items) {
+    public List<InsertionError> addOrUpdate(Collection<Item> items, ItemUpdateMode updateMode) {
         List<InsertionError> errors = new ArrayList<>();
         try (var conn = datasource.getConnection()) {
             for (var itemsByClass : items.stream().collect(groupingBy(item -> item.getoClass().getId())).values()) {
-                errors.addAll(insertItems(conn, itemsByClass));
+                errors.addAll(insertOrUpdateItems(conn, itemsByClass, updateMode));
             }
         } catch (SQLException e) {
-            log.error("Unable to insert items", e);
+            log.error("Unable to insert or update items", e);
             return List.of(new InsertionError(null, e.getMessage()));
+        } catch (BusinessException e) {
+            log.error("Unable to insert or update items", e);
+            return List.of(new InsertionError(null, e));
         }
         return errors;
     }
 
-    private List<InsertionError> insertItems(Connection conn, List<Item> items) throws SQLException {
-        var oClass = items.getFirst().getoClass();
+    private List<InsertionError> insertOrUpdateItems(Connection conn, List<Item> items, ItemUpdateMode updateMode)
+            throws SQLException {
 
-        String sql = buildInsertSql(oClass);
+        String sql = buildInsertOrUpdateSql(items, updateMode);
         log.debugf("SQL : \n%s", sql);
         try (var statement = conn.prepareStatement(sql)) {
             for (Item item : items) {
@@ -66,7 +71,7 @@ class PostgisWriteService implements StorageWriteService {
                 statement.setString(++parameterIndex, item.getId().getId());
                 statement.setObject(++parameterIndex, item.getId().getDatasetVersionId());
                 List<InsertionError> itemErrors = new ArrayList<>();
-                for (var attributeDef : getSortedAttributes(oClass)) { // Use same order as sql
+                for (var attributeDef : getSortedAttributes(items, updateMode)) { // Use same order as sql
                     itemErrors.addAll(setStatementValues(statement, item, ++parameterIndex, attributeDef));
                 }
 
@@ -109,24 +114,57 @@ class PostgisWriteService implements StorageWriteService {
         };
     }
 
-    private List<AttributeDefDetailsDto> getSortedAttributes(OClassDetailsDto oClass) {
-        var sortedAttributes = oClass.getAttributes();
+    private List<AttributeDefDetailsDto> getSortedAttributes(List<Item> items, ItemUpdateMode updateMode) {
+        var sortedAttributes = getAttributeListToInsertOrUpdate(items, updateMode);
         sortedAttributes.sort(Comparator.comparing(AttributeDefDetailsDto::getName));
         return sortedAttributes;
     }
 
-    private String buildInsertSql(OClassDetailsDto oClass) {
+    /**
+     * Get the list of attributes to insert or update depending on the update mode<br>
+     * <ul>
+     * <li>in REPLACE mode : we must insert or update all attributes of the class</li>
+     * <li>in MERGE mode, we must insert or update only the attributes of the first item
+     * which must be the same for all items</li>
+     * </ul>
+     *
+     * @param items the items to insert or update
+     * @param updateMode the mode to use
+     * @return the list of attributes to insert or update
+     */
+    private List<AttributeDefDetailsDto> getAttributeListToInsertOrUpdate(List<Item> items, ItemUpdateMode updateMode) {
+        var firstItem = items.getFirst();
+        if (updateMode == ItemUpdateMode.REPLACE) {
+            return firstItem.getoClass().getAttributes();
+        } else {
+            // when merging, we must first ensure that all items have the sames attributes
+            // as only the first item is used to build the SQL UPDATE query
+            var firstItemAttributes = String.join(", ", items.stream().findFirst().get().getSortedAttributes());
+            if (items.stream().anyMatch(item -> !firstItemAttributes.equals(String.join(", ", item.getSortedAttributes())))) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST,
+                        "With postgis storage, using update mode MERGE, all items must have the same attributes.");
+            }
+
+            var oClass = firstItem.getoClass();
+            return oClass.getAttributes().stream()
+                    .filter(classAttr -> firstItem.getAttributes().containsKey(classAttr.getTechnicalName()))
+                    .collect(Collectors.toCollection(ArrayList::new));
+        }
+    }
+
+    private String buildInsertOrUpdateSql(List<Item> items, ItemUpdateMode updateMode) {
 
         //  build column lists => "station_id, totalSpace, freeSpace"
-        var columnList = getSortedAttributes(oClass).stream() //  Parameters are filled by position, we must ensure consistency in attributes order
+        var columnList = getSortedAttributes(items, updateMode).stream() //  Parameters are filled by position, we must ensure consistency in attributes order
                 .map(postgisSupport::getColumnName).toList();
         var joinedAttributes = String.join(", ", columnList);
 
         // Build parameters list => "?, ?, ?"
-        var attributesParameters = oClass.getAttributes().stream()
+        var attributesParameters = columnList.stream()
                 .map(attr -> "?")
                 .collect(Collectors.joining(", ")); // => " ?,?,?,?"
 
+        var oClass = items.getFirst().getoClass();
         return new StringBuilder("insert into ")
                 .append(postgisSupport.getTableName(oClass))
                 .append(" ( \n")

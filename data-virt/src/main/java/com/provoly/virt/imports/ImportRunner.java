@@ -12,6 +12,7 @@ import com.provoly.common.dataset.DatasetVersionDetailsDto;
 import com.provoly.common.dataset.DatasetVersionDto;
 import com.provoly.common.imports.*;
 import com.provoly.common.item.ItemDto;
+import com.provoly.common.item.ItemUpdateMode;
 import com.provoly.common.model.AttributeDefDetailsDto;
 import com.provoly.common.model.OClassDetailsDto;
 import com.provoly.virt.DataVirtProperties;
@@ -179,7 +180,7 @@ public class ImportRunner {
                     List.of(new ExtractedMessage(MessageLevel.ERROR, ExtractMessageCode.FORMAT))));
             return;
         }
-        List<InsertionError> errors = writeItemsService.addItemsDto(request.items());
+        List<InsertionError> errors = writeItemsService.addOrUpdateItemsDto(request.items(), ItemUpdateMode.REPLACE);
 
         if (!errors.isEmpty()) {
             log.infof("There are errors %s during import %s", errors.size(), request);
@@ -209,7 +210,7 @@ public class ImportRunner {
     }
 
     private Long saveChunk(List<ItemDto> items, Map<String, String> recordIdToItemId, UUID datasetVersionId) {
-        List<InsertionError> responses = writeItemsService.addItemsDto(items);
+        List<InsertionError> responses = writeItemsService.addOrUpdateItemsDto(items, ItemUpdateMode.REPLACE);
         return responses.stream()
                 .filter(response -> response.error() != null)
                 .map(storageError -> sendStorageError(recordIdToItemId, datasetVersionId, storageError))
