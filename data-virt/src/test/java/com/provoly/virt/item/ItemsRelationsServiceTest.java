@@ -3,19 +3,21 @@ package com.provoly.virt.item;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import jakarta.inject.Inject;
 
+import com.provoly.common.datasource.DataSourceType;
 import com.provoly.common.item.ItemsSearchResultDto;
 import com.provoly.common.model.AttributeDefDto;
 import com.provoly.common.model.field.FieldDto;
 import com.provoly.common.relation.RelationTypeDto;
-import com.provoly.test.AuthService;
-import com.provoly.test.ProvolyKafkaCompanionResource;
-import com.provoly.test.ProvolyTestContainers;
-import com.provoly.test.TestDataService;
+import com.provoly.common.search.MonoClassRequestDto;
+import com.provoly.common.search.SearchRequestDto;
+import com.provoly.test.*;
+import com.provoly.virt.datasource.DataSourceController;
 import com.provoly.virt.entity.ItemId;
 import com.provoly.virt.test.ItemsTestTools;
 
@@ -25,7 +27,10 @@ import io.quarkus.test.kafka.InjectKafkaCompanion;
 import io.restassured.RestAssured;
 import io.smallrye.reactive.messaging.kafka.companion.KafkaCompanion;
 
-import org.junit.jupiter.api.*;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 @QuarkusTest
 @QuarkusTestResource(ProvolyTestContainers.class)
@@ -43,6 +48,12 @@ public class ItemsRelationsServiceTest {
 
     @Inject
     ItemsController controller;
+
+    @RestClient
+    DataSourceServiceMock dsMock;
+
+    @Inject
+    DataSourceController dataSourceController;
 
     @InjectKafkaCompanion
     KafkaCompanion companion;
@@ -117,5 +128,39 @@ public class ItemsRelationsServiceTest {
         assertThat(result.items()).hasSize(2);
         assertThat(result.items().get(voitureClass.getId())).extracting("id").containsExactly(voiture1.getId());
         assertThat(result.items().get(usagerClass.getId())).extracting("id").containsExactly(usager1.getId());
+    }
+
+    @Test
+    void shouldLoadRelationsOfItemsWhenSearchingForItems() {
+        var voitureClass = testDataService.createClass(companion, "voiture", attribute);
+        var voitureDs = testDataService.createDataset("voiture", voitureClass.getId());
+        dsMock.addDataSource(voitureDs.getId(), DataSourceType.DATASET_VERSION, voitureClass.getId());
+
+        Map<String, Object> attributes = new HashMap<>();
+        attributes.put("name", "toto");
+        var voiture1 = itemsTestTools.addItem(voitureDs, attributes);
+        var voiture2 = itemsTestTools.addItem(voitureDs, attributes);
+        var voiture3 = itemsTestTools.addItem(voitureDs, attributes);
+        var voiture4 = itemsTestTools.addItem(voitureDs, attributes);
+
+        itemsTestTools.createRelation(relationType, voiture1, voiture2);
+        itemsTestTools.createRelation(relationType, voiture3, voiture4);
+
+        SearchRequestDto searchRequestDto = new MonoClassRequestDto(voitureClass.getId(), List.of(voitureDs.getId()));
+        var result = dataSourceController.getItemsSearch(voitureDs.getId(), null, null, searchRequestDto);
+
+        assertThat(result.relations())
+                .hasSize(2)
+                .extracting("source")
+                .containsExactlyInAnyOrder(voiture1.getId(), voiture3.getId());
+        assertThat(result.relations())
+                .hasSize(2)
+                .extracting("destination")
+                .containsExactlyInAnyOrder(voiture2.getId(), voiture4.getId());
+        assertThat(result.items()).hasSize(1);
+        assertThat(result.items().get(voitureClass.getId()))
+                .hasSize(4)
+                .extracting("id")
+                .containsExactlyInAnyOrder(voiture1.getId(), voiture2.getId(), voiture3.getId(), voiture4.getId());
     }
 }

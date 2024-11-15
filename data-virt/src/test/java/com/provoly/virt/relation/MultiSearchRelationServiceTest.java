@@ -27,7 +27,10 @@ import io.quarkus.test.kafka.InjectKafkaCompanion;
 import io.smallrye.reactive.messaging.kafka.companion.KafkaCompanion;
 
 import org.assertj.core.groups.Tuple;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 @QuarkusTest
 @QuarkusTestResource(ProvolyTestContainers.class)
@@ -85,6 +88,9 @@ public class MultiSearchRelationServiceTest {
         var voiture2 = itemsTestTools.addItem(voitureDs, attributes);
 
         itemsTestTools.createRelation(relationType, voiture1, caracteristique1);
+
+        // A relation between an item of result set and an item out of result set
+        // this relation must be returned as filter condition is not applied on relation
         itemsTestTools.createRelation(relationType, voiture2, caracteristique1);
 
         FieldConditionDto fieldCondition = new FieldConditionDto(field1.getId(), "42");
@@ -93,7 +99,9 @@ public class MultiSearchRelationServiceTest {
 
         assertThat(result.relations())
                 .extracting(RelationDto::getRelationType, RelationDto::getSource, RelationDto::getDestination)
-                .containsExactly(Tuple.tuple(relationType.slug, voiture1.getId(), caracteristique1.getId()));
+                .containsExactlyInAnyOrder(
+                        Tuple.tuple(relationType.slug, voiture1.getId(), caracteristique1.getId()),
+                        Tuple.tuple(relationType.slug, voiture2.getId(), caracteristique1.getId()));
     }
 
 }

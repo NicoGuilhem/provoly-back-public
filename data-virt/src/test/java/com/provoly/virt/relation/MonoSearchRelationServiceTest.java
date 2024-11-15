@@ -99,7 +99,10 @@ public class MonoSearchRelationServiceTest {
         var voiture3 = itemsTestTools.addItem(voitureDs, attributes);
 
         itemsTestTools.createRelation(relationType, voiture1, voiture2);
-        itemsTestTools.createRelation(relationType, voiture1, voiture3); // A relation between an item of result set and an item out of result set
+
+        // A relation between an item of result set and an item out of result set
+        // this relation must be returned as filter condition is not applied on relation
+        itemsTestTools.createRelation(relationType, voiture1, voiture3);
 
         var condition = new AttributeConditionDto(attribute.getId(), "in", Operator.EQUALS);
 
@@ -107,7 +110,9 @@ public class MonoSearchRelationServiceTest {
 
         assertThat(result.relations())
                 .extracting(RelationDto::getRelationType, RelationDto::getSource, RelationDto::getDestination)
-                .containsExactly(Tuple.tuple(relationType.slug, voiture1.getId(), voiture2.getId()));
+                .containsExactlyInAnyOrder(
+                        Tuple.tuple(relationType.slug, voiture1.getId(), voiture2.getId()),
+                        Tuple.tuple(relationType.slug, voiture1.getId(), voiture3.getId()));
         cleaning();
     }
 

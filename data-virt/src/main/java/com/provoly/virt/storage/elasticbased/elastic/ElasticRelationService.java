@@ -3,6 +3,7 @@ package com.provoly.virt.storage.elasticbased.elastic;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -32,9 +33,8 @@ import co.elastic.clients.elasticsearch.core.search.Hit;
 @StorageQualifier(Storage.ELASTIC)
 class ElasticRelationService implements StorageRelationService {
 
-    public static final int MAX_SIZE = 10000;
     private DataVirtProperties properties;
-    Logger log;
+    private Logger log;
 
     ElasticsearchClient elasticClient;
 
@@ -51,9 +51,9 @@ class ElasticRelationService implements StorageRelationService {
     }
 
     /**
-     * Methode permettant de charger les relations entre les items present dans ItemSearchResult.items
+     * Methode permettant de charger les relations entre les items presents dans {@code ItemSearchResult.items }
      *
-     * @param searchResult
+     * @param searchResult les items dont on veut charger les relations
      */
     public void loadRelations(ItemsSearchResult searchResult) {
         try {
@@ -61,23 +61,7 @@ class ElasticRelationService implements StorageRelationService {
             if (searchResult.isEmpty()) {
                 return; // No need to search for relation if no item in resultset
             }
-            var itemsId = searchResult.getItems().stream()
-                    .map(Item::getIdAsString)
-                    .map(FieldValue::of)
-                    .toList();
-            // spotless:off
-            var query = Query.of(q -> q
-                    .bool(b -> b
-                            .must(c1 -> c1
-                                    .terms(t -> t
-                                            .field("source")
-                                            .terms(t2 -> t2.value(itemsId))))
-                            .must(c1 -> c1
-                                    .terms(t -> t
-                                            .field("destination")
-                                            .terms(t2 -> t2.value(itemsId))))));
-            // spotless:on
-
+            var query = buildRelationQuery(searchResult.getItems());
             var response = executeRelationRequest(query, 100);
             for (var hit : response.hits().hits()) {
                 String type = extractStringFrom(hit, RelationAttributes.TYPE);
@@ -87,9 +71,35 @@ class ElasticRelationService implements StorageRelationService {
             }
 
         } catch (IOException e) {
-            throw new BusinessException(ErrorCode.TECHNICAL, "Unable to search", e);
+            throw new BusinessException(ErrorCode.TECHNICAL, "Unable to search relations of searchResult", e);
         }
 
+    }
+
+    /**
+     * Builds the query to search for relations of a list of items.<br>
+     * A relation is retrieved if the item is the source or the destination of the relation.
+     * 
+     * @param items the list of items to search for relations
+     * @return the query to search for relations
+     */
+    private Query buildRelationQuery(List<Item> items) {
+
+        var itemsId = items.stream()
+                .map(Item::getIdAsString)
+                .map(FieldValue::of)
+                .toList();
+
+        return Query.of(q -> q
+                .bool(b -> b
+                        .should(c1 -> c1
+                                .terms(t -> t
+                                        .field(RelationAttributes.SOURCE)
+                                        .terms(t2 -> t2.value(itemsId))))
+                        .should(c1 -> c1
+                                .terms(t -> t
+                                        .field(RelationAttributes.DESTINATION)
+                                        .terms(t2 -> t2.value(itemsId))))));
     }
 
     /**
@@ -101,22 +111,11 @@ class ElasticRelationService implements StorageRelationService {
      */
     public ItemsSearchResult getRelationsByItem(Item item) {
         try {
-            // spotless:off
-            var query = Query.of(q -> q
-                    .bool(b -> b
-                            .should(c1 -> c1
-                                    .term(t -> t
-                                            .field("source")
-                                            .value(item.getIdAsString())))
-                            .should(c1 -> c1
-                                    .term(t -> t
-                                            .field("destination")
-                                            .value(item.getIdAsString())))));
-            // spotless:on
+            var query = buildRelationQuery(List.of(item));
             var response = executeRelationRequest(query, 100);
             return buildSearchResult(item, response);
         } catch (IOException e) {
-            throw new BusinessException(ErrorCode.TECHNICAL, "Unable to search", e);
+            throw new BusinessException(ErrorCode.TECHNICAL, "Unable to search relations of item", e);
         }
     }
 
@@ -135,10 +134,10 @@ class ElasticRelationService implements StorageRelationService {
                                     aggregatesIds))));
             // spotless:on
 
-            var response = executeRelationRequest(query, MAX_SIZE);
+            var response = executeRelationRequest(query, properties.maxSizeLimit());
             return buildRelationsFrom(response);
         } catch (IOException e) {
-            throw new BusinessException(ErrorCode.TECHNICAL, "Unable to search", e);
+            throw new BusinessException(ErrorCode.TECHNICAL, "Unable to search relations by aggregates", e);
         }
     }
 
