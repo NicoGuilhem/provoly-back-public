@@ -115,6 +115,7 @@ public class MonoClassSearchService {
         log.infof("Init search on class %s", classId);
 
         var classDto = modelService.getDetails(classId);
+        checkStorageFeatureImplementation(classDto, request);
         checkNotMixedAttributeClass(classDto, request);
         checkRequestedAttributes(classDto, request);
         MonoClassContextRequest monoClassContextRequest = initMonoClassContextRequest(request, classDto);
@@ -135,7 +136,8 @@ public class MonoClassSearchService {
                     monoClassContextRequest);
 
             if (classDto.getStorage() == Storage.ELASTIC) {
-                relationService.loadRelations(result);
+                relationService.loadRelations(result, request.getLimit(), request.isWithSourceItems(),
+                        request.isWithDestinationItems());
             }
 
             result.getItems().forEach(item -> updateVisibility(item, monoClassContextRequest.securityMetaCondition()));
@@ -153,6 +155,12 @@ public class MonoClassSearchService {
         }
 
         return result;
+    }
+
+    public void checkStorageFeatureImplementation(OClassDetailsDto classDto, SearchRequestDto request) {
+        if (classDto.getStorage() != Storage.ELASTIC && request.isWithRelationItems()) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "Enable to retrieve relation items on non elastic storage");
+        }
     }
 
     private void checkRequestedAttributes(OClassDetailsDto classDto, MonoClassRequestDto request) {

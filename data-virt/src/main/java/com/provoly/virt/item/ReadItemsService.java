@@ -1,7 +1,7 @@
 package com.provoly.virt.item;
 
-import java.util.Collections;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -13,6 +13,7 @@ import com.provoly.common.metadata.MetadataSystem;
 import com.provoly.common.search.MetadataConditionDto;
 import com.provoly.common.search.MonoClassRequestDto;
 import com.provoly.common.search.Operator;
+import com.provoly.common.search.OrConditionDto;
 import com.provoly.virt.entity.Item;
 import com.provoly.virt.entity.ItemId;
 import com.provoly.virt.entity.ItemsSearchResult;
@@ -36,6 +37,28 @@ public class ReadItemsService {
 
     public Item get(ItemId id) {
         return getOptional(id).orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Item " + id + " not found"));
+    }
+
+    public List<Item> getList(List<ItemId> listOfIds) {
+        Map<UUID, List<ItemId>> itemIdsByDatasetVersionId = listOfIds.stream()
+                .collect(Collectors.groupingBy(ItemId::getDatasetVersionId));
+
+        List<Item> itemListFound = new ArrayList<>();
+        for (Map.Entry<UUID, List<ItemId>> entry : itemIdsByDatasetVersionId.entrySet()) {
+            var dataset = datasetVersionService.get(entry.getKey());
+            var listOfIdsCondition = entry.getValue().stream()
+                    .map(id -> new MetadataConditionDto(MetadataSystem.ID, id.getAsString(), Operator.EQUALS))
+                    .toList();
+            OrConditionDto orCondition = new OrConditionDto();
+            orCondition.composed.addAll(listOfIdsCondition);
+            var request = new MonoClassRequestDto(dataset.getoClass(),
+                    Collections.singletonList(dataset.getId()),
+                    orCondition,
+                    entry.getValue().size());
+            ItemsSearchResult result = searchService.search(request);
+            itemListFound.addAll(result.getItems());
+        }
+        return itemListFound;
     }
 
     public Optional<Item> getOptional(ItemId id) {

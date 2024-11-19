@@ -17,6 +17,7 @@ import com.provoly.test.ProvolyKafkaCompanionResource;
 import com.provoly.test.ProvolyTestContainers;
 import com.provoly.test.TestDataService;
 import com.provoly.virt.test.ItemsTestTools;
+import com.provoly.virt.test.SearchResultAssert;
 
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
@@ -73,11 +74,16 @@ public class MonoSearchRelationServiceTest {
 
         itemsTestTools.createRelation(relationType, voiture1, voiture2);
 
-        var result = itemsTestTools.searchAll(voitureClass.getId(), voitureDs);
+        //TODO add test case that verify that without requesting relations, they are not returned
+        var result = itemsTestTools.searchAllWithRelationsItems(voitureClass.getId(), voitureDs, null);
 
         assertThat(result.relations())
                 .extracting(RelationDto::getRelationType, RelationDto::getSource, RelationDto::getDestination)
                 .containsExactly(Tuple.tuple(relationType.slug, voiture1.getId(), voiture2.getId()));
+
+        SearchResultAssert.assertThat(result)
+                .haveSourceItemsForClass(voitureClass.getId(), voiture1)
+                .haveDestinationItemsForClass(voitureClass.getId(), voiture2);
     }
 
     @Test

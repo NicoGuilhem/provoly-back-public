@@ -7,5 +7,5 @@ public interface StorageRelationService {
 
     ItemsSearchResult getRelationsByItem(Item item);
 
-    void loadRelations(ItemsSearchResult searchResult);
+    void loadRelations(ItemsSearchResult searchResult, int maxSize, boolean withSourceItems, boolean withDestinationItems);
 }

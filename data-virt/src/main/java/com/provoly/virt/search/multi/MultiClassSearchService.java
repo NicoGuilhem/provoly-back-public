@@ -44,6 +44,8 @@ public class MultiClassSearchService {
         for (OClassDetailsDto oClass : loadOClasses(request.getoClasses())) {
             log.debugf("Build mono class search for class %s/%s", oClass.getName(), oClass.getId());
 
+            monoClassSearchService.checkStorageFeatureImplementation(oClass, request);
+
             ComposedConditionDto searchMonoCondition;
             switch (request.getMultiType()) {
                 case AND -> {
@@ -105,7 +107,8 @@ public class MultiClassSearchService {
             }
         }
         log.infof("Global result size : %s", resultAllClass.size());
-        relationService.loadRelations(resultAllClass);
+        relationService.loadRelations(resultAllClass, request.getLimit(), request.isWithSourceItems(),
+                request.isWithDestinationItems());
 
         resultAllClass.setCount(totalRemainingItem);
         return resultAllClass;

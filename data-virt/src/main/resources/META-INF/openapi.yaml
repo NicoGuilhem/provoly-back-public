@@ -106,6 +106,8 @@ paths:
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/sortString'
         - $ref: '#/components/parameters/excludeGeo'
+        - $ref: '#/components/parameters/withSourceItems'
+        - $ref: '#/components/parameters/withDestinationItems'
       responses:
         "200":
           description: OK
@@ -569,114 +571,6 @@ paths:
                     application: data-virt
                     code: BAD_REQUEST
                     message: Aggregate by is not available for types STRING, RAW, or GEO type
-      security:
-        - oidc:
-            - search
-            - datasource_read
-  /data-sources/id/{dataSourceId}/items/paginate:
-    get:
-      summary: Get all items from dataset, dataset version or named query
-      description: |
-        This endpoint is not restricted by the limit of max item number in a result.
-        It returns all items from a datasource using server sent event. An order is necessary.
-      tags:
-        - Data Source
-      operationId: com.provoly.virt.datasource.DataSourceController_getPaginateItems
-      parameters:
-        - name: dataSourceId
-          in: path
-          required: true
-          schema:
-            $ref: '#/components/schemas/UUID'
-        - $ref: '#/components/parameters/filterDto'
-        - $ref: '#/components/parameters/sortString'
-        - $ref: '#/components/parameters/excludeGeo'
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ItemsSearchResultDto'
-              examples:
-                itemSearchResult:
-                  summary: Item search result
-                  value:
-                    - items:
-                        oclass_id_1:
-                          - oClass: "914fd928-3b18-4e2c-a545-45db993a34a2"
-                            id: dataset_version_id_1@item_id_1
-                            metadata:
-                              _insertion_date: "2023-06-27T07:14:00.228606022"
-                              datasetdef_id: "914fd928-3b18-4e2c-a545-45db993a34a3"
-                              _dataset_id: "914fd928-3b18-4e2c-a545-45db993a35a3"
-                              _item_id: dataset_version_id_1@item_id_1
-                              _class: "914fd928-3b18-4e2c-a545-45db993a34a7"
-                            attributes:
-                              Classification:
-                                value: "Conifères"
-                                type: VALUE
-                                metadata: { }
-                                visible: true
-                              Pourcentage surface:
-                                value: "6.82"
-                                type: VALUE
-                                metadata: { }
-                                visible: true
-                              Année:
-                                value: "2020"
-                                type: VALUE
-                                metadata: { }
-                                visible: true
-                            itemId: item_id_1
-                          - oClass: "4c3d3ebc-0b37-404b-b12b-b107c76d7a6d"
-                            id: dataset_version_id_1@item_id_1
-                            metadata:
-                              _insertion_date: '2023-06-27T07:14:00.228606022'
-                              datasetdef_id: "79c1ab48-e13c-40fa-bb62-981cf6bc7943"
-                              _dataset_id: "79c1ab48-e13c-40fa-bb62-981cf6bc7948"
-                              _item_id: dataset_version_id_1@item_id_1
-                              _class: oclass_id_1
-                            attributes:
-                              Classification:
-                                value: "Conifères"
-                                type: VALUE
-                                metadata: { }
-                                visible: true
-                              Pourcentage surface:
-                                value: "6.66"
-                                type: VALUE
-                                metadata: { }
-                                visible: true
-                              Année:
-                                value: "2021"
-                                type: VALUE
-                                metadata: { }
-                                visible: true
-                            itemId: item_id_1
-                      relations: [ ]
-                      count:
-                        oclass_id_1:
-                          count: 115
-                          accurate: true
-                      searchAfter: null
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              examples:
-                noSort:
-                  summary: Search all without sorting
-                  value:
-                    application: data-virt
-                    code: BAD_REQUEST
-                    message: It's not possible to search all items without sorting
-        "401":
-          description: Not Authorized
-        "404":
-          $ref: '#/components/responses/notFoundException'
       security:
         - oidc:
             - search
@@ -1461,17 +1355,14 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                excludeGeo:
-                  $ref: '#/components/schemas/ExcludeGeo'
-                type:
-                  $ref: '#/components/schemas/SearchRequestType'
-                fullSearch:
-                  $ref: '#/components/schemas/FullSearchConditionDto'
               oneOf:
                 - $ref: '#/components/schemas/MonoClassRequestDto'
                 - $ref: '#/components/schemas/MultiClassRequestDto'
+              discriminator:
+                propertyName: type
+                mapping:
+                  MONO_CLASS: '#/components/schemas/MonoClassRequestDto'
+                  MULTI_CLASS: '#/components/schemas/MultiClassRequestDto'
             examples:
               monoWithoutCondition:
                 summary: Mono request without condition
@@ -2031,6 +1922,16 @@ components:
       name: excludeGeo
       schema:
         $ref: '#/components/schemas/ExcludeGeo'
+    withSourceItems:
+      in: query
+      name: withSourceItems
+      schema:
+        $ref: '#/components/schemas/WithSourceItems'
+    withDestinationItems:
+      in: query
+      name: withDestinationItems
+      schema:
+        $ref: '#/components/schemas/WithDestinationItems'
     filterDto:
       in: query
       name: filter
@@ -2053,6 +1954,14 @@ components:
       default: 200
       maximum: 1000
       example: 10
+    WithSourceItems:
+      description: Parameter to include source items from relations in search result.
+      type: boolean
+      default: false
+    WithDestinationItems:
+      description: Parameter to include destination items from relations in search result.
+      type: boolean
+      default: false
     Error:
       type: object
       properties:
@@ -2525,14 +2434,42 @@ components:
         searchAfter:
           type: string
           nullable: true
-    MonoClassRequestDto:
+        geoFormat:
+          $ref: '#/components/schemas/GeoFormat'
+        sourceItems:
+          type: object
+          description: Source items from relations grouped by class id
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/ItemDto'
+        destinationItems:
+          type: object
+          description: Destination items from relations grouped by class id
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/ItemDto'
+    SearchRequestDto:
       type: object
       properties:
         type:
           $ref: '#/components/schemas/SearchRequestType'
-          default: MONO_CLASS
         fullSearch:
           $ref: '#/components/schemas/FullSearchConditionDto'
+        limit:
+          $ref: '#/components/schemas/Limit'
+        excludeGeo:
+          $ref: '#/components/schemas/ExcludeGeo'
+        withSourceItems:
+          $ref: '#/components/schemas/WithSourceItems'
+        withDestinationItems:
+          $ref: '#/components/schemas/WithDestinationItems'
+    MonoClassRequestDto:
+      allOf:
+        - $ref: '#/components/schemas/SearchRequestDto'
+      type: object
+      properties:
         oClass:
           $ref: '#/components/schemas/UUID'
         datasetVersionIds:
@@ -2546,15 +2483,11 @@ components:
         searchAfter:
           type: string
           nullable: true
-        excludeGeo:
-          $ref: '#/components/schemas/ExcludeGeo'
     MultiClassRequestDto:
+      allOf:
+        - $ref: '#/components/schemas/SearchRequestDto'
       type: object
       properties:
-        type:
-          $ref: '#/components/schemas/SearchRequestType'
-        fullSearch:
-          $ref: '#/components/schemas/FullSearchConditionDto'
         multiType:
           $ref: '#/components/schemas/MultiSearchType'
         oClasses:
@@ -2565,8 +2498,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FieldConditionDto'
-        excludeGeo:
-          $ref: '#/components/schemas/ExcludeGeo'
     MultiSearchType:
       enum:
         - OR
@@ -2653,6 +2584,11 @@ components:
         - REPLACE
         - MERGE
       type: string
+    GeoFormat:
+      enum:
+        - GEO_JSON
+        - WKT
+        - WKB
   securitySchemes:
     oidc:
       type: oauth2

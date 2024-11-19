@@ -74,6 +74,13 @@ public class ItemsTestTools {
         return searchController.search(request, sort);
     }
 
+    public ItemsSearchResultDto searchAllWithRelationsItems(UUID oClass, DatasetVersionDto dataset, SortDto sort) {
+        var request = new MonoClassRequestDto(oClass, Collections.singleton(dataset.getId()));
+        request.setWithSourceItems(true);
+        request.setWithDestinationItems(true);
+        return searchController.search(request, sort);
+    }
+
     public ItemsSearchResultDto searchMulti(MultiClassRequestDto condition) {
         return searchController.search(condition, null);
     }

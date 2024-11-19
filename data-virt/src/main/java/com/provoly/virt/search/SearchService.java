@@ -72,7 +72,6 @@ public class SearchService {
             }
             case MultiClassRequestDto multiRequest ->
                 multiClassSearchService.search(multiRequest);
-            default -> throw new BusinessException(ErrorCode.TECHNICAL, "Unknown request type " + request.getType());
         };
     }
 

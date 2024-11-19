@@ -121,14 +121,16 @@ public class DataSourceItemServiceTest {
         var request = new MonoClassRequestDto(vehicleClass.getId(), Collections.singleton(datasetVersionDto.getId()));
         var namedQuery = testData.createNamedQuery(namedQueryName, request);
         dsMock.addDataSource(namedQuery.getId(), DataSourceType.SEARCH, vehicleClass.getId());
-        assertThat(datasourceItemsService.getItems(namedQuery.getId(), null, null, 0, false, null).size()).isEqualTo(2);
+        assertThat(datasourceItemsService.getItems(namedQuery.getId(), null, null, 0, false, null, false, false).size())
+                .isEqualTo(2);
     }
 
     @Test
     @Order(2)
     public void getItems_withDatasourceDefinitionShouldReturnItems() {
         dsMock.addDataSource(datasetVersionDto.getDataset(), DataSourceType.DATASET, vehicleClass.getId());
-        assertThat(datasourceItemsService.getItems(datasetVersionDto.getDataset(), null, null, 0, false, null).size())
+        assertThat(datasourceItemsService.getItems(datasetVersionDto.getDataset(), null, null, 0, false, null, false, false)
+                .size())
                 .isEqualTo(2);
     }
 
@@ -138,7 +140,7 @@ public class DataSourceItemServiceTest {
         dsMock.addDataSource(datasetVersionDto.getDataset(), DataSourceType.DATASET, vehicleClass.getId());
 
         var sort = new SortDto(attributeIdVehicle.getId(), Direction.asc);
-        var result = datasourceItemsService.getItems(datasetVersionDto.getDataset(), sort, null, 0, false, null);
+        var result = datasourceItemsService.getItems(datasetVersionDto.getDataset(), sort, null, 0, false, null, false, false);
 
         assertThat(result.size()).isEqualTo(2);
         assertThat(result.getItems().get(0).getId().getAsString()).isEqualTo(vehicleOne.getId());
@@ -151,7 +153,7 @@ public class DataSourceItemServiceTest {
         dsMock.addDataSource(datasetVersionDto.getDataset(), DataSourceType.DATASET, vehicleClass.getId());
 
         var sort = new SortDto(attributeIdVehicle.getId(), Direction.desc);
-        var result = datasourceItemsService.getItems(datasetVersionDto.getDataset(), sort, null, 0, false, null);
+        var result = datasourceItemsService.getItems(datasetVersionDto.getDataset(), sort, null, 0, false, null, false, false);
 
         assertThat(result.size()).isEqualTo(2);
         assertThat(result.getItems().get(0).getId().getAsString()).isEqualTo(vehicleTwo.getId());
@@ -164,7 +166,7 @@ public class DataSourceItemServiceTest {
         dsMock.addDataSource(datasetVersionDto.getDataset(), DataSourceType.DATASET, vehicleClass.getId());
 
         var result = datasourceItemsService.getItems(datasetVersionDto.getDataset(), null,
-                List.of(new FilterDto(attributeIdVehicle.getId(), Operator.EQUALS, "AAA")), 0, false, null);
+                List.of(new FilterDto(attributeIdVehicle.getId(), Operator.EQUALS, "AAA")), 0, false, null, false, false);
 
         assertThat(result.size()).isEqualTo(1);
         assertThat(result.getItems().getFirst().getId().getAsString()).isEqualTo(vehicleTwo.getId());
@@ -178,7 +180,8 @@ public class DataSourceItemServiceTest {
                 new AttributeConditionDto(attributeIdVehicle.getId(), "AAA", Operator.EQUALS));
         var namedQuery = testData.createNamedQuery(namedQueryName, request);
         dsMock.addDataSource(namedQuery.getId(), DataSourceType.SEARCH, vehicleClass.getId());
-        assertThat(datasourceItemsService.getItems(namedQuery.getId(), null, List.of(), 0, false, null).size()).isEqualTo(1);
+        assertThat(datasourceItemsService.getItems(namedQuery.getId(), null, List.of(), 0, false, null, false, false).size())
+                .isEqualTo(1);
     }
 
     @Test
@@ -186,7 +189,7 @@ public class DataSourceItemServiceTest {
     public void getItems_withDatasourceDefinition_AndFilters_ShouldReturnEmpty() {
         dsMock.addDataSource(datasetVersionDto.getDataset(), DataSourceType.DATASET, vehicleClass.getId());
         var result = datasourceItemsService.getItems(datasetVersionDto.getDataset(), null,
-                List.of(new FilterDto(attributeIdVehicle.getId(), Operator.EQUALS, "BBB")), 0, false, null);
+                List.of(new FilterDto(attributeIdVehicle.getId(), Operator.EQUALS, "BBB")), 0, false, null, false, false);
         assertThat(result.size()).isZero();
     }
 
@@ -195,7 +198,7 @@ public class DataSourceItemServiceTest {
     public void getItems_withDatasourceDefinition_AndSortWithTypeNull_ShouldNotThrowError() {
         dsMock.addDataSource(datasetVersionDto.getDataset(), DataSourceType.DATASET, vehicleClass.getId());
         var result = datasourceItemsService.getItems(datasetVersionDto.getDataset(),
-                new SortDto(attributeIdVehicle.getId(), Direction.asc, null), List.of(), 0, false, null);
+                new SortDto(attributeIdVehicle.getId(), Direction.asc, null), List.of(), 0, false, null, false, false);
         assertThat(result.size()).isEqualTo(count.get());
     }
 
@@ -206,7 +209,8 @@ public class DataSourceItemServiceTest {
         List<FilterDto> filterDtos = List.of(new FilterDto(UUID.randomUUID(), Operator.EQUALS, "BBB"));
 
         assertThatThrownBy(
-                () -> datasourceItemsService.getItems(datasetVersionDto.getDataset(), null, filterDtos, 0, false, null))
+                () -> datasourceItemsService.getItems(datasetVersionDto.getDataset(), null, filterDtos, 0, false, null, false,
+                        false))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("doesn't belong to oClass");
     }
@@ -221,7 +225,7 @@ public class DataSourceItemServiceTest {
         List<FilterDto> filterDtos = List.of(new FilterDto(attributeIdVehicle.getId(), Operator.EQUALS, "AAA"));
 
         assertThatThrownBy(() -> datasourceItemsService.getItems(namedQuery.getId(),
-                null, filterDtos, 0, false, null))
+                null, filterDtos, 0, false, null, false, false))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("Filtering on multi class request is not available");
     }
@@ -235,7 +239,8 @@ public class DataSourceItemServiceTest {
         var namedQuery = testData.createNamedQuery(namedQueryName, request);
         dsMock.addDataSource(namedQuery.getId(), DataSourceType.SEARCH, vehicleClass.getId());
 
-        assertThat(datasourceItemsService.getItems(namedQuery.getId(), null, null, 0, false, null).size()).isEqualTo(1);
+        assertThat(datasourceItemsService.getItems(namedQuery.getId(), null, null, 0, false, null, false, false).size())
+                .isEqualTo(1);
     }
 
     @Test
@@ -267,7 +272,8 @@ public class DataSourceItemServiceTest {
         dsMock.addDataSource(datasetVersionDto.getDataset(), DataSourceType.DATASET, vehicleClass.getId());
         var sort = new SortDto(MetadataSystem.ID.getId(), Direction.asc, SortType.METADATA);
 
-        ItemsSearchResult result = datasourceItemsService.getItems(datasetVersionDto.getDataset(), sort, null, 0, false, null);
+        ItemsSearchResult result = datasourceItemsService.getItems(datasetVersionDto.getDataset(), sort, null, 0, false, null,
+                false, false);
 
         Map<UUID, CountDto> count = new HashMap<>();
         count.put(datasetVersionDto.getDataset(), new CountDto(2, true));
@@ -301,7 +307,8 @@ public class DataSourceItemServiceTest {
         dsMock.addDataSource(datasetVersionDto.getDataset(), DataSourceType.DATASET, vehicleClass.getId());
         var sort = new SortDto(MetadataSystem.ID.getId(), Direction.asc, SortType.METADATA);
 
-        ItemsSearchResult result = datasourceItemsService.getItems(datasetVersionDto.getDataset(), sort, null, 0, false, null);
+        ItemsSearchResult result = datasourceItemsService.getItems(datasetVersionDto.getDataset(), sort, null, 0, false, null,
+                false, false);
         assertThat(result.getItems()).isEmpty();
         testData.clean();
     }

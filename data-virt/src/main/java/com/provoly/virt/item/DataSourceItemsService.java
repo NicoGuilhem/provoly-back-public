@@ -76,7 +76,7 @@ public class DataSourceItemsService {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "Sort is not available when a groupBy has been set");
         }
         DataSourceDetailsDto datasource = dataSourceService.getDataSourceDetails(datasourceId);
-        var request = getSearchRequest(datasource, excludeGeo, limit, null);
+        var request = getSearchRequest(datasource, excludeGeo, limit, null, false, false);
 
         if (request instanceof MultiClassRequestDto) {
             throw new BusinessException(ErrorCode.BAD_REQUEST,
@@ -87,22 +87,23 @@ public class DataSourceItemsService {
     }
 
     public ItemsSearchResult getItems(UUID dataSourceId, SortDto sort, List<FilterDto> filters, SearchRequestDto requestDto) {
-        switch (requestDto.getType()) {
-            case MONO_CLASS -> {
-                MonoClassRequestDto monoClassRequestDto = (MonoClassRequestDto) requestDto;
-                return getItems(dataSourceId, sort, filters, requestDto.getLimit(), requestDto.isExcludeGeo(),
-                        monoClassRequestDto.getCondition());
-            }
-            default -> {
-                return getItems(dataSourceId, sort, filters, requestDto.getLimit(), requestDto.isExcludeGeo(), null);
-            }
-        }
+        return switch (requestDto) {
+            case MonoClassRequestDto monoClassRequestDto ->
+                getItems(dataSourceId, sort, filters, requestDto.getLimit(), requestDto.isExcludeGeo(),
+                        monoClassRequestDto.getCondition(), requestDto.isWithSourceItems(),
+                        requestDto.isWithDestinationItems());
+            case MultiClassRequestDto multiClassRequestDto ->
+                getItems(dataSourceId, sort, filters, requestDto.getLimit(), requestDto.isExcludeGeo(), null,
+                        requestDto.isWithSourceItems(), requestDto.isWithDestinationItems());
+        };
     }
 
+    //TODO change this method to turn it private or prevent from being called with a previous SearchRequest then building a new one
     public ItemsSearchResult getItems(UUID dataSourceId, SortDto sort, List<FilterDto> filters, int limit, boolean excludeGeo,
-            ConditionDto conditionDto) {
+            ConditionDto conditionDto, boolean withSourceItems, boolean withDestinationItems) {
         DataSourceDetailsDto datasource = dataSourceService.getDataSourceDetails(dataSourceId);
-        SearchRequestDto request = getSearchRequest(datasource, excludeGeo, limit, conditionDto);
+        SearchRequestDto request = getSearchRequest(datasource, excludeGeo, limit, conditionDto, withSourceItems,
+                withDestinationItems);
 
         updateRequestWithFilters(request, filters);
         ItemsSearchResult result = searchService.search(request, sort);
@@ -127,21 +128,23 @@ public class DataSourceItemsService {
     }
 
     private SearchRequestDto getSearchRequest(DataSourceDetailsDto datasource, boolean excludeGeo, int limit,
-            ConditionDto conditionDto) {
+            ConditionDto conditionDto, boolean withSourceItems, boolean withDestinationItems) {
         if (limit == 0) {
             limit = dataVirtProperties.searchLimit();
         }
-        return switch (datasource.type()) {
-            case SEARCH -> {
-                SearchRequestDto request = provolyUserService.getNamedQueryById(datasource.id()).getRequest();
-                request.setExcludeGeo(excludeGeo);
-                request.setLimit(limit);
-                yield request;
-            }
+        SearchRequestDto request = switch (datasource.type()) {
+            case SEARCH -> provolyUserService.getNamedQueryById(datasource.id()).getRequest();
             case DATASET_VERSION ->
                 new MonoClassRequestDto(datasource.oClass(), List.of(datasource.id()), excludeGeo, limit, conditionDto);
             case DATASET -> buildMonoClassRequestWithDataset(datasource, excludeGeo, limit, conditionDto);
         };
+
+        request.setExcludeGeo(excludeGeo);
+        request.setLimit(limit);
+        request.setWithSourceItems(withSourceItems);
+        request.setWithDestinationItems(withDestinationItems);
+
+        return request;
     }
 
     private MonoClassRequestDto buildMonoClassRequestWithDataset(DataSourceDetailsDto datasource, boolean excludeGeo,

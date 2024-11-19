@@ -120,6 +120,8 @@ public class DataSourceControllerTest {
                 new SortDto(dataStorage.attributeChoc.getId(), Direction.asc),
                 null,
                 1,
+                false,
+                false,
                 false);
         assertThat(result.items()).hasSize(1);
     }
@@ -133,6 +135,8 @@ public class DataSourceControllerTest {
                 new SortDto(dataStorage.attributeChoc.getId(), Direction.asc),
                 null,
                 10000,
+                false,
+                false,
                 false)).isInstanceOf(BusinessException.class)
                 .hasMessage("Limit can't be negative or exceed 1000.");
     }
@@ -459,7 +463,9 @@ public class DataSourceControllerTest {
         dsMock.addDataSource(dataStorage.datasetVersionDto.getId(), DataSourceType.DATASET,
                 dataStorage.datasetVersionDto.getoClass());
 
-        var result = dataSourceController.getItems(dataStorage.datasetVersionDto.getId(), null, null, 0, false);
+        var result = dataSourceController.getItems(dataStorage.datasetVersionDto.getId(), null, null, 0, false,
+                false,
+                false);
 
         assertThat(result.items()).isEmpty();
     }

@@ -16,54 +16,57 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
         @JsonSubTypes.Type(value = MonoClassRequestDto.class, name = "MONO_CLASS"),
         @JsonSubTypes.Type(value = MultiClassRequestDto.class, name = "MULTI_CLASS"),
 })
-public abstract class SearchRequestDto {
+public abstract sealed class SearchRequestDto permits MonoClassRequestDto, MultiClassRequestDto {
     private final UUID id;
     private final SearchRequestType type;
     private final FullSearchConditionDto fullSearch;
     private boolean excludeGeo;
     private int limit;
+    private boolean withSourceItems;
+    private boolean withDestinationItems;
 
     private boolean withCount;
     private List<UUID> requestedAttributes;
     private GeoFormat geoFormat;
 
     protected SearchRequestDto(SearchRequestType type, boolean excludeGeo) {
-        this(null, type, new ArrayList<>(), null, excludeGeo, 0, true, GeoFormat.GEO_JSON);
+        this(null, type, new ArrayList<>(), null, excludeGeo, 0, true, GeoFormat.GEO_JSON, false, false);
     }
 
     protected SearchRequestDto(SearchRequestType type) {
-        this(null, type, new ArrayList<>(), null, false, 0, true, GeoFormat.GEO_JSON);
+        this(null, type, new ArrayList<>(), null, false, 0, true, GeoFormat.GEO_JSON, false, false);
     }
 
     @Default
     @JsonCreator
     protected SearchRequestDto(SearchRequestType type, boolean excludeGeo, boolean withCount, GeoFormat geoFormat) {
-        this(null, type, new ArrayList<>(), null, excludeGeo, 0, withCount, geoFormat);
+        this(null, type, new ArrayList<>(), null, excludeGeo, 0, withCount, geoFormat, false, false);
     }
 
     protected SearchRequestDto(SearchRequestType type, boolean excludeGeo, int limit) {
-        this(null, type, new ArrayList<>(), null, excludeGeo, limit, true, GeoFormat.GEO_JSON);
+        this(null, type, new ArrayList<>(), null, excludeGeo, limit, true, GeoFormat.GEO_JSON, false, false);
     }
 
     protected SearchRequestDto(SearchRequestType type, boolean excludeGeo, List<UUID> requestedAttributes,
             boolean withCount) {
-        this(null, type, requestedAttributes, null, excludeGeo, 0, withCount, GeoFormat.GEO_JSON);
+        this(null, type, requestedAttributes, null, excludeGeo, 0, withCount, GeoFormat.GEO_JSON, false, false);
     }
 
     protected SearchRequestDto(SearchRequestType type, FullSearchConditionDto fullSearch) {
-        this(null, type, new ArrayList<>(), fullSearch, false, 0, true, GeoFormat.GEO_JSON);
+        this(null, type, new ArrayList<>(), fullSearch, false, 0, true, GeoFormat.GEO_JSON, false, false);
     }
 
     protected SearchRequestDto(SearchRequestType type, FullSearchConditionDto fullSearch, int limit) {
-        this(null, type, new ArrayList<>(), fullSearch, false, limit, true, GeoFormat.GEO_JSON);
+        this(null, type, new ArrayList<>(), fullSearch, false, limit, true, GeoFormat.GEO_JSON, false, false);
     }
 
     protected SearchRequestDto(FullSearchConditionDto fullSearch) {
-        this(null, null, new ArrayList<>(), fullSearch, false, 0, true, GeoFormat.GEO_JSON);
+        this(null, null, new ArrayList<>(), fullSearch, false, 0, true, GeoFormat.GEO_JSON, false, false);
     }
 
     protected SearchRequestDto(UUID id, SearchRequestType type, List<UUID> requestedAttributes,
-            FullSearchConditionDto fullSearch, boolean excludeGeo, int limit, boolean withCount, GeoFormat geoFormat) {
+            FullSearchConditionDto fullSearch, boolean excludeGeo, int limit, boolean withCount, GeoFormat geoFormat,
+            boolean withSourceItems, boolean withDestinationItems) {
         this.id = id;
         this.type = type;
         this.fullSearch = fullSearch;
@@ -72,10 +75,12 @@ public abstract class SearchRequestDto {
         this.requestedAttributes = requestedAttributes;
         this.geoFormat = geoFormat;
         this.limit = limit;
+        this.withSourceItems = withSourceItems;
+        this.withDestinationItems = withDestinationItems;
     }
 
     protected SearchRequestDto(SearchRequestType type, boolean excludeGeo, int limit, boolean withCount) {
-        this(null, type, new ArrayList<>(), null, excludeGeo, limit, withCount, GeoFormat.GEO_JSON);
+        this(null, type, new ArrayList<>(), null, excludeGeo, limit, withCount, GeoFormat.GEO_JSON, false, false);
     }
 
     public SearchRequestType getType() {
@@ -116,5 +121,25 @@ public abstract class SearchRequestDto {
 
     public boolean isWithCount() {
         return withCount;
+    }
+
+    public void setWithSourceItems(boolean withSourceItems) {
+        this.withSourceItems = withSourceItems;
+    }
+
+    public boolean isWithSourceItems() {
+        return withSourceItems;
+    }
+
+    public void setWithDestinationItems(boolean withDestinationItems) {
+        this.withDestinationItems = withDestinationItems;
+    }
+
+    public boolean isWithDestinationItems() {
+        return withDestinationItems;
+    }
+
+    public boolean isWithRelationItems() {
+        return withSourceItems || withDestinationItems;
     }
 }

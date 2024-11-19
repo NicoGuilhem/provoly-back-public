@@ -54,15 +54,19 @@ class ElasticRelationService implements StorageRelationService {
      * Methode permettant de charger les relations entre les items presents dans {@code ItemSearchResult.items }
      *
      * @param searchResult les items dont on veut charger les relations
+     * @param maxSize le nombre maximum de relations à charger
+     * @param withSourceItems if true, loads source items
+     * @param withDestinationItems if true, loads destinations items
      */
-    public void loadRelations(ItemsSearchResult searchResult) {
+    public void loadRelations(ItemsSearchResult searchResult, int maxSize, boolean withSourceItems,
+            boolean withDestinationItems) {
         try {
             log.infof("Starting search relations on %d objects", searchResult.size());
             if (searchResult.isEmpty()) {
                 return; // No need to search for relation if no item in resultset
             }
             var query = buildRelationQuery(searchResult.getItems());
-            var response = executeRelationRequest(query, 100);
+            var response = executeRelationRequest(query, maxSize);
             for (var hit : response.hits().hits()) {
                 String type = extractStringFrom(hit, RelationAttributes.TYPE);
                 var sourceId = new ItemId(extractStringFrom(hit, RelationAttributes.SOURCE));
@@ -70,8 +74,18 @@ class ElasticRelationService implements StorageRelationService {
                 searchResult.addRelation(type, sourceId, destinationId);
             }
 
+            if (withSourceItems) {
+                itemService.getList(searchResult.getRelations().stream().map(Relation::getSource).toList())
+                        .forEach(searchResult::addSource);
+            }
+
+            if (withDestinationItems) {
+                itemService.getList(searchResult.getRelations().stream().map(Relation::getDestination).toList())
+                        .forEach(searchResult::addDestination);
+            }
+
         } catch (IOException e) {
-            throw new BusinessException(ErrorCode.TECHNICAL, "Unable to search relations of searchResult", e);
+            throw new BusinessException(ErrorCode.TECHNICAL, "Unable to search", e);
         }
 
     }
@@ -79,7 +93,7 @@ class ElasticRelationService implements StorageRelationService {
     /**
      * Builds the query to search for relations of a list of items.<br>
      * A relation is retrieved if the item is the source or the destination of the relation.
-     * 
+     *
      * @param items the list of items to search for relations
      * @return the query to search for relations
      */

@@ -8,7 +8,7 @@ import com.provoly.common.Default;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
-public class MultiClassRequestDto extends SearchRequestDto {
+public final class MultiClassRequestDto extends SearchRequestDto {
     private MultiSearchType multiType;
     private final List<UUID> oClasses;
     private final Collection<FieldConditionDto> fields;

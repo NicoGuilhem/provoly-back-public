@@ -146,7 +146,6 @@ public class NamedQueryService {
                 currentMultiRequest.setoClasses(updatedMonoRequest.getoClasses());
                 currentMultiRequest.setMultiType(updatedMonoRequest.getMultiType());
             }
-            default -> throw new IllegalStateException("Unexpected value: " + requestDto);
         }
 
     }

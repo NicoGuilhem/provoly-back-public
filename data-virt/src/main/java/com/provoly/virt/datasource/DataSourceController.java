@@ -78,8 +78,15 @@ public class DataSourceController {
             @RestQuery("order") SortDto sort,
             @RestQuery("filter") List<FilterDto> filters,
             @QueryParam("limit") int limit,
-            @QueryParam("excludeGeo") boolean excludeGeo) {
-        var result = mapper.toDto(dataSourceItemsService.getItems(dataSourceId, sort, filters, limit, excludeGeo, null));
+            @QueryParam("excludeGeo") boolean excludeGeo,
+            @QueryParam("withSourceItems") boolean withSourceItems,
+            @QueryParam("withDestinationItems") boolean withDestinationItems) {
+        var searchRequest = new MonoClassRequestDto(null, null);
+        searchRequest.setLimit(limit);
+        searchRequest.setExcludeGeo(excludeGeo);
+        searchRequest.setWithSourceItems(withSourceItems);
+        searchRequest.setWithDestinationItems(withDestinationItems);
+        var result = mapper.toDto(dataSourceItemsService.getItems(dataSourceId, sort, filters, searchRequest));
         return new ItemsSearchResultDto(result, GeoFormat.GEO_JSON);
     }
 

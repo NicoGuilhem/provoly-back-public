@@ -9,11 +9,29 @@ public class ItemsSearchResult {
     private Map<ItemId, Item> items = new LinkedHashMap<>();
     private Collection<Relation> relations = new ArrayList<>();
     private SearchAfterContext searchAfter;
+    private Map<ItemId, Item> sourceItems = new HashMap<>();
+    private Map<ItemId, Item> destinationItems = new HashMap<>();
 
     private Map<UUID, CountDto> count;
 
     public void add(Item item) {
         items.put(item.getId(), item);
+    }
+
+    public List<Item> getSourceItems() {
+        return new ArrayList<>(sourceItems.values());
+    }
+
+    public void addSource(Item item) {
+        sourceItems.put(item.getId(), item);
+    }
+
+    public List<Item> getDestinationItems() {
+        return new ArrayList<>(destinationItems.values());
+    }
+
+    public void addDestination(Item item) {
+        destinationItems.put(item.getId(), item);
     }
 
     public List<Item> getItems() {
