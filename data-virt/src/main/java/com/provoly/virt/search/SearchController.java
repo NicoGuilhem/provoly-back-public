@@ -31,6 +31,7 @@ public class SearchController {
     public ItemsSearchResultDto search(
             SearchRequestDto request,
             @RestQuery("order") SortDto sort) {
+        searchService.updateRequestWithRelationCondition(request);
         var result = mapper.toDto(searchService.search(request, sort));
         return new ItemsSearchResultDto(result, request.getGeoFormat());
     }

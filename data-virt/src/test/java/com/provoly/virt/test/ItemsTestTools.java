@@ -81,6 +81,20 @@ public class ItemsTestTools {
         return searchController.search(request, sort);
     }
 
+    public ItemsSearchResultDto searchAllFilteringOnRelation(UUID oClass, DatasetVersionDto dataset, RelationDto relationDto) {
+        return searchAllFilteringOnRelation(oClass, dataset, relationDto, null);
+    }
+
+    public ItemsSearchResultDto searchAllFilteringOnRelation(UUID oClass, DatasetVersionDto dataset, RelationDto relationDto,
+            ConditionDto otherCondition) {
+        var request = new MonoClassRequestDto(oClass, Collections.singleton(dataset.getId()));
+        request.setWithRelation(relationDto);
+        if (otherCondition != null) {
+            request.setCondition(otherCondition);
+        }
+        return searchController.search(request, null);
+    }
+
     public ItemsSearchResultDto searchMulti(MultiClassRequestDto condition) {
         return searchController.search(condition, null);
     }

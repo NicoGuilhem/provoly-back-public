@@ -1,5 +1,6 @@
 package com.provoly.virt.search;
 
+import java.util.Collection;
 import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -7,12 +8,15 @@ import jakarta.enterprise.context.ApplicationScoped;
 import com.provoly.clients.ProvolyUserService;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
+import com.provoly.common.metadata.MetadataSystem;
 import com.provoly.common.search.*;
 import com.provoly.virt.DataVirtProperties;
 import com.provoly.virt.entity.ItemsSearchResult;
+import com.provoly.virt.entity.Relation;
 import com.provoly.virt.search.mono.MonoClassSearchService;
 import com.provoly.virt.search.mono.MonoMapper;
 import com.provoly.virt.search.multi.MultiClassSearchService;
+import com.provoly.virt.storage.StorageRelationAdapters;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -20,26 +24,33 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.MultiEmitter;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class SearchService {
 
+    private Logger logger;
     private MonoClassSearchService monoClassSearchService;
     private MultiClassSearchService multiClassSearchService;
     private ProvolyUserService provolyUserService;
     private DataVirtProperties dataVirtProperties;
+    private StorageRelationAdapters storageRelationAdapters;
 
     private MonoMapper mapper;
 
-    public SearchService(MonoClassSearchService monoClassSearchService,
+    public SearchService(Logger logger,
+            MonoClassSearchService monoClassSearchService,
             MultiClassSearchService multiClassSearchService,
             @RestClient ProvolyUserService provolyUserService,
             DataVirtProperties dataVirtProperties,
+            StorageRelationAdapters storageRelationAdapters,
             MonoMapper mapper) {
+        this.logger = logger;
         this.monoClassSearchService = monoClassSearchService;
         this.multiClassSearchService = multiClassSearchService;
         this.provolyUserService = provolyUserService;
         this.dataVirtProperties = dataVirtProperties;
+        this.storageRelationAdapters = storageRelationAdapters;
         this.mapper = mapper;
     }
 
@@ -118,6 +129,44 @@ public class SearchService {
                     .with(follow -> completeOrContinuePaginating(follow, emitter, request));
         } else {
             emitter.complete();
+        }
+    }
+
+    /**
+     * Adds to the request the metadata condition to filter on the relation requested
+     *
+     * @param request the current search request
+     */
+    public void updateRequestWithRelationCondition(SearchRequestDto request) {
+        if (request.getWithRelation() != null) {
+
+            if (request instanceof MonoClassRequestDto monoRequest) {
+
+                logger.debugf("Loading all relations for the relation %s", request.getWithRelation());
+                Collection<Relation> relationsByItemAndRelation = storageRelationAdapters
+                        .getRelationsByItemAndRelation(request.getWithRelation());
+
+                logger.debugf("Building orConditionDTO to filter on the %s itemsId", relationsByItemAndRelation.size());
+                OrConditionDto itemIdCondition = new OrConditionDto();
+                relationsByItemAndRelation.stream().map(relation -> {
+                    var filteredItem = request.getWithRelation().getSource() != null ? relation.getDestination().getAsString()
+                            : relation.getSource().getAsString();
+                    return new MetadataConditionDto(MetadataSystem.ID, filteredItem, Operator.EQUALS);
+                })
+                        .forEach(itemIdCondition.composed::add);
+
+                AndConditionDto andCondition = new AndConditionDto();
+                andCondition.composed.add(itemIdCondition);
+
+                if (monoRequest.getCondition() != null) {
+                    logger.debug("Merging condition from SearchRequest with the relation condition");
+                    andCondition.composed.add(monoRequest.getCondition());
+                }
+                monoRequest.setCondition(andCondition);
+
+            } else {
+                throw new BusinessException(ErrorCode.BAD_REQUEST, "Filtering on multi class request is not available");
+            }
         }
     }
 }

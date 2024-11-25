@@ -8,9 +8,11 @@ import java.util.UUID;
 
 import jakarta.inject.Inject;
 
+import com.provoly.common.metadata.MetadataSystem;
 import com.provoly.common.relation.RelationDto;
 import com.provoly.common.relation.RelationTypeDto;
 import com.provoly.common.search.AttributeConditionDto;
+import com.provoly.common.search.MetadataConditionDto;
 import com.provoly.common.search.Operator;
 import com.provoly.test.AuthService;
 import com.provoly.test.ProvolyKafkaCompanionResource;
@@ -74,20 +76,37 @@ public class MonoSearchRelationServiceTest {
 
         itemsTestTools.createRelation(relationType, voiture1, voiture2);
 
-        //TODO add test case that verify that without requesting relations, they are not returned
-        var result = itemsTestTools.searchAllWithRelationsItems(voitureClass.getId(), voitureDs, null);
+        var resultWithRelationsItems = itemsTestTools.searchAllWithRelationsItems(voitureClass.getId(), voitureDs, null);
 
-        assertThat(result.relations())
+        assertThat(resultWithRelationsItems.relations())
                 .extracting(RelationDto::getRelationType, RelationDto::getSource, RelationDto::getDestination)
                 .containsExactly(Tuple.tuple(relationType.slug, voiture1.getId(), voiture2.getId()));
 
-        SearchResultAssert.assertThat(result)
+        SearchResultAssert.assertThat(resultWithRelationsItems)
+                .hasSizeSourceItemsForClass(voitureClass.getId(), 1)
                 .haveSourceItemsForClass(voitureClass.getId(), voiture1)
+                .hasSizeDestinationItemsForClass(voitureClass.getId(), 1)
                 .haveDestinationItemsForClass(voitureClass.getId(), voiture2);
     }
 
     @Test
     @Order(2)
+    public void relationItemsAreNotRetrievedIfNotRequested() {
+
+        var field = testData.createField("nom_du_field_%s".formatted(UUID.randomUUID()), "keyword");
+        var attribute = testData.createAttribute("name", field);
+
+        var voitureClass = testData.createClass(companion, "voiture", attribute);
+        var voitureDs = testData.createDataset("voiture", voitureClass.getId());
+
+        var resultWithoutRelationsItems = itemsTestTools.searchAll(voitureClass.getId(), voitureDs);
+
+        assertThat(resultWithoutRelationsItems.sourceItems()).isNullOrEmpty();
+        assertThat(resultWithoutRelationsItems.destinationItems()).isNullOrEmpty();
+    }
+
+    @Test
+    @Order(3)
     public void onlyRelationInItemsOfResultSet() {
 
         var field1 = testData.createField("field1_%s".formatted(UUID.randomUUID()), "string");
@@ -111,7 +130,6 @@ public class MonoSearchRelationServiceTest {
         itemsTestTools.createRelation(relationType, voiture1, voiture3);
 
         var condition = new AttributeConditionDto(attribute.getId(), "in", Operator.EQUALS);
-
         var result = itemsTestTools.searchAll(voitureClass.getId(), voitureDs, condition);
 
         assertThat(result.relations())
@@ -119,7 +137,34 @@ public class MonoSearchRelationServiceTest {
                 .containsExactlyInAnyOrder(
                         Tuple.tuple(relationType.slug, voiture1.getId(), voiture2.getId()),
                         Tuple.tuple(relationType.slug, voiture1.getId(), voiture3.getId()));
+
+        // searching items filtering withRelation source voiture1
+        var resultsForRelationSourceVoiture1 = itemsTestTools.searchAllFilteringOnRelation(voitureClass.getId(), voitureDs,
+                new RelationDto(relationType.slug, voiture1.getId(), null));
+
+        SearchResultAssert.assertThat(resultsForRelationSourceVoiture1)
+                .hasSizeItemsForClass(voitureClass.getId(), 2)
+                .haveItemsForClass(voitureClass.getId(), voiture2, voiture3);
+
+        // searching items filtering withRelation destination voiture3
+        var resultsForRelationDestinationVoiture3 = itemsTestTools.searchAllFilteringOnRelation(voitureClass.getId(), voitureDs,
+                new RelationDto(relationType.slug, null, voiture3.getId()));
+
+        SearchResultAssert.assertThat(resultsForRelationDestinationVoiture3)
+                .hasSizeItemsForClass(voitureClass.getId(), 1)
+                .haveItemsForClass(voitureClass.getId(), voiture1);
+
+        // checking items with relation source to voiture1 and additional filter
+        MetadataConditionDto voiture3itemIdFilter = new MetadataConditionDto(MetadataSystem.ID, voiture3.getId(),
+                Operator.EQUALS);
+        var resultsForRelationSourceVoiture1AndAdditionalFilter = itemsTestTools.searchAllFilteringOnRelation(
+                voitureClass.getId(), voitureDs,
+                new RelationDto(relationType.slug, voiture1.getId(), null), voiture3itemIdFilter);
+
+        SearchResultAssert.assertThat(resultsForRelationSourceVoiture1AndAdditionalFilter)
+                .hasSizeItemsForClass(voitureClass.getId(), 1)
+                .haveItemsForClass(voitureClass.getId(), voiture3);
+
         cleaning();
     }
-
 }

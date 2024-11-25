@@ -23,4 +23,12 @@ public class RelationDto {
         return destination;
     }
 
+    @Override
+    public String toString() {
+        return "RelationDto{" +
+                "relationType='" + relationType + '\'' +
+                ", source='" + source + '\'' +
+                ", destination='" + destination + '\'' +
+                '}';
+    }
 }

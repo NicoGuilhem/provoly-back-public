@@ -17,6 +17,7 @@ import com.provoly.common.error.ErrorCode;
 import com.provoly.common.model.AttributeDefDetailsDto;
 import com.provoly.common.model.OClassDetailsDto;
 import com.provoly.common.model.Type;
+import com.provoly.common.relation.RelationDto;
 import com.provoly.common.search.*;
 import com.provoly.virt.DataVirtProperties;
 import com.provoly.virt.datasource.FilterDto;
@@ -91,21 +92,28 @@ public class DataSourceItemsService {
             case MonoClassRequestDto monoClassRequestDto ->
                 getItems(dataSourceId, sort, filters, requestDto.getLimit(), requestDto.isExcludeGeo(),
                         monoClassRequestDto.getCondition(), requestDto.isWithSourceItems(),
-                        requestDto.isWithDestinationItems());
+                        requestDto.isWithDestinationItems(), requestDto.getWithRelation());
             case MultiClassRequestDto multiClassRequestDto ->
                 getItems(dataSourceId, sort, filters, requestDto.getLimit(), requestDto.isExcludeGeo(), null,
-                        requestDto.isWithSourceItems(), requestDto.isWithDestinationItems());
+                        requestDto.isWithSourceItems(), requestDto.isWithDestinationItems(), requestDto.getWithRelation());
         };
+    }
+
+    public ItemsSearchResult getItems(UUID dataSourceId, SortDto sort, List<FilterDto> filters, int limit, boolean excludeGeo,
+            ConditionDto conditionDto, boolean withSourceItems, boolean withDestinationItems) {
+        return getItems(dataSourceId, sort, filters, limit, excludeGeo, conditionDto, withSourceItems, withDestinationItems,
+                null);
     }
 
     //TODO change this method to turn it private or prevent from being called with a previous SearchRequest then building a new one
     public ItemsSearchResult getItems(UUID dataSourceId, SortDto sort, List<FilterDto> filters, int limit, boolean excludeGeo,
-            ConditionDto conditionDto, boolean withSourceItems, boolean withDestinationItems) {
+            ConditionDto conditionDto, boolean withSourceItems, boolean withDestinationItems, RelationDto withRelation) {
         DataSourceDetailsDto datasource = dataSourceService.getDataSourceDetails(dataSourceId);
         SearchRequestDto request = getSearchRequest(datasource, excludeGeo, limit, conditionDto, withSourceItems,
-                withDestinationItems);
+                withDestinationItems, withRelation);
 
         updateRequestWithFilters(request, filters);
+        searchService.updateRequestWithRelationCondition(request);
         ItemsSearchResult result = searchService.search(request, sort);
         if (datasource.type() == DataSourceType.SEARCH) {
             provolyUserService.updateNamedQueryExecution(dataSourceId);
@@ -129,6 +137,11 @@ public class DataSourceItemsService {
 
     private SearchRequestDto getSearchRequest(DataSourceDetailsDto datasource, boolean excludeGeo, int limit,
             ConditionDto conditionDto, boolean withSourceItems, boolean withDestinationItems) {
+        return getSearchRequest(datasource, excludeGeo, limit, conditionDto, withSourceItems, withDestinationItems, null);
+    }
+
+    private SearchRequestDto getSearchRequest(DataSourceDetailsDto datasource, boolean excludeGeo, int limit,
+            ConditionDto conditionDto, boolean withSourceItems, boolean withDestinationItems, RelationDto withRelation) {
         if (limit == 0) {
             limit = dataVirtProperties.searchLimit();
         }
@@ -143,6 +156,7 @@ public class DataSourceItemsService {
         request.setLimit(limit);
         request.setWithSourceItems(withSourceItems);
         request.setWithDestinationItems(withDestinationItems);
+        request.setWithRelation(withRelation);
 
         return request;
     }

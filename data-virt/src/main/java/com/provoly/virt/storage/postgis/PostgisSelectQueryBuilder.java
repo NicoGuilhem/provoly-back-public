@@ -26,6 +26,7 @@ import com.provoly.virt.GeoHolder;
 import com.provoly.virt.ProvolySpanManager;
 import com.provoly.virt.storage.StorageSupport;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.jboss.logging.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -341,41 +342,42 @@ class PostgisSelectQueryBuilder {
         var columnName = postgisSupport.getColumnName(attribute);
         var value = typedValue(attribute, condition);
 
-        switch (condition.getOperator()) {
-            case EQUALS -> appendOperators("%s = ?".formatted(columnName), value);
-            case I_EQUALS -> appendOperators("%s ilike ?".formatted(columnName), value);
-            case NOT_EQUALS -> appendOperators("%s <> ?".formatted(columnName), value);
-            case I_NOT_EQUALS -> appendOperators("%s not ilike ?".formatted(columnName), value);
-            case CONTAINS -> appendOperators("%s like ?".formatted(columnName), "%%%s%%".formatted(value));
-            case I_CONTAINS -> appendOperators("%s ilike ?".formatted(columnName), "%%%s%%".formatted(value));
-            case START_WITH -> appendOperators("%s like ?".formatted(columnName), "%s%%".formatted(value));
-            case I_START_WITH -> appendOperators("%s ilike ?".formatted(columnName), "%s%%".formatted(value));
-            case END_WITH -> appendOperators("%s like ?".formatted(columnName), "%%%s".formatted(value));
-            case I_END_WITH -> appendOperators("%s ilike ?".formatted(columnName), "%%%s".formatted(value));
-            case GREATER_THAN -> appendOperators("%s > ?".formatted(columnName), value);
-            case LOWER_THAN -> appendOperators("%s < ?".formatted(columnName), value);
-            case INSIDE -> appendOperators(" ( %s > ? AND %s < ? )".formatted(columnName, columnName), value,
-                    typedValue(attribute, condition.getUpperValue()));
-            case OUTSIDE -> appendOperators(" ( %s < ? OR %s > ? )".formatted(columnName, columnName), value,
-                    typedValue(attribute, condition.getUpperValue()));
-            case EXISTS -> appendOperators(" is not null", columnName);
+        Pair<String, Object> formattedConditionWithValues = switch (condition.getOperator()) {
+            case EQUALS -> Pair.of("%s = ?".formatted(columnName), value);
+            case I_EQUALS -> Pair.of("%s ilike ?".formatted(columnName), value);
+            case NOT_EQUALS -> Pair.of("%s <> ?".formatted(columnName), value);
+            case I_NOT_EQUALS -> Pair.of("%s not ilike ?".formatted(columnName), value);
+            case CONTAINS -> Pair.of("%s like ?".formatted(columnName), "%%%s%%".formatted(value));
+            case I_CONTAINS -> Pair.of("%s ilike ?".formatted(columnName), "%%%s%%".formatted(value));
+            case START_WITH -> Pair.of("%s like ?".formatted(columnName), "%s%%".formatted(value));
+            case I_START_WITH -> Pair.of("%s ilike ?".formatted(columnName), "%s%%".formatted(value));
+            case END_WITH -> Pair.of("%s like ?".formatted(columnName), "%%%s".formatted(value));
+            case I_END_WITH -> Pair.of("%s ilike ?".formatted(columnName), "%%%s".formatted(value));
+            case GREATER_THAN -> Pair.of("%s > ?".formatted(columnName), value);
+            case LOWER_THAN -> Pair.of("%s < ?".formatted(columnName), value);
+            case INSIDE -> Pair.of(" ( %s > ? AND %s < ? )".formatted(columnName, columnName), List.of(value,
+                    typedValue(attribute, condition.getUpperValue())));
+            case OUTSIDE -> Pair.of(" ( %s < ? OR %s > ? )".formatted(columnName, columnName), List.of(value,
+                    typedValue(attribute, condition.getUpperValue())));
+            case EXISTS -> Pair.of(" is not null", columnName);
             //FIXME INSTANCE and INTERSECT are workaround
             //Other operator won't work at all.
             case DISTANCE -> {
                 attribute.getField().checkField();
-                appendOperators("st_distance(%s, 'SRID=%s;%s', true) <= ?"
+                yield Pair.of("st_distance(%s, 'SRID=%s;%s', true) <= ?"
                         .formatted(columnName, ((FieldGeoDto) attribute.getField()).checkAndExtractSRID(),
                                 condition.getLocation()),
                         Double.valueOf(condition.getEvaluatedValue()));
             }
-            case INTERSECTS -> appendOperators("st_intersects(%s, st_geomfromgeojson(?))".formatted(columnName), value);
-            case IN -> appendOperators(
+            case INTERSECTS -> Pair.of("st_intersects(%s, st_geomfromgeojson(?))".formatted(columnName), value);
+            case IN -> Pair.of(
                     "%s IN (%s)".formatted(columnName, ((List) value).stream().map(x -> "?").collect(Collectors.joining(", "))),
                     value);
-            case NOT_IN -> appendOperators("%s NOT IN (%s)".formatted(columnName,
+            case NOT_IN -> Pair.of("%s NOT IN (%s)".formatted(columnName,
                     ((List) value).stream().map(x -> "?").collect(Collectors.joining(", "))), value);
-        }
+        };
 
+        appendOperators(formattedConditionWithValues.getLeft(), formattedConditionWithValues.getRight());
     }
 
     private void appendOperators(String operator, Object... values) {
@@ -384,17 +386,14 @@ class PostgisSelectQueryBuilder {
     }
 
     private Object typedValue(AttributeDefDetailsDto attribute, AttributeConditionDto conditionDto) {
-        return switch (conditionDto.getOperator()) {
-            case IN, NOT_IN -> switch (attribute.getField().getType()) {
-                case INTEGER, LONG, DECIMAL, STRING, KEYWORD, RAW, INSTANT -> typedValue(attribute, conditionDto.getValues());
-                default -> List.of(getGeoValue(attribute, conditionDto));
-            };
-            default -> switch (attribute.getField().getType()) {
-                case INTEGER, LONG, DECIMAL, STRING, KEYWORD, RAW, INSTANT ->
-                    typedValue(attribute, conditionDto.getEvaluatedValue());
-                default -> getGeoValue(attribute, conditionDto);
-            };
-        };
+        boolean isListOperator = conditionDto.getOperator().isWithNativeListOfValues();
+        if (attribute.getField().getType().isGeo()) {
+            Object geoValue = getGeoValue(attribute, conditionDto);
+            return isListOperator ? List.of(geoValue) : geoValue;
+        } else {
+            return isListOperator ? typedValue(attribute, conditionDto.getValues())
+                    : typedValue(attribute, conditionDto.getEvaluatedValue());
+        }
     }
 
     private Object getGeoValue(AttributeDefDetailsDto attribute, AttributeConditionDto conditionDto) {

@@ -2,13 +2,17 @@ package com.provoly.virt.storage;
 
 import static com.provoly.virt.storage.StorageAdapterUtils.getService;
 
+import java.util.Collection;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 
 import com.provoly.common.Storage;
+import com.provoly.common.relation.RelationDto;
 import com.provoly.virt.entity.Item;
 import com.provoly.virt.entity.ItemsSearchResult;
+import com.provoly.virt.entity.Relation;
 
 import org.jboss.logging.Logger;
 
@@ -34,5 +38,10 @@ public class StorageRelationAdapters implements StorageRelationService {
             boolean withDestinationItems) {
         getService(storageRelationServices, Storage.ELASTIC).loadRelations(searchResult, maxSize, withSourceItems,
                 withDestinationItems);
+    }
+
+    @Override
+    public Collection<Relation> getRelationsByItemAndRelation(RelationDto relationDto) {
+        return getService(storageRelationServices, Storage.ELASTIC).getRelationsByItemAndRelation(relationDto);
     }
 }

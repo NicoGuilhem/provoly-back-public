@@ -2465,6 +2465,8 @@ components:
           $ref: '#/components/schemas/WithSourceItems'
         withDestinationItems:
           $ref: '#/components/schemas/WithDestinationItems'
+        withRelation:
+          $ref: '#/components/schemas/RelationDto'
     MonoClassRequestDto:
       allOf:
         - $ref: '#/components/schemas/SearchRequestDto'

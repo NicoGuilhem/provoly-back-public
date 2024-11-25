@@ -60,4 +60,13 @@ public class Relation {
     public String getAggregateId() {
         return aggregateId;
     }
+
+    @Override
+    public String toString() {
+        return "Relation{" +
+                "relationType='" + relationType + '\'' +
+                ", source=" + source +
+                ", destination=" + destination +
+                '}';
+    }
 }

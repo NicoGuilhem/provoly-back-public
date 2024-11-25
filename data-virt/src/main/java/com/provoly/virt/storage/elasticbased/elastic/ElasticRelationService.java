@@ -11,6 +11,8 @@ import com.provoly.common.Storage;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.model.RelationAttributes;
+import com.provoly.common.relation.RelationDirection;
+import com.provoly.common.relation.RelationDto;
 import com.provoly.common.relation.RelationsAggregateDto;
 import com.provoly.virt.DataVirtProperties;
 import com.provoly.virt.entity.Item;
@@ -31,6 +33,9 @@ import co.elastic.clients.elasticsearch.core.search.Hit;
 
 @ApplicationScoped
 @StorageQualifier(Storage.ELASTIC)
+// visibility is package : this class must not be used outside his package
+// it must be call throw adapter to fit storage system
+// TODO move code that is not specific to elastic but common to all storages to another class in package com.provoly.virt.storage
 class ElasticRelationService implements StorageRelationService {
 
     private DataVirtProperties properties;
@@ -98,22 +103,51 @@ class ElasticRelationService implements StorageRelationService {
      * @return the query to search for relations
      */
     private Query buildRelationQuery(List<Item> items) {
+        return buildRelationQuery(items.stream().map(Item::getId).toList(), null, null);
+    }
 
-        var itemsId = items.stream()
-                .map(Item::getIdAsString)
+    /**
+     * Builds the query to search for relations of a list of items.<br>
+     * A relation is retrieved if the item is the source or the destination of the relation.
+     *
+     * @param itemIds the list of items to search for relations
+     * @param relationTypeId the relation type to search for (if null, all relations are retrieved)
+     * @param relationDirection the direction of the relation to search for (if null, all relations are retrieved)
+     * @return the query to search for relations
+     */
+    private Query buildRelationQuery(List<ItemId> itemIds, String relationTypeId, RelationDirection relationDirection) {
+
+        var itemsId = itemIds.stream()
+                .map(ItemId::getAsString)
                 .map(FieldValue::of)
                 .toList();
 
         return Query.of(q -> q
-                .bool(b -> b
-                        .should(c1 -> c1
+                .bool(b -> {
+                    if (relationDirection != null) {
+                        b.must(c1 -> c1
                                 .terms(t -> t
-                                        .field(RelationAttributes.SOURCE)
-                                        .terms(t2 -> t2.value(itemsId))))
-                        .should(c1 -> c1
-                                .terms(t -> t
-                                        .field(RelationAttributes.DESTINATION)
-                                        .terms(t2 -> t2.value(itemsId))))));
+                                        .field(relationDirection.getAttributeName())
+                                        .terms(t2 -> t2.value(itemsId))));
+                    } else {
+                        b
+                                .should(c1 -> c1
+                                        .terms(t -> t
+                                                .field(RelationAttributes.SOURCE)
+                                                .terms(t2 -> t2.value(itemsId))))
+                                .should(c1 -> c1
+                                        .terms(t -> t
+                                                .field(RelationAttributes.DESTINATION)
+                                                .terms(t2 -> t2.value(itemsId))));
+                    }
+                    if (relationTypeId != null) {
+                        b.must(c1 -> c1
+                                .match(t -> t
+                                        .field(RelationAttributes.TYPE)
+                                        .query(relationTypeId)));
+                    }
+                    return b;
+                }));
     }
 
     /**
@@ -219,7 +253,44 @@ class ElasticRelationService implements StorageRelationService {
     }
 
     private static String extractStringFrom(Hit<Void> hit, String fieldName) {
+        if (hit.fields().get(fieldName) == null) {
+            return null;
+        }
         return hit.fields().get(fieldName).toJson().asJsonArray().getString(0);
     }
 
+    /**
+     * Retrieves all relations of an item with a specific relation type and direction.<br>
+     * To load all destination relations of an item, sets the attribute {@code source} of the {@see RelationDto} argument.<br>
+     * To load all source relations of an item, sets the attribute {@code destination} of the {@see RelationDto} argument.
+     *
+     * @param relationDto the relation dto containing the item id and the relation id to search for
+     * @return the list of relations
+     */
+    public Collection<Relation> getRelationsByItemAndRelation(RelationDto relationDto) {
+
+        if (relationDto == null || relationDto.getRelationType() == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST,
+                    "Relation type is required to search relations by item id and relation type.");
+        }
+
+        if ((relationDto.getSource() == null && relationDto.getDestination() == null)
+                || (relationDto.getSource() != null && relationDto.getDestination() != null)) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST,
+                    "Exactly one value amongst source or destination must be filled to search relations by item's identifier and relation's type.");
+        }
+
+        RelationDirection relationDirection = relationDto.getSource() != null ? RelationDirection.SOURCE
+                : RelationDirection.DESTINATION;
+        ItemId itemId = relationDto.getSource() != null ? new ItemId(relationDto.getSource())
+                : new ItemId(relationDto.getDestination());
+
+        try {
+            var query = buildRelationQuery(List.of(itemId), relationDto.getRelationType(), relationDirection);
+            var response = executeRelationRequest(query, 100);
+            return buildRelationsFrom(response);
+        } catch (IOException e) {
+            throw new BusinessException(ErrorCode.TECHNICAL, "Unable to search relations of item", e);
+        }
+    }
 }
