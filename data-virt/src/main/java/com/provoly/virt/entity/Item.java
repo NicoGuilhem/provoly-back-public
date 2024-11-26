@@ -1,13 +1,11 @@
 package com.provoly.virt.entity;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.model.AttributeDefDetailsDto;
 import com.provoly.common.model.OClassDetailsDto;
-import com.provoly.common.model.field.FieldDto;
 
 public class Item {
 
@@ -16,14 +14,6 @@ public class Item {
     private final Map<String, AttributeDefDetailsDto> attributesDef = new HashMap<>();
     private Map<UUID, MetadataValueDto> metadata = null; // Metadata for object
     private final Map<String, AttributeValue> attributes = new HashMap<>();
-
-    public Item(ItemId id, OClassDetailsDto oClass, Collection<FieldDto> fields) {
-        this.id = id;
-
-        oClass.getAttributes().forEach(attr -> attributesDef.put(attr.getTechnicalName(), attr));
-        this.oClass = new OClassDetailsDto(oClass.getId(), oClass.getSlug(), oClass.getName(), null,
-                attributesDef.values().stream().toList(), oClass.getStorage(), List.of());
-    }
 
     public Item(ItemId id, OClassDetailsDto oClass) {
         this.id = id;
@@ -104,7 +94,7 @@ public class Item {
         return attributes.values().stream()
                 .filter(attr -> attr.getClass().equals(clazz))
                 .map(clazz::cast)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public Iterable<AttributeValue> getAttributesValue() {

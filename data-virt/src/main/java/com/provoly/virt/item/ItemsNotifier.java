@@ -1,9 +1,7 @@
 package com.provoly.virt.item;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -12,6 +10,7 @@ import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.common.item.GeoFormat;
 import com.provoly.common.item.ItemDto;
+import com.provoly.virt.entity.AttributeSimpleValue;
 import com.provoly.virt.entity.Item;
 import com.provoly.virt.kafka.KafkaTools;
 import com.provoly.virt.search.mono.MonoMapper;
@@ -30,6 +29,7 @@ public class ItemsNotifier {
     @Inject
     Logger log;
 
+    // TODO should be a KafkaProducer<UUID, Item> with custom serializers (for key and value)
     @Inject
     KafkaProducer producer;
 
@@ -49,17 +49,18 @@ public class ItemsNotifier {
     public void notifyItemWrittenToStorage(Collection<Item> items) {
 
         try {
-            var itemsCount = new HashMap<String, AtomicLong>();
             ObjectWriter itemWriter = mapper.writer().forType(ItemDto.class).withAttribute("GEO_FORMAT", GeoFormat.WKT);
             for (Item item : items) {
-                String topicName = buildTopicName(item.getoClass().getSlug()); // One topic per class
+                // Items are not read from a user and a security context but received from external system without any authentication
+                // We have to unlock visibility
+                item.getAttributes(AttributeSimpleValue.class).forEach(attribute -> attribute.setVisible(true));
                 var itemDto = itemMapper.toDto(item);
                 String itemJson = itemWriter.writeValueAsString(itemDto);
+                String topicName = buildTopicName(item.getoClass().getSlug()); // One topic per class
                 kafkaTools.createTopicIfNeeded(topicName); // TODO : Retention, policies, etc
-                var record = new ProducerRecord<>(topicName, itemDto.getId(), itemJson);
+                var itemRecord = new ProducerRecord<>(topicName, itemDto.getId(), itemJson);
                 log.tracef("Send notification for item %s to topic %s", itemDto.getId(), topicName);
-                producer.send(record);
-                itemsCount.computeIfAbsent(topicName, k -> new AtomicLong(0)).addAndGet(1);
+                producer.send(itemRecord);
             }
         } catch (JsonProcessingException e) {
             throw new BusinessException(ErrorCode.TECHNICAL, "Unable to notify items written", e);

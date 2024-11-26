@@ -9,7 +9,6 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -65,7 +64,7 @@ public class ElasticWriteServiceTest {
         OClassDetailsDto oClassDto = new OClassDetailsDto(UUID.randomUUID(), "name", "", "", List.of(), Storage.ELASTIC, List.of());
         UUID datasetId = UUID.randomUUID();
         for (int i = 0; i < 5; i++) {
-            items.add(new Item(new ItemId(datasetId, UUID.randomUUID().toString()), oClassDto, Collections.emptyList()));
+            items.add(new Item(new ItemId(datasetId, UUID.randomUUID().toString()), oClassDto));
         }
         Assert.assertThrows(IllegalStateException.class,
                 () -> elasticStorageWriteAdapter.addOrUpdate(items, ItemUpdateMode.REPLACE));
@@ -82,7 +81,7 @@ public class ElasticWriteServiceTest {
         OClassDetailsDto oClassDto = new OClassDetailsDto(UUID.randomUUID(), "name", "", "", List.of(), Storage.ELASTIC, List.of());
         UUID datasetId = UUID.randomUUID();
         for (int i = 0; i < 5; i++) {
-            items.add(new Item(new ItemId(datasetId, UUID.randomUUID().toString()), oClassDto, Collections.emptyList()));
+            items.add(new Item(new ItemId(datasetId, UUID.randomUUID().toString()), oClassDto));
         }
         Assert.assertThrows(BusinessException.class,
                 () -> elasticStorageWriteAdapter.addOrUpdate(items, ItemUpdateMode.REPLACE));
@@ -130,7 +129,7 @@ public class ElasticWriteServiceTest {
         List<Item> items = new ArrayList<>();
 
         for (int i = 0; i < 5; i++) {
-            items.add(new Item(new ItemId(datasetId, UUID.randomUUID().toString()), oClassDto, Collections.emptyList()));
+            items.add(new Item(new ItemId(datasetId, UUID.randomUUID().toString()), oClassDto));
         }
         assertEquals(1, elasticStorageWriteAdapter.addOrUpdate(items, ItemUpdateMode.REPLACE).size());
     }
@@ -155,7 +154,7 @@ public class ElasticWriteServiceTest {
         List<Item> items = new ArrayList<>();
 
         for (int i = 0; i < 5; i++) {
-            items.add(new Item(new ItemId(datasetId, UUID.randomUUID().toString()), oClassDto, Collections.emptyList()));
+            items.add(new Item(new ItemId(datasetId, UUID.randomUUID().toString()), oClassDto));
         }
         assertTrue(elasticStorageWriteAdapter.addOrUpdate(items, ItemUpdateMode.REPLACE).isEmpty());
     }
