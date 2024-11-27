@@ -86,7 +86,9 @@ public class DataSourceController {
         searchRequest.setExcludeGeo(excludeGeo);
         searchRequest.setWithSourceItems(withSourceItems);
         searchRequest.setWithDestinationItems(withDestinationItems);
-        var result = mapper.toDto(dataSourceItemsService.getItems(dataSourceId, sort, filters, searchRequest));
+        var items = dataSourceItemsService.getItems(dataSourceId, sort, filters, searchRequest);
+        items.setSearchAfter(null); // search after is not supported by this endpoint
+        var result = mapper.toDto(items);
         return new ItemsSearchResultDto(result, GeoFormat.GEO_JSON);
     }
 

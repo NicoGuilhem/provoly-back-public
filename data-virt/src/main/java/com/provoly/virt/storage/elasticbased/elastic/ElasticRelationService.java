@@ -160,7 +160,7 @@ class ElasticRelationService implements StorageRelationService {
     public ItemsSearchResult getRelationsByItem(Item item) {
         try {
             var query = buildRelationQuery(List.of(item));
-            var response = executeRelationRequest(query, 100);
+            var response = executeRelationRequest(query, properties.maxSizeLimit());
             return buildSearchResult(item, response);
         } catch (IOException e) {
             throw new BusinessException(ErrorCode.TECHNICAL, "Unable to search relations of item", e);
@@ -287,7 +287,7 @@ class ElasticRelationService implements StorageRelationService {
 
         try {
             var query = buildRelationQuery(List.of(itemId), relationDto.getRelationType(), relationDirection);
-            var response = executeRelationRequest(query, 100);
+            var response = executeRelationRequest(query, properties.maxSizeLimit());
             return buildRelationsFrom(response);
         } catch (IOException e) {
             throw new BusinessException(ErrorCode.TECHNICAL, "Unable to search relations of item", e);

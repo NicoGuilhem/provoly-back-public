@@ -73,6 +73,24 @@ public class SearchService {
     }
 
     public ItemsSearchResult search(SearchRequestDto request) {
+
+        var relationCondition = buildWithRelationCondition(request);
+        if (relationCondition != null) {
+            // if the relation condition is empty, we can return an empty result (non relation matches the requested one)
+            if (relationCondition.composed.isEmpty()) {
+                return new ItemsSearchResult();
+            }
+            // else we merge the relation condition with the existing condition
+            MonoClassRequestDto monoRequest = (MonoClassRequestDto) request;
+            AndConditionDto andCondition = new AndConditionDto();
+            andCondition.composed.add(relationCondition);
+            if (monoRequest.getCondition() != null) {
+                logger.debug("Merging condition from SearchRequest with the relation condition");
+                andCondition.composed.add(monoRequest.getCondition());
+            }
+            monoRequest.setCondition(andCondition);
+        }
+
         request.setLimit(checkOrGetDefault(request.getLimit()));
         return switch (request) {
             case MonoClassRequestDto monoRequest -> {
@@ -133,40 +151,34 @@ public class SearchService {
     }
 
     /**
-     * Adds to the request the metadata condition to filter on the relation requested
+     * Builds an instance of {@see OrConditionDto} to filter on the relation requested
      *
      * @param request the current search request
+     * @return an instance of {@see OrConditionDto} or null if the request doesn't contain any filter on relation
+     * @throws BusinessException if the request is a multi class request
      */
-    public void updateRequestWithRelationCondition(SearchRequestDto request) {
-        if (request.getWithRelation() != null) {
-
-            if (request instanceof MonoClassRequestDto monoRequest) {
-
-                logger.debugf("Loading all relations for the relation %s", request.getWithRelation());
-                Collection<Relation> relationsByItemAndRelation = storageRelationAdapters
-                        .getRelationsByItemAndRelation(request.getWithRelation());
-
-                logger.debugf("Building orConditionDTO to filter on the %s itemsId", relationsByItemAndRelation.size());
-                OrConditionDto itemIdCondition = new OrConditionDto();
-                relationsByItemAndRelation.stream().map(relation -> {
-                    var filteredItem = request.getWithRelation().getSource() != null ? relation.getDestination().getAsString()
-                            : relation.getSource().getAsString();
-                    return new MetadataConditionDto(MetadataSystem.ID, filteredItem, Operator.EQUALS);
-                })
-                        .forEach(itemIdCondition.composed::add);
-
-                AndConditionDto andCondition = new AndConditionDto();
-                andCondition.composed.add(itemIdCondition);
-
-                if (monoRequest.getCondition() != null) {
-                    logger.debug("Merging condition from SearchRequest with the relation condition");
-                    andCondition.composed.add(monoRequest.getCondition());
-                }
-                monoRequest.setCondition(andCondition);
-
-            } else {
-                throw new BusinessException(ErrorCode.BAD_REQUEST, "Filtering on multi class request is not available");
-            }
+    private OrConditionDto buildWithRelationCondition(SearchRequestDto request) {
+        if (request.getWithRelation() == null) {
+            return null;
         }
+
+        if (!(request instanceof MonoClassRequestDto)) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "Filtering on multi class request is not available");
+        }
+
+        logger.debugf("Loading all relations for the relation %s", request.getWithRelation());
+        Collection<Relation> relationsByItemAndRelation = storageRelationAdapters
+                .getRelationsByItemAndRelation(request.getWithRelation());
+
+        logger.debugf("Building orConditionDTO to filter on the %s itemsId", relationsByItemAndRelation.size());
+        OrConditionDto itemIdCondition = new OrConditionDto();
+        relationsByItemAndRelation.stream().map(relation -> {
+            var filteredItem = request.getWithRelation().getSource() != null ? relation.getDestination().getAsString()
+                    : relation.getSource().getAsString();
+            return new MetadataConditionDto(MetadataSystem.ID, filteredItem, Operator.EQUALS);
+        })
+                .forEach(itemIdCondition.composed::add);
+
+        return itemIdCondition;
     }
 }

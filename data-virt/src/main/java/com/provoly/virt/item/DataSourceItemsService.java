@@ -92,28 +92,30 @@ public class DataSourceItemsService {
             case MonoClassRequestDto monoClassRequestDto ->
                 getItems(dataSourceId, sort, filters, requestDto.getLimit(), requestDto.isExcludeGeo(),
                         monoClassRequestDto.getCondition(), requestDto.isWithSourceItems(),
-                        requestDto.isWithDestinationItems(), requestDto.getWithRelation());
+                        requestDto.isWithDestinationItems(), requestDto.getWithRelation(),
+                        monoClassRequestDto.getSearchAfter());
             case MultiClassRequestDto multiClassRequestDto ->
                 getItems(dataSourceId, sort, filters, requestDto.getLimit(), requestDto.isExcludeGeo(), null,
-                        requestDto.isWithSourceItems(), requestDto.isWithDestinationItems(), requestDto.getWithRelation());
+                        requestDto.isWithSourceItems(), requestDto.isWithDestinationItems(), requestDto.getWithRelation(),
+                        null);
         };
     }
 
     public ItemsSearchResult getItems(UUID dataSourceId, SortDto sort, List<FilterDto> filters, int limit, boolean excludeGeo,
             ConditionDto conditionDto, boolean withSourceItems, boolean withDestinationItems) {
         return getItems(dataSourceId, sort, filters, limit, excludeGeo, conditionDto, withSourceItems, withDestinationItems,
-                null);
+                null, null);
     }
 
     //TODO change this method to turn it private or prevent from being called with a previous SearchRequest then building a new one
     public ItemsSearchResult getItems(UUID dataSourceId, SortDto sort, List<FilterDto> filters, int limit, boolean excludeGeo,
-            ConditionDto conditionDto, boolean withSourceItems, boolean withDestinationItems, RelationDto withRelation) {
+            ConditionDto conditionDto, boolean withSourceItems, boolean withDestinationItems, RelationDto withRelation,
+            String searchAfter) {
         DataSourceDetailsDto datasource = dataSourceService.getDataSourceDetails(dataSourceId);
         SearchRequestDto request = getSearchRequest(datasource, excludeGeo, limit, conditionDto, withSourceItems,
-                withDestinationItems, withRelation);
+                withDestinationItems, withRelation, searchAfter);
 
         updateRequestWithFilters(request, filters);
-        searchService.updateRequestWithRelationCondition(request);
         ItemsSearchResult result = searchService.search(request, sort);
         if (datasource.type() == DataSourceType.SEARCH) {
             provolyUserService.updateNamedQueryExecution(dataSourceId);
@@ -137,11 +139,12 @@ public class DataSourceItemsService {
 
     private SearchRequestDto getSearchRequest(DataSourceDetailsDto datasource, boolean excludeGeo, int limit,
             ConditionDto conditionDto, boolean withSourceItems, boolean withDestinationItems) {
-        return getSearchRequest(datasource, excludeGeo, limit, conditionDto, withSourceItems, withDestinationItems, null);
+        return getSearchRequest(datasource, excludeGeo, limit, conditionDto, withSourceItems, withDestinationItems, null, null);
     }
 
     private SearchRequestDto getSearchRequest(DataSourceDetailsDto datasource, boolean excludeGeo, int limit,
-            ConditionDto conditionDto, boolean withSourceItems, boolean withDestinationItems, RelationDto withRelation) {
+            ConditionDto conditionDto, boolean withSourceItems, boolean withDestinationItems, RelationDto withRelation,
+            String searchAfter) {
         if (limit == 0) {
             limit = dataVirtProperties.searchLimit();
         }
@@ -157,6 +160,9 @@ public class DataSourceItemsService {
         request.setWithSourceItems(withSourceItems);
         request.setWithDestinationItems(withDestinationItems);
         request.setWithRelation(withRelation);
+        if (request instanceof MonoClassRequestDto monoRequest) {
+            monoRequest.setSearchAfter(searchAfter);
+        }
 
         return request;
     }

@@ -165,6 +165,12 @@ public class MonoSearchRelationServiceTest {
                 .hasSizeItemsForClass(voitureClass.getId(), 1)
                 .haveItemsForClass(voitureClass.getId(), voiture3);
 
+        // searching items filtering withRelation source voiture2
+        var resultsForRelationSourceVoiture2 = itemsTestTools.searchAllFilteringOnRelation(voitureClass.getId(), voitureDs,
+                new RelationDto(relationType.slug, voiture2.getId(), null));
+
+        assertThat(resultsForRelationSourceVoiture2.items()).hasSize(0);
+
         cleaning();
     }
 }
