@@ -32,7 +32,7 @@
     <dependency>
       <groupId>org.flywaydb</groupId>
       <artifactId>flyway-database-postgresql</artifactId>
-      <version>11.0.0</version>
+      <version>11.0.1</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
