@@ -12,6 +12,9 @@ quarkus:
       realm-path: dev-realm.json
       port: 9080
       start-command: start-dev
+  kafka:
+    devservices:
+      image-name: docker.io/redpandadata/redpanda:v24.1.2
   oidc:
     client-id: provoly
     token:

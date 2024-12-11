@@ -59,11 +59,10 @@ class ElasticRelationService implements StorageRelationService {
      * Methode permettant de charger les relations entre les items presents dans {@code ItemSearchResult.items }
      *
      * @param searchResult les items dont on veut charger les relations
-     * @param maxSize le nombre maximum de relations à charger
      * @param withSourceItems if true, loads source items
      * @param withDestinationItems if true, loads destinations items
      */
-    public void loadRelations(ItemsSearchResult searchResult, int maxSize, boolean withSourceItems,
+    public void loadRelations(ItemsSearchResult searchResult, boolean withSourceItems,
             boolean withDestinationItems) {
         try {
             log.infof("Starting search relations on %d objects", searchResult.size());
@@ -71,7 +70,7 @@ class ElasticRelationService implements StorageRelationService {
                 return; // No need to search for relation if no item in resultset
             }
             var query = buildRelationQuery(searchResult.getItems());
-            var response = executeRelationRequest(query, maxSize);
+            var response = executeRelationRequest(query, properties.maxSizeLimit());
             for (var hit : response.hits().hits()) {
                 String type = extractStringFrom(hit, RelationAttributes.TYPE);
                 var sourceId = new ItemId(extractStringFrom(hit, RelationAttributes.SOURCE));

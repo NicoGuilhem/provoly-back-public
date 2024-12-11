@@ -13,6 +13,10 @@ quarkus:
   oidc:
     auth-server-url: https://acme.com/auth # Needed by extension even if not used
 
+  kafka:
+    devservices:
+      image-name: docker.io/redpandadata/redpanda:v24.1.2
+
 provoly:
   exec:
     file-base-path: "./data"

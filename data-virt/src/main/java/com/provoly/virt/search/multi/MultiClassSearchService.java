@@ -107,7 +107,7 @@ public class MultiClassSearchService {
             }
         }
         log.infof("Global result size : %s", resultAllClass.size());
-        relationService.loadRelations(resultAllClass, request.getLimit(), request.isWithSourceItems(),
+        relationService.loadRelations(resultAllClass, request.isWithSourceItems(),
                 request.isWithDestinationItems());
 
         resultAllClass.setCount(totalRemainingItem);

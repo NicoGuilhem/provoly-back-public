@@ -11,7 +11,7 @@ public interface StorageRelationService {
 
     ItemsSearchResult getRelationsByItem(Item item);
 
-    void loadRelations(ItemsSearchResult searchResult, int maxSize, boolean withSourceItems, boolean withDestinationItems);
+    void loadRelations(ItemsSearchResult searchResult, boolean withSourceItems, boolean withDestinationItems);
 
     Collection<Relation> getRelationsByItemAndRelation(RelationDto relationDto);
 }

@@ -34,9 +34,9 @@ public class StorageRelationAdapters implements StorageRelationService {
     }
 
     @Override
-    public void loadRelations(ItemsSearchResult searchResult, int maxSize, boolean withSourceItems,
+    public void loadRelations(ItemsSearchResult searchResult, boolean withSourceItems,
             boolean withDestinationItems) {
-        getService(storageRelationServices, Storage.ELASTIC).loadRelations(searchResult, maxSize, withSourceItems,
+        getService(storageRelationServices, Storage.ELASTIC).loadRelations(searchResult, withSourceItems,
                 withDestinationItems);
     }
 

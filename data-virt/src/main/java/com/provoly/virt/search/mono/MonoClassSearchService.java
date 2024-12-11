@@ -136,7 +136,7 @@ public class MonoClassSearchService {
                     monoClassContextRequest);
 
             if (classDto.getStorage() == Storage.ELASTIC) {
-                relationService.loadRelations(result, request.getLimit(), request.isWithSourceItems(),
+                relationService.loadRelations(result, request.isWithSourceItems(),
                         request.isWithDestinationItems());
             }
 
