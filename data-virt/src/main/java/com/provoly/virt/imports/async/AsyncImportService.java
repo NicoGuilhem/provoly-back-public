@@ -71,7 +71,7 @@ public class AsyncImportService {
 
         var messages = recordConvertor.validateAttributeNames(
                 itemRecord.values().keySet(),
-                oClassDetails.getAttributes().stream().map(AttributeDefDetailsDto::getName))
+                oClassDetails.getAttributes().stream().map(AttributeDefDetailsDto::getTechnicalName))
                 .stream()
                 .filter(m -> m.messageLevel() == MessageLevel.ERROR)
                 .toList();

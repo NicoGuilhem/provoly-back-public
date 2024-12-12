@@ -85,11 +85,11 @@ public class AsyncImportServiceTest {
             null,
             List.of(new AttributeDefDetailsDto(
                     UUID.randomUUID(),
-                    new AttributeDefDto(UUID.randomUUID(), "name", "name", field, null, false, "slug_name"),
+                    new AttributeDefDto(UUID.randomUUID(), "name", "technical_name", field, null, false, "slug_name"),
                     field, null),
                     new AttributeDefDetailsDto(
                             UUID.randomUUID(),
-                            new AttributeDefDto(UUID.randomUUID(), "family_name", "family_name", field, null, false,
+                            new AttributeDefDto(UUID.randomUUID(), "family_name", "technical_family_name", field, null, false,
                                     "slug_family_name"),
                             field, null)),
             Storage.ELASTIC,
@@ -122,8 +122,8 @@ public class AsyncImportServiceTest {
 
         var firstItemID = UUID.randomUUID();
         var secondItemID = UUID.randomUUID();
-        var recordInsertItem1 = generateRecord(firstItemID, null, "name", "Mymi", "family_name", "Cool");
-        var recordInsertItem2 = generateRecord(secondItemID, null, "name", "Dam", "family_name", "Super");
+        var recordInsertItem1 = generateRecord(firstItemID, null, "technical_name", "Mymi", "technical_family_name", "Cool");
+        var recordInsertItem2 = generateRecord(secondItemID, null, "technical_name", "Dam", "technical_family_name", "Super");
 
         //when
         asyncImportService.consume(recordInsertItem1);
@@ -133,19 +133,21 @@ public class AsyncImportServiceTest {
         var firstItem = items.stream().filter(i -> i.getId().getId().equals(firstItemID.toString())).findFirst().get();
         assertThat(firstItem.getAttributes())
                 .hasSize(2)
-                .containsKeys("name", "family_name")
-                .matches(attributeValues -> ((AttributeSimpleValue) attributeValues.get("name")).getValue().equals("Mymi")
-                        && ((AttributeSimpleValue) attributeValues.get("family_name")).getValue().equals("Cool"));
+                .containsKeys("technical_name", "technical_family_name")
+                .matches(attributeValues -> ((AttributeSimpleValue) attributeValues.get("technical_name")).getValue()
+                        .equals("Mymi")
+                        && ((AttributeSimpleValue) attributeValues.get("technical_family_name")).getValue().equals("Cool"));
         var secondItem = items.stream().filter(i -> i.getId().getId().equals(secondItemID.toString())).findFirst().get();
         assertThat(secondItem.getAttributes())
                 .hasSize(2)
-                .containsKeys("name", "family_name")
-                .matches(attributeValues -> ((AttributeSimpleValue) attributeValues.get("name")).getValue().equals("Dam")
-                        && ((AttributeSimpleValue) attributeValues.get("family_name")).getValue().equals("Super"));
+                .containsKeys("technical_name", "technical_family_name")
+                .matches(attributeValues -> ((AttributeSimpleValue) attributeValues.get("technical_name")).getValue()
+                        .equals("Dam")
+                        && ((AttributeSimpleValue) attributeValues.get("technical_family_name")).getValue().equals("Super"));
 
         // updating items
-        var recordReplaceItem1 = generateRecord(firstItemID, ItemUpdateMode.REPLACE, "name", "Myra", null, null);
-        var recordUpdateItem2 = generateRecord(secondItemID, ItemUpdateMode.MERGE, "name", "Daminou", null, null);
+        var recordReplaceItem1 = generateRecord(firstItemID, ItemUpdateMode.REPLACE, "technical_name", "Myra", null, null);
+        var recordUpdateItem2 = generateRecord(secondItemID, ItemUpdateMode.MERGE, "technical_name", "Daminou", null, null);
         asyncImportService.consume(recordReplaceItem1);
         asyncImportService.consume(recordUpdateItem2);
 
@@ -155,22 +157,23 @@ public class AsyncImportServiceTest {
         firstItem = items.stream().filter(i -> i.getId().getId().equals(firstItemID.toString())).findFirst().get();
         assertThat(firstItem.getAttributes())
                 .hasSize(1)
-                .containsKey("name")
-                .extractingByKey("name")
+                .containsKey("technical_name")
+                .extractingByKey("technical_name")
                 .matches(attributeValue -> ((AttributeSimpleValue) attributeValue).getValue().equals("Myra"));
         secondItem = items.stream().filter(i -> i.getId().getId().equals(secondItemID.toString())).findFirst().get();
         assertThat(secondItem.getAttributes())
                 .hasSize(2)
-                .containsKeys("name", "family_name")
-                .matches(attributeValues -> ((AttributeSimpleValue) attributeValues.get("name")).getValue().equals("Daminou")
-                        && ((AttributeSimpleValue) attributeValues.get("family_name")).getValue().equals("Super"));
+                .containsKeys("technical_name", "technical_family_name")
+                .matches(attributeValues -> ((AttributeSimpleValue) attributeValues.get("technical_name")).getValue()
+                        .equals("Daminou")
+                        && ((AttributeSimpleValue) attributeValues.get("technical_family_name")).getValue().equals("Super"));
     }
 
     @Test
     public void throw_error_when_header_is_missing() {
         // given
         JsonObject value = new JsonObject();
-        value.put("name", "toto");
+        value.put("technical_name", "toto");
         var recordMessage = new ConsumerRecord<String, JsonObject>(topicDataset, 0, 0, null, value);
 
         //when
@@ -183,7 +186,7 @@ public class AsyncImportServiceTest {
         // given
         DatasetDto invalidDataset = new DatasetDto(UUID.randomUUID(), "invalid-dataset", classId, DatasetType.CLOSED);
         when(datasetService.searchByDatasetVersionId(datasetVersionId)).thenReturn(invalidDataset);
-        var recordMessage = generateRecord("name", "toto", "family_name", "toto");
+        var recordMessage = generateRecord("technical_name", "toto", "technical_family_name", "toto");
 
         //when
         assertThatThrownBy(() -> asyncImportService.consume(recordMessage))
@@ -204,7 +207,7 @@ public class AsyncImportServiceTest {
     @Order(2) // to be sure that the index is created before the test (done by the first test)
     public void import_does_not_fail_with_attribute_value_null() {
         // given
-        var recordMessage = generateRecord("name", "toto", "family_name", null);
+        var recordMessage = generateRecord("technical_name", "toto", "technical_family_name", null);
 
         //when
         assertThatNoException().isThrownBy(() -> asyncImportService.consume(recordMessage));
