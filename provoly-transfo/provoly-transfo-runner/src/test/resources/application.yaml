@@ -13,10 +13,6 @@ quarkus:
       realm-path: dev-realm.json
       port: 9080
 
-  kafka:
-    devservices:
-      image-name: docker.io/redpandadata/redpanda:v24.1.2
-
   otel:
     sdk:
       enabled: false

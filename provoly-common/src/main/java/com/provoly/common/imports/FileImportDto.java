@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.provoly.common.model.Type;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 public record FileImportDto(Integer numberOfLines, Map<Long, List<FileImportError>> itemErrors) {
@@ -15,6 +16,7 @@ public record FileImportDto(Integer numberOfLines, Map<Long, List<FileImportErro
         Type type;
         String receivedValue;
 
+        @JsonCreator
         public ParamsTypeError(String name, Type type, String receivedValue) {
             this.name = name;
             this.type = type;
