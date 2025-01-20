@@ -79,9 +79,15 @@ class UserControllerTest {
     @TestSecurity(user = "testUser", roles = { Role.STR_USER_READ })
     public void shouldGetAllUser() {
         given(currentSubjectProvider.getSub()).willReturn(iamuseradminSub);
+        given(currentSubjectProvider.getGivenName()).willReturn("fakeAdminGivenName");
+        given(currentSubjectProvider.getFamilyName()).willReturn("fakeAdminFamilyName");
+        given(currentSubjectProvider.getEmail()).willReturn("fakeEmail@admin.com");
 
         UserDto userSaved = userController.getCurrentUserInfo();
         assertThat(userSaved.getId()).isNotNull();
+        assertThat(userSaved.getName()).isNotNull().isEqualTo("fakeAdminGivenName");
+        assertThat(userSaved.getFamilyName()).isNotNull().isEqualTo("fakeAdminFamilyName");
+        assertThat(userSaved.getEmail()).isNotNull().isEqualTo("fakeEmail@admin.com");
 
         List<UserDto> savedUsers = userController.getAllUsers();
         assertThat(savedUsers).contains(userSaved);
