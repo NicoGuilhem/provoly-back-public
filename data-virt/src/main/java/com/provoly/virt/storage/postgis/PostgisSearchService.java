@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
 
 import com.provoly.common.Storage;
 import com.provoly.common.error.BusinessException;
@@ -60,13 +61,17 @@ class PostgisSearchService implements StorageSearchService {
     public PostgisSearchService(
             Logger log,
             PostgisSupport postgisSupport,
-            AgroalDataSource dataSource,
+            Instance<AgroalDataSource> dataSource,
             ObjectMapper mapper,
             StorageSupport storageSupport,
             ProvolySpanManager spanManager) {
         this.log = log;
         this.postgisSupport = postgisSupport;
-        this.dataSource = dataSource;
+        if (dataSource.isResolvable()) {
+            this.dataSource = dataSource.get();
+        } else {
+            this.dataSource = null;
+        }
         this.mapper = mapper;
         this.storageSupport = storageSupport;
         this.spanManager = spanManager;

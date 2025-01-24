@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
 
 import com.provoly.common.Storage;
 import com.provoly.common.error.BusinessException;
@@ -47,10 +48,14 @@ public class PostgisAggregateService implements StorageAggregateService {
 
     private final ObjectMapper mapper;
 
-    PostgisAggregateService(Logger log, AgroalDataSource dataSource, PostgisSupport postgisSupport,
+    PostgisAggregateService(Logger log, Instance<AgroalDataSource> dataSource, PostgisSupport postgisSupport,
             StorageSupport storageSupport, ObjectMapper mapper, ProvolySpanManager spanManager) {
         this.log = log;
-        this.dataSource = dataSource;
+        if (dataSource.isResolvable()) {
+            this.dataSource = dataSource.get();
+        } else {
+            this.dataSource = null;
+        }
         this.postgisSupport = postgisSupport;
         this.storageSupport = storageSupport;
         this.mapper = mapper;

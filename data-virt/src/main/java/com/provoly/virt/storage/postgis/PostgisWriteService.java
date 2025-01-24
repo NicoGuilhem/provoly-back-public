@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
 
 import com.provoly.common.Storage;
 import com.provoly.common.error.BusinessException;
@@ -37,10 +38,14 @@ class PostgisWriteService implements StorageWriteService {
 
     private final AgroalDataSource datasource;
 
-    public PostgisWriteService(Logger log, PostgisSupport postgisSupport, AgroalDataSource datasource) {
+    public PostgisWriteService(Logger log, PostgisSupport postgisSupport, Instance<AgroalDataSource> datasource) {
         this.log = log;
         this.postgisSupport = postgisSupport;
-        this.datasource = datasource;
+        if (datasource.isResolvable()) {
+            this.datasource = datasource.get();
+        } else {
+            this.datasource = null;
+        }
     }
 
     @Override

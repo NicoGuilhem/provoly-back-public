@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
 
 import com.provoly.common.Storage;
 import com.provoly.common.dataset.DatasetVersionDto;
@@ -36,10 +37,14 @@ class PostgisModelService implements StorageModelService {
     private PostgisSupport postgisSupport;
     private AgroalDataSource dataSource;
 
-    public PostgisModelService(Logger log, PostgisSupport postgisSupport, AgroalDataSource dataSource) {
+    public PostgisModelService(Logger log, PostgisSupport postgisSupport, Instance<AgroalDataSource> dataSource) {
         this.log = log;
         this.postgisSupport = postgisSupport;
-        this.dataSource = dataSource;
+        if (dataSource.isResolvable()) {
+            this.dataSource = dataSource.get();
+        } else {
+            this.dataSource = null;
+        }
     }
 
     @Override
