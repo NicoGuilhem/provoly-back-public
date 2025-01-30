@@ -201,7 +201,7 @@ public class DataSourceControllerTest {
                         dataStorage.datasetVersionDto.getId()));
         Search autoComplete = new Search(attributes, "mar", 5);
 
-        var result = dataSourceController.searchForAttributeValues(autoComplete);
+        var result = dataSourceController.searchForAttributeValues(autoComplete, null);
 
         assertThat(result).containsExactlyInAnyOrder("marie", "MaRie").hasSize(2);
     }
@@ -217,7 +217,7 @@ public class DataSourceControllerTest {
                         dataStorage.datasetVersionDto.getDataset()));
         Search autoComplete = new Search(attributes, "ar", 5);
 
-        var result = dataSourceController.searchForAttributeValues(autoComplete);
+        var result = dataSourceController.searchForAttributeValues(autoComplete, null);
 
         assertThat(result).containsExactlyInAnyOrder("marie", "MaRie").hasSize(2);
     }
@@ -225,6 +225,24 @@ public class DataSourceControllerTest {
     @ParameterizedTest
     @EnumSource(names = { "ELASTIC", "POSTGIS" })
     @Order(8)
+    public void autocompleteCalledWithar_shouldReturnAllElementWithOutFilteredElements(Storage storage) {
+        var dataStorage = dataStorages.get(storage);
+        List<Search.AttributeByDatasource> attributes = new ArrayList<>();
+        attributes.add(
+                new Search.AttributeByDatasource(dataStorage.attributeKeyword.getId(),
+                        dataStorage.datasetVersionDto.getDataset()));
+        Search autoComplete = new Search(attributes, "ar", 5);
+
+        FilterDto filter = FilterDto.fromString(dataStorage.attributeChoc.getId() + ",EQUALS,15");
+
+        var result = dataSourceController.searchForAttributeValues(autoComplete, List.of(filter));
+
+        assertThat(result).containsExactlyInAnyOrder("MaRie").hasSize(1);
+    }
+
+    @ParameterizedTest
+    @EnumSource(names = { "ELASTIC", "POSTGIS" })
+    @Order(9)
     public void autocompleteCalledWithUnknownAttribute_shouldThrowError(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         List<Search.AttributeByDatasource> attributes = new ArrayList<>();
@@ -232,7 +250,7 @@ public class DataSourceControllerTest {
         attributes.add(new Search.AttributeByDatasource(attributeId, dataStorage.datasetVersionDto.getId()));
         Search autoComplete = new Search(attributes, "Z", 5);
 
-        assertThatThrownBy(() -> dataSourceController.searchForAttributeValues(autoComplete))
+        assertThatThrownBy(() -> dataSourceController.searchForAttributeValues(autoComplete, null))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("AttributeId %s is unknown for class %s".formatted(attributeId,
                         dataStorage.datasetVersionDto.getoClass()));
@@ -240,7 +258,7 @@ public class DataSourceControllerTest {
 
     @ParameterizedTest
     @EnumSource(names = { "ELASTIC", "POSTGIS" })
-    @Order(9)
+    @Order(10)
     public void autocompleteCalledWithUnknownDatasource_shouldThrowError(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         UUID datasetId = UUID.randomUUID();
@@ -248,14 +266,14 @@ public class DataSourceControllerTest {
         attributes.add(new Search.AttributeByDatasource(dataStorage.attributeKeyword.getId(), datasetId));
         Search autoComplete = new Search(attributes, "Z", 5);
 
-        assertThatThrownBy(() -> dataSourceController.searchForAttributeValues(autoComplete))
+        assertThatThrownBy(() -> dataSourceController.searchForAttributeValues(autoComplete, null))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("Unknown dataset %s".formatted(datasetId));
     }
 
     @ParameterizedTest
     @EnumSource(names = { "ELASTIC", "POSTGIS" })
-    @Order(10)
+    @Order(11)
     public void autocompleteCalledWithNamedquery_shouldThrowError(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         String namedQueryName = "namedQuery" + UUID.randomUUID();
@@ -267,14 +285,14 @@ public class DataSourceControllerTest {
         Search autoComplete = new Search(attributes, "Z", 5);
         dsMock.addDataSource(namedQuery.getId(), DataSourceType.SEARCH, dataStorage.datasetVersionDto.getoClass());
 
-        assertThatThrownBy(() -> dataSourceController.searchForAttributeValues(autoComplete))
+        assertThatThrownBy(() -> dataSourceController.searchForAttributeValues(autoComplete, null))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("Autocomplete is not implemented on namedquery yet.");
     }
 
     @ParameterizedTest
     @EnumSource(names = { "ELASTIC", "POSTGIS" })
-    @Order(11)
+    @Order(12)
     public void autocompleteCalledWithAttributeInteger_shouldThrowError(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         List<Search.AttributeByDatasource> attributes = new ArrayList<>();
@@ -282,14 +300,14 @@ public class DataSourceControllerTest {
                 new Search.AttributeByDatasource(dataStorage.attributeDate.getId(), dataStorage.datasetVersionDto.getId()));
         Search autoComplete = new Search(attributes, "a", 5);
 
-        assertThatThrownBy(() -> dataSourceController.searchForAttributeValues(autoComplete))
+        assertThatThrownBy(() -> dataSourceController.searchForAttributeValues(autoComplete, null))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("Search only implemented on attribute with type keyword.");
     }
 
     @ParameterizedTest
     @EnumSource(names = { "ELASTIC" })
-    @Order(12)
+    @Order(13)
     public void autocompleteCalledWithMultiValueAttribute_shouldThrowError(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         List<Search.AttributeByDatasource> attributes = new ArrayList<>();
@@ -298,12 +316,12 @@ public class DataSourceControllerTest {
                         dataStorage.datasetVersionDto.getId()));
         Search autoComplete = new Search(attributes, "a", 5);
 
-        assertThatThrownBy(() -> dataSourceController.searchForAttributeValues(autoComplete))
+        assertThatThrownBy(() -> dataSourceController.searchForAttributeValues(autoComplete, null))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("Search only implemented on simple value attribute.");
     }
 
-    @Order(13)
+    @Order(14)
     public void autocompleteCalledWithoutAnything_shouldReturnAllElement(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         List<Search.AttributeByDatasource> attributes = new ArrayList<>();
@@ -312,14 +330,14 @@ public class DataSourceControllerTest {
                         dataStorage.datasetVersionDto.getId()));
         Search autoComplete = new Search(attributes, "", 5);
 
-        var result = dataSourceController.searchForAttributeValues(autoComplete);
+        var result = dataSourceController.searchForAttributeValues(autoComplete, null);
 
         assertThat(result).containsExactlyInAnyOrder("marie", "MaRie").hasSize(2);
     }
 
     @ParameterizedTest
     @EnumSource(names = { "ELASTIC", "POSTGIS" })
-    @Order(14)
+    @Order(15)
     public void initSearchWithBlankValue_shouldThrowError(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         List<Search.AttributeByDatasource> attributes = new ArrayList<>();
@@ -327,23 +345,23 @@ public class DataSourceControllerTest {
                 new Search.AttributeByDatasource(dataStorage.multiAttributeKeyword.getId(),
                         dataStorage.datasetVersionDto.getId()));
 
-        assertThatThrownBy(() -> dataSourceController.searchForAttributeValues(new Search(attributes, null, 5)))
+        assertThatThrownBy(() -> dataSourceController.searchForAttributeValues(new Search(attributes, null, 5), null))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("Value search must not be null.");
     }
 
     @ParameterizedTest
     @EnumSource(names = { "ELASTIC", "POSTGIS" })
-    @Order(15)
+    @Order(16)
     public void initSearchWithNullAttributes_shouldThrowError(Storage storage) {
-        assertThatThrownBy(() -> dataSourceController.searchForAttributeValues(new Search(null, "a", 5)))
+        assertThatThrownBy(() -> dataSourceController.searchForAttributeValues(new Search(null, "a", 5), null))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("Must contains at least one attribute.");
     }
 
     @ParameterizedTest
     @EnumSource(names = "ELASTIC")
-    @Order(16)
+    @Order(17)
     public void getItemAggregate_wrongDateIntervalFormat_shouldThrowError(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         String wrongDateIntervalValue = "TOTO";
@@ -361,7 +379,7 @@ public class DataSourceControllerTest {
 
     @ParameterizedTest
     @EnumSource(names = "ELASTIC")
-    @Order(17)
+    @Order(18)
     public void getItemAggregate_wrongAttributeId_shouldThrowError(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         var params = new DataSourceController.AggregationParameters();
@@ -377,7 +395,7 @@ public class DataSourceControllerTest {
 
     @ParameterizedTest
     @EnumSource(names = { "ELASTIC", "POSTGIS" })
-    @Order(18)
+    @Order(19)
     public void getItemsSearch_withAndComposedCondition_ShouldReturnItems(Storage storage) {
         var dataStorage = dataStorages.get(storage);
 
@@ -398,7 +416,7 @@ public class DataSourceControllerTest {
 
     @ParameterizedTest
     @EnumSource(names = { "ELASTIC", "POSTGIS" })
-    @Order(19)
+    @Order(20)
     public void getItemsSearch_withConditionAndFilter_ShouldReturnItems(Storage storage) {
         var dataStorage = dataStorages.get(storage);
 
@@ -415,7 +433,7 @@ public class DataSourceControllerTest {
 
     @ParameterizedTest
     @EnumSource(names = { "ELASTIC", "POSTGIS" })
-    @Order(20)
+    @Order(21)
     public void getItemsSearch_withFilterIn_ShouldNotReturnItems(Storage storage) {
         var dataStorage = dataStorages.get(storage);
 
@@ -433,7 +451,7 @@ public class DataSourceControllerTest {
 
     @ParameterizedTest
     @EnumSource(names = { "ELASTIC", "POSTGIS" })
-    @Order(21)
+    @Order(22)
     public void getItemsSearch_withFilterNotIn_ShouldNotReturnItems(Storage storage) {
         var dataStorage = dataStorages.get(storage);
 
@@ -451,7 +469,7 @@ public class DataSourceControllerTest {
 
     @ParameterizedTest
     @EnumSource(names = { "ELASTIC", "POSTGIS" })
-    @Order(22)
+    @Order(23)
     public void should_get_empty_result_when_dataset_doesnt_exist(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         var dateField = testData.createField("aggregate_date_%s".formatted(storage), Type.INSTANT, "MONTH");
@@ -472,7 +490,7 @@ public class DataSourceControllerTest {
 
     @ParameterizedTest
     @EnumSource(names = { "ELASTIC", "POSTGIS" })
-    @Order(23)
+    @Order(24)
     public void aggregate_groupBy_withOrder_should_throwError(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         // GIVEN
@@ -491,7 +509,7 @@ public class DataSourceControllerTest {
 
     @ParameterizedTest
     @EnumSource(names = { "ELASTIC", "POSTGIS" })
-    @Order(24)
+    @Order(25)
     public void aggregate_withLimitNegative_should_throwError(Storage storage) {
         var dataStorage = dataStorages.get(storage);
         String intervalFormat = "hour";

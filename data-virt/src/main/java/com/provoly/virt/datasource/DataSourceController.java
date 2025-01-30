@@ -127,7 +127,8 @@ public class DataSourceController {
     @RolesAllowed({ Role.STR_DATASOURCE_READ })
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/values")
-    public List<String> searchForAttributeValues(Search search) {
-        return dataSourceItemsService.searchForAttributeValues(search);
+    public List<String> searchForAttributeValues(Search search,
+            @RestQuery("filter") List<FilterDto> filters) {
+        return dataSourceItemsService.searchForAttributeValues(search, filters);
     }
 }

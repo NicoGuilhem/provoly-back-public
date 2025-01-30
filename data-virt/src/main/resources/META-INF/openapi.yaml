@@ -584,6 +584,8 @@ paths:
       tags:
         - Data Source
       operationId: com.provoly.virt.datasource.DataSourceController_searchForAttributeValues
+      parameters:
+        - $ref: '#/components/parameters/filterDto'
       requestBody:
         content:
           application/json:

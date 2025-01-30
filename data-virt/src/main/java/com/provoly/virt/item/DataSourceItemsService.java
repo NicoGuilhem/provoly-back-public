@@ -1,5 +1,6 @@
 package com.provoly.virt.item;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -123,7 +124,7 @@ public class DataSourceItemsService {
         return result;
     }
 
-    public List<String> searchForAttributeValues(Search search) {
+    public List<String> searchForAttributeValues(Search search, List<FilterDto> filters) {
         // Required in #28 to only get the first value for now
         var datasourceByAttribute = search.attributes().getFirst();
         var dataSourceDetails = dataSourceService.getDataSourceDetails(datasourceByAttribute.getDatasource());
@@ -134,7 +135,7 @@ public class DataSourceItemsService {
                 throw new BusinessException(ErrorCode.NOT_SUPPORTED, "Autocomplete is not implemented on namedquery yet.");
         };
         return searchForAttributeValue(datasourceByAttribute.getAttribute(), datasetVersionDto, search.value(),
-                search.limit());
+                search.limit(), filters);
     }
 
     private SearchRequestDto getSearchRequest(DataSourceDetailsDto datasource, boolean excludeGeo, int limit,
@@ -226,7 +227,8 @@ public class DataSourceItemsService {
     }
 
     private List<String> searchForAttributeValue(UUID attributeId,
-            DatasetVersionDetailsDto datasetVersion, String search, Integer limit) {
+            DatasetVersionDetailsDto datasetVersion, String search, Integer limit,
+            List<FilterDto> filters) {
         OClassDetailsDto oClassDto = modelService.getDetails(datasetVersion.getoClass());
 
         AttributeDefDetailsDto attributesFormatted = oClassDto.getAttributes()
@@ -240,11 +242,19 @@ public class DataSourceItemsService {
         SortAggregate sortAggregate = new SortAggregate(Direction.asc, OrderBy.KEY);
         AggregationParamDto params = new AggregationParamDto(attributesFormatted.getId(), AggregateOperation.COUNT, null,
                 sortAggregate);
+
+        List<FilterDto> filtersToUse;
         FilterDto filterDto = new FilterDto(attributesFormatted.getId(), Operator.I_CONTAINS, search);
+        if (filters != null) {
+            filtersToUse = new ArrayList<>(filters);
+            filtersToUse.add(filterDto);
+        } else {
+            filtersToUse = List.of(filterDto);
+        }
         if (limit == null) {
             limit = dataVirtProperties.maxSizeLimit();
         }
-        return extractAttributesValues(getAggregationResult(datasetVersion.getId(), params, List.of(filterDto), true, limit));
+        return extractAttributesValues(getAggregationResult(datasetVersion.getId(), params, filtersToUse, true, limit));
     }
 
     private static void checkValidAttribute(AttributeDefDetailsDto attributesFormatted) {
