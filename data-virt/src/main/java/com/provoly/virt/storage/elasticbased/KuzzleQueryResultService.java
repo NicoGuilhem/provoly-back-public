@@ -93,11 +93,6 @@ public class KuzzleQueryResultService {
                 };
                 finalQuery.put("sort", List.of(Map.of(propertyName, sort.direction().name())));
             }
-
-            if (request.getSearchAfter() != null) {
-                var searchAfterContext = storageSupport.getSearchAfterContext(request.getSearchAfter());
-                finalQuery.put("search_after", searchAfterContext.searchAfter());
-            }
         } catch (JsonProcessingException e) {
             throw new BusinessException(ErrorCode.TECHNICAL, "Unable to parse query", e);
         }
@@ -134,9 +129,19 @@ public class KuzzleQueryResultService {
                     case METADATA -> item.getMetadata(sortDto.attribute()).getValue();
                     case ITEM_ID -> item.getId().getId();
                 };
-                result.setSearchAfter(new SearchAfterContext(null, List.of(sortValue.toString())));
             }
         }
+
+        var next = requestDto.getLimit();
+        if (requestDto.getSearchAfter() != null) {
+            try {
+                var context = storageSupport.getSearchAfterContext(requestDto.getSearchAfter());
+                next = Integer.parseInt(context.pit()) + requestDto.getLimit();
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        result.setSearchAfter(new SearchAfterContext(String.valueOf(next), List.of()));
 
         long totalSize = response.total;
         boolean isAccurate = totalSize <= 10000;

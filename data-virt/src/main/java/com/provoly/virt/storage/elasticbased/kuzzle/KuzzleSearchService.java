@@ -60,8 +60,8 @@ public class KuzzleSearchService implements StorageSearchService {
             return result;
         }
 
-        var response = kuzzleClient.kuzzleSearch(classDto.getSlug(), KuzzleLayout.COLLECTION_NAME, finalQuery,
-                request.getLimit());
+        var response = kuzzleClient.kuzzleSearchPagination(classDto.getSlug(), KuzzleLayout.COLLECTION_NAME, finalQuery,
+                request.getLimit(), request.getSearchAfter());
         return kuzzleQueryResultService.convertToItemResult(response, classDto, request, layout);
 
     }

@@ -58,7 +58,8 @@ public class KuzzleAssetSearchService implements StorageSearchService {
             log.debugf("Query is null, return empty result");
             return result;
         }
-        var response = kuzzleClient.kuzzleSearch(tenant, ASSET_COLLECTION, finalQuery, request.getLimit());
+        var response = kuzzleClient.kuzzleSearchPagination(tenant, ASSET_COLLECTION, finalQuery, request.getLimit(),
+                request.getSearchAfter());
         return kuzzleQueryResultService.convertToItemResult(response, classDto, request, layout);
 
     }

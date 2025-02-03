@@ -13,6 +13,8 @@ import jakarta.enterprise.event.Observes;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.virt.DataVirtProperties;
+import com.provoly.virt.entity.SearchAfterContext;
+import com.provoly.virt.search.mono.MonoMapper;
 import com.provoly.virt.storage.InsertionError;
 import com.provoly.virt.storage.elasticbased.kuzzle.KuzzleNotifierService;
 import com.provoly.virt.storage.elasticbased.kuzzle.KuzzleUnconfiguredClient;
@@ -48,11 +50,13 @@ public class KuzzleClient {
     private Thread reconnectThread = null;
     private int replicas;
     private String token;
+    private final MonoMapper mapper;
 
-    public KuzzleClient(DataVirtProperties config, Logger log, KuzzleNotifierService kuzzleNotifierService) {
+    public KuzzleClient(DataVirtProperties config, Logger log, KuzzleNotifierService kuzzleNotifierService, MonoMapper mapper) {
         this.log = log;
         this.kuzzleConfiguration = config.kuzzle();
         this.kuzzleNotifierService = kuzzleNotifierService;
+        this.mapper = mapper;
         replicas = kuzzleConfiguration.flatMap(DataVirtProperties.KuzzleConfiguration::replicas)
                 .orElse(DEFAULT_REPLICAS);
     }
@@ -94,6 +98,29 @@ public class KuzzleClient {
         return kuzzleConfiguration.map(DataVirtProperties.KuzzleConfiguration::tenant)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TECHNICAL,
                         "Tenant property is mandatory to use Kuzzle device manager"));
+    }
+
+    public SearchResult kuzzleSearchPagination(String index,
+            String collection,
+            Map<String, Object> query,
+            int limit,
+            String searchAfter) {
+        int from = 0;
+        if (searchAfter != null) {
+            SearchAfterContext context = mapper.map(searchAfter);
+            from = Integer.parseInt(context.pit());
+        }
+
+        try {
+            return client().getDocumentController().search(
+                    index,
+                    collection,
+                    query,
+                    limit,
+                    from).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new BusinessException(ErrorCode.TECHNICAL, "Unable to search", e);
+        }
     }
 
     public SearchResult kuzzleSearch(String index, String collection, Map<String, Object> query, int limit) {

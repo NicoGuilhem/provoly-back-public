@@ -90,11 +90,14 @@ public class DataSourceItemsService {
 
     public ItemsSearchResult getItems(UUID dataSourceId, SortDto sort, List<FilterDto> filters, SearchRequestDto requestDto) {
         return switch (requestDto) {
-            case MonoClassRequestDto monoClassRequestDto ->
-                getItems(dataSourceId, sort, filters, requestDto.getLimit(), requestDto.isExcludeGeo(),
+            case MonoClassRequestDto monoClassRequestDto -> {
+                searchService.updateRequestWithEffectiveSort(monoClassRequestDto, sort);
+                yield getItems(dataSourceId, monoClassRequestDto.getSort(), filters, requestDto.getLimit(),
+                        requestDto.isExcludeGeo(),
                         monoClassRequestDto.getCondition(), requestDto.isWithSourceItems(),
                         requestDto.isWithDestinationItems(), requestDto.getWithRelation(),
                         monoClassRequestDto.getSearchAfter());
+            }
             case MultiClassRequestDto multiClassRequestDto ->
                 getItems(dataSourceId, sort, filters, requestDto.getLimit(), requestDto.isExcludeGeo(), null,
                         requestDto.isWithSourceItems(), requestDto.isWithDestinationItems(), requestDto.getWithRelation(),
