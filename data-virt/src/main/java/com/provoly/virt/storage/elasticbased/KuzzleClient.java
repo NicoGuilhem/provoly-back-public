@@ -2,6 +2,7 @@ package com.provoly.virt.storage.elasticbased;
 
 import static com.provoly.virt.storage.elasticbased.kuzzlemeasure.KuzzleMeasureLayout.MEASURE_COLLECTION;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -13,7 +14,6 @@ import jakarta.enterprise.event.Observes;
 import com.provoly.common.error.BusinessException;
 import com.provoly.common.error.ErrorCode;
 import com.provoly.virt.DataVirtProperties;
-import com.provoly.virt.entity.SearchAfterContext;
 import com.provoly.virt.search.mono.MonoMapper;
 import com.provoly.virt.storage.InsertionError;
 import com.provoly.virt.storage.elasticbased.kuzzle.KuzzleNotifierService;
@@ -30,6 +30,7 @@ import io.quarkus.cache.CacheResult;
 import io.quarkus.runtime.StartupEvent;
 
 import org.jboss.logging.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import kotlin.Unit;
 
@@ -42,6 +43,7 @@ public class KuzzleClient {
     public static final int DEFAULT_PORT = 7512;
     public static final int DEFAULT_REPLICAS = 1;
     private static final String JWT_PROPERTY = "jwt";
+    private static final int SECONDS_TTL_SEARCH_RESULT = 50;
     private static final int SECONDS_TO_REFRESH_TOKEN_BEFORE_IT_EXPIRES = 120;
     private final Logger log;
     private Kuzzle kuzzle;
@@ -51,6 +53,8 @@ public class KuzzleClient {
     private int replicas;
     private String token;
     private final MonoMapper mapper;
+    private final TtlHashMap<String, SearchResult> searchResultCache = new TtlHashMap<>(
+            Duration.ofSeconds(SECONDS_TTL_SEARCH_RESULT));
 
     public KuzzleClient(DataVirtProperties config, Logger log, KuzzleNotifierService kuzzleNotifierService, MonoMapper mapper) {
         this.log = log;
@@ -105,21 +109,38 @@ public class KuzzleClient {
             Map<String, Object> query,
             int limit,
             String searchAfter) {
-        int from = 0;
-        if (searchAfter != null) {
-            SearchAfterContext context = mapper.map(searchAfter);
-            from = Integer.parseInt(context.pit());
-        }
 
         try {
-            return client().getDocumentController().search(
+            if (searchAfter != null) {
+                return getNextSearchResult(searchAfter);
+            }
+
+            var searchResult = client().getDocumentController().search(
                     index,
                     collection,
                     query,
-                    limit,
-                    from).get();
+                    "%ds".formatted(SECONDS_TTL_SEARCH_RESULT),
+                    limit).get();
+            searchResultCache.put(searchResult.getScrollId(), searchResult);
+            return searchResult;
+
         } catch (InterruptedException | ExecutionException e) {
             throw new BusinessException(ErrorCode.TECHNICAL, "Unable to search", e);
+        }
+    }
+
+    @NotNull
+    private SearchResult getNextSearchResult(String searchAfter) throws InterruptedException, ExecutionException {
+        var searchAfterContext = mapper.map(searchAfter);
+        var scrollId = searchAfterContext.pit(); // Hideously used pit, searchAfter should be a string in ItemSearchResult
+        var previousSearchResult = searchResultCache.get(scrollId);
+        if (previousSearchResult != null) {
+            var searchResult = previousSearchResult.next().get();
+            searchResultCache.put(searchResult.getScrollId(), searchResult);
+            return searchResult;
+        } else {
+            throw new BusinessException(ErrorCode.TECHNICAL,
+                    "Unable to find previous search result, searchAfter is invalid or expired");
         }
     }
 

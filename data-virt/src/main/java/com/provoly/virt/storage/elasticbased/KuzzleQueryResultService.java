@@ -132,16 +132,7 @@ public class KuzzleQueryResultService {
             }
         }
 
-        var next = requestDto.getLimit();
-        if (requestDto.getSearchAfter() != null) {
-            try {
-                var context = storageSupport.getSearchAfterContext(requestDto.getSearchAfter());
-                next = Integer.parseInt(context.pit()) + requestDto.getLimit();
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        result.setSearchAfter(new SearchAfterContext(String.valueOf(next), List.of()));
+        result.setSearchAfter(new SearchAfterContext(response.getScrollId(), List.of()));
 
         long totalSize = response.total;
         boolean isAccurate = totalSize <= 10000;
