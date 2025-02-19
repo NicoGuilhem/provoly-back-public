@@ -60,7 +60,7 @@ public class KuzzleAssetSearchService implements StorageSearchService {
         }
         var response = kuzzleClient.kuzzleSearchPagination(tenant, ASSET_COLLECTION, finalQuery, request.getLimit(),
                 request.getSearchAfter());
-        return kuzzleQueryResultService.convertToItemResult(response, classDto, request, layout);
+        return kuzzleQueryResultService.convertToItemResult(response, classDto, layout);
 
     }
 

@@ -30,7 +30,6 @@ import io.quarkus.cache.CacheResult;
 import io.quarkus.runtime.StartupEvent;
 
 import org.jboss.logging.Logger;
-import org.jetbrains.annotations.NotNull;
 
 import kotlin.Unit;
 
@@ -129,14 +128,17 @@ public class KuzzleClient {
         }
     }
 
-    @NotNull
     private SearchResult getNextSearchResult(String searchAfter) throws InterruptedException, ExecutionException {
         var searchAfterContext = mapper.map(searchAfter);
         var scrollId = searchAfterContext.pit(); // Hideously used pit, searchAfter should be a string in ItemSearchResult
         var previousSearchResult = searchResultCache.get(scrollId);
         if (previousSearchResult != null) {
             var searchResult = previousSearchResult.next().get();
-            searchResultCache.put(searchResult.getScrollId(), searchResult);
+            if (searchResult == null) { // No more result
+                searchResultCache.remove(scrollId);
+            } else {
+                searchResultCache.put(searchResult.getScrollId(), searchResult);
+            }
             return searchResult;
         } else {
             throw new BusinessException(ErrorCode.TECHNICAL,

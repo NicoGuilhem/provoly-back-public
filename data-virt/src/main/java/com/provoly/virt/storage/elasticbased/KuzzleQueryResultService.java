@@ -1,9 +1,6 @@
 package com.provoly.virt.storage.elasticbased;
 
-import static com.provoly.virt.storage.StorageSupport.BOTTOM_RIGHT;
-import static com.provoly.virt.storage.StorageSupport.LAT;
-import static com.provoly.virt.storage.StorageSupport.LON;
-import static com.provoly.virt.storage.StorageSupport.TOP_LEFT;
+import static com.provoly.virt.storage.StorageSupport.*;
 import static com.provoly.virt.storage.elasticbased.StorageLayout.*;
 
 import java.util.*;
@@ -20,7 +17,6 @@ import com.provoly.common.error.ErrorCode;
 import com.provoly.common.item.CountDto;
 import com.provoly.common.model.OClassDetailsDto;
 import com.provoly.common.search.*;
-import com.provoly.virt.entity.AttributeSimpleValue;
 import com.provoly.virt.entity.ItemsSearchResult;
 import com.provoly.virt.entity.SearchAfterContext;
 import com.provoly.virt.search.mono.MonoClassContextRequest;
@@ -103,11 +99,15 @@ public class KuzzleQueryResultService {
 
     public ItemsSearchResult convertToItemResult(SearchResult response,
             OClassDetailsDto oClass,
-            MonoClassRequestDto requestDto,
             KuzzleBasedLayout storageLayout) {
-        var sortDto = requestDto.getSort();
-        var datasetVersionId = datasetVersionService.getAllActiveForClass(oClass.getId()).stream().toList().get(0).getId();
+        var datasetVersionId = datasetVersionService.getAllActiveForClass(oClass.getId()).stream().toList().getFirst().getId();
         ItemsSearchResult result = new ItemsSearchResult();
+
+        if (response == null) {
+            // No more result or no result at all
+            // We're returning an empty result
+            return result;
+        }
 
         for (var hit : response.hits) {
             Map<String, Object> map = (Map<String, Object>) hit.get("_source");
@@ -115,24 +115,9 @@ public class KuzzleQueryResultService {
 
             var item = storageLayout.convertToItem(map, oClass, datasetVersionId);
             result.add(item);
-            if (sortDto != null) {
-                var sortValue = switch (sortDto.type()) {
-                    case ATTRIBUTE -> {
-                        AttributeSimpleValue attr = (AttributeSimpleValue) item.getAttributes()
-                                .values()
-                                .stream()
-                                .filter(attributeValue -> attributeValue.getAttributeDef().getId().equals(sortDto.attribute()))
-                                .findFirst()
-                                .orElseThrow(() -> new BusinessException(ErrorCode.TECHNICAL, "attribute not found"));
-                        yield attr.readValueEvenIfNotVisible();
-                    }
-                    case METADATA -> item.getMetadata(sortDto.attribute()).getValue();
-                    case ITEM_ID -> item.getId().getId();
-                };
-            }
         }
 
-        result.setSearchAfter(new SearchAfterContext(response.getScrollId(), List.of()));
+        result.setSearchAfter(new SearchAfterContext(response.getScrollId(), null));
 
         long totalSize = response.total;
         boolean isAccurate = totalSize <= 10000;
