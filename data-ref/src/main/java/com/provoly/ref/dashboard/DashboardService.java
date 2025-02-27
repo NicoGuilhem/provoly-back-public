@@ -10,6 +10,7 @@ import com.provoly.common.user.SystemGroup;
 import com.provoly.ref.dashboard.dto.DashboardWriteDto;
 import com.provoly.ref.dataset.DatasetRepository;
 import com.provoly.ref.datasource.DataSourceService;
+import com.provoly.ref.entity.EntityIdRepository;
 import com.provoly.ref.entity.EntityType;
 import com.provoly.ref.groups.*;
 import com.provoly.ref.message.notification.NotificationService;
@@ -36,11 +37,13 @@ public class DashboardService {
 
     private DashboardRepository dashboardRepository;
 
+    private EntityIdRepository entityIdRepository;
+
     public DashboardService(UserService userService, DashboardMapper dashboardMapper, NotificationService notificationService,
             DataSourceService dataSourceService, MetadataService metadataService,
             GroupService groupService, GroupRepository groupRepository, GrantService grantService, Logger log,
             DatasetRepository datasetRepository,
-            DashboardRepository dashboardRepository) {
+            DashboardRepository dashboardRepository, EntityIdRepository entityIdRepository) {
         this.userService = userService;
         this.dashboardMapper = dashboardMapper;
         this.notificationService = notificationService;
@@ -52,6 +55,7 @@ public class DashboardService {
         this.log = log;
         this.datasetRepository = datasetRepository;
         this.dashboardRepository = dashboardRepository;
+        this.entityIdRepository = entityIdRepository;
     }
 
     @Transactional
@@ -76,10 +80,12 @@ public class DashboardService {
         // only creator can update dashboard
         grantService.canWrite(dashboard, userService.getCurrentUser());
         dashboardMapper.update(dashboardDto, dashboard);
+        entityIdRepository.saveEntity(dashboard);
         metadataService.updateMetadataByEntityType(dashboardDto, EntityType.DASHBOARD);
         notificationService.sendNotification(dashboardDto, true);
         groupService.updateEntityGroups(dashboardDto.getAccessRightsByGroup(), dashboardDto.getId(),
                 WithGroupEntityType.DASHBOARD);
+
         return getGroupsError(dashboard, groupService.getGroupsNames(dashboardDto.getAccessRightsByGroup()));
     }
 

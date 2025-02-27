@@ -37,10 +37,13 @@ public class EntityIdRepository {
             throw new BusinessException(ErrorCode.TECHNICAL, "Id is required");
         }
         if (findById(entity.getId(), entity.getClass()) != null) {
+            if (checkNameDuplicate && entity instanceof EntityNamed named) {
+                checkNameAlreadyExists(named.getName(), named.getClass(), named.getId());
+            }
             em.merge(entity);
         } else {
             if (checkNameDuplicate && entity instanceof EntityNamed named) {
-                checkNameAlreadyExists(named.getName(), named.getClass());
+                checkNameAlreadyExists(named.getName(), named.getClass(), null);
             }
             em.persist(entity);
         }
@@ -113,13 +116,16 @@ public class EntityIdRepository {
         return entity;
     }
 
-    @Transactional
-    public <T extends EntityNamed> void checkNameAlreadyExists(String name, Class<T> entityClass) {
+    private <T extends EntityNamed> void checkNameAlreadyExists(String name, Class<T> entityClass, UUID idEntityToExclude) {
         var cb = em.getCriteriaBuilder();
         var q = cb.createQuery(Long.class);
         var metadataRoot = q.from(entityClass);
         q.select(cb.count(metadataRoot));
-        q.where(cb.equal(metadataRoot.get(EntityNamed_.NAME), name));
+        var filterQuery = cb.equal(metadataRoot.get(EntityNamed_.NAME), name);
+        if (idEntityToExclude != null) {
+            filterQuery = cb.and(filterQuery, cb.notEqual(metadataRoot.get(EntityNamed_.ID), idEntityToExclude));
+        }
+        q.where(filterQuery);
         var result = em.createQuery(q).getSingleResult();
         if (result > 0) {
             throw new BusinessException(ErrorCode.NAME_ALREADY_USED, "Name %s already exists".formatted(name));

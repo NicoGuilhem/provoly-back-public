@@ -60,6 +60,7 @@ public class AbacControllerTest {
         pred.setName("predicate");
         pred.setValue("value");
         predicateService.save(pred);
+        metadataDefService.addMetadata(new MetadataDef(id, "meta", VariableType.STRING, "", "slug"));
     }
 
     @AfterEach
@@ -110,8 +111,6 @@ public class AbacControllerTest {
     @Test
     @TestSecurity(user = "testUser", roles = { Role.STR_DATA_ACCESS_WRITE })
     public void addRule_metadata_return_200() {
-        metadataDefService.addMetadata(new MetadataDef(id, "meta", VariableType.STRING, "", "slug"));
-
         AbacRuleDto rule = new AbacRuleDto();
         rule.name = "rule";
         rule.id = UUID.randomUUID();
@@ -131,8 +130,6 @@ public class AbacControllerTest {
     @Test
     @TestSecurity(user = "testUser", roles = { Role.STR_DATA_ACCESS_WRITE })
     public void addRule_attribute_whithMetadataCondition_return_400() {
-        metadataDefService.addMetadata(new MetadataDef(id, "meta", VariableType.STRING, "", "slug"));
-
         AbacRuleDto rule = new AbacRuleDto();
         rule.name = "rule";
         rule.id = UUID.randomUUID();
@@ -191,8 +188,6 @@ public class AbacControllerTest {
                 .post("abac/rules")
                 .then()
                 .statusCode(204);
-
-        metadataDefService.addMetadata(new MetadataDef(id, "meta", VariableType.STRING, "", "slug"));
 
         AbacRuleDto metadataRule = new AbacRuleDto();
         metadataRule.name = "metadataRule";

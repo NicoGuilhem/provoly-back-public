@@ -132,7 +132,7 @@ public class DatasetControllerTest {
         } catch (BusinessException e) {
             // skipping group creation as it already exist
         }
-
+        generateMetadataDefWithType();
     }
 
     @AfterEach
@@ -294,7 +294,7 @@ public class DatasetControllerTest {
     @TestSecurity(user = "testUser", roles = { Role.STR_DATASET_WRITE, Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_DATASET_READ,
             Role.STR_SEARCH })
     public void should_add_metadata_to_dataset() {
-        generateMetadataDefWithType();
+
         metadataDefController.addMetadata(metadataDefDto);
         var metadataValueWrite = new MetadataValueWriteDto();
         metadataValueWrite.setValue("12");
@@ -332,7 +332,6 @@ public class DatasetControllerTest {
     @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_CLASS_READ, Role.STR_SEARCH,
             Role.STR_DATASET_WRITE })
     public void should_delete_metadata_of_dataset() {
-        generateMetadataDefWithType();
         metadataDefController.addMetadata(metadataDefDto);
         var metadataValueWrite = new MetadataValueWriteDto();
         metadataValueWrite.setValue("12");
@@ -351,7 +350,6 @@ public class DatasetControllerTest {
     @TestSecurity(user = "testUser", roles = { Role.STR_METADATA_ITEM_REF_WRITE, Role.STR_DATASET_WRITE, Role.STR_CLASS_READ,
             Role.STR_SEARCH })
     public void delete_inexistant_metadata_shouldThrowError() {
-        generateMetadataDefWithType();
         metadataDefController.addMetadata(metadataDefDto);
 
         assertThatThrownBy(() -> datasetController.deleteMetadata(datasetVersionDto.getId(), metadataDefDto.id))
@@ -394,7 +392,7 @@ public class DatasetControllerTest {
             Role.STR_FIELD_WRITE, Role.STR_SEARCH })
     public void get_datasetWithDescription() {
         UUID datasetId = UUID.randomUUID();
-        Dataset dataset = createDataset(datasetId, "description", "name");
+        Dataset dataset = createDataset(datasetId, "description", "name1");
 
         var result = datasetService.getById(datasetId);
         assertThat(result).isEqualTo(dataset);
@@ -405,7 +403,8 @@ public class DatasetControllerTest {
             Role.STR_FIELD_WRITE, Role.STR_SEARCH })
     public void get_datasetWithNoDescription() {
         UUID datasetId = UUID.randomUUID();
-        Dataset dataset = createDataset(datasetId, null, "name");
+        String descrip = null;
+        Dataset dataset = createDataset(datasetId, descrip, "name2");
 
         var result = datasetService.getById(datasetId);
         assertThat(result).isEqualTo(dataset);
@@ -464,7 +463,7 @@ public class DatasetControllerTest {
     public void getDatasetByIfOfIamsperadmin_shouldNotSucceed() {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
         UUID datasetId = UUID.randomUUID();
-        createDataset(datasetId, "description", "name");
+        createDataset(datasetId, "description", "name3");
 
         testService.authenticate("iampolice", currentSubjectProvider);
         assertThatThrownBy(() -> datasetController.get(datasetId))
@@ -477,7 +476,7 @@ public class DatasetControllerTest {
     public void getDatasetByNameOfIamsperadmin_shouldNotSucceed() {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
         UUID datasetId = UUID.randomUUID();
-        Dataset dataset = createDataset(datasetId, "description", "name");
+        Dataset dataset = createDataset(datasetId, "description", "name4");
 
         testService.authenticate("iampolice", currentSubjectProvider);
         assertThatThrownBy(() -> datasetController.getByName(dataset.getName()))
@@ -489,11 +488,11 @@ public class DatasetControllerTest {
     @TestSecurity(user = "testUser", roles = { Role.STR_ITEM_WRITE, Role.STR_SEARCH })
     public void getAllDatasetOfClass_shouldOnlyGet1() {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
-        createDataset(UUID.randomUUID(), "description", "name");
+        createDataset(UUID.randomUUID(), "description", "name5");
 
         testService.authenticate("iampolice", currentSubjectProvider);
         UUID datasetId = UUID.randomUUID();
-        createDataset(datasetId, "description", "name" + UUID.randomUUID());
+        createDataset(datasetId, "description", "name6" + UUID.randomUUID());
         var result = datasetController.getAllForClass(oClass.getId());
 
         assertThat(result).extracting(DatasetDetailsDto::getId)
@@ -506,7 +505,7 @@ public class DatasetControllerTest {
     public void addGroupToDataset_shouldSucceed() {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
         UUID datasetId = UUID.randomUUID();
-        createDataset(datasetId, Set.of("new_group"));
+        createDataset(datasetId, Set.of("new_group"), "name7");
 
         var result = datasetController.get(datasetId);
         assertThat(result).extracting(DatasetDetailsDto::getGroups).isEqualTo(List.of("new_group"));
@@ -518,8 +517,8 @@ public class DatasetControllerTest {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
         UUID datasetId = UUID.randomUUID();
 
-        createDataset(datasetId, Set.of("new_group"));
-        updateGroup(datasetId, null);
+        createDataset(datasetId, Set.of("new_group"), "name8");
+        updateGroup(datasetId, null, "name8");
 
         var result = datasetController.get(datasetId);
         assertThat(result).extracting(DatasetDetailsDto::getGroups).isEqualTo(List.of("new_group"));
@@ -531,8 +530,8 @@ public class DatasetControllerTest {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
         UUID datasetId = UUID.randomUUID();
 
-        createDataset(datasetId, Set.of("new_group"));
-        updateGroup(datasetId, Set.of());
+        createDataset(datasetId, Set.of("new_group"), "name9");
+        updateGroup(datasetId, Set.of(), "name9");
 
         var result = datasetController.get(datasetId);
         assertThat(result).extracting(DatasetDetailsDto::getGroups).isEqualTo(List.of());
@@ -546,10 +545,10 @@ public class DatasetControllerTest {
         UUID dashboardId = UUID.randomUUID();
         var expected = new GroupErrors(Map.of(dashboardId, Set.of("test_group")));
 
-        createDataset(datasetDto.getId(), groups);
+        createDataset(datasetDto.getId(), groups, "name10");
         createDashboardDto(dashboardId, Set.of("test_group"));
 
-        var result = updateGroup(datasetDto.getId(), Set.of());
+        var result = updateGroup(datasetDto.getId(), Set.of(), "name10");
         assertThat(result).isEqualTo(expected);
     }
 
@@ -561,10 +560,10 @@ public class DatasetControllerTest {
         UUID dashboardId = UUID.randomUUID();
         var expected = new GroupErrors(Map.of(dashboardId, groups));
 
-        createDataset(datasetDto.getId(), Set.of("AUTHENTICATED"));
+        createDataset(datasetDto.getId(), Set.of("AUTHENTICATED"), "name11");
         createDashboardDto(dashboardId, groups);
 
-        var result = updateGroup(datasetDto.getId(), Set.of());
+        var result = updateGroup(datasetDto.getId(), Set.of(), "name11");
         assertThat(result).isEqualTo(expected);
     }
 
@@ -574,8 +573,8 @@ public class DatasetControllerTest {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
         UUID datasetId = UUID.randomUUID();
 
-        createDataset(datasetId, Set.of("ALL"));
-        updateGroup(datasetId, Set.of("new_group"));
+        createDataset(datasetId, Set.of("ALL"), "name12");
+        updateGroup(datasetId, Set.of("new_group"), "name12");
 
         var result = datasetController.get(datasetId);
 
@@ -591,10 +590,10 @@ public class DatasetControllerTest {
         UUID dashboardId = UUID.randomUUID();
         var expected = new GroupErrors(Map.of(dashboardId, groups));
 
-        createDataset(datasetDto.getId(), Set.of());
+        createDataset(datasetDto.getId(), Set.of(), "name13");
         createDashboardDto(dashboardId, groups);
 
-        var result = updateGroup(datasetDto.getId(), Set.of());
+        var result = updateGroup(datasetDto.getId(), Set.of(), "name13");
         assertThat(result).isEqualTo(expected);
     }
 
@@ -604,11 +603,11 @@ public class DatasetControllerTest {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
         UUID datasetId = UUID.randomUUID();
 
-        createDataset(UUID.randomUUID(), Set.of("new_group"));
+        createDataset(UUID.randomUUID(), Set.of("new_group"), "name14");
 
-        assertThatThrownBy(() -> createDataset(datasetId, Set.of("new_group")))
+        assertThatThrownBy(() -> createDataset(datasetId, Set.of("new_group"), "name14"))
                 .isInstanceOf(BusinessException.class)
-                .hasMessage("Name %s already exists for class %s".formatted("name", oClass.getName()));
+                .hasMessage("Name %s already exists for class %s".formatted("name14", oClass.getName()));
     }
 
     @Test
@@ -623,11 +622,11 @@ public class DatasetControllerTest {
         OClassWriteDto oClassWriteDto = testService.createClassWriteDto(classId, "classDto", attributeDefDto);
 
         modelService.saveEntity(modelMapper.toModel(oClassWriteDto));
-        createDataset(datasetId, Set.of());
+        createDataset(datasetId, Set.of(), "name15");
 
         assertThatThrownBy(
                 () -> datasetController
-                        .update(new DatasetDto(datasetId, "name", classId, DatasetType.CLOSED, List.of(), List.of())))
+                        .update(new DatasetDto(datasetId, "name15", classId, DatasetType.CLOSED, List.of(), List.of())))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("The dataset's type is immutable.");
     }
@@ -645,7 +644,7 @@ public class DatasetControllerTest {
     public void addCategoryToDataset_shouldSucceed() {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
         UUID datasetId = UUID.randomUUID();
-        createDataset(datasetId, Set.of("new_group"), List.of(categoryId));
+        createDataset(datasetId, Set.of("new_group"), List.of(categoryId), "name16");
 
         var result = datasetController.get(datasetId);
         assertThat(result).extracting(DatasetDetailsDto::getCategories).isEqualTo(List.of(categoryDto));
@@ -657,8 +656,10 @@ public class DatasetControllerTest {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
         UUID datasetId = UUID.randomUUID();
 
-        createDataset(datasetId, Set.of("new_group"), List.of(categoryId));
-        updateGroup(datasetId, null, null);
+        createDataset(datasetId, Set.of("new_group"), List.of(categoryId), "name17");
+
+        List<UUID> list = null;
+        updateGroup(datasetId, null, list, "name17");
 
         var result = datasetController.get(datasetId);
         assertThat(result).extracting(DatasetDetailsDto::getCategories).isEqualTo(List.of(categoryDto));
@@ -670,33 +671,33 @@ public class DatasetControllerTest {
         testService.authenticate("iamsuperadmin", currentSubjectProvider);
         UUID datasetId = UUID.randomUUID();
 
-        createDataset(datasetId, Set.of("new_group"), List.of(categoryId));
-        updateGroup(datasetId, Set.of(), List.of());
+        createDataset(datasetId, Set.of("new_group"), List.of(categoryId), "name18");
+        updateGroup(datasetId, Set.of(), List.of(), "name18");
 
         var result = datasetController.get(datasetId);
         assertThat(result).extracting(DatasetDetailsDto::getGroups).isEqualTo(List.of());
     }
 
-    private GroupErrors updateGroup(UUID datasetId, Set<String> groups) {
-        DatasetDto dataset = new DatasetDto(datasetId, "name", oClass.getId(), DatasetType.CLOSED,
+    private GroupErrors updateGroup(UUID datasetId, Set<String> groups, String name) {
+        DatasetDto dataset = new DatasetDto(datasetId, name, oClass.getId(), DatasetType.CLOSED,
                 groups, List.of());
         return datasetService.updateDataset(dataset);
     }
 
-    private void updateGroup(UUID datasetId, Set<String> groups, List<UUID> categoryIds) {
-        DatasetDto dataset = new DatasetDto(datasetId, "name", oClass.getId(), DatasetType.CLOSED,
+    private void updateGroup(UUID datasetId, Set<String> groups, List<UUID> categoryIds, String name) {
+        DatasetDto dataset = new DatasetDto(datasetId, name, oClass.getId(), DatasetType.CLOSED,
                 groups, categoryIds);
         datasetService.updateDataset(dataset);
     }
 
-    private void createDataset(UUID datasetId, Set<String> groups, List<UUID> categoryIds) {
-        DatasetDto dataset = new DatasetDto(datasetId, "name", oClass.getId(), DatasetType.CLOSED, groups, categoryIds);
+    private void createDataset(UUID datasetId, Set<String> groups, List<UUID> categoryIds, String name) {
+        DatasetDto dataset = new DatasetDto(datasetId, name, oClass.getId(), DatasetType.CLOSED, groups, categoryIds);
         datasetService.save(dataset);
         datasetService.findById(datasetId);
     }
 
-    private void createDataset(UUID datasetId, Set<String> groups) {
-        DatasetDto dataset = new DatasetDto(datasetId, "name", oClass.getId(), DatasetType.CLOSED, groups, List.of());
+    private void createDataset(UUID datasetId, Set<String> groups, String name) {
+        DatasetDto dataset = new DatasetDto(datasetId, name, oClass.getId(), DatasetType.CLOSED, groups, List.of());
         datasetService.save(dataset);
         datasetService.findById(datasetId);
     }

@@ -144,7 +144,7 @@ public class TestService {
                 "TRUNCATE provoly_user_named_query, named_query, abac_rule, predicate, link, metadata_value, " +
                         "dataset_version_message, dataset_version, category_relations, category, dataset, relation_type, " +
                         "group_relations, dashboard_datasource, dashboard, widget_catalog_datasource, " +
-                        "widget_catalog, mono_class_search_request,  condition_condition,  condition, attribute_def, custom_class, oclass, field_condition, field")
+                        "widget_catalog, mono_class_search_request,  condition_condition,  condition, attribute_def, custom_class, oclass, field_condition, field, metadata_def_allowed_value, meta_provisioning, metadata_def")
                 .executeUpdate();
     }
 }

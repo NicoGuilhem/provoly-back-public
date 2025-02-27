@@ -79,9 +79,6 @@ public class FieldService {
             throw new BusinessException(ErrorCode.BAD_REQUEST,
                     "You're not allowed to change type %s to %s".formatted(field.getType(), fieldDto.getType()));
         }
-        if (!field.getName().equals(fieldDto.getName())) {
-            entityIdRepository.checkNameAlreadyExists(fieldDto.getName(), Field.class);
-        }
     }
 
 }
