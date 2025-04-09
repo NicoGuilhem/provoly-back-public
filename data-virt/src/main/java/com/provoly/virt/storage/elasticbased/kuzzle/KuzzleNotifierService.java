@@ -43,7 +43,7 @@ public class KuzzleNotifierService implements NotificationHandler {
      * no need to subscribe again when kuzzle lost connection
      */
     public void startNotificationService() {
-        log.info("Kuzzle is connected");
+        log.info("Check notification service");
         if (isSubscribed) {
             // Subscriptions are persistant even across reconnection
             // We need to subscribe only at the first connection
@@ -51,7 +51,7 @@ public class KuzzleNotifierService implements NotificationHandler {
             return;
         }
 
-        log.infof("Registering to Kuzzle notifications");
+        log.info("Registering to Kuzzle notifications");
         //FIXME: Kuzzle not reentrant, find better solution
         // This line preload measure mapping in quarkus cache
         // When this.run use getMeasureMapping in measureLayout.convertToItem

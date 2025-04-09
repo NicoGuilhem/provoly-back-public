@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
@@ -41,16 +42,17 @@ public class KuzzleClient {
     public static final String AUTH_STRATEGY = "local";
     public static final int DEFAULT_PORT = 7512;
     public static final int DEFAULT_REPLICAS = 1;
-    private static final String JWT_PROPERTY = "jwt";
     private static final int SECONDS_TTL_SEARCH_RESULT = 50;
-    private static final int SECONDS_TO_REFRESH_TOKEN_BEFORE_IT_EXPIRES = 120;
+    private static final Duration TOKEN_TTL_DURATION = Duration.ofHours(24); // TOKEN_TTL_DURATION must be greater as the longer batch of data imported
+    private static final String TOKEN_TTL_SECONDS = String.format("%ds", TOKEN_TTL_DURATION.getSeconds());
+    private static final Duration TOKEN_REFRESH_PERIOD = Duration.ofHours(2); // Must be lower as TOKEN_TTL_DURATION
     private final Logger log;
     private Kuzzle kuzzle;
     private final Optional<DataVirtProperties.KuzzleConfiguration> kuzzleConfiguration;
     private final KuzzleNotifierService kuzzleNotifierService;
+    private Instant nextRefreshTime;
     private Thread reconnectThread = null;
-    private int replicas;
-    private String token;
+    private final int replicas;
     private final MonoMapper mapper;
     private final TtlHashMap<String, SearchResult> searchResultCache = new TtlHashMap<>(
             Duration.ofSeconds(SECONDS_TTL_SEARCH_RESULT));
@@ -200,19 +202,6 @@ public class KuzzleClient {
         }
     }
 
-    private void authenticate(String username, String password) {
-        log.infof("Trying to authenticate to Kuzzle");
-        Map<String, Object> credentials = new HashMap<>();
-        credentials.put("username", username);
-        credentials.put("password", password);
-        kuzzle.connect();
-        try {
-            updateToken(kuzzle.getAuthController().login(AUTH_STRATEGY, credentials).get());
-        } catch (InterruptedException | ExecutionException e) {
-            throw new BusinessException(ErrorCode.TECHNICAL, "Unable to authenticate to Kuzzle", e);
-        }
-    }
-
     private List<InsertionError> convertKuzzleResponseToError(Map<String, ArrayList<Object>> result) {
         var errors = result.get("errors");
         if (errors == null) {
@@ -269,14 +258,17 @@ public class KuzzleClient {
                             log.warn("Kuzzle connection is closed, skipping keep-alive");
                             break;
                         case OPEN:
+                            // Warn : if a batch of data is received by notifier, kuzzle client will not respond until end
+                            // Today batch can be long as several minutes, we have to ignore timeout and be sure every call have a timeout set
                             log.trace("Sending keep-alive to kuzzle");
-                            if (token != null) {
-                                refreshTokenIfNeeded();
-                            }
+                            refreshTokenIfNeeded();
                             var date = kuzzle.getServerController().now().get(10, TimeUnit.SECONDS);
                             log.debugf("Keep-alive sent to Kuzzle %s", date);
                             break;
                     }
+                } catch (TimeoutException e) {
+                    // If subscription send a lot of messages, kuzzle is not responding anymore.
+                    log.warn("Kuzzle keep-alive timed out");
                 } catch (Exception e) {
                     log.error("Error while sending keep-alive to Kuzzle", e);
                 }
@@ -288,7 +280,7 @@ public class KuzzleClient {
         ws.addListener(LoginAttemptEvent.class, //  wait for authentication to be established
                 event -> {
                     if (event.getSuccess()) {
-                        log.infof("Kuzzle authentication successful.");
+                        log.info("Kuzzle authentication successful.");
                         new Thread(kuzzleNotifierService::startNotificationService).start();
                     }
                     return Unit.INSTANCE;
@@ -305,20 +297,27 @@ public class KuzzleClient {
         });
     }
 
-    private void refreshTokenIfNeeded() throws InterruptedException, ExecutionException {
-        log.trace("Check token validity");
-        var validityToken = kuzzle.getAuthController().checkToken(token).get();
-        var expiresAt = Long.parseLong(validityToken.get("expiresAt").toString());
-
-        if (Instant.now().plusSeconds(SECONDS_TO_REFRESH_TOKEN_BEFORE_IT_EXPIRES).isAfter(Instant.ofEpochMilli(expiresAt))) {
-            log.debug("Token expires in less than 2 min, refresh it");
-            updateToken(kuzzle.getAuthController().refreshToken().get());
+    private void authenticate(String username, String password) {
+        try {
+            log.infof("Trying to authenticate to Kuzzle");
+            Map<String, Object> credentials = new HashMap<>();
+            credentials.put("username", username);
+            credentials.put("password", password);
+            kuzzle.connect();
+            kuzzle.getAuthController().login(AUTH_STRATEGY, credentials, TOKEN_TTL_SECONDS).get();
+            nextRefreshTime = Instant.now().plus(TOKEN_REFRESH_PERIOD);
+        } catch (InterruptedException | ExecutionException e) {
+            throw new BusinessException(ErrorCode.TECHNICAL, "Unable to authenticate to Kuzzle", e);
         }
     }
 
-    private void updateToken(Map<String, Object> loginOrRefresh) {
-        var jwt = loginOrRefresh.get(JWT_PROPERTY);
-        token = jwt.toString();
+    private void refreshTokenIfNeeded() throws InterruptedException, ExecutionException, TimeoutException {
+        log.tracef("Check kuzzle token refresh time. Planned at %d", nextRefreshTime);
+        if (Instant.now().isAfter(nextRefreshTime)) {
+            log.info("Refreshing kuzzle token");
+            kuzzle.getAuthController().refreshToken(TOKEN_TTL_SECONDS).get(10, TimeUnit.SECONDS);
+            nextRefreshTime = Instant.now().plus(TOKEN_REFRESH_PERIOD);
+        }
     }
 
 }

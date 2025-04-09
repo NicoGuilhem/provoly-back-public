@@ -44,11 +44,11 @@ public class KuzzleMeasureLayout extends KuzzleBasedLayout {
     public static final String ASSET_ID = "asset_id";
     public static final String METADATA = "metadata";
 
-    private ElasticSupport elasticSupport;
-    private KuzzleClient kuzzleClient;
-    private ModelService modelService;
-    private DatasetVersionService datasetVersionService;
-    private Logger log;
+    private final ElasticSupport elasticSupport;
+    private final KuzzleClient kuzzleClient;
+    private final ModelService modelService;
+    private final DatasetVersionService datasetVersionService;
+    private final Logger log;
 
     public KuzzleMeasureLayout(KuzzleClient kuzzleClient,
             ElasticSupport elasticSupport,
@@ -156,7 +156,7 @@ public class KuzzleMeasureLayout extends KuzzleBasedLayout {
             var oClassDetails = modelService.getDetails(oClass.getId());
             var measureName = getOptionalMetadata(oClassDetails, MetadataSystem.MEASURE_NAME.getName());
             if (measureName.isPresent() && measureName.get().getValue().equals(receivedMeasureName)) {
-                log.debugf("Found class %s for measure %s", oClass.getName(), measureName);
+                log.tracef("Found class %s for measure %s", oClass.getName(), measureName);
                 UUID datasetVersionId = datasetVersionService.getAllActiveForClass(oClass.getId())
                         .stream()
                         .toList()
