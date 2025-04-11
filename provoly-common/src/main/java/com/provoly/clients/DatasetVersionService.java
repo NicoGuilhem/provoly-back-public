@@ -47,5 +47,6 @@ public interface DatasetVersionService {
 
     @GET
     @Path("/class/{classId}")
+    @CacheResult(cacheName = "dvs-all-active-for-class")
     Collection<DatasetVersionDetailsDto> getAllActiveForClass(@PathParam("classId") UUID classId);
 }

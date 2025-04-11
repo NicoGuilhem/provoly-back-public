@@ -48,6 +48,7 @@ public interface ModelService {
 
     @GET
     @Path("/class")
+    @CacheResult(cacheName = "model-all-classes")
     Collection<OClassReadDto> getAllClasses();
 
     @DELETE
@@ -64,9 +65,9 @@ public interface ModelService {
 
     @GET
     @Path("/fields")
-    public Collection<FieldDto> getFields();
+    Collection<FieldDto> getFields();
 
     @DELETE
     @Path("/fields/{id}")
-    public void deleteFieldById(UUID id);
+    void deleteFieldById(UUID id);
 }

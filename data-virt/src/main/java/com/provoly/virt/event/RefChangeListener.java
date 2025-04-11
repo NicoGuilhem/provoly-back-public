@@ -40,6 +40,9 @@ public class RefChangeListener {
     public void refEvent(RefChangeEvent event) {
         switch (event) {
             case RefChangeEventClassCreated e -> {
+                // We need to invalidate for class list
+                log.infof("Invalidate caches for oClass %s because it has been created", e.getoClassDetails().getId());
+                cacheClearer.invalidateOClassCaches(e.getoClassDetails().getId());
                 storageModelAdapter.createOClass(e.getoClassDetails());
                 sendEventClassReady(e.getoClassDetails());
             }

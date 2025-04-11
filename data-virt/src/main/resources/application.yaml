@@ -39,6 +39,8 @@ quarkus:
         expire-after-write: 30s
       "get-dataset-version":
         expire-after-write: 30s
+      "dvs-all-active-for-class":
+        expire-after-write: 30s
       "fields-for-class":
         expire-after-write: 30s
       "metadata-by-id":
@@ -60,6 +62,8 @@ quarkus:
       "context-variables":
         expire-after-write: 30s
       "kuzzle-measures-mapping":
+        expire-after-write: 30s
+      "model-all-classes":
         expire-after-write: 30s
 
 mp:
