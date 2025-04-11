@@ -21,10 +21,9 @@ public class ProvolyAuthentRequestFilter implements ResteasyReactiveClientReques
     private final Instance<TokenCredential> accessToken;
     private final Logger log;
 
-
     public ProvolyAuthentRequestFilter(Instance<AccessTokenRequestReactiveFilter> accessTokenRequestFilter,
-                                       @WithCaching Instance<OidcClientRequestReactiveFilter> oidcClientRequestFilter,
-                                       Instance<TokenCredential> accessToken, Logger log) {
+            @WithCaching Instance<OidcClientRequestReactiveFilter> oidcClientRequestFilter,
+            Instance<TokenCredential> accessToken, Logger log) {
         log.info("Building a new ProvolyAuthentRequestFilter");
         this.accessTokenRequestFilter = accessTokenRequestFilter;
         this.oidcClientRequestFilter = oidcClientRequestFilter;
