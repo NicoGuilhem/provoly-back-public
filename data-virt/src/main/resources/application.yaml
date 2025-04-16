@@ -15,7 +15,7 @@ quarkus:
   oidc-client:
     client-id: provoly
     access-token-expiry-skew: 60s # Allow for clock skew
-    refresh-token-expiry-skew: 60s
+    refresh-token-time-skew: 60s
     grant-options:
       password:
         username: ${provoly.virt.user}
