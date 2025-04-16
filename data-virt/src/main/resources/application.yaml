@@ -14,6 +14,8 @@ quarkus:
     client-id: provoly
   oidc-client:
     client-id: provoly
+    access-token-expiry-skew: 60s # Allow for clock skew
+    refresh-token-expiry-skew: 60s
     grant-options:
       password:
         username: ${provoly.virt.user}
@@ -65,6 +67,10 @@ quarkus:
         expire-after-write: 30s
       "model-all-classes":
         expire-after-write: 30s
+
+  log:
+    min-level: TRACE
+
 
 mp:
   messaging:
