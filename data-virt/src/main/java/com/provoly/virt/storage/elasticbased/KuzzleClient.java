@@ -203,6 +203,13 @@ public class KuzzleClient {
         }
     }
 
+    public ProtocolState getState() {
+        if (kuzzle == null) {
+            return ProtocolState.CLOSE;
+        }
+        return kuzzle.getProtocol().getState();
+    }
+
     private void waitForConnection() {
         try {
             var startTime = Instant.now();
@@ -297,8 +304,10 @@ public class KuzzleClient {
         ws.addListener(LoginAttemptEvent.class, //  wait for authentication to be established
                 event -> {
                     if (event.getSuccess()) {
-                        log.info("Kuzzle authentication successful.");
+                        log.info("Kuzzle authentication successful -> Registering notification service");
                         new Thread(kuzzleNotifierService::startNotificationService).start();
+                    } else {
+                        log.errorf("Kuzzle authentication failed");
                     }
                     return Unit.INSTANCE;
                 });
@@ -330,7 +339,7 @@ public class KuzzleClient {
 
     private void refreshTokenIfNeeded() throws InterruptedException, ExecutionException, TimeoutException {
         log.tracef("Check kuzzle token refresh time. Planned at %d", nextRefreshTime);
-        if (Instant.now().isAfter(nextRefreshTime)) {
+        if (nextRefreshTime != null && Instant.now().isAfter(nextRefreshTime)) {
             log.info("Refreshing kuzzle token");
             kuzzle.getAuthController().refreshToken(TOKEN_TTL_SECONDS).get(10, TimeUnit.SECONDS);
             nextRefreshTime = Instant.now().plus(TOKEN_REFRESH_PERIOD);
