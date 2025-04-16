@@ -193,12 +193,29 @@ public class KuzzleClient {
 
     public List<InsertionError> insertDocuments(String index, String collection, List<Map<String, Object>> documents) {
         try {
+            waitForConnection();
             var result = kuzzle.getDocumentController()
                     .mCreateOrReplace(index, collection, new ArrayList<>(documents))
                     .get();
             return convertKuzzleResponseToError(result);
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (Exception e) { // Should not happens, but NotConnectedException is not catchable but can be raised
             throw new BusinessException(ErrorCode.TECHNICAL, "Error while communicating with kuzzle", e);
+        }
+    }
+
+    private void waitForConnection() {
+        try {
+            var startTime = Instant.now();
+            while (kuzzle.getProtocol().getState() != ProtocolState.OPEN) {
+                log.info("Waiting for Kuzzle reconnected successfully.");
+                if (Duration.between(startTime, Instant.now()).toSeconds() > 60) {
+                    log.error("Kuzzle connection timed out after 60 seconds");
+                    throw new BusinessException(ErrorCode.TECHNICAL, "Kuzzle connection timed out");
+                }
+                Thread.sleep(1000);
+            }
+        } catch (InterruptedException e) {
+            throw new BusinessException(ErrorCode.TECHNICAL, "Thread interrupted while waiting for Kuzzle reconnection", e);
         }
     }
 
