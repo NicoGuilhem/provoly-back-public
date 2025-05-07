@@ -21,6 +21,12 @@ quarkus:
         username: ${provoly.virt.user}
         password: ${provoly.virt.password}
     auth-server-url: http://localhost:9080/realms/provoly
+    scopes:
+      - offline_access
+      - openid
+      - profile
+      - email
+      - groups
 
   # Specify for each profile ?
   http:
