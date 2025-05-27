@@ -22,6 +22,7 @@ import com.provoly.virt.storage.elasticbased.kuzzle.KuzzleUnconfiguredClient;
 
 import io.kuzzle.sdk.Kuzzle;
 import io.kuzzle.sdk.coreClasses.SearchResult;
+import io.kuzzle.sdk.coreClasses.exceptions.ApiErrorException;
 import io.kuzzle.sdk.coreClasses.maps.KuzzleMap;
 import io.kuzzle.sdk.events.LoginAttemptEvent;
 import io.kuzzle.sdk.events.NetworkStateChangeEvent;
@@ -80,10 +81,10 @@ public class KuzzleClient {
                     false);
             this.kuzzle = new Kuzzle(ws);
 
-            addNetworkChangeListener(config, ws);
+            addNetworkChangeListener(ws);
             addLoginListener(ws);
 
-            startReconnectThreadToKuzzle(log, config);
+            startReconnectThreadToKuzzle(log);
             startKeepAlive();
         });
     }
@@ -243,7 +244,7 @@ public class KuzzleClient {
 
     // Kuzzle reconnect option is not working, so we are implementing our own reconnect mechanism
     // Delete this code when Kuzzle will fix the issue : https://github.com/kuzzleio/sdk-jvm/issues/86
-    private void startReconnectThreadToKuzzle(Logger log, DataVirtProperties.KuzzleConfiguration config) {
+    private void startReconnectThreadToKuzzle(Logger log) {
         if (reconnectThread != null && reconnectThread.isAlive()) {
             log.warn("Reconnect thread already started");
             return;
@@ -255,9 +256,7 @@ public class KuzzleClient {
                 try {
                     Thread.sleep(10000);
                     kuzzle.connect();
-                    config.credentials()
-                            .ifPresentOrElse(credentials -> authenticate(credentials.username(), credentials.password()),
-                                    kuzzleNotifierService::startNotificationService);
+                    authenticate();
                     // If authentication is not configured, the notification service must be called, as it will not be triggered by the listener.
                 } catch (Exception e) {
                     log.error("Error while reconnecting to Kuzzle :" + e.getMessage());
@@ -293,6 +292,11 @@ public class KuzzleClient {
                 } catch (TimeoutException e) {
                     // If subscription send a lot of messages, kuzzle is not responding anymore.
                     log.warn("Kuzzle keep-alive timed out");
+                } catch (ExecutionException e) {
+                    var e2 = interceptTokenExpired(e);
+                    if (e2 != null) {
+                        log.error("Error while sending keep-alive to Kuzzle", e);
+                    }
                 } catch (Exception e) {
                     log.error("Error while sending keep-alive to Kuzzle", e);
                 }
@@ -313,37 +317,111 @@ public class KuzzleClient {
                 });
     }
 
-    private void addNetworkChangeListener(DataVirtProperties.KuzzleConfiguration config, WebSocket ws) {
+    private void addNetworkChangeListener(WebSocket ws) {
         ws.addListener(NetworkStateChangeEvent.class, event -> {
             log.info("Network state changed: " + event.getState());
             if (event.getState() == ProtocolState.CLOSE) {
-                startReconnectThreadToKuzzle(log, config);
+                startReconnectThreadToKuzzle(log);
             }
             return Unit.INSTANCE;
         });
     }
 
-    private void authenticate(String username, String password) {
+    private void authenticate() {
+
+        if (kuzzleConfiguration.isEmpty())
+            return;
+        var config = kuzzleConfiguration.get();
+        if (config.credentials().isEmpty()) {
+            // Notification service is started when authenticated event is received.
+            // If no authentication we should start it manually
+            kuzzleNotifierService.startNotificationService();
+            return;
+        }
+        var credentials = config.credentials().get();
+
         try {
-            log.infof("Trying to authenticate to Kuzzle");
-            Map<String, Object> credentials = new HashMap<>();
-            credentials.put("username", username);
-            credentials.put("password", password);
-            kuzzle.connect();
-            kuzzle.getAuthController().login(AUTH_STRATEGY, credentials, TOKEN_TTL_SECONDS).get();
+            log.info("Authenticate to Kuzzle");
+            var credentialMap = Map.of(
+                    "username", credentials.username(),
+                    "password", credentials.password());
+            kuzzle.getAuthController()
+                    .login(AUTH_STRATEGY, credentialMap, TOKEN_TTL_SECONDS)
+                    .get(10, TimeUnit.SECONDS);
             nextRefreshTime = Instant.now().plus(TOKEN_REFRESH_PERIOD);
         } catch (InterruptedException | ExecutionException e) {
             throw new BusinessException(ErrorCode.TECHNICAL, "Unable to authenticate to Kuzzle", e);
+        } catch (TimeoutException e) {
+            throw new RuntimeException(e);
         }
     }
 
+    /**
+     * Intercept token expired exception and re-authenticate.
+     * If the token is expired, we remove it and re-authenticate.
+     * If the exception is not related to token expiration, we return the original exception.
+     *
+     * @param e the ExecutionException to intercept
+     * @return null if the token was expired and re-authentication was successful, otherwise the original exception
+     */
+    private ExecutionException interceptTokenExpired(ExecutionException e) {
+        return switch (e.getCause()) {
+            case ApiErrorException apiError -> {
+                if ("security.token.invalid".equals(apiError.getId())) {
+                    log.warn("Intercept exception kuzzle token is expired or invalid, removing token and re-authenticating");
+                    kuzzle.setAuthenticationToken(null);
+                    authenticate();
+                    yield null;
+                }
+                yield e;
+            }
+            case null, default -> e;
+        };
+    }
+
+    /**
+     * Refresh the Kuzzle token if needed.
+     * The token is refreshed every TOKEN_REFRESH_PERIOD, which must be lower than TOKEN_TTL_DURATION.
+     * Throws: ExecutionException if the token refresh fails. If Kuzzle redis is restarted token can be invalidated
+     * before expiration.
+     *
+     */
     private void refreshTokenIfNeeded() throws InterruptedException, ExecutionException, TimeoutException {
-        log.tracef("Check kuzzle token refresh time. Planned at %d", nextRefreshTime);
+
+        log.tracef("Check kuzzle token refresh time. Planned at %s", nextRefreshTime);
         if (nextRefreshTime != null && Instant.now().isAfter(nextRefreshTime)) {
             log.info("Refreshing kuzzle token");
-            kuzzle.getAuthController().refreshToken(TOKEN_TTL_SECONDS).get(10, TimeUnit.SECONDS);
+            var res = kuzzle.getAuthController().refreshToken(TOKEN_TTL_SECONDS).get(10, TimeUnit.SECONDS);
+            logRefreshResult(res);
             nextRefreshTime = Instant.now().plus(TOKEN_REFRESH_PERIOD);
         }
+
+    }
+
+    private void logRefreshResult(Map<String, Object> map) {
+        if (!log.isInfoEnabled())
+            return;
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("{");
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            if (sb.length() > 1) {
+                sb.append(", ");
+            }
+            var key = entry.getKey();
+            var value = entry.getValue();
+
+            if ("jwt".equals(key)) {
+                value = "***";
+            } else if ("expiresAt".equals(key)) {
+                long expiresAt = Long.valueOf(value.toString());
+                value = Instant.ofEpochMilli(expiresAt).toString();
+            }
+
+            sb.append(key).append("=").append(value);
+        }
+        sb.append("}");
+        log.infof("Token refreshed return : %s", sb.toString());
     }
 
 }
