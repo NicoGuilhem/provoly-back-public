@@ -82,7 +82,6 @@ public class DashboardService {
         dashboardMapper.update(dashboardDto, dashboard);
         entityIdRepository.saveEntity(dashboard);
         metadataService.updateMetadataByEntityType(dashboardDto, EntityType.DASHBOARD);
-        notificationService.sendNotification(dashboardDto, true);
         groupService.updateEntityGroups(dashboardDto.getAccessRightsByGroup(), dashboardDto.getId(),
                 WithGroupEntityType.DASHBOARD);
 
@@ -172,8 +171,6 @@ public class DashboardService {
         var dashboard = dashboardRepository.getDashboard(id);
         grantService.canWrite(dashboard, userService.getCurrentUser());
         dashboardRepository.delete(id);
-
-        notificationService.sendNotification(dashboardMapper.toReadDto(dashboard), false);
     }
 
     @Transactional
