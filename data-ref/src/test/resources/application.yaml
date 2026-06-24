@@ -13,7 +13,7 @@ quarkus:
 
   kafka:
     devservices:
-      image-name: redpanda:v24.1.2
+      image-name: redpandadata/redpanda:v24.1.2
 
   keycloak:
     devservices:
