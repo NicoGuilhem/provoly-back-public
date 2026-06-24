@@ -50,7 +50,7 @@ public class ProvolyTestContainers implements QuarkusTestResourceLifecycleManage
     public static final String KAFKA_SERVICE_LABEL = "quarkus-dev-service-kafka";
     public static final String KAFKA_VALUE = "kafka";
     public static final int KAFKA_PORT = 9092;
-    private static final String KAFKA_DOCKER_IMAGE = "dh2wltsh.gra7.container-registry.ovh.net/docker-mirror/redpandadata/redpanda:v22.3.4";
+    private static final String KAFKA_DOCKER_IMAGE = "redpandadata/redpanda:v22.3.4";
 
     public static final String DEV_SERVICE_LABEL = "provoly-dataref";
     public static final String DEV_VALUE = "dataref";
@@ -134,7 +134,7 @@ public class ProvolyTestContainers implements QuarkusTestResourceLifecycleManage
                 .withNetwork(sharedNetwork)
                 .withNetworkAliases("db01");
 
-        postgres.setDockerImageName("dh2wltsh.gra7.container-registry.ovh.net/docker-mirror/postgis/postgis:16-3.4");
+        postgres.setDockerImageName("postgis/postgis:16-3.4");
         postgres.setPortBindings(List.of("%s:%s".formatted(POSTGRES_EXTERNAL_PORT, "5432")));
         return postgres;
     }
