@@ -9,11 +9,11 @@ quarkus:
 
   datasource:
     devservices:
-      image-name: dh2wltsh.gra7.container-registry.ovh.net/docker-mirror/library/postgres:14.1-alpine
+      image-name: postgres:14.1-alpine
 
   kafka:
     devservices:
-      image-name: dh2wltsh.gra7.container-registry.ovh.net/docker-mirror/redpandadata/redpanda:v24.1.2
+      image-name: redpanda:v24.1.2
 
   keycloak:
     devservices:
